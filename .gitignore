@@ -1,0 +1,54 @@
+# Build artifacts
+bin/
+obj/
+
+# Visual Studio files
+.vs/
+*.suo
+*.user
+*.csproj.user
+*.cache
+*.vspscc
+*.vssscc
+*_i.c
+*_p.c
+*.ncb
+*.sdf
+*.opensdf
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+*.vsidx
+*.vsdx
+
+
+# ReSharper files
+_ReSharper.*
+
+# NuGet packages
+*.nupkg
+/packages/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+build/
+[Bb]in/
+
+# Logs and databases
+*.log
+*.sqlite
+*.mdf
+*.ldf
+
+# Other files and directories
+[Tt]humbs.db
+[Dd]esktop.ini
+*.zip
+*.rar
+*.bak
+*.dll
+*.pdb
+*.cache
+*.csproj.user
