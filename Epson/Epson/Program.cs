@@ -1,6 +1,9 @@
+using Epson.Data.Context;
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -9,6 +12,9 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v3", new OpenApiInfo { Title = "Epson APIs", Version = "v3" });
 });
 builder.Services.AddControllers();
+
+builder.Services.AddDbContext<EpsonDbContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("EpsonDbConnection")));
 
 var app = builder.Build();
 
