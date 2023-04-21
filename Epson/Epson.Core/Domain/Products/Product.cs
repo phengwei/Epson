@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Epson.Core.Domain.Product
+namespace Epson.Core.Domain.Products
 {
     public class Product : BaseEntityExtension
     {
