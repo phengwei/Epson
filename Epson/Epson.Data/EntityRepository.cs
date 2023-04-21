@@ -31,25 +31,25 @@ namespace Epson.Data
         public T GetById(int id)
         {
             using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
-            return db.QueryFirstOrDefault<T>($"SELECT * FROM {typeof(T).Name}s WHERE Id = @Id", new { Id = id });
+            return db.QueryFirstOrDefault<T>($"SELECT * FROM {typeof(T).Name} WHERE Id = @Id", new { Id = id });
         }
 
         public int Add(T entity)
         {
             using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
-            return db.Execute($"INSERT INTO {typeof(T).Name}s VALUES (@Name, @Price)", entity);
+            return db.Execute($"INSERT INTO {typeof(T).Name} VALUES (@Name, @Price)", entity);
         }
 
         public int Update(T entity)
         {
             using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
-            return db.Execute($"UPDATE {typeof(T).Name}s SET Name = @Name, Price = @Price WHERE Id = @Id", entity);
+            return db.Execute($"UPDATE {typeof(T).Name} SET Name = @Name, Price = @Price WHERE Id = @Id", entity);
         }
 
         public int Delete(int id)
         {
             using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
-            return db.Execute($"DELETE FROM {typeof(T).Name}s WHERE Id = @Id", new { Id = id });
+            return db.Execute($"DELETE FROM {typeof(T).Name} WHERE Id = @Id", new { Id = id });
         }
     }
 
