@@ -13,6 +13,8 @@ using Autofac.Core;
 using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
+using AutoMapper;
+using Epson.Services.DTO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,15 +34,29 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddControllers();
 
-builder.Services.AddScoped<EpsonSQLConnectionFactory>(provider =>
-    new EpsonSQLConnectionFactory(builder.Configuration));
+#region AutoMapper
+var mapperConfig = new MapperConfiguration(mc =>
+{
+    mc.AddProfile(new AutoMappingProfile());
+});
+
+IMapper mapper = mapperConfig.CreateMapper();
+builder.Services.AddSingleton(mapper);
+#endregion
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EntityRepository<>));
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddSingleton<IDbConnectionFactory, EpsonSQLConnectionFactory>();
 
+#region Services
+builder.Services.AddScoped<IProductService, ProductService>();
+#endregion
+
+#region DbContext
+builder.Services.AddScoped<EpsonSQLConnectionFactory>(provider =>
+    new EpsonSQLConnectionFactory(builder.Configuration));
+builder.Services.AddSingleton<IDbConnectionFactory, EpsonSQLConnectionFactory>();
 builder.Services.AddDbContext<EpsonDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("EpsonDbConnection")));
+#endregion
 
 var app = builder.Build();
 
