@@ -1,0 +1,345 @@
+/*form styles*/
+#msform {
+    text-align: center;
+    position: relative;
+}
+
+#msform fieldset {
+    border: 0 none;
+    border-radius: 25px;
+     box-sizing: border-box;
+    
+    
+    padding: 20px 20px;
+    width: 100%;
+    margin: 0 auto;
+    
+
+    /*stacking fieldsets above each other*/
+    position: relative;
+    
+    /**
+    @include for-tablet-land-up {   
+        padding: 20px 30px;
+   
+        width: 80%;
+        margin: 0 10%;
+    }
+    **/
+    label {
+        font-weight: 700;
+        
+    }
+}
+
+/*Hide all except first fieldset*/
+#msform fieldset:not(:first-of-type) {
+    display: none;
+}
+
+/*inputs*/
+#msform input, #msform textarea {
+  /* padding: 15px 30px; */
+    border: 1px solid #ccc;
+    /* border-radius: 30px; 
+    margin-bottom: 10px; */
+    
+    /** width: 100%; **/
+    box-sizing: border-box;
+    /* color: #2C3E50; */
+    font-size: 0.9rem;
+    font-weight: 600;
+    /* background-color: #ffffff; */
+    
+    &[disabled='disabled'] {
+        background-color: #f1f1eb;
+    }
+    
+    z-index: 7;
+}
+
+
+    
+
+#msform input:focus, #msform textarea:focus {
+    -moz-box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    border: 1px solid var(--tsh1-red);;
+    outline-width: 0;
+    transition: All 0.5s ease-in;
+    -webkit-transition: All 0.5s ease-in;
+    -moz-transition: All 0.5s ease-in;
+    -o-transition: All 0.5s ease-in;
+}
+
+/*buttons*/
+#msform .action-button {
+    width: 100px;
+    background: var(--tsh1-red);
+    font-weight: bold;
+    color: var(--tsh2-white);
+    border: 0 none;
+    border-radius: 25px;
+    cursor: pointer;
+    padding: 10px 5px;
+    margin: 10px 5px;
+     z-index: 7;
+}
+
+#msform .action-button:hover, #msform .action-button:focus {
+    box-shadow: 0 0 0 2px var(--tsh2-white), 0 0 0 3px #ee0979;
+}
+
+#msform .action-button-previous {
+    width: 100px;
+    background: #C5C5F1;
+    font-weight: bold;
+    color: var(--tsh2-white);
+    border: 0 none;
+    border-radius: 25px;
+    cursor: pointer;
+    padding: 10px 5px;
+    margin: 10px 5px;
+}
+
+#msform .action-button-previous:hover, #msform .action-button-previous:focus {
+    box-shadow: 0 0 0 2px var(--tsh2-white), 0 0 0 3px #C5C5F1;
+}
+
+/*headings*/
+.fs-title {
+    font-size: 18px;
+    text-transform: uppercase;
+    color: #2C3E50;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.fs-subtitle {
+    font-weight: normal;
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/*progressbar*/
+#kc-progressbar {
+    margin-bottom: 30px;
+    overflow: hidden;
+    /*CSS counters to number the steps*/
+    counter-reset: step;
+}
+
+#kc-progressbar li {
+    list-style-type: none;
+    color: var(--tsh1-blue);
+    //text-transform: uppercase;
+    font-size: 14px;
+    width: 33.33%;
+    float: left;
+    position: relative;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+#kc-progressbar li:before {
+    content: counter(step);
+    counter-increment: step;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    display: block;
+    font-size: 16px;
+    color: #333;
+    background: var(--tsh2-gray);
+    border-radius: 25px;
+    margin: 0 auto 10px auto;
+}
+
+/*progressbar connectors*/
+#kc-progressbar li:after {
+    content: '';
+    width: 100%;
+    height: 4px;
+    background: var(--tsh2-gray);
+    position: absolute;
+    left: -50%;
+    top: 15px;
+    font-weight: 700;
+    z-index: -1; /*put it behind the numbers*/
+}
+
+#kc-progressbar li:first-child:after {
+    /*connector not needed before the first step*/
+    content: none;
+}
+
+/*marking active/completed steps green*/
+/*The number of the step and the connector before it = green*/
+#kc-progressbar li.active:before, #kc-progressbar li.active:after {
+    background: var(--tsh1-red);
+    color: var(--tsh2-white);
+}
+
+
+/* Not relevant to this form */
+.dme_link {
+    margin-top: 30px;
+    text-align: center;
+}
+.dme_link a {
+    background: #FFF;
+    font-weight: bold;
+    color: var(--tsh1-red);
+    border: 0 none;
+    border-radius: 25px;
+    cursor: pointer;
+    padding: 5px 25px;
+    font-size: 12px;
+}
+
+.dme_link a:hover, .dme_link a:focus {
+    background: #C5C5F1;
+    text-decoration: none;
+}
+    
+    
+    
+    
+    
+    
+    
+$rbtn-spacing-unit: 16px;
+$rbtn-half-spacing-unit: $rbtn-spacing-unit / 2;
+$quarter-spacing-unit: $rbtn-spacing-unit / 4;
+
+    #msform{
+        .options {
+            /**
+          position: absolute;
+          left: 0;
+          right: 0;
+          transform: translateY(-50%);
+            
+          font-family: 'Open Sans', sans-serif;
+            **/
+          top: 50%;
+          color: #333;
+          //padding: $rbtn-spacing-unit * 3;
+
+            
+            padding: 10px;
+            text-align: left;
+          input:not([type="text"]) {
+            display: none;
+          }
+          // .options > label
+          > label {
+            display: inline-block;
+            position: relative;
+            margin-right: $rbtn-spacing-unit;
+            padding-left: $rbtn-spacing-unit + $rbtn-half-spacing-unit;
+            cursor: pointer;
+
+            // .options > label:before
+            // this creates the outer circle for faux radio button
+            &:before {
+              content: "";
+              display: block;
+              position: absolute;
+              width: 16px;
+              height: 16px;
+              left: 0;
+              top: 50%;
+              margin-top: -8px;
+              border: 1px solid #000;
+              border-radius: 8px;
+            }
+
+            // .options > label:after
+            // this creates the inner circle for active faux radio button
+            &:after {
+              content: "";
+              display: block;
+              position: absolute;
+              width: 0;
+              height: 0;
+              top: 50%;
+              left: 8px;
+              margin-top: 0;
+              background: #000;
+              border-radius: 4px;
+              transition: .2s ease-in-out;
+            }
+          }
+
+          // .options :checked + label:after
+          :checked + label {
+            &:after {
+              height: 8px;
+              width: 8px;
+              margin-top: -4px;
+              left: 4px;
+            }
+          }
+        }
+        
+        
+        
+        
+        
+          .dropbox {
+            outline: 2px dashed grey; /* the dash box */
+            outline-offset: -10px;
+            background: lightcyan;
+            color: dimgray;
+            padding: 10px 10px;
+            min-height: 120px; /* minimum height */
+            position: relative;
+            cursor: pointer;
+              
+              li {
+                  
+                font-size: 1.4rem;
+                padding: 2rem;
+
+              }
+          }
+
+          .input-file {
+            
+            opacity: 0; /* invisible but it's there! */
+            width: 100%;
+              
+    left: 0px;
+    bottom: 0;
+    top: 0;
+  
+              
+            position: absolute;
+            cursor: pointer;
+          }
+
+          .dropbox:hover {
+            background: lightblue; /* when mouse over to the drop zone, change color */
+          }
+
+          .dropbox p {
+            font-size: 1.2em;
+            text-align: center;
+            padding: 50px 0;
+          }
+
+
+        
+        
+        
+        
+        
+        
+
+    }
+    
+    

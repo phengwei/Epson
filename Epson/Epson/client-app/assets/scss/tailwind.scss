@@ -1,0 +1,132 @@
+
+
+
+
+:root {
+  --tsh1-red: #df1e26;
+  --tsh2-white: #ffffff;
+  --tsh2-gray: #ffffff;
+  
+}
+
+
+
+/* Tailwind base */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+
+
+@layer base {
+  @font-face {
+    font-family: 'TCCC-UnityHeadline';
+    src: url('~assets/fonts/TCCC-UnityHeadline-Regular.eot?') format('eot'),
+      url('~assets/fonts/TCCC-UnityHeadline-Regular.woff2') format('woff2'),
+      url('~assets/fonts/TCCC-UnityHeadline-Regular.woff') format('woff');
+  }
+  @font-face {
+    font-family: 'TCCC-UnityHeadline-Black';
+    src: url('~assets/fonts/TCCC-UnityHeadline-Black.eot?') format('eot'),
+      url('~assets/fonts/TCCC-UnityHeadline-Black.woff2') format('woff2'),
+      url('~assets/fonts/TCCC-UnityHeadline-Black.woff') format('woff');
+  }
+  @font-face {
+    font-family: 'TCCC-UnityHeadline-Bold';
+    src: url('~assets/fonts/TCCC-UnityHeadline-Bold.eot?') format('eot'),
+      url('~assets/fonts/TCCC-UnityHeadline-Bold.woff2') format('woff2'),
+      url('~assets/fonts/TCCC-UnityHeadline-Bold.woff') format('woff');
+  }
+  @font-face {
+    font-family: 'TCCC-UnityHeadline-Light';
+    src: url('~assets/fonts/TCCC-UnityHeadline-Light.eot?') format('eot'),
+      url('~assets/fonts/TCCC-UnityHeadline-Light.woff2') format('woff2'),
+      url('~assets/fonts/TCCC-UnityHeadline-Light.woff') format('woff');
+  }
+  @font-face {
+    font-family: 'TCCC-UnityHeadline-Medium';
+    src: url('~assets/fonts/TCCC-UnityHeadline-Medium.eot?') format('eot'),
+      url('~assets/fonts/TCCC-UnityHeadline-Medium.woff2') format('woff2'),
+      url('~assets/fonts/TCCC-UnityHeadline-Medium.woff') format('woff');
+  }
+  @font-face {
+    font-family: 'TCCC-UnityHeadline-Regular';
+    src: url('~assets/fonts/TCCC-UnityHeadline-Regular.eot?') format('eot'),
+      url('~assets/fonts/TCCC-UnityHeadline-Regular.woff2') format('woff2'),
+      url('~assets/fonts/TCCC-UnityHeadline-Regular.woff') format('woff');
+  }
+  @font-face {
+    font-family: 'TCCC-UnityText';
+    src: url('~assets/fonts/TCCC-UnityText-Regular.eot?') format('eot'),
+      url('~assets/fonts/TCCC-UnityText-Regular.woff2') format('woff2'),
+      url('~assets/fonts/TCCC-UnityText-Regular.woff') format('woff');
+  }
+  @font-face {
+    font-family: 'TCCC-UnityText-Black';
+    src: url('~assets/fonts/TCCC-UnityText-Black.eot?') format('eot'),
+      url('~assets/fonts/TCCC-UnityText-Black.woff2') format('woff2'),
+      url('~assets/fonts/TCCC-UnityText-Black.woff') format('woff');
+  }
+  @font-face {
+    font-family: 'TCCC-UnityText-Bold';
+    src: url('~assets/fonts/TCCC-UnityText-Bold.eot?') format('eot'),
+      url('~assets/fonts/TCCC-UnityText-Bold.woff2') format('woff2'),
+      url('~assets/fonts/TCCC-UnityText-Bold.woff') format('woff');
+  }
+  @font-face {
+    font-family: 'TCCC-UnityText-Light';
+    src: url('~assets/fonts/TCCC-UnityText-Light.eot?') format('eot'),
+      url('~assets/fonts/TCCC-UnityText-Light.woff2') format('woff2'),
+      url('~assets/fonts/TCCC-UnityText-Light.woff') format('woff');
+  }
+  @font-face {
+    font-family: 'TCCC-UnityText-Medium';
+    src: url('~assets/fonts/TCCC-UnityText-Medium.eot?') format('eot'),
+      url('~assets/fonts/TCCC-UnityText-Medium.woff2') format('woff2'),
+      url('~assets/fonts/TCCC-UnityText-Medium.woff') format('woff');
+  }
+  @font-face {
+    font-family: 'TCCC-UnityText-Regular';
+    src: url('~assets/fonts/TCCC-UnityText-Regular.eot?') format('eot'),
+      url('~assets/fonts/TCCC-UnityText-Regular.woff2') format('woff2'),
+      url('~assets/fonts/TCCC-UnityText-Regular.woff') format('woff');
+  }
+
+  .h1 {
+    font-family: 'TCCC-UnityText-Black';
+  }
+
+  h2 {
+    @apply text-xl;
+  }
+}
+
+@layer utilities {
+  @responsive {
+    .small-brown-bg {
+      background-color: #cb8f61;
+      margin-bottom: 1.25rem;
+      padding-top: 0.75rem;
+      padding-bottom: 1.25rem;
+    }
+
+    .small-brown-bg-none {
+      margin-bottom: 1.25rem;
+      background-color: transparent;
+      padding-top: 0;
+      padding-bottom: 1.25rem;
+    }
+  }
+}
+
+
+
+
+/* Custom Components */
+@import "./components/button";
+
+
+
+
+/* Will not work */
+@import "./components/step_form";
