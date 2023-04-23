@@ -376,7 +376,7 @@ auth: false,
     components: {
       VueTailwindModal,
      //  CokeFormAlt,
-      MultiForm,
+      // MultiForm,
       CokePrivacy,
       CokeTerms
     },

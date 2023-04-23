@@ -132,7 +132,7 @@ export default {
     '@nuxtjs/pwa',
     '@nuxtjs/auth-next',
 
-    '@nuxtjs/recaptcha',
+    // '@nuxtjs/recaptcha',
     ['vue-scrollto/nuxt', { duration: 300 }],
     'vue-sweetalert2/nuxt',
 
@@ -195,15 +195,9 @@ export default {
     baseURL: process.env.BASE_URL || "http://localhost:3000",
     tattest: process.env.NODE_ENV === "production"? "is production":"not production",
     tattest2: process.env.NODE_ENV,
-    recaptcha: {
-        hideBadge: true, // Hide badge element (v3 & v2 via size=invisible)
-        siteKey: process.env.RECAPTCHA_SITE_KEY,    // Site key for requests
-        version: 3     // Version
-    },
   },
   privateRuntimeConfig: {
     myPrivateToken: process.env.PRIVATE_TOKEN,
-    recaptchaSecret: process.env.RECAPTCHA_SECRET,
     
   },
   router: {

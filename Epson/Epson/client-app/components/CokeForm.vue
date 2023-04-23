@@ -390,7 +390,7 @@ isLoading: false,
       // await this.$recaptchaLoaded();
 
 
-      const token = await this.$recaptcha.execute('submitcontest')
+      // const token = await this.$recaptcha.execute('submitcontest')
       payload.token = token
       try {
         // const source = this.$axios.CancelToken.source();

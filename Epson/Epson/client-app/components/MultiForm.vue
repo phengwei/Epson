@@ -429,7 +429,7 @@ isLoading: false,
       async mounted() {
         this.reshuffle();
           try {
-            await this.$recaptcha.init()
+            // await this.$recaptcha.init()
           } catch (e) {
             console.error(e);
           }

@@ -58,6 +58,9 @@ builder.Services.AddDbContext<EpsonDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("EpsonDbConnection")));
 #endregion
 
+
+builder.Services.AddSpaStaticFiles(options => options.RootPath = "client-app/dist");
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -83,5 +86,21 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapControllers();
+
+app.UseSpaStaticFiles();
+
+app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
+{
+    builder.UseSpa(spa =>
+    {
+        spa.Options.SourcePath = "client-app";
+        if (app.Environment.IsDevelopment())
+        {
+            // Launch development server for Nuxt
+            spa.UseNuxtDevelopmentServer();
+        }
+    });
+});
+
 
 app.Run();
