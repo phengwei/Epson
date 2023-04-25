@@ -5,7 +5,7 @@
         <div class="column is-4 is-offset-4">
           <h2 class="title has-text-centered">Register!</h2>
 
-          <Notification :message="error" v-if="error"/>
+          <!-- <Notification :message="error" v-if="error"/>  -->
 
           <form method="post" @submit.prevent="register">
             <div class="field">
@@ -59,13 +59,13 @@
 </template>
 
 <script>
-import Notification from '~/components/Notification'
+// import Notification from '~/components/Notification'
 
 export default {
   name :"auth-register",
   middleware: 'guest',
   components: {
-    Notification,
+    // Notification,
   },
 
   data() {
