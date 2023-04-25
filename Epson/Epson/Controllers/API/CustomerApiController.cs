@@ -17,13 +17,19 @@ namespace Epson.Controllers.API
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JwtSettings _jwtSettings;
+        private readonly JwtService _jwtService;
+        private readonly IConfiguration _configuration;
 
         public CustomerApiController(
             UserManager<ApplicationUser> userManager,
-            JwtSettings jwtSettings)
+            JwtSettings jwtSettings,
+            JwtService jwtService,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _jwtSettings = jwtSettings;
+            _jwtService = jwtService;
+            _configuration = configuration;
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] BaseQueryModel<LoginModel> queryModel)
@@ -45,7 +51,7 @@ namespace Epson.Controllers.API
                     authClaims.Add(new Claim(ClaimTypes.Role, role));
                 }
 
-                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
+                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
 
                 var token = new JwtSecurityToken(
                     issuer: _jwtSettings.Issuer,
@@ -63,6 +69,40 @@ namespace Epson.Controllers.API
             }
 
             return Unauthorized("User unauthorized");
+        }
+
+        [HttpPost("register")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Register([FromBody] BaseQueryModel<RegisterModel> queryModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var model = queryModel.Data;
+
+            var user = new ApplicationUser
+            {
+                UserName = model.Username,
+                Email = model.Email,
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                var token = await _jwtService.GenerateToken(user);
+
+                return Ok(new { token });
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+
+            return BadRequest(ModelState);
         }
 
         [Authorize(Roles = "Admin")]

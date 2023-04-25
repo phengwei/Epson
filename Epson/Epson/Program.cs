@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Epson.Model.Users;
 using Epson.Core.Domain.Users;
+using Epson.Models.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,7 @@ builder.Services.AddSingleton(mapper);
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddSingleton<JwtSettings>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EntityRepository<>));
+builder.Services.AddScoped<JwtService>();
 #endregion
 
 #region DbContext
@@ -121,18 +123,18 @@ app.MapControllers();
 
 app.UseSpaStaticFiles();
 
-app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
-{
-    builder.UseSpa(spa =>
-    {
-        spa.Options.SourcePath = "client-app";
-        if (app.Environment.IsDevelopment())
-        {
-            // Launch development server for Nuxt
-            spa.UseNuxtDevelopmentServer();
-        }
-    });
-});
+//app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
+//{
+//    builder.UseSpa(spa =>
+//    {
+//        spa.Options.SourcePath = "client-app";
+//        if (app.Environment.IsDevelopment())
+//        {
+//            // Launch development server for Nuxt
+//            spa.UseNuxtDevelopmentServer();
+//        }
+//    });
+//});
 
 
 app.Run();
