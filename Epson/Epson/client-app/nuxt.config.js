@@ -173,7 +173,7 @@ export default {
           property: false
         },
         endpoints: {
-          login: { url: '/api/users/authenticate', method: 'post' },
+          login: { url: '/api/customer/login', method: 'post' },
           refresh: { url: '/api/users/refresh-token', method: 'post' },
           user: { url: '/api/users/user-profile', method: 'get' },
           logout: { url: '/api/users/logout', method: 'post' }
@@ -207,7 +207,7 @@ export default {
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
     // Workaround to avoid enforcing hard-coded localhost:3000: https://github.com/nuxt-community/axios-module/issues/308
-    baseURL: '/',
+    baseURL: 'http://localhost:7223/api',
     proxy: true
   },
 
@@ -264,29 +264,6 @@ export default {
       })
     ]
   },
-
-
-
-/** 
-purgeCSS: {
-  mode: 'postcss',
-  enabled: (process.env.NODE_ENV === 'production')
-},
-**/
-/**
-proxy: {
-  // With options
-  '/api/': { target: 'https://localhost:7044', pathRewrite: {'^/api/v1/':''} },
-
-}
-**/
-proxy: {
-  '/api/contests': {
-    target: 'https://localhost:7044',
- //   pathRewrite: { '^/api/contests': '/api/contests' },
-    changeOrigin: true
-  }
-},
 
 
   

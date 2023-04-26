@@ -15,7 +15,7 @@ namespace NuxtIntegration.Helpers
     public static class NuxtHelper
     {
         // default port number of 'npm run dev'
-        private static int Port { get; } = 3000;
+        private static int Port { get; } = 3001;
         private static Uri DevelopmentServerEndpoint { get; } = new Uri($"http://localhost:{Port}");
         private static TimeSpan Timeout { get; } = TimeSpan.FromSeconds(30);
         // done message of 'npm run dev' command.
@@ -35,16 +35,34 @@ namespace NuxtIntegration.Helpers
 
                 // launch Nuxt development server
                 var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+                //  var npm = System.Environment.GetEnvironmentVariable("npm");
+
+                var processInfo = new ProcessStartInfo( "npm", "run dev")
+                {
+                    WorkingDirectory = "client-app",
+                    RedirectStandardError = true,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+
+                };
+
+                /**
                 var processInfo = new ProcessStartInfo
                 {
                     FileName = isWindows ? "cmd" : "npm",
                     Arguments = $"{(isWindows ? "/c npm " : "")}run dev",
+                    
+                    // FileName = "npm",
+                    // Arguments = "run dev",
                     WorkingDirectory = "client-app",
                     RedirectStandardError = true,
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                 };
+                **/
                 var process = Process.Start(processInfo);
                 var tcs = new TaskCompletionSource<int>();
                 _ = Task.Run(() =>

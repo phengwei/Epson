@@ -18,17 +18,18 @@
                   <hr class="mt-6 border-b-1 border-gray-400" />
                 </div>
                 <div class="flex-auto px-4 lg:px-10 py-10 pt-0">
-                  <form>
+                  <form method="post" @submit.prevent="login">
                     <div class="relative w-full mb-3">
                       <label
                         class="block uppercase text-gray-700 text-xs font-bold mb-2"
                         for="grid-password"
-                        >Email</label
+                        >Username</label
                       ><input
-                        type="email"
+                        type="text"
                         class="border-0 px-3 py-3 placeholder-gray-400 text-gray-700 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full"
-                        placeholder="Email"
+                        placeholder="Username"
                         style="transition: all 0.15s ease 0s;"
+                        v-model="userName"
                       />
                     </div>
                     <div class="relative w-full mb-3">
@@ -41,12 +42,13 @@
                         class="border-0 px-3 py-3 placeholder-gray-400 text-gray-700 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full"
                         placeholder="Password"
                         style="transition: all 0.15s ease 0s;"
+                        v-model="password"
                       />
                     </div>
                     <div class="text-center mt-6">
                       <button
                         class="bg-gray-900 text-white active:bg-gray-700 text-sm font-bold uppercase px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 w-full"
-                        type="button"
+                        type="submit"
                         style="transition: all 0.15s ease 0s;"
                       >
                         Sign In
@@ -69,25 +71,15 @@
     
   name :"auth-login",
   middleware: 'guest',
-auth: false,
+  auth: false,
     components: {
     },
     
     data() {
       return {
-        username: '',
+        userName: '',
         password: '',
         error: null,
-        isShowingStores: false,
-        // Initialize an empty products variabkle
-        products: [],
-        query: '',
-        fileName: '',
-        isLoading: true,
-        open: false,
-        isUserScrolling: false,
-        showing: false,
-        showingPrivacy: false
       }
     },
     head() {
@@ -104,14 +96,24 @@ auth: false,
     },
     methods: {
 
-      openModal() {
-        this.showing = true;
-      },
-      signIn() {
-      },
-      handleScroll(event) {
-        this.isUserScrolling = (window.scrollY > 0);
-        // Any code to be executed when the window is scrolled
+      async login(){
+        const vm = this;
+        try {
+          await this.$auth.loginWith('customStrategy', {data: {
+            data:{
+              userName: this.userName,
+              password: this.password
+            }
+          }}).then(response => {
+            console.log("res", response);
+          }).catch(function (error) {
+            console.log(error);
+            console.log(error.response);
+            vm.$swal('Login Failed', error.response.data.message, 'error');
+          });
+        } catch (err) {
+          console.log(err)
+        }
       }
     }
     

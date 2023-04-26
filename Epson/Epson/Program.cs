@@ -55,7 +55,7 @@ builder.Services.AddScoped<EpsonSQLConnectionFactory>(provider =>
     new EpsonSQLConnectionFactory(builder.Configuration));
 builder.Services.AddSingleton<IDbConnectionFactory, EpsonSQLConnectionFactory>();
 builder.Services.AddDbContext<EpsonDbContext>(options =>
-        options.UseMySql(builder.Configuration.GetConnectionString("EpsonDbConnection"), 
+        options.UseMySql(builder.Configuration.GetConnectionString("EpsonDbConnection"),
         new MySqlServerVersion(new Version(8, 0, 22))
 ));
 #endregion
@@ -123,18 +123,18 @@ app.MapControllers();
 
 app.UseSpaStaticFiles();
 
-//app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
-//{
-//    builder.UseSpa(spa =>
-//    {
-//        spa.Options.SourcePath = "client-app";
-//        if (app.Environment.IsDevelopment())
-//        {
-//            // Launch development server for Nuxt
-//            spa.UseNuxtDevelopmentServer();
-//        }
-//    });
-//});
+app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
+{
+    builder.UseSpa(spa =>
+    {
+        spa.Options.SourcePath = "client-app";
+        if (app.Environment.IsDevelopment())
+        {
+            // Launch development server for Nuxt
+            spa.UseNuxtDevelopmentServer();
+        }
+    });
+});
 
 
 app.Run();
