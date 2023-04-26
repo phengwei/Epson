@@ -2,6 +2,8 @@
 using Epson.Infrastructure;
 using Epson.Model.Common;
 using Epson.Model.Users;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,17 +18,20 @@ namespace Epson.Controllers.API
     public class CustomerApiController : BaseApiController
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<Role> _roleManager;
         private readonly JwtSettings _jwtSettings;
         private readonly JwtService _jwtService;
         private readonly IConfiguration _configuration;
 
         public CustomerApiController(
             UserManager<ApplicationUser> userManager,
+            RoleManager<Role> roleManager,
             JwtSettings jwtSettings,
             JwtService jwtService,
             IConfiguration configuration)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _jwtSettings = jwtSettings;
             _jwtService = jwtService;
             _configuration = configuration;
@@ -104,6 +109,52 @@ namespace Epson.Controllers.API
 
             return BadRequest(ModelState);
         }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return Ok();
+        }
+
+        [HttpPost("changepassword")]
+        public async Task<IActionResult> ChangePassword(string userId, string currentPassword, string newPassword)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            var result = await _userManager.CheckPasswordAsync(user, currentPassword);
+            if (!result)
+                return BadRequest("Invalid password.");
+
+            //Change password
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var changeResult = await _userManager.ResetPasswordAsync(user, token, newPassword);
+            if (!changeResult.Succeeded)
+                return BadRequest(changeResult.Errors);
+
+            return Ok();
+        }
+
+        [HttpPost("addroletouser")]
+        public async Task<IActionResult> AddRoleToUser(string userId, string roleName)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+            
+            var role = await _roleManager.FindByNameAsync(roleName);
+            if (role == null)
+                return NotFound();
+
+            var result = await _userManager.AddToRoleAsync(user, roleName);
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            return Ok();
+        }
+
 
         [Authorize(Roles = "Admin")]
         [HttpGet("testadmin")]

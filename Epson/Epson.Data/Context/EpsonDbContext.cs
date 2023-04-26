@@ -30,7 +30,7 @@ namespace Epson.Data.Context
         {
             base.OnModelCreating(builder);
             builder.Entity<ApplicationUser>(entity => { entity.ToTable("AspNetUsers"); });
-            builder.Entity<IdentityRole>(entity => { entity.ToTable("AspNetRoles"); });
+            builder.Entity<Role>(entity => { entity.ToTable("AspNetRoles"); });
             builder.Entity<IdentityUserRole<string>>(entity => { 
                 entity.ToTable("AspNetUserRoles"); 
                 entity.HasKey(ur => new { ur.UserId, ur.RoleId });
