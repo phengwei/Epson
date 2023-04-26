@@ -18,7 +18,7 @@ export default {
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    title: 'coke-contest',
+    title: 'epson-ums',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -182,10 +182,10 @@ export default {
       }
     },
     redirect: {
-      login: '/backstage/login',
-      logout: '/backstage/login',
-      callback: '/backstage/login',
-      home: '/backstage/dashboard'
+      login: '/',
+      logout: '/',
+      callback: '/',
+      home: '/'
     }
   },
 

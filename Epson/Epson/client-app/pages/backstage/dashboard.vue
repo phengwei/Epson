@@ -151,7 +151,7 @@ export default {
         })
       },async logout(){
         await this.$auth.logout().then(response => {
-            this.$router.push("/backstage/login");
+            this.$router.push("/");
         });
       },
       downloadFile(fileKey){
