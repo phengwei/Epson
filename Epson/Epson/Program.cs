@@ -1,20 +1,19 @@
 using Epson.Data.Context;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
-using Autofac;
-using Epson.Infrastructure;
-using Autofac.Extensions.DependencyInjection;
 using Epson.Services.Services.Products;
 using Epson.Data;
-using Epson.Core.Domain.Products;
-using EpsonPortal.Controllers.API;
 using Epson.Services.Interface.Products;
-using Autofac.Core;
-using System.Data;
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.DependencyInjection;
 using AutoMapper;
 using Epson.Services.DTO;
+using NuxtIntegration.Helpers;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Epson.Model.Users;
+using Epson.Core.Domain.Users;
+using Epson.Models.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,10 +43,11 @@ IMapper mapper = mapperConfig.CreateMapper();
 builder.Services.AddSingleton(mapper);
 #endregion
 
-builder.Services.AddScoped(typeof(IRepository<>), typeof(EntityRepository<>));
-
 #region Services
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddSingleton<JwtSettings>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(EntityRepository<>));
+builder.Services.AddScoped<JwtService>();
 #endregion
 
 #region DbContext
@@ -55,9 +55,41 @@ builder.Services.AddScoped<EpsonSQLConnectionFactory>(provider =>
     new EpsonSQLConnectionFactory(builder.Configuration));
 builder.Services.AddSingleton<IDbConnectionFactory, EpsonSQLConnectionFactory>();
 builder.Services.AddDbContext<EpsonDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("EpsonDbConnection")));
+        options.UseMySql(builder.Configuration.GetConnectionString("EpsonDbConnection"), 
+        new MySqlServerVersion(new Version(8, 0, 22))
+));
 #endregion
 
+#region Authentication
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<EpsonDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddScoped<UserManager<ApplicationUser>, UserManager<ApplicationUser>>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("User", policy => policy.RequireRole("User"));
+});
+
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+#endregion
 
 builder.Services.AddSpaStaticFiles(options => options.RootPath = "client-app/dist");
 
@@ -82,6 +114,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseCookiePolicy();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();

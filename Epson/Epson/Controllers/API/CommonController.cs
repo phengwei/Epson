@@ -2,10 +2,10 @@
 using Epson.Services.Services.Products;
 using Microsoft.AspNetCore.Mvc;
 
-namespace EpsonPortal.Controllers.API
+namespace Epson.Controllers.API
 {
     [Route("api/[controller]")]
-    public class CommonController : Controller
+    public class CommonController : BaseApiController
     {
         private readonly IProductService _productService;
 
