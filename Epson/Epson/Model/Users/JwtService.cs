@@ -1,6 +1,7 @@
 ﻿using Epson.Core.Domain.Users;
 using Epson.Models.Users;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -25,7 +26,7 @@ namespace Epson.Model.Users
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(ClaimTypes.Email, user.Email),
             };
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -45,7 +46,43 @@ namespace Epson.Model.Users
                 signingCredentials: creds
             );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            if (!ValidateJwtToken(tokenString))
+            {
+                return "";
+            }
+
+            return tokenString;
+        }
+
+        public bool ValidateJwtToken(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["Jwt:SecretKey"])),
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidIssuer = _configuration["Jwt:Issuer"],
+                ValidAudience = _configuration["Jwt:Audience"],
+                ClockSkew = TimeSpan.Zero
+            };
+            SecurityToken validatedToken;
+            try
+            {
+                tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
+            }
+            catch (SecurityTokenException)
+            {
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            return validatedToken != null;
         }
     }
 }

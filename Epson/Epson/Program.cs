@@ -14,6 +14,8 @@ using System.Text;
 using Epson.Model.Users;
 using Epson.Core.Domain.Users;
 using Epson.Models.Users;
+using Epson.Factories;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,13 +27,52 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v3", new OpenApiInfo { Title = "Epson APIs", Version = "v3" });
 });
 
-//var containerBuilder = new ContainerBuilder();
-//containerBuilder.RegisterModule(new DependencyRegister());
+#region DbContext
+builder.Services.AddScoped<EpsonSQLConnectionFactory>(provider =>
+    new EpsonSQLConnectionFactory(builder.Configuration));
+builder.Services.AddSingleton<IDbConnectionFactory, EpsonSQLConnectionFactory>();
+builder.Services.AddDbContext<EpsonDbContext>(options =>
+        options.UseMySql(builder.Configuration.GetConnectionString("EpsonDbConnection"),
+        new MySqlServerVersion(new Version(8, 0, 22))
+));
+#endregion
 
-//var container = containerBuilder.Build();
-//builder.Services.AddAutofac(c => c.Populate((IEnumerable<ServiceDescriptor>)container));
+#region Authentication
+builder.Services.AddIdentity<ApplicationUser, Role>()
+    .AddRoleManager<RoleManager<Role>>()
+    .AddEntityFrameworkStores<EpsonDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddScoped<UserManager<ApplicationUser>, UserManager<ApplicationUser>>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("Sales", policy => policy.RequireRole("Sales"));
+    options.AddPolicy("Product", policy => policy.RequireRole("Product"));
+});
+
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+#endregion
 
 builder.Services.AddControllers();
+builder.Services.AddSession();
+builder.Services.AddHttpContextAccessor();
 
 #region AutoMapper
 var mapperConfig = new MapperConfiguration(mc =>
@@ -50,45 +91,8 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(EntityRepository<>));
 builder.Services.AddScoped<JwtService>();
 #endregion
 
-#region DbContext
-builder.Services.AddScoped<EpsonSQLConnectionFactory>(provider =>
-    new EpsonSQLConnectionFactory(builder.Configuration));
-builder.Services.AddSingleton<IDbConnectionFactory, EpsonSQLConnectionFactory>();
-builder.Services.AddDbContext<EpsonDbContext>(options =>
-        options.UseMySql(builder.Configuration.GetConnectionString("EpsonDbConnection"),
-        new MySqlServerVersion(new Version(8, 0, 22))
-));
-#endregion
-
-#region Authentication
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<EpsonDbContext>()
-    .AddDefaultTokenProviders();
-
-builder.Services.AddScoped<UserManager<ApplicationUser>, UserManager<ApplicationUser>>();
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Issuer"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-        };
-    });
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("User", policy => policy.RequireRole("User"));
-});
-
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+#region Factories
+builder.Services.AddScoped<IProductModelFactory, ProductModelFactory>();
 #endregion
 
 builder.Services.AddSpaStaticFiles(options => options.RootPath = "client-app/dist");
@@ -113,10 +117,27 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
-app.UseCookiePolicy();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseSession();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
+
+app.Use(async (context, next) =>
+{
+    await next.Invoke();
+    var user = context.User;
+    if (user.Identity.IsAuthenticated)
+    {
+        // Log successful authentication
+    }
+    else
+    {
+        // Log failed authentication
+    }
+});
 
 app.MapRazorPages();
 app.MapControllers();

@@ -8,12 +8,12 @@
             if (t.GetConstructor(Type.EmptyTypes) != null)
                 Data = Activator.CreateInstance<TModel>();
 
-            FormValues = new List<KeyValueApi>();
-            UploadPicture = new PictureQueryModel();
+            //FormValues = new List<KeyValueApi>();
+            //UploadPicture = new PictureQueryModel();
         }
 
         public TModel Data { get; set; }
-        public List<KeyValueApi> FormValues { get; set; }
-        public PictureQueryModel UploadPicture { get; set; }
+        //public List<KeyValueApi> FormValues { get; set; }
+        //public PictureQueryModel UploadPicture { get; set; }
     }
 }
