@@ -19,14 +19,42 @@ namespace Epson.Services.Services.Products
             _ProductRepository = productRepository;
         }
 
-        public List<Product> GetProduct()
+        public ProductDTO GetProductById(int id)
+        {
+            if (id == 0 || id == null)
+                return new ProductDTO();
+
+            return _mapper.Map<ProductDTO>(_ProductRepository.GetById(id));
+        }
+
+        public List<ProductDTO> GetProduct()
         {
             var products = _ProductRepository.GetAll();
-            var singleProduct = products.FirstOrDefault();
 
-            var r = _mapper.Map<ProductDTO>(singleProduct);
+            var productDTOs = products.Select(x => new ProductDTO
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Price = x.Price,
+                CreatedById = x.CreatedById,
+                CreatedOnUTC = x.CreatedOnUTC, 
+                UpdatedById = x.UpdatedById,
+                UpdatedOnUTC = x.UpdatedOnUTC
+            })
+            .OrderBy(x => x.Name)
+            .ToList();
 
-            return products.ToList();
+            return productDTOs;
         }
+
+        public void InsertProduct(Product product)
+        {
+            if (product == null)
+                throw new ArgumentNullException(nameof(product));
+
+            _ProductRepository.Add(product);
+        }
+
+
     }
 }

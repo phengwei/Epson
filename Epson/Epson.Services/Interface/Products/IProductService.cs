@@ -1,4 +1,5 @@
 ﻿using Epson.Core.Domain.Products;
+using Epson.Services.DTO.Products;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,8 @@ namespace Epson.Services.Interface.Products
 {
     public interface IProductService
     {
-        public List<Product> GetProduct();
+        public ProductDTO GetProductById(int id);
+        public List<ProductDTO> GetProduct();
+        public void InsertProduct(Product product);
     }
 }
