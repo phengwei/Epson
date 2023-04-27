@@ -2,7 +2,6 @@
 using Epson.Infrastructure;
 using Epson.Model.Common;
 using Epson.Model.Users;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -19,7 +18,7 @@ using Epson.Core.Domain.Products;
 
 namespace Epson.Controllers.API
 {
-    //[Authorize(Roles = "Product")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Admin")]
     [Route("api/product")]
     public class ProductApiController : BaseApiController
     {
@@ -59,11 +58,6 @@ namespace Epson.Controllers.API
         [HttpGet("getproducts")]
         public async Task<IActionResult> GetProducts()
         {
-            var users = await _userManager.GetUserAsync(HttpContext.User);
-            var context = _httpContextAccessor.HttpContext.User;
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
-            var userClaims = identity.Claims;
-
             var response = new GenericResponseModel<List<ProductModel>>();
 
             var products = _productService.GetProduct();

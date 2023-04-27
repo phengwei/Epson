@@ -1,20 +1,16 @@
 ﻿using Epson.Core.Domain.Users;
-using Epson.Infrastructure;
 using Epson.Model.Common;
 using Epson.Model.Users;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Epson.Model.Products;
+using Serilog;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Epson.Controllers.API
 {
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [Route("api/customer")]
     public class CustomerApiController : BaseApiController
     {
@@ -23,19 +19,22 @@ namespace Epson.Controllers.API
         private readonly JwtSettings _jwtSettings;
         private readonly JwtService _jwtService;
         private readonly IConfiguration _configuration;
+        private readonly Serilog.ILogger _logger;
 
         public CustomerApiController(
             UserManager<ApplicationUser> userManager,
             RoleManager<Role> roleManager,
             JwtSettings jwtSettings,
             JwtService jwtService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            Serilog.ILogger logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _jwtSettings = jwtSettings;
             _jwtService = jwtService;
             _configuration = configuration;
+            _logger = logger;
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] BaseQueryModel<LoginModel> queryModel)
@@ -45,7 +44,7 @@ namespace Epson.Controllers.API
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
                 var generatedToken = await _jwtService.GenerateToken(user);
-
+                
                 return Ok(new
                 {
                     token = generatedToken
@@ -92,8 +91,8 @@ namespace Epson.Controllers.API
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return Ok();
+            await HttpContext.SignOutAsync(JwtBearerDefaults.AuthenticationScheme);
+            return Ok("User logged out");
         }
 
         [HttpPost("changepassword")]
