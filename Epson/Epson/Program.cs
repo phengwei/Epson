@@ -13,29 +13,20 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Epson.Model.Users;
 using Epson.Core.Domain.Users;
-using Epson.Models.Users;
 using Epson.Factories;
-using System.Security.Claims;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+using var log = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console(outputTemplate:
+        "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
-// Add services to the container.
-builder.Services.AddRazorPages();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v3", new OpenApiInfo { Title = "Epson APIs", Version = "v3" });
-});
-
-#region DbContext
-builder.Services.AddScoped<EpsonSQLConnectionFactory>(provider =>
-    new EpsonSQLConnectionFactory(builder.Configuration));
-builder.Services.AddSingleton<IDbConnectionFactory, EpsonSQLConnectionFactory>();
-builder.Services.AddDbContext<EpsonDbContext>(options =>
-        options.UseMySql(builder.Configuration.GetConnectionString("EpsonDbConnection"),
-        new MySqlServerVersion(new Version(8, 0, 22))
-));
-#endregion
+builder.Services.AddSingleton<Serilog.ILogger>(log);
+builder.Host.UseSerilog();
 
 #region Authentication
 builder.Services.AddIdentity<ApplicationUser, Role>()
@@ -68,6 +59,23 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+#endregion
+
+// Add services to the container.
+builder.Services.AddRazorPages();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v3", new OpenApiInfo { Title = "Epson APIs", Version = "v3" });
+});
+
+#region DbContext
+builder.Services.AddScoped<EpsonSQLConnectionFactory>(provider =>
+    new EpsonSQLConnectionFactory(builder.Configuration));
+builder.Services.AddSingleton<IDbConnectionFactory, EpsonSQLConnectionFactory>();
+builder.Services.AddDbContext<EpsonDbContext>(options =>
+        options.UseMySql(builder.Configuration.GetConnectionString("EpsonDbConnection"),
+        new MySqlServerVersion(new Version(8, 0, 22))
+));
 #endregion
 
 builder.Services.AddControllers();
@@ -119,24 +127,26 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    await next();
+    if (context.Response.StatusCode == 404)
+    {
+        var user = context.User;
+        if (user.Identity.IsAuthenticated == false)
+        {
+            log.Warning("Debug: Authentication failed for request {RequestPath} with Authorization token {AuthorizationToken}",
+            context.Request.Path, context.Request.Headers["Authorization"]);
+        }
+
+    }
+});
+
 app.UseSession();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
-});
-
-app.Use(async (context, next) =>
-{
-    await next.Invoke();
-    var user = context.User;
-    if (user.Identity.IsAuthenticated)
-    {
-        // Log successful authentication
-    }
-    else
-    {
-        // Log failed authentication
-    }
 });
 
 app.MapRazorPages();
