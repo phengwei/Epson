@@ -41,6 +41,7 @@ build/
 *.sqlite
 *.mdf
 *.ldf
+*.txt
 
 # Other files and directories
 [Tt]humbs.db
