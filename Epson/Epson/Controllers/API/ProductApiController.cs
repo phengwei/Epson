@@ -15,6 +15,7 @@ using Epson.Model.Products;
 using Epson.Factories;
 using Epson.Services.DTO.Products;
 using Epson.Core.Domain.Products;
+using AutoMapper;
 
 namespace Epson.Controllers.API
 {
@@ -26,18 +27,21 @@ namespace Epson.Controllers.API
         private readonly IProductService _productService;
         private readonly IProductModelFactory _productModelFactory;
         private readonly IWorkContext _workContext;
+        private readonly IMapper _mapper;
 
 
         public ProductApiController(
             UserManager<ApplicationUser> userManager,
             IProductService productService,
             IProductModelFactory productModelFactory,
-            IWorkContext workContext)
+            IWorkContext workContext,
+            IMapper mapper)
         {
             _userManager = userManager;
             _productService = productService;
             _productModelFactory = productModelFactory;
             _workContext = workContext;
+            _mapper = mapper;
         }
 
         [HttpGet("getproductbyid")]
@@ -91,9 +95,52 @@ namespace Epson.Controllers.API
                 UpdatedById = user.Id
             };
 
-            _productService.InsertProduct(product);
+            if (_productService.InsertProduct(product))
+                return Ok();
+            else
+                return BadRequest("Failed to insert product");
+        }
 
-            return Ok();
+        [HttpPost("editproduct")]
+        public async Task<IActionResult> EditProduct([FromBody] BaseQueryModel<ProductModel> queryModel)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var model = queryModel.Data;
+
+            if (model.Id == 0 || model.Id == null)
+                return BadRequest("Id must not be empty!");
+            
+            var product = _productService.GetProductById(model.Id);
+            var user = _workContext.CurrentUser;
+
+            var updatedProduct = new Product
+            {
+                Id = product.Id,
+                Name = model.Name,
+                Price = model.Price,
+                UpdatedOnUTC = DateTime.UtcNow,
+                UpdatedById = user.Id
+            };
+
+            if (_productService.UpdateProduct(updatedProduct))
+                return Ok();
+            else
+                return BadRequest("Failed to update product");
+        }
+
+        [HttpPost("deleteproduct")]
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            var product = _productService.GetProductById(id);
+
+            var productToDelete = _mapper.Map<Product>(product);
+
+            if (_productService.DeleteProduct(productToDelete))
+                return Ok();
+            else
+                return BadRequest("Failed to delete product");
         }
     }
 }

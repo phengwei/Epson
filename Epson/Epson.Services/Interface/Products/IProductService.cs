@@ -12,6 +12,8 @@ namespace Epson.Services.Interface.Products
     {
         public ProductDTO GetProductById(int id);
         public List<ProductDTO> GetProduct();
-        public void InsertProduct(Product product);
+        public bool InsertProduct(Product product);
+        public bool UpdateProduct(Product product);
+        public bool DeleteProduct(Product product);
     }
 }
