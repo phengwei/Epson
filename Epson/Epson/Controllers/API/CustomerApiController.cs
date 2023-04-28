@@ -37,6 +37,7 @@ namespace Epson.Controllers.API
             _logger = logger;
         }
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] BaseQueryModel<LoginModel> queryModel)
         {
             var model = queryModel.Data;
