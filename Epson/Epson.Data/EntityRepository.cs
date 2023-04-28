@@ -64,14 +64,15 @@ namespace Epson.Data
 
                 query.Append($"{property.Name} = @{property.Name}");
 
-                if (i < properties.Length - 2)
+                if (i < properties.Length - 1)
                     query.Append(", ");
-                else if (i == properties.Length - 2)
+                else if (i == properties.Length - 1)
                     query.Append(" ");
             }
 
             query.Append(" WHERE id = @id");
 
+            //_logger.Information("Executing query {querystring}", query.ToString());
             return db.Execute(query.ToString(), entity);
         }
 

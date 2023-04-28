@@ -18,11 +18,11 @@ namespace Epson.Data.Context
         {
         }
 
-        public DbSet<AuditTrail> Audit_Trail { get; set; }
+        public DbSet<AuditTrail> AuditTrail { get; set; }
         public DbSet<Category> Category { get; set; }
         public DbSet<ProductCategory> ProductCategory { get; set; }
-        public DbSet<EmailAccount> Email_Account { get; set; }
-        public DbSet<EmailQueue> Email_Queue { get; set; }
+        public DbSet<EmailAccount> EmailAccount { get; set; }
+        public DbSet<EmailQueue> EmailQueue { get; set; }
         public DbSet<Product> Product { get; set; }
         public DbSet<Request> Request { get; set; }
 

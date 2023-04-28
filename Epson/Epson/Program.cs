@@ -16,9 +16,13 @@ using Epson.Core.Domain.Users;
 using Epson.Factories;
 using Serilog;
 using Epson.Infrastructure;
+using Epson.Services.Services.Email;
+using Epson.Services.Interface.Email;
+using Epson.Job;
 
 var builder = WebApplication.CreateBuilder(args);
 
+#region Serilog
 using var log = new LoggerConfiguration()
     .MinimumLevel.Information()
     .WriteTo.Console(outputTemplate:
@@ -28,6 +32,7 @@ using var log = new LoggerConfiguration()
 
 builder.Services.AddSingleton<Serilog.ILogger>(log);
 builder.Host.UseSerilog();
+#endregion
 
 #region Authentication
 builder.Services.AddIdentity<ApplicationUser, Role>()
@@ -95,10 +100,12 @@ builder.Services.AddSingleton(mapper);
 
 #region Services
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IWorkContext, WorkContext>();
 builder.Services.AddSingleton<JwtSettings>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EntityRepository<>));
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddHostedService<EmailBackgroundService>();
 #endregion
 
 #region Factories
@@ -125,6 +132,7 @@ app.UseSwaggerUI(c =>
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 
 app.UseRouting();
 app.UseAuthentication();

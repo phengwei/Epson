@@ -16,6 +16,7 @@ using Epson.Factories;
 using Epson.Services.DTO.Products;
 using Epson.Core.Domain.Products;
 using AutoMapper;
+using Epson.Services.Interface.Email;
 
 namespace Epson.Controllers.API
 {
@@ -49,8 +50,8 @@ namespace Epson.Controllers.API
         {
             var response = new GenericResponseModel<ProductModel>();
 
-            if (String.IsNullOrEmpty(id.ToString()))
-                return BadRequest();
+            if (id == null || id == 0)
+                return BadRequest("Id must not be empty");
 
             var product = _productService.GetProductById(id);
 

@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using Epson.Core.Domain.Email;
 using Epson.Core.Domain.Products;
+using Epson.Services.DTO.Email;
 using Epson.Services.DTO.Products;
 using System;
 using System.Collections.Generic;
@@ -16,6 +18,13 @@ namespace Epson.Services.DTO
             #region Product
             CreateMap<ProductDTO, Product>();
             CreateMap<Product, ProductDTO>();
+            #endregion
+
+            #region Email
+            CreateMap<EmailAccountDTO, EmailAccount>();
+            CreateMap<EmailAccount, EmailAccountDTO>();
+            CreateMap<EmailQueueDTO, EmailQueue>();
+            CreateMap<EmailQueue, EmailQueueDTO>();
             #endregion
         }
     }

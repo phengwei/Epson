@@ -1,13 +1,12 @@
-﻿using Epson.Core.Domain.Base;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Epson.Core.Domain.Email
+namespace Epson.Services.DTO.Email
 {
-    public class EmailQueue
+    public class EmailQueueDTO
     {
         public int Id { get; set; }
         public int Priority { get; set; }
@@ -22,6 +21,5 @@ namespace Epson.Core.Domain.Email
         public int SendAttempts { get; set; }
         public DateTime? SentTime { get; set; }
         public int EmailAccountId { get; set; }
-
     }
 }
