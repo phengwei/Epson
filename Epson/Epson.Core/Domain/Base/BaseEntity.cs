@@ -1,4 +1,6 @@
-﻿
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Epson.Core.Domain.Base
 {
     public abstract partial class BaseEntity

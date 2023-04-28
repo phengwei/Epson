@@ -7,13 +7,13 @@ namespace Epson.Core.Domain.Base
 {
     public abstract partial class BaseEntityExtension : BaseEntity
     {
-        public int CreatedById { get; set; }
-        public int UpdatedById { get; set; }
+        public string CreatedById { get; set; }
+        public string UpdatedById { get; set; }
         public DateTime CreatedOnUTC { get; set; }
         public DateTime? UpdatedOnUTC { get; set; }
 
 
-        public void CreateAudit( int actorId)
+        public void CreateAudit(string actorId)
         {
             CreatedById = actorId;
             CreatedOnUTC = DateTime.UtcNow;
@@ -21,13 +21,13 @@ namespace Epson.Core.Domain.Base
             UpdatedOnUTC = DateTime.UtcNow;
         }
 
-        public void UpdateAudit(int actorId)
+        public void UpdateAudit(string actorId)
         {
             UpdatedById = actorId;
             UpdatedOnUTC = DateTime.UtcNow;
         }
 
-        public void UpdateAudit(BaseEntityExtension oldModel, int actorId)
+        public void UpdateAudit(BaseEntityExtension oldModel, string actorId)
         {
             CreatedById = oldModel.CreatedById;
             CreatedOnUTC = oldModel.CreatedOnUTC;

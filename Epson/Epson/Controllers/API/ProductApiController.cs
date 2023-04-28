@@ -25,18 +25,19 @@ namespace Epson.Controllers.API
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IProductService _productService;
         private readonly IProductModelFactory _productModelFactory;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IWorkContext _workContext;
+
 
         public ProductApiController(
             UserManager<ApplicationUser> userManager,
             IProductService productService,
             IProductModelFactory productModelFactory,
-            IHttpContextAccessor httpContextAccessor)
+            IWorkContext workContext)
         {
             _userManager = userManager;
             _productService = productService;
             _productModelFactory = productModelFactory;
-            _httpContextAccessor = httpContextAccessor;
+            _workContext = workContext;
         }
 
         [HttpGet("getproductbyid")]
@@ -71,22 +72,26 @@ namespace Epson.Controllers.API
         
 
         [HttpPost("addproduct")]
-        public async Task<IActionResult> AddProduct(BaseQueryModel<ProductModel> queryModel)
+        public async Task<IActionResult> AddProduct([FromBody] BaseQueryModel<ProductModel> queryModel)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
             
             var model = queryModel.Data;
 
-            var productCopy = new Product();
+            var user = _workContext.CurrentUser;
 
-            productCopy.Id = model.Id;
-            productCopy.Name = model.Name;
-            productCopy.Price = model.Price;
-            productCopy.CreatedOnUTC = DateTime.UtcNow;
-            productCopy.UpdatedOnUTC = DateTime.UtcNow;
+            var product = new Product
+            {
+                Name = model.Name,
+                Price = model.Price,
+                CreatedOnUTC = DateTime.UtcNow,
+                UpdatedOnUTC = DateTime.UtcNow,
+                CreatedById = user.Id,
+                UpdatedById = user.Id
+            };
 
-            _productService.InsertProduct(productCopy);
+            _productService.InsertProduct(product);
 
             return Ok();
         }

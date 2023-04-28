@@ -15,6 +15,7 @@ using Epson.Model.Users;
 using Epson.Core.Domain.Users;
 using Epson.Factories;
 using Serilog;
+using Epson.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,6 +95,7 @@ builder.Services.AddSingleton(mapper);
 
 #region Services
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IWorkContext, WorkContext>();
 builder.Services.AddSingleton<JwtSettings>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EntityRepository<>));
 builder.Services.AddScoped<JwtService>();
@@ -127,21 +129,6 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.Use(async (context, next) =>
-{
-    await next();
-    if (context.Response.StatusCode == 404)
-    {
-        var user = context.User;
-        if (user.Identity.IsAuthenticated == false)
-        {
-            log.Warning("Debug: Authentication failed for request {RequestPath} with Authorization token {AuthorizationToken}",
-            context.Request.Path, context.Request.Headers["Authorization"]);
-        }
-
-    }
-});
 
 app.UseSession();
 app.UseEndpoints(endpoints =>

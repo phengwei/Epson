@@ -37,7 +37,11 @@ namespace Epson.Data
         public int Add(T entity)
         {
             using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
-            return db.Execute($"INSERT INTO {typeof(T).Name} VALUES (@Name, @Price)", entity);
+
+            var props = typeof(T).GetProperties();
+            var query = $"INSERT INTO {typeof(T).Name} ({string.Join(",", props.Select(p => p.Name))}) VALUES ({string.Join(",", props.Select(p => "@" + p.Name))})";
+
+            return db.Execute(query, entity);
         }
 
         public int Update(T entity)

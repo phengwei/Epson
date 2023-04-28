@@ -3,6 +3,7 @@ using Epson.Core.Domain.Products;
 using Epson.Services.Interface.Products;
 using AutoMapper;
 using Epson.Services.DTO.Products;
+using Serilog;
 
 namespace Epson.Services.Services.Products
 {
@@ -10,13 +11,16 @@ namespace Epson.Services.Services.Products
     {
         private readonly IMapper _mapper;
         private readonly IRepository<Product> _ProductRepository;
+        private readonly ILogger _logger;
 
         public ProductService
             (IMapper mapper,
-            IRepository<Product> productRepository)
+            IRepository<Product> productRepository,
+            ILogger logger)
         {
             _mapper = mapper;
             _ProductRepository = productRepository;
+            _logger = logger;
         }
 
         public ProductDTO GetProductById(int id)
@@ -52,7 +56,16 @@ namespace Epson.Services.Services.Products
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
 
-            _ProductRepository.Add(product);
+            try
+            {
+                _ProductRepository.Add(product);
+                _logger.Information("Inserting product {ProductName}", product.Name);
+            }
+            catch(Exception ex)
+            {
+                _logger.Error(ex, "Error inserting product {ProductName}", product.Name);
+            }
+            
         }
 
 
