@@ -3,6 +3,7 @@ using Epson.Core.Domain.Base;
 using Epson.Core.Domain.Products;
 using LinqToDB;
 using LinqToDB.DataProvider;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -15,10 +16,13 @@ namespace Epson.Data
     public class EntityRepository<T> : IRepository<T>
     {
         private readonly EpsonSQLConnectionFactory _dataConnectionProvider;
+        private readonly ILogger _logger;
 
-        public EntityRepository(EpsonSQLConnectionFactory dataConnectionProvider)
+        public EntityRepository(EpsonSQLConnectionFactory dataConnectionProvider,
+            ILogger logger)
         {
             _dataConnectionProvider = dataConnectionProvider;
+            _logger = logger;
         }
 
         public IEnumerable<T> GetAll()
@@ -47,7 +51,28 @@ namespace Epson.Data
         public int Update(T entity)
         {
             using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
-            return db.Execute($"UPDATE {typeof(T).Name} SET Name = @Name, Price = @Price WHERE Id = @Id", entity);
+
+            var properties = entity.GetType().GetProperties();
+            var query = new StringBuilder($"UPDATE {typeof(T).Name} SET ");
+
+            for (int i = 0; i < properties.Length; i++)
+            {
+                var property = properties[i];
+
+                if (property.Name.Equals("id", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                query.Append($"{property.Name} = @{property.Name}");
+
+                if (i < properties.Length - 2)
+                    query.Append(", ");
+                else if (i == properties.Length - 2)
+                    query.Append(" ");
+            }
+
+            query.Append(" WHERE id = @id");
+
+            return db.Execute(query.ToString(), entity);
         }
 
         public int Delete(int id)
