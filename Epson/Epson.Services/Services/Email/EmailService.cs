@@ -41,6 +41,14 @@ namespace Epson.Services.Services.Email
             return _mapper.Map<EmailAccountDTO>(emailAccount);
         }
 
+
+        public EmailAccountDTO GetEmailAccountByUserName(string username)
+        {
+            var emailAccount = _EmailAccountRepository.GetAll().Where(x => x.Username == username).FirstOrDefault();
+
+            return _mapper.Map<EmailAccountDTO>(emailAccount);
+        }
+
         //only get unsent and < 3 sent attempt queues 
         public List<EmailQueueDTO> GetUnsentEmailQueues()
         {
@@ -92,6 +100,7 @@ namespace Epson.Services.Services.Email
                         client.Send(message);
                         _logger.Information("Email of queue {emailQueue} successfully sent!", emailQueue.Id);
                         emailQueue.SentTime = DateTime.UtcNow;
+                        emailQueue.SendAttempts += 1;
                         _EmailQueueRepository.Update(_mapper.Map<EmailQueue>(emailQueue));
                     }
                     catch (Exception ex)

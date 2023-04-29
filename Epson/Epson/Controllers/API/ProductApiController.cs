@@ -24,7 +24,6 @@ namespace Epson.Controllers.API
     [Route("api/product")]
     public class ProductApiController : BaseApiController
     {
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IProductService _productService;
         private readonly IProductModelFactory _productModelFactory;
         private readonly IWorkContext _workContext;
@@ -32,13 +31,11 @@ namespace Epson.Controllers.API
 
 
         public ProductApiController(
-            UserManager<ApplicationUser> userManager,
             IProductService productService,
             IProductModelFactory productModelFactory,
             IWorkContext workContext,
             IMapper mapper)
         {
-            _userManager = userManager;
             _productService = productService;
             _productModelFactory = productModelFactory;
             _workContext = workContext;
