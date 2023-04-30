@@ -19,6 +19,8 @@ using Epson.Infrastructure;
 using Epson.Services.Services.Email;
 using Epson.Services.Interface.Email;
 using Epson.Job;
+using Epson.Services.Interface.Requests;
+using Epson.Services.Services.Requests;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -100,6 +102,7 @@ builder.Services.AddSingleton(mapper);
 
 #region Services
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IWorkContext, WorkContext>();
 builder.Services.AddSingleton<JwtSettings>();
@@ -110,6 +113,7 @@ builder.Services.AddHostedService<EmailBackgroundService>();
 
 #region Factories
 builder.Services.AddScoped<IProductModelFactory, ProductModelFactory>();
+builder.Services.AddScoped<IRequestModelFactory, RequestModelFactory>();
 #endregion
 
 builder.Services.AddSpaStaticFiles(options => options.RootPath = "client-app/dist");
@@ -149,18 +153,18 @@ app.MapControllers();
 
 app.UseSpaStaticFiles();
 
-app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
-{
-    builder.UseSpa(spa =>
-    {
-        spa.Options.SourcePath = "client-app";
-        if (app.Environment.IsDevelopment())
-        {
-            // Launch development server for Nuxt
-            spa.UseNuxtDevelopmentServer();
-        }
-    });
-});
+//app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
+//{
+//    builder.UseSpa(spa =>
+//    {
+//        spa.Options.SourcePath = "client-app";
+//        if (app.Environment.IsDevelopment())
+//        {
+//            // Launch development server for Nuxt
+//            spa.UseNuxtDevelopmentServer();
+//        }
+//    });
+//});
 
 
 app.Run();

@@ -1,26 +1,16 @@
-﻿using Epson.Core.Domain.Users;
-using Epson.Infrastructure;
+﻿using Epson.Infrastructure;
 using Epson.Model.Common;
-using Epson.Model.Users;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using Epson.Services.Interface.Products;
 using Epson.Model.Products;
 using Epson.Factories;
-using Epson.Services.DTO.Products;
 using Epson.Core.Domain.Products;
 using AutoMapper;
-using Epson.Services.Interface.Email;
 
 namespace Epson.Controllers.API
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Admin")]
+    //[Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Admin")]
     [Route("api/product")]
     public class ProductApiController : BaseApiController
     {
@@ -63,7 +53,7 @@ namespace Epson.Controllers.API
         {
             var response = new GenericResponseModel<List<ProductModel>>();
 
-            var products = _productService.GetProduct();
+            var products = _productService.GetProducts();
 
             var productModels = _productModelFactory.PrepareProductModels(products);
 
@@ -111,6 +101,10 @@ namespace Epson.Controllers.API
                 return BadRequest("Id must not be empty!");
             
             var product = _productService.GetProductById(model.Id);
+
+            if (product == null)
+                return NotFound("Product not found!");
+
             var user = _workContext.CurrentUser;
 
             var updatedProduct = new Product

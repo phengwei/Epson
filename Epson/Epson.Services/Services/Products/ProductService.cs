@@ -31,7 +31,7 @@ namespace Epson.Services.Services.Products
             return _mapper.Map<ProductDTO>(_ProductRepository.GetById(id));
         }
 
-        public List<ProductDTO> GetProduct()
+        public List<ProductDTO> GetProducts()
         {
             var products = _ProductRepository.GetAll();
 

@@ -43,9 +43,9 @@ namespace Epson.Data
             using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
 
             var props = typeof(T).GetProperties();
-            var query = $"INSERT INTO {typeof(T).Name} ({string.Join(",", props.Select(p => p.Name))}) VALUES ({string.Join(",", props.Select(p => "@" + p.Name))})";
+            var query = $"INSERT INTO {typeof(T).Name} ({string.Join(",", props.Select(p => p.Name))}) VALUES ({string.Join(",", props.Select(p => "@" + p.Name))}); SELECT LAST_INSERT_ID();";
 
-            return db.Execute(query, entity);
+            return db.ExecuteScalar<int>(query, entity);
         }
 
         public int Update(T entity)
@@ -64,15 +64,15 @@ namespace Epson.Data
 
                 query.Append($"{property.Name} = @{property.Name}");
 
-                if (i < properties.Length - 1)
+                if (i < properties.Length - 2)
                     query.Append(", ");
-                else if (i == properties.Length - 1)
+                else if (i == properties.Length - 2)
                     query.Append(" ");
             }
 
             query.Append(" WHERE id = @id");
 
-            //_logger.Information("Executing query {querystring}", query.ToString());
+            _logger.Information("Executing query {querystring}", query.ToString());
             return db.Execute(query.ToString(), entity);
         }
 
