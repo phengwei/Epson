@@ -50,3 +50,6 @@ CREATE TABLE SLAStaffLeave (
   EndDate DATE NOT NULL,
   Reason VARCHAR(255)
 );
+
+ALTER TABLE slastaffleave
+MODIFY COLUMN StaffID VARCHAR(50);

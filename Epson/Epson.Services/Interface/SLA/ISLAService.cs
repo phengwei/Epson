@@ -14,6 +14,7 @@ namespace Epson.Services.Interface.SLA
         public SLAStaffLeaveDTO GetSLAStaffLeaveById(int id);
         public List<SLAHolidayDTO> GetSLAHolidays();
         public List<SLAStaffLeaveDTO> GetSLAStaffLeaves();
+        public List<SLAStaffLeaveDTO> GetSLAStaffLeavesByStaffId(string staffId)
         public bool InsertSLAHoliday(SLAHoliday slaHoliday);
         public bool InsertSLAStaffLeave(SLAStaffLeave slaStaffLeave);
         public bool DeleteSLAHoliday(SLAHoliday slaHoliday);

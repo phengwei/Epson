@@ -10,29 +10,33 @@ using AutoMapper;
 using Epson.Services.Interface.SLA;
 using Epson.Model.SLA;
 using Epson.Core.Domain.SLA;
+using Epson.Services.Interface.Requests;
 
 namespace Epson.Controllers.API
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
-    [Route("api/product")]
+    //[Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+    [Route("api/sla")]
     public class SLAApiController : BaseApiController
     {
         private readonly ISLAService _slaService;
         private readonly ISLAModelFactory _slaModelFactory;
         private readonly IWorkContext _workContext;
         private readonly IMapper _mapper;
+        private readonly IRequestService _requestService;
 
 
         public SLAApiController(
             ISLAService slaService,
             ISLAModelFactory slaModelFactory,
             IWorkContext workContext,
-            IMapper mapper)
+            IMapper mapper,
+            IRequestService requestService)
         {
             _slaService = slaService;
             _slaModelFactory = slaModelFactory;
             _workContext = workContext;
             _mapper = mapper;
+            _requestService = requestService;
         }
 
         [HttpGet("getslaholidays")]

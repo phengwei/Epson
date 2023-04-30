@@ -68,8 +68,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Product", policy => policy.RequireRole("Product"));
 });
 
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
-builder.Services.Configure<SLASetting>(builder.Configuration.GetSection("SLA"));
+builder.Services.AddOptions<SLASetting>().Bind(builder.Configuration.GetSection("SLA"));
+builder.Services.AddOptions<JwtSettings>().Bind(builder.Configuration.GetSection("Jwt"));
 #endregion
 
 // Add services to the container.

@@ -60,6 +60,12 @@ namespace Epson.Services.Services.SLA
 
             return _mapper.Map<List<SLAStaffLeaveDTO>>(slaStaffLeaves);
         }
+        public List<SLAStaffLeaveDTO> GetSLAStaffLeavesByStaffId(string staffId)
+        {
+            var slaStaffLeaves = _SLAStaffLeaveRepository.GetAll().Where(x => x.StaffId == staffId);
+
+            return _mapper.Map<List<SLAStaffLeaveDTO>>(slaStaffLeaves);
+        }
 
         public bool InsertSLAHoliday(SLAHoliday slaHoliday)
         {

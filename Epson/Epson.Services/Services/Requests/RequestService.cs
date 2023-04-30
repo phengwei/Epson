@@ -4,8 +4,10 @@ using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.Users;
 using Epson.Data;
 using Epson.Services.DTO.Requests;
+using Epson.Services.DTO.SLA;
 using Epson.Services.Interface.Requests;
 using Epson.Services.Interface.SLA;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace Epson.Services.Services.Requests
@@ -17,19 +19,22 @@ namespace Epson.Services.Services.Requests
         private readonly IRepository<RequestProduct> _RequestProductRepository;
         private readonly ILogger _logger;
         private readonly ISLAService _slaService;
+        private readonly IOptions<SLASetting> _slaSetting;
 
         public RequestService
             (IMapper mapper,
             IRepository<Request> requestRepository,
             IRepository<RequestProduct> requestProductRepository,
             ILogger logger,
-            ISLAService slaService)
+            ISLAService slaService,
+            IOptions<SLASetting> slaSetting)
         {
             _mapper = mapper;
             _RequestRepository = requestRepository;
             _RequestProductRepository = requestProductRepository;
             _logger = logger;
             _slaService = slaService;
+            _slaSetting = slaSetting;
         }
 
         public RequestDTO GetRequestById(int id)
@@ -64,6 +69,8 @@ namespace Epson.Services.Services.Requests
             })
             .OrderBy(x => x.CreatedOnUTC)
             .ToList();
+
+            //var t = CalculateTimeToResolution(requests.FirstOrDefault());
 
             return requestDTOs;
         }
@@ -176,7 +183,8 @@ namespace Epson.Services.Services.Requests
 
             request.ApprovedBy = user.Id;
             request.ApprovedTime = DateTime.UtcNow;
-            request.TimeToResolution = CalculateTimeToResolution(request);
+
+            request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
 
             try
             {
@@ -191,10 +199,103 @@ namespace Epson.Services.Services.Requests
                 return false;
             }
         }
-        public TimeSpan CalculateTimeToResolution (Request request)
+
+        //todo: add deadline configuration?
+        public TimeSpan CalculateResolutionTime(DateTime approvedTime, DateTime ticketCreateTime, List<SLAStaffLeaveDTO> staffLeaves, List<SLAHolidayDTO> holidays)
         {
-            var timeToResolution = request.ApprovedTime - request.CreatedOnUTC;
-            return timeToResolution;
+            //calculate resolution time
+            TimeSpan resolutionTime = approvedTime - ticketCreateTime;
+
+            //calculate resolution time if working hours is included 
+            TimeSpan workingHoursResolutionTime = TimeSpan.Zero;
+            if (_slaSetting.Value.IncludeWorkingHours == true)
+            {
+                DateTime startTime = new DateTime(ticketCreateTime.Year, ticketCreateTime.Month, ticketCreateTime.Day, _slaSetting.Value.WorkingStartHour, _slaSetting.Value.WorkingStartMinute, 0);
+                DateTime endTime = new DateTime(approvedTime.Year, approvedTime.Month, approvedTime.Day, _slaSetting.Value.WorkingEndHour, _slaSetting.Value.WorkingEndMinute, 0);
+
+                //calculate the number of full working days between the start and end dates
+                int fullDays = 0;
+                if (startTime < endTime)
+                {
+                    fullDays = (int)(endTime - startTime).TotalDays;
+                    if (startTime.DayOfWeek > endTime.DayOfWeek)
+                    {
+                        fullDays -= 2; //adjust for weekends between start and end dates
+                    }
+                    else if (endTime.DayOfWeek == DayOfWeek.Saturday)
+                    {
+                        fullDays -= 1; //adjust for end date on a weekend
+                    }
+                }
+
+                //calculate the working hours for the full days
+                workingHoursResolutionTime = TimeSpan.FromHours(fullDays * 8);
+
+                //calculate the working hours for the partial day (if any)
+                if (fullDays == 0)
+                {
+                    //if the start and end dates are on the same day, calculate the working hours between them
+                    workingHoursResolutionTime = TimeSpan.FromTicks(Math.Min(endTime.Ticks, approvedTime.Ticks) - Math.Max(startTime.Ticks, ticketCreateTime.Ticks));
+                }
+                else
+                {
+                    //if there are full working days between the start and end dates, calculate the working hours for the partial day(s) at the start and end
+                    DateTime partialDayStart = startTime.AddDays(fullDays);
+                    DateTime partialDayEnd = endTime;
+                    if (partialDayStart.DayOfWeek != DayOfWeek.Saturday && partialDayStart.DayOfWeek != DayOfWeek.Sunday) // if partial day is a weekday
+                    {
+                        workingHoursResolutionTime += TimeSpan.FromTicks(Math.Min(partialDayEnd.Ticks, approvedTime.Ticks) - Math.Max(partialDayStart.Ticks, ticketCreateTime.Ticks));
+                    }
+                }
+            }
+
+            //adjust resolution time based on SLA settings
+            if (_slaSetting.Value.IncludeHoliday == true)
+            {
+                resolutionTime -= GetTimeSpanOfHolidayDates(ticketCreateTime, approvedTime, holidays.Select(x => x.Date).ToList());
+            }
+            if (_slaSetting.Value.IncludeStaffLeaves == true)
+            {
+                resolutionTime -= GetTimeSpanOfStaffLeaves(ticketCreateTime, approvedTime, staffLeaves.Select(l => (l.StartDate, l.EndDate)).ToList());
+            }
+
+            //choose the appropriate resolution time based on SLA settings
+            if (_slaSetting.Value.IncludeWorkingHours == true && workingHoursResolutionTime < resolutionTime)
+            {
+                return workingHoursResolutionTime;
+            }
+            else
+            {
+                return resolutionTime;
+            }
         }
+
+        private TimeSpan GetTimeSpanOfHolidayDates(DateTime start, DateTime end, List<DateTime> dates)
+        {
+            TimeSpan overlappingTime = TimeSpan.Zero;
+            foreach (DateTime date in dates)
+            {
+                if (date >= start && date < end)
+                {
+                    overlappingTime += TimeSpan.FromDays(1);
+                }
+            }
+            return overlappingTime;
+        }
+        private TimeSpan GetTimeSpanOfStaffLeaves(DateTime start, DateTime end, List<(DateTime Start, DateTime End)> dateRanges)
+        {
+            TimeSpan overlappingTime = TimeSpan.Zero;
+            foreach (var dateRange in dateRanges)
+            {
+                if (dateRange.End > start && dateRange.Start < end)
+                {
+                    DateTime overlappingStart = dateRange.Start < start ? start : dateRange.Start;
+                    DateTime overlappingEnd = dateRange.End > end ? end : dateRange.End;
+                    overlappingTime += overlappingEnd - overlappingStart;
+                }
+            }
+            return overlappingTime;
+        }
+
     }
 }
