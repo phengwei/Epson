@@ -65,7 +65,6 @@ namespace Epson.Controllers.API
             return Ok(response);
         }
 
-
         [HttpPost("createrequest")]
         public async Task<IActionResult> CreateRequest([FromBody] BaseQueryModel<RequestModel> queryModel)
         {
@@ -134,6 +133,25 @@ namespace Epson.Controllers.API
                 return Ok();
             else
                 return BadRequest("Failed to update request");
+        }
+
+        [HttpPost("approverequest")]
+        public async Task<IActionResult> ApproveRequest(int id)
+        {
+            var request = _requestService.GetRequestById(id);
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (request == null)
+                return NotFound("Request not found!");
+
+            if (user == null)
+                return Unauthorized("User not authorized to perform this operation");
+
+            if (_requestService.ApproveRequest(user, _mapper.Map<Request>(request)))
+                return Ok("Request has been approved");
+            else
+                return BadRequest("Failed to approve request");
+
         }
     }
 }

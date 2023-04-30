@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Epson.Core.Domain.Products;
 using Epson.Core.Domain.Requests;
+using Epson.Core.Domain.Users;
 using Epson.Data;
 using Epson.Services.DTO.Requests;
 using Epson.Services.Interface.Requests;
@@ -118,6 +119,7 @@ namespace Epson.Services.Services.Requests
             {
                 _RequestRepository.Update(request);
                 _logger.Information("Updating request {id}", request.Id);
+
                 DeleteRequestProductOfRequest(request.Id);
 
                 foreach (var requestProduct in requestProducts)
@@ -158,6 +160,37 @@ namespace Epson.Services.Services.Requests
 
                 return false;
             }
+        }
+
+        public bool ApproveRequest(ApplicationUser user, Request request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (GetRequestById(request.Id) == null)
+                throw new ArgumentNullException(nameof(request));
+
+            request.ApprovedBy = user.Id;
+            request.ApprovedTime = DateTime.UtcNow;
+            request.TimeToResolution = CalculateTimeToResolution(request);
+
+            try
+            {
+                _RequestRepository.Update(request);
+                _logger.Information("Approving request {id}", request.Id);
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                _logger.Error(ex, "Error approving request {requestid}", request.Id);
+                return false;
+            }
+        }
+        public TimeSpan CalculateTimeToResolution (Request request)
+        {
+            var timeToResolution = request.ApprovedTime - request.CreatedOnUTC;
+            return timeToResolution;
         }
     }
 }

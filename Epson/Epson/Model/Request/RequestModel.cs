@@ -6,7 +6,7 @@ namespace Epson.Model.Request
     {
         public int Id { get; set; }
         public DateTime ApprovedTime { get; set; }
-        public int ApprovedBy { get; set; }
+        public string ApprovedBy { get; set; }
         public string Segment { get; set; }
         public string ManagerId { get; set; }
         public string ManagerName { get; set; }

@@ -32,3 +32,6 @@ ALTER TABLE requestproduct ADD COLUMN quantity INT;
 
 ALTER TABLE request
 MODIFY COLUMN TimeToResolution Time;
+
+ALTER TABLE request
+MODIFY COLUMN ApprovedBy VARCHAR(50);

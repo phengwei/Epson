@@ -10,7 +10,7 @@ namespace Epson.Core.Domain.Requests
     public class Request : BaseEntityExtension
     {
         public DateTime ApprovedTime { get; set; }
-        public int ApprovedBy { get; set; }
+        public string ApprovedBy { get; set; }
         public string Segment { get; set; }
         public string ManagerId { get; set; }
         public string ManagerName { get; set; }
