@@ -29,3 +29,6 @@ ALTER TABLE Request
 DROP COLUMN ProductId;
 
 ALTER TABLE requestproduct ADD COLUMN quantity INT;
+
+ALTER TABLE request
+MODIFY COLUMN TimeToResolution Time;

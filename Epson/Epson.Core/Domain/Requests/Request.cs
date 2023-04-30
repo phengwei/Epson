@@ -18,6 +18,6 @@ namespace Epson.Core.Domain.Requests
         public int Priority { get; set; }
         public DateTime Deadline { get; set; }
         public Decimal TotalPrice { get; set; }
-        public DateTime TimeToResolution { get; set; }
+        public TimeSpan TimeToResolution { get; set; }
     }
 }
