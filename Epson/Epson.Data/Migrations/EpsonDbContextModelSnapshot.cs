@@ -63,7 +63,7 @@ namespace Epson.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Audit_Trail");
+                    b.ToTable("AuditTrail");
                 });
 
             modelBuilder.Entity("Epson.Core.Domain.Category.Category", b =>
@@ -184,7 +184,7 @@ namespace Epson.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Email_Account");
+                    b.ToTable("EmailAccount");
                 });
 
             modelBuilder.Entity("Epson.Core.Domain.Email.EmailQueue", b =>
@@ -209,17 +209,10 @@ namespace Epson.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("CreatedById")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedOnUTC")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<int>("EmailAccountId")
                         .HasColumnType("int");
 
-                    b.Property<string>("From")
+                    b.Property<string>("FromEmail")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -232,27 +225,20 @@ namespace Epson.Data.Migrations
                     b.Property<int>("SendAttempts")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("SentTime")
+                    b.Property<DateTime?>("SentTime")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("To")
+                    b.Property<string>("ToEmail")
                         .IsRequired()
                         .HasColumnType("longtext");
-
-                    b.Property<string>("UpdatedById")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("UpdatedOnUTC")
-                        .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Email_Queue");
+                    b.ToTable("EmailQueue");
                 });
 
             modelBuilder.Entity("Epson.Core.Domain.Products.Product", b =>
@@ -287,7 +273,7 @@ namespace Epson.Data.Migrations
                     b.ToTable("Product");
                 });
 
-            modelBuilder.Entity("Epson.Core.Domain.Request.Request", b =>
+            modelBuilder.Entity("Epson.Core.Domain.Requests.Request", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -309,17 +295,15 @@ namespace Epson.Data.Migrations
                     b.Property<DateTime>("Deadline")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("ManagerId")
-                        .HasColumnType("int");
+                    b.Property<string>("ManagerId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<string>("ManagerName")
                         .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<int>("Priority")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
@@ -345,6 +329,26 @@ namespace Epson.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Request");
+                });
+
+            modelBuilder.Entity("Epson.Core.Domain.Requests.RequestProduct", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RequestId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RequestProduct");
                 });
 
             modelBuilder.Entity("Epson.Core.Domain.Users.ApplicationUser", b =>

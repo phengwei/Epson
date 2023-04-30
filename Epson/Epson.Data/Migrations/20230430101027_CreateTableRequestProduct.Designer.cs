@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Epson.Data.Migrations
 {
     [DbContext(typeof(EpsonDbContext))]
-    [Migration("20230425070247_InitialDatabase")]
-    partial class InitialDatabase
+    [Migration("20230430101027_CreateTableRequestProduct")]
+    partial class CreateTableRequestProduct
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,8 +43,9 @@ namespace Epson.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("CreatedById")
-                        .HasColumnType("int");
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedOnUTC")
                         .HasColumnType("datetime(6)");
@@ -56,15 +57,16 @@ namespace Epson.Data.Migrations
                     b.Property<int>("EntityId")
                         .HasColumnType("int");
 
-                    b.Property<int>("UpdatedById")
-                        .HasColumnType("int");
+                    b.Property<string>("UpdatedById")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime?>("UpdatedOnUTC")
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Audit_Trail");
+                    b.ToTable("AuditTrail");
                 });
 
             modelBuilder.Entity("Epson.Core.Domain.Category.Category", b =>
@@ -73,8 +75,9 @@ namespace Epson.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("CreatedById")
-                        .HasColumnType("int");
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedOnUTC")
                         .HasColumnType("datetime(6)");
@@ -83,8 +86,9 @@ namespace Epson.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("UpdatedById")
-                        .HasColumnType("int");
+                    b.Property<string>("UpdatedById")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime?>("UpdatedOnUTC")
                         .HasColumnType("datetime(6)");
@@ -117,8 +121,9 @@ namespace Epson.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("CreatedById")
-                        .HasColumnType("int");
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedOnUTC")
                         .HasColumnType("datetime(6)");
@@ -169,8 +174,9 @@ namespace Epson.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("UpdatedById")
-                        .HasColumnType("int");
+                    b.Property<string>("UpdatedById")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime?>("UpdatedOnUTC")
                         .HasColumnType("datetime(6)");
@@ -181,7 +187,7 @@ namespace Epson.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Email_Account");
+                    b.ToTable("EmailAccount");
                 });
 
             modelBuilder.Entity("Epson.Core.Domain.Email.EmailQueue", b =>
@@ -206,16 +212,10 @@ namespace Epson.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("CreatedById")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedOnUTC")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<int>("EmailAccountId")
                         .HasColumnType("int");
 
-                    b.Property<string>("From")
+                    b.Property<string>("FromEmail")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -228,26 +228,20 @@ namespace Epson.Data.Migrations
                     b.Property<int>("SendAttempts")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("SentTime")
+                    b.Property<DateTime?>("SentTime")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("To")
+                    b.Property<string>("ToEmail")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("UpdatedById")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedOnUTC")
-                        .HasColumnType("datetime(6)");
-
                     b.HasKey("Id");
 
-                    b.ToTable("Email_Queue");
+                    b.ToTable("EmailQueue");
                 });
 
             modelBuilder.Entity("Epson.Core.Domain.Products.Product", b =>
@@ -256,8 +250,9 @@ namespace Epson.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("CreatedById")
-                        .HasColumnType("int");
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedOnUTC")
                         .HasColumnType("datetime(6)");
@@ -269,8 +264,9 @@ namespace Epson.Data.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(65,30)");
 
-                    b.Property<int>("UpdatedById")
-                        .HasColumnType("int");
+                    b.Property<string>("UpdatedById")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime?>("UpdatedOnUTC")
                         .HasColumnType("datetime(6)");
@@ -280,7 +276,7 @@ namespace Epson.Data.Migrations
                     b.ToTable("Product");
                 });
 
-            modelBuilder.Entity("Epson.Core.Domain.Request.Requests", b =>
+            modelBuilder.Entity("Epson.Core.Domain.Requests.Request", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -292,8 +288,9 @@ namespace Epson.Data.Migrations
                     b.Property<DateTime>("ApprovedTime")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("CreatedById")
-                        .HasColumnType("int");
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedOnUTC")
                         .HasColumnType("datetime(6)");
@@ -301,8 +298,9 @@ namespace Epson.Data.Migrations
                     b.Property<DateTime>("Deadline")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("ManagerId")
-                        .HasColumnType("int");
+                    b.Property<string>("ManagerId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<string>("ManagerName")
                         .IsRequired()
@@ -327,8 +325,9 @@ namespace Epson.Data.Migrations
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(65,30)");
 
-                    b.Property<int>("UpdatedById")
-                        .HasColumnType("int");
+                    b.Property<string>("UpdatedById")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime?>("UpdatedOnUTC")
                         .HasColumnType("datetime(6)");
@@ -336,6 +335,23 @@ namespace Epson.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Request");
+                });
+
+            modelBuilder.Entity("Epson.Core.Domain.Requests.RequestProduct", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RequestId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RequestProduct");
                 });
 
             modelBuilder.Entity("Epson.Core.Domain.Users.ApplicationUser", b =>
@@ -390,7 +406,7 @@ namespace Epson.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+            modelBuilder.Entity("Epson.Core.Domain.Users.Role", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("varchar(255)");

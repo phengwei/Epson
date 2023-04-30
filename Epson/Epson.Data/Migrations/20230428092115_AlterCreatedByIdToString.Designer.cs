@@ -290,7 +290,7 @@ namespace Epson.Data.Migrations
                     b.ToTable("Product");
                 });
 
-            modelBuilder.Entity("Epson.Core.Domain.Request.Request", b =>
+            modelBuilder.Entity("Epson.Core.Domain.Request.Requests", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
