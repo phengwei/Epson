@@ -3,6 +3,7 @@ using Epson.Core.Domain.Category;
 using Epson.Core.Domain.Email;
 using Epson.Core.Domain.Products;
 using Epson.Core.Domain.Requests;
+using Epson.Core.Domain.SLA;
 using Epson.Core.Domain.Users;
 using LinqToDB.DataProvider.SqlServer;
 using Microsoft.AspNetCore.Identity;
@@ -26,6 +27,8 @@ namespace Epson.Data.Context
         public DbSet<Product> Product { get; set; }
         public DbSet<Request> Request { get; set; }
         public DbSet<RequestProduct> RequestProduct { get; set; }
+        public DbSet<SLAHoliday> SLAHoliday { get; set; }
+        public DbSet<SLAStaffLeave> SLAStaffLeave { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

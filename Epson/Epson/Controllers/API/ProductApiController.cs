@@ -10,7 +10,7 @@ using AutoMapper;
 
 namespace Epson.Controllers.API
 {
-    //[Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Admin")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Admin")]
     [Route("api/product")]
     public class ProductApiController : BaseApiController
     {

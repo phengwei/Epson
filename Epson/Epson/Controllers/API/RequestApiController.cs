@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Epson.Factories;
 using Epson.Core.Domain.Requests;
 using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Epson.Services.Interface.Requests;
 using Epson.Model.Request;
 using Microsoft.AspNetCore.Identity;
@@ -11,7 +13,7 @@ using Epson.Core.Domain.Users;
 
 namespace Epson.Controllers.API
 {
-    //[Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin")]
     [Route("api/request")]
     public class RequestApiController : BaseApiController
     {

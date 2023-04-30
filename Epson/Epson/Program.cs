@@ -21,6 +21,8 @@ using Epson.Services.Interface.Email;
 using Epson.Job;
 using Epson.Services.Interface.Requests;
 using Epson.Services.Services.Requests;
+using Epson.Services.Interface.SLA;
+using Epson.Services.Services.SLA;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,6 +69,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<SLASetting>(builder.Configuration.GetSection("SLA"));
 #endregion
 
 // Add services to the container.
@@ -103,9 +106,11 @@ builder.Services.AddSingleton(mapper);
 #region Services
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
+builder.Services.AddScoped<ISLAService, SLAService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IWorkContext, WorkContext>();
 builder.Services.AddSingleton<JwtSettings>();
+builder.Services.AddSingleton<SLASetting>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EntityRepository<>));
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddHostedService<EmailBackgroundService>();
@@ -114,6 +119,7 @@ builder.Services.AddHostedService<EmailBackgroundService>();
 #region Factories
 builder.Services.AddScoped<IProductModelFactory, ProductModelFactory>();
 builder.Services.AddScoped<IRequestModelFactory, RequestModelFactory>();
+builder.Services.AddScoped<ISLAModelFactory, SLAModelFactory>();
 #endregion
 
 builder.Services.AddSpaStaticFiles(options => options.RootPath = "client-app/dist");

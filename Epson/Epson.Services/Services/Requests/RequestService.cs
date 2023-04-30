@@ -5,6 +5,7 @@ using Epson.Core.Domain.Users;
 using Epson.Data;
 using Epson.Services.DTO.Requests;
 using Epson.Services.Interface.Requests;
+using Epson.Services.Interface.SLA;
 using Serilog;
 
 namespace Epson.Services.Services.Requests
@@ -15,17 +16,20 @@ namespace Epson.Services.Services.Requests
         private readonly IRepository<Request> _RequestRepository;
         private readonly IRepository<RequestProduct> _RequestProductRepository;
         private readonly ILogger _logger;
+        private readonly ISLAService _slaService;
 
         public RequestService
             (IMapper mapper,
             IRepository<Request> requestRepository,
             IRepository<RequestProduct> requestProductRepository,
-            ILogger logger)
+            ILogger logger,
+            ISLAService slaService)
         {
             _mapper = mapper;
             _RequestRepository = requestRepository;
             _RequestProductRepository = requestProductRepository;
             _logger = logger;
+            _slaService = slaService;
         }
 
         public RequestDTO GetRequestById(int id)
