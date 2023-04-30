@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Epson.Model.Products;
 
 namespace Epson.Controllers.API
 {
@@ -94,6 +95,26 @@ namespace Epson.Controllers.API
         {
             await HttpContext.SignOutAsync(JwtBearerDefaults.AuthenticationScheme);
             return Ok("User logged out");
+        }
+
+        [HttpGet("getcurrentuser")]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var response = new GenericResponseModel<UserModel>();
+
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+
+            if (user == null)
+            {
+                return Unauthorized("User must be logged in!");
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+
+            response.Data.UserName = user.UserName;
+            response.Data.Email = user.Email;
+            response.Data.Roles = (List<string>)roles;
+
+            return Ok(response);
         }
 
         [HttpPost("changepassword")]
