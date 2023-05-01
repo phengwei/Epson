@@ -70,8 +70,6 @@ namespace Epson.Services.Services.Requests
             .OrderBy(x => x.CreatedOnUTC)
             .ToList();
 
-            //var t = CalculateTimeToResolution(requests.FirstOrDefault());
-
             return requestDTOs;
         }
 
@@ -183,7 +181,8 @@ namespace Epson.Services.Services.Requests
 
             request.ApprovedBy = user.Id;
             request.ApprovedTime = DateTime.UtcNow;
-
+            request.UpdatedOnUTC = DateTime.UtcNow;
+            request.UpdatedById = user.Id;
             request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
 
             try

@@ -90,13 +90,6 @@ namespace Epson.Controllers.API
             return BadRequest(ModelState);
         }
 
-        [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
-        {
-            await HttpContext.SignOutAsync(JwtBearerDefaults.AuthenticationScheme);
-            return Ok("User logged out");
-        }
-
         [HttpGet("getcurrentuser")]
         public async Task<IActionResult> GetCurrentUser()
         {
