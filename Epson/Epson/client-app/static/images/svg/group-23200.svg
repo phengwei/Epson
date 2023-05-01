@@ -1,0 +1,14 @@
+<svg data-name="Group 23200" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+    <defs>
+        <clipPath id="c2fv4f1yga">
+            <path data-name="Rectangle 3952" style="fill:none" d="M0 0h48v48H0z"/>
+        </clipPath>
+    </defs>
+    <g data-name="Group 23199" style="clip-path:url(#c2fv4f1yga)">
+        <path data-name="Path 14314" d="M22.5 25.536h-12v7.5h12zm-1.5 6h-9v-4.5h9z"/>
+        <path data-name="Path 14315" d="M32.25 26.225h-1.5v-2.187H17.071v2.187h-1.5v-3.688H32.25z"/>
+        <path data-name="Path 14316" d="M37.5 25.536h-12v7.5h12zm-1.5 6h-9v-4.5h9z"/>
+        <path data-name="Rectangle 3951" d="M23.249 20.318h1.502v2.969h-1.502z"/>
+        <path data-name="Path 14317" d="M30 13.5H18V21h12zm-1.5 6h-9V15h9z" style="fill:#2bbaed"/>
+    </g>
+</svg>

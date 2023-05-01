@@ -54,6 +54,7 @@ export default {
     '@nuxtjs/eslint-module',
     // https://go.nuxtjs.dev/tailwindcss
     '@nuxtjs/tailwindcss',
+    '@nuxtjs/vuetify',
     '@nuxt/postcss8',
     [
       'nuxt-i18n',
@@ -155,37 +156,45 @@ export default {
    */
   auth: {
     strategies: {
-      customStrategy: {
+      local: {
+        user: {
+          property: false,
+          autoFetch: true
+        },
+        endpoints: {
+          login: { url: 'api/customer/login', method: 'post'},
+          user: { url: 'api/customer/getcurrentuser', method: 'get' },
+          logout: { url: 'api/customer/logout', method: 'post' },
+        }
+      }
+      /* customStrategy: {
         scheme: '~/schemes/customScheme',
         
         token: {
           property: 'jwtToken',
+          tokenType: false,
           maxAge: 1800,
-          global: true,
+          // global: true,
           // type: 'Bearer'
         },
         refreshToken: {
           property: 'refreshToken',
-          data: 'refresh_token',
+          data: '',
           maxAge: 60 * 60 * 24 * 30
         },
-        user: {
-          property: false
-        },
         endpoints: {
-          login: { url: '/api/customer/login', method: 'post' },
-          refresh: { url: '/api/users/refresh-token', method: 'post' },
-          user: { url: '/api/users/user-profile', method: 'get' },
-          logout: { url: '/api/users/logout', method: 'post' }
+          login: { url: 'api/customer/login', method: 'post'},
+          user: { url: 'api/customer/testadmin', method: 'get' },
         },
+        logout:false,
         // autoLogout: false
-      }
+      } */
     },
     redirect: {
-      login: '/',
-      logout: '/',
+      login: '/login',
+      logout: '/login',
       callback: '/',
-      home: '/'
+      home: '/dashboard'
     }
   },
 
@@ -207,7 +216,7 @@ export default {
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
     // Workaround to avoid enforcing hard-coded localhost:3000: https://github.com/nuxt-community/axios-module/issues/308
-    baseURL: 'http://localhost:7223/api',
+    baseURL: 'https://localhost:7223',
     proxy: true
   },
 

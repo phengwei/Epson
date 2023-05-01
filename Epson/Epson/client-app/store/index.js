@@ -4,13 +4,6 @@ export const getters = {
   },
 
   loggedInUser(state) {
-    return state.auth.user
+    return state.auth.user.data
   }
 }
-
-export const state = () => ({
-  busy: false,
-  loggedIn: false,
-  strategy: "customStrategy",
-  user: false,
-});

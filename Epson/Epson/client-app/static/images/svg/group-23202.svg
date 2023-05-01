@@ -1,0 +1,25 @@
+<svg data-name="Group 23202" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+    <defs>
+        <clipPath id="qxioqgvsza">
+            <path data-name="Rectangle 3965" style="fill:none" d="M0 0h48v48H0z"/>
+        </clipPath>
+    </defs>
+    <g data-name="Group 23201" style="clip-path:url(#qxioqgvsza)">
+        <path data-name="Path 14319" d="M23.243 37.523h-7.522v-3.017h1.5v1.515h4.518V33h1.5z" style="fill:#2bbaed"/>
+        <path data-name="Rectangle 3953" d="M29.251 19.494h2.999v1.493h-2.999z"/>
+        <path data-name="Rectangle 3954" transform="translate(24.753 19.494)" style="fill:#2bbaed" d="M0 0h2.999v1.493H0z"/>
+        <path data-name="Rectangle 3955" d="M20.253 19.494h2.999v1.493h-2.999z"/>
+        <path data-name="Rectangle 3956" transform="translate(29.251 22.499)" style="fill:#2bbaed" d="M0 0h2.999v1.493H0z"/>
+        <path data-name="Rectangle 3957" d="M24.753 22.499h2.999v1.493h-2.999z"/>
+        <path data-name="Rectangle 3958" d="M20.253 22.499h2.999v1.493h-2.999z"/>
+        <path data-name="Rectangle 3959" d="M29.251 25.503h2.999v1.493h-2.999z"/>
+        <path data-name="Rectangle 3960" transform="translate(24.753 25.503)" style="fill:#2bbaed" d="M0 0h2.999v1.493H0z"/>
+        <path data-name="Rectangle 3961" d="M20.253 25.503h2.999v1.493h-2.999z"/>
+        <path data-name="Rectangle 3962" d="M29.251 28.508h2.999v1.493h-2.999z"/>
+        <path data-name="Rectangle 3963" d="M24.753 28.508h2.999v1.493h-2.999z"/>
+        <path data-name="Rectangle 3964" transform="translate(20.253 28.508)" style="fill:#2bbaed" d="M0 0h2.999v1.493H0z"/>
+        <path data-name="Path 14320" d="M35.251 16.479h-18v16.5h18zm-1.5 15h-15v-13.5h15z"/>
+        <path data-name="Path 14321" d="M32.25 10.477h-12v7.5h12zm-1.5 6h-9v-4.5h9z"/>
+        <path data-name="Path 14322" d="M18.751 14.98h-6v19.5h6zm-1.5 18h-3v-16.5h3z"/>
+    </g>
+</svg>

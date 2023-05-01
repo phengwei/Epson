@@ -1,6 +1,6 @@
 <template>
   <nav class="bg-[#19212b] top-0 inset-x-0 w-full z-30 text-white fixed transition duration-300 delay-0 ease-out" :class="{'transition-right': showPopup}">
-            <div class="relative container sm:px-18 mx-auto px-4">
+            <div class="flex sm:px-18 px-4">
                 <div class="w-full flex justify-between flex-row-reverse">
                     <div class="flex md:space-x-7 md:w-full">
                         <!-- Website Logo -->
@@ -13,29 +13,22 @@
                             </nuxt-link>
                         </div>
                         <!-- Primary Navbar items -->
-                        <div class="hidden md:flex items-center w-full justify-end ">
+                        <div class="hidden md:flex items-center w-full justify-end " v-if="isAuthenticated">
                             <nuxt-link
                                 to="/"
                                 class="w-40  h-full hover:bg-[#003399] flex justify-center items-center  font-semibold transition duration-300"
-                                >Home</nuxt-link
+                                >{{ loggedInUser.userName }}</nuxt-link
+                            >
+                            <nuxt-link
+                                to="/dashboard"
+                                class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300"
+                                >Dashboard</nuxt-link
                             >
                             <a
-                                href="https://virtualshowroom.epson.com.my/"
-                                class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300"
+                                class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300 cursor-pointer"
                                 target="_blank"
-                                >Virtual Showroom</a
-                            >
-                            <a
-                                href="https://s.lazada.com.my/s.V0n6K"
-                                class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300"
-                                target="_blank"
-                                >Lazada Store</a
-                            >
-                            <a
-                                href="https://shopee.com.my/epson.os"
-                                class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300"
-                                target="_blank"
-                                >Shopee Store</a
+                                @click="logout"
+                                >Logout</a
                             >
                         </div>
                     </div>
@@ -62,8 +55,10 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
 import Vue from 'vue'
 import EventBus from '~/components/eventbus'
+
 Vue.directive('scroll', {
     inserted (el, binding) {
         const f = function (event) {
@@ -75,12 +70,17 @@ Vue.directive('scroll', {
     }
 })
 export default {
-    name: 'Header',
+    name: 'HeaderNav',
+    computed: {
+        ...mapGetters(['isAuthenticated', 'loggedInUser'])
+    },
     data() {
-
+        return {
+            showMobileMenu: false,
+            showPopup: false,
+        }
     },
     components: {
-        EventBus
     },
     methods: {
         updateScroll () {
@@ -92,9 +92,16 @@ export default {
             document.body.classList.add('stop-scrolling')
             EventBus.$emit('OPEN_MOBILE_HEADER', this.showPopup)
         },
+        async logout(){
+            await this.$auth.logout().then(response => {
+                this.$router.push("/login");
+            })
+        }
     },
     mounted() {
         console.log('epson-header-mounted');
+        console.log('auth user', this.$auth.state.user);
+        
         const $vm = this
         EventBus.$on('OPEN_MOBILE_HEADER', function (showPopup) {
             $vm.showPopup = showPopup
