@@ -12,5 +12,8 @@ namespace Epson.Services.DTO.Requests
         public int RequestId { get; set; }
         public int ProductId { get; set; }
         public int Quantity { get; set; }
+        public string FulfillerId { get; set; }
+        public decimal Price { get; set; }
+        public bool HasFulfilled { get; set; }
     }
 }

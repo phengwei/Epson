@@ -25,6 +25,8 @@ namespace Epson.Data
             _logger = logger;
         }
 
+        public IQueryable<T> Table => GetAll().AsQueryable();
+
         public IEnumerable<T> GetAll()
         {
             var tt = typeof(T).Name;
@@ -64,10 +66,13 @@ namespace Epson.Data
 
                 query.Append($"{property.Name} = @{property.Name}");
 
-                if (i < properties.Length - 2)
+                if (i < properties.Length - 1)
                     query.Append(", ");
-                else if (i == properties.Length - 2)
-                    query.Append(" ");
+            }
+
+            if (query.ToString().EndsWith(", "))
+            {
+                query.Remove(query.Length - 2, 2);
             }
 
             query.Append(" WHERE id = @id");

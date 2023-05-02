@@ -7,5 +7,6 @@ namespace Epson.Models.Users
     public interface IJwtService
     {
         Task<string> GenerateToken(ApplicationUser user);
+        public string InvalidateToken(string token);
     }
 }

@@ -11,6 +11,7 @@ namespace Epson.Data
 {
     public interface IRepository<T>
     {
+        IQueryable<T> Table { get; }
         public IEnumerable<T> GetAll();
         public T GetById(int id);
         public int Add(T entity);

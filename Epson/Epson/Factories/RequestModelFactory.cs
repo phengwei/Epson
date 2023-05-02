@@ -30,13 +30,13 @@ namespace Epson.Factories
                 requestModel.UpdatedById = request.UpdatedById;
                 requestModel.UpdatedOnUTC = request.UpdatedOnUTC;
                 requestModel.Segment = request.Segment;
-                requestModel.ManagerId = request.ManagerId;
-                requestModel.ManagerName = request.ManagerName;
-                requestModel.Quantity = request.Quantity;
+                requestModel.TotalBudget = request.TotalBudget;
+                requestModel.ApprovalState = request.ApprovalState;
                 requestModel.Priority = request.Priority;
                 requestModel.Deadline = request.Deadline;
                 requestModel.TotalPrice = request.TotalPrice;
                 requestModel.TimeToResolution = request.TimeToResolution;
+                requestModel.RequestProducts = request.RequestProducts;
 
                 return requestModel;
             }
@@ -62,9 +62,8 @@ namespace Epson.Factories
                     UpdatedById = request.UpdatedById,
                     UpdatedOnUTC = request.UpdatedOnUTC,
                     Segment = request.Segment,
-                    ManagerId = request.ManagerId,
-                    ManagerName = request.ManagerName,
-                    Quantity = request.Quantity,
+                    TotalBudget = request.TotalBudget,
+                    ApprovalState = request.ApprovalState,
                     Priority = request.Priority,
                     Deadline = request.Deadline,
                     TotalPrice = request.TotalPrice,

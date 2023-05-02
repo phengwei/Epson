@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Epson.Model.Products;
+using System.Security.Claims;
 
 namespace Epson.Controllers.API
 {
@@ -110,7 +111,19 @@ namespace Epson.Controllers.API
             return Ok(response);
         }
 
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            _jwtService.InvalidateToken(token);
+
+            Response.Headers.Remove("Authorization");
+
+            return Ok(new { message = "Logout successful" });
+        }
+
         [HttpPost("changepassword")]
+        [AllowAnonymous]
         public async Task<IActionResult> ChangePassword(string userId, string currentPassword, string newPassword)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -131,6 +144,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("addroletouser")]
+        [AllowAnonymous]
         public async Task<IActionResult> AddRoleToUser(string userId, string roleName)
         {
             var user = await _userManager.FindByIdAsync(userId);

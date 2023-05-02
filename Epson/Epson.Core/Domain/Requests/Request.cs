@@ -12,9 +12,8 @@ namespace Epson.Core.Domain.Requests
         public DateTime ApprovedTime { get; set; }
         public string ApprovedBy { get; set; }
         public string Segment { get; set; }
-        public string ManagerId { get; set; }
-        public string ManagerName { get; set; }
-        public int Quantity { get; set; }
+        public decimal TotalBudget { get; set; }
+        public int ApprovalState { get; set; }
         public int Priority { get; set; }
         public DateTime Deadline { get; set; }
         public Decimal TotalPrice { get; set; }

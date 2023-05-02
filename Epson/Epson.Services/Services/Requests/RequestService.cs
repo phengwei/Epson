@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
+using Epson.Core.Domain.Enum;
 using Epson.Core.Domain.Products;
 using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.Users;
 using Epson.Data;
 using Epson.Services.DTO.Requests;
 using Epson.Services.DTO.SLA;
+using Epson.Services.Interface.Products;
 using Epson.Services.Interface.Requests;
 using Epson.Services.Interface.SLA;
 using Microsoft.Extensions.Options;
@@ -17,6 +19,7 @@ namespace Epson.Services.Services.Requests
         private readonly IMapper _mapper;
         private readonly IRepository<Request> _RequestRepository;
         private readonly IRepository<RequestProduct> _RequestProductRepository;
+        private readonly IProductService _productService;
         private readonly ILogger _logger;
         private readonly ISLAService _slaService;
         private readonly IOptions<SLASetting> _slaSetting;
@@ -25,6 +28,7 @@ namespace Epson.Services.Services.Requests
             (IMapper mapper,
             IRepository<Request> requestRepository,
             IRepository<RequestProduct> requestProductRepository,
+            IProductService productService,
             ILogger logger,
             ISLAService slaService,
             IOptions<SLASetting> slaSetting)
@@ -32,6 +36,7 @@ namespace Epson.Services.Services.Requests
             _mapper = mapper;
             _RequestRepository = requestRepository;
             _RequestProductRepository = requestProductRepository;
+            _productService = productService;
             _logger = logger;
             _slaService = slaService;
             _slaSetting = slaSetting;
@@ -42,7 +47,11 @@ namespace Epson.Services.Services.Requests
             if (id == 0 || id == null)
                 return new RequestDTO();
 
-            return _mapper.Map<RequestDTO>(_RequestRepository.GetById(id));
+            var requestDTO = _mapper.Map<RequestDTO>(_RequestRepository.GetById(id));
+
+            requestDTO.RequestProducts = _RequestProductRepository.GetAll().Where(x => x.RequestId == id).ToList();
+
+            return requestDTO;
         }
 
         public List<RequestDTO> GetRequests()
@@ -59,9 +68,8 @@ namespace Epson.Services.Services.Requests
                 UpdatedById = x.UpdatedById,
                 UpdatedOnUTC = x.UpdatedOnUTC,
                 Segment = x.Segment,
-                ManagerId = x.ManagerId,
-                ManagerName = x.ManagerName,
-                Quantity = x.Quantity,
+                TotalBudget = x.TotalBudget,
+                ApprovalState = x.ApprovalState,
                 Priority = x.Priority,
                 Deadline = x.Deadline,
                 TotalPrice = x.TotalPrice,
@@ -85,8 +93,10 @@ namespace Epson.Services.Services.Requests
 
                 foreach (var requestProduct in requestProducts)
                 {
-                    requestProduct.RequestId = request.Id;
+                    var product = _productService.GetProductById(requestProduct.ProductId);
 
+                    requestProduct.RequestId = request.Id;
+                    requestProduct.FulfillerId = product.CreatedById;
                     InsertRequestProduct(requestProduct);
                 }
                 return true;
@@ -179,6 +189,10 @@ namespace Epson.Services.Services.Requests
             if (GetRequestById(request.Id) == null)
                 throw new ArgumentNullException(nameof(request));
 
+            if (request.ApprovalState != (int)ApprovalStateEnum.PendingRequesterAction)
+                return false;
+            
+            request.ApprovalState = (int)ApprovalStateEnum.Approved;
             request.ApprovedBy = user.Id;
             request.ApprovedTime = DateTime.UtcNow;
             request.UpdatedOnUTC = DateTime.UtcNow;
@@ -195,6 +209,49 @@ namespace Epson.Services.Services.Requests
             catch(Exception ex)
             {
                 _logger.Error(ex, "Error approving request {requestid}", request.Id);
+                return false;
+            }
+        }
+
+        public bool FulfillRequest(ApplicationUser user, Request request, Product product, decimal totalPrice)
+        {
+            var existingRequest = GetRequestById(request.Id);
+            var existingProduct = _productService.GetProductById(product.Id);
+
+            if (existingRequest == null || existingProduct == null || request.ApprovalState != (int)ApprovalStateEnum.PendingFulfillerAction)
+                return false;
+
+            var requestProducts = _RequestProductRepository.GetAll().Where(x => x.RequestId == request.Id).ToList();
+            var requestProductToFulfill = requestProducts.FirstOrDefault(x => x.ProductId == product.Id);
+
+            if (requestProductToFulfill == null)
+                return false;
+
+            requestProductToFulfill.Price = totalPrice;
+            requestProductToFulfill.HasFulfilled = true;
+
+            try
+            {
+                _RequestProductRepository.Update(requestProductToFulfill);
+                _logger.Information("Fulfilling request product {id}", requestProductToFulfill.Id);
+
+                //calculates total price for all requested products
+                decimal totalUpdatedPrice = requestProducts.Sum(x => x.Price);
+                request.TotalPrice = totalUpdatedPrice;
+
+                //checks for all hasfulfilled field 
+                bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled == true);
+
+                if (allProductsFulfilled)
+                    request.ApprovalState = (int)ApprovalStateEnum.PendingRequesterAction;
+
+                _RequestRepository.Update(request);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error fulfilling request {id}", requestProductToFulfill.Id);
                 return false;
             }
         }

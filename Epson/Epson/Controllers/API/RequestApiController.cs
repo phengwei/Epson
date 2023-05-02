@@ -10,14 +10,17 @@ using Epson.Services.Interface.Requests;
 using Epson.Model.Request;
 using Microsoft.AspNetCore.Identity;
 using Epson.Core.Domain.Users;
+using Epson.Core.Domain.Enum;
+using Epson.Services.Interface.Products;
+using Epson.Core.Domain.Products;
 
 namespace Epson.Controllers.API
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin")]
     [Route("api/request")]
     public class RequestApiController : BaseApiController
     {
         private readonly IRequestService _requestService;
+        private readonly IProductService _productService;
         private readonly IRequestModelFactory _requestModelFactory;
         private readonly IWorkContext _workContext;
         private readonly IMapper _mapper;
@@ -26,18 +29,21 @@ namespace Epson.Controllers.API
 
         public RequestApiController(
             IRequestService requestService,
+            IProductService productService,
             IRequestModelFactory requestModelFactory,
             IWorkContext workContext,
             IMapper mapper,
             UserManager<ApplicationUser> userManager)
         {
             _requestService = requestService;
+            _productService = productService;
             _requestModelFactory = requestModelFactory;
             _workContext = workContext;
             _mapper = mapper;
             _userManager = userManager;
         }
         [HttpGet("getrequestbyid")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin")]
         public async Task<IActionResult> RequestById(int id)
         {
             var response = new GenericResponseModel<RequestModel>();
@@ -54,6 +60,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getrequests")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product")]
         public async Task<IActionResult> GetRequests()
         {
             var response = new GenericResponseModel<List<RequestModel>>();
@@ -68,6 +75,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("createrequest")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
         public async Task<IActionResult> CreateRequest([FromBody] BaseQueryModel<RequestModel> queryModel)
         {
             if (!ModelState.IsValid)
@@ -75,7 +83,6 @@ namespace Epson.Controllers.API
 
             var model = queryModel.Data;
 
-            var manager = await _userManager.FindByIdAsync(model.ManagerId);
             var user = _workContext.CurrentUser;
 
             var request = new Request
@@ -85,12 +92,10 @@ namespace Epson.Controllers.API
                 CreatedById = user.Id,
                 UpdatedById = user.Id,
                 Segment = model.Segment,
-                ManagerId = manager?.Id,
-                ManagerName = manager?.UserName,
-                Quantity = model.Quantity,
+                TotalBudget = model.TotalBudget,
+                ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction,
                 Priority = model.Priority,
-                Deadline = model.Deadline,
-                TotalPrice = model.TotalPrice
+                Deadline = (DateTime)model.Deadline
             };
 
             if (_requestService.InsertRequest(request, model.RequestProducts))
@@ -100,6 +105,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("editrequest")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
         public async Task<IActionResult> EditRequest([FromBody] BaseQueryModel<RequestModel> queryModel)
         {
             if (!ModelState.IsValid)
@@ -111,7 +117,6 @@ namespace Epson.Controllers.API
                 return BadRequest("Id must not be empty!");
 
             var request = _requestService.GetRequestById(model.Id);
-            var manager = await _userManager.FindByIdAsync(model.ManagerId);
             var user = _workContext.CurrentUser;
 
             if (request == null)
@@ -123,12 +128,10 @@ namespace Epson.Controllers.API
                 UpdatedOnUTC = DateTime.UtcNow,
                 UpdatedById = user.Id,
                 Segment = model.Segment,
-                ManagerId = manager?.Id,
-                ManagerName = manager?.UserName,
-                Quantity = model.Quantity,
+                TotalBudget = model.TotalBudget,
+                ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction,
                 Priority = model.Priority,
-                Deadline = model.Deadline,
-                TotalPrice = model.TotalPrice
+                Deadline = (DateTime)model.Deadline
             };
 
             if (_requestService.UpdateRequest(updatedRequest, model.RequestProducts))
@@ -138,6 +141,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("approverequest")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
         public async Task<IActionResult> ApproveRequest(int id)
         {
             var request = _requestService.GetRequestById(id);
@@ -153,7 +157,27 @@ namespace Epson.Controllers.API
                 return Ok("Request has been approved");
             else
                 return BadRequest("Failed to approve request");
+        }
 
+        [HttpPost("fulfillrequest")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product")]
+        public async Task<IActionResult> FulfillRequest(int requestId, int productId, decimal totalPrice)
+        {
+            var request = _requestService.GetRequestById(requestId);
+            var product = _productService.GetProductById(productId);
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (request == null || product == null)
+                return NotFound("Request not found!");
+
+            if (user == null)
+                return Unauthorized("User not authorized to perform this operation");
+
+            if (_requestService.FulfillRequest(user, _mapper.Map<Request>(request), _mapper.Map<Product>(product), totalPrice))
+                return Ok("Request has been fulfilled");
+            else
+                return BadRequest("Failed to fulfill request");
         }
     }
 }

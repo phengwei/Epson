@@ -56,6 +56,52 @@ namespace Epson.Model.Users
             return tokenString;
         }
 
+        public string InvalidateToken(string token)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"])),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true
+                };
+
+                SecurityToken securityToken;
+                var principal = tokenHandler.ValidateToken(token, validationParameters, out securityToken);
+
+                if (securityToken != null)
+                {
+                    var jwtToken = securityToken as JwtSecurityToken;
+                    var expirationDateTime = jwtToken?.ValidTo;
+
+                    if (expirationDateTime < DateTime.UtcNow)
+                        return null;
+                    else
+                    {
+                        var tokenDescriptor = new SecurityTokenDescriptor
+                        {
+                            Subject = principal.Identity as ClaimsIdentity,
+                            NotBefore = DateTime.UtcNow.AddMinutes(-1),
+                            Expires = DateTime.UtcNow,
+                            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"])), SecurityAlgorithms.HmacSha256Signature)
+                        };
+                        var newToken = tokenHandler.CreateToken(tokenDescriptor);
+                        return tokenHandler.WriteToken(newToken);
+                    }
+                }
+
+                return null;
+            }
+            catch (SecurityTokenException)
+            {
+                return null;
+            }
+        }
+
         public bool ValidateJwtToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();

@@ -2,6 +2,7 @@
 using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.Users;
 using Epson.Services.DTO.SLA;
+using Epson.Core.Domain.Products;
 
 namespace Epson.Services.Interface.Requests
 {
@@ -12,6 +13,7 @@ namespace Epson.Services.Interface.Requests
         public bool InsertRequest(Request request, List<RequestProduct> requestProducts);
         public bool UpdateRequest(Request request, List<RequestProduct> requestProducts);
         public bool ApproveRequest(ApplicationUser user, Request request);
+        public bool FulfillRequest(ApplicationUser user, Request request, Product product, decimal totalPrice);
         public TimeSpan CalculateResolutionTime(DateTime approvedTime, DateTime ticketCreateTime, List<SLAStaffLeaveDTO> staffLeaves, List<SLAHolidayDTO> holidays);
     }
 }
