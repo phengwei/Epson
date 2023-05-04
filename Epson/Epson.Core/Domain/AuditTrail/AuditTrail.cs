@@ -7,13 +7,15 @@ using System.Threading.Tasks;
 
 namespace Epson.Core.Domain.AuditTrail
 {
-    public class AuditTrail : BaseEntityExtension
+    public class AuditTrail
     {
+        public int Id { get; set; }
         public int EntityId { get; set; }
         public string Entity { get; set; }
         public DateTime ActionTime { get; set; }
         public string Actor { get; set; }
-        public string AactionDetails { get; set; }
+        public string ActionDetails { get; set; }
         public string Action { get; set; }
+        public DateTime CreatedOnUTC { get; set; }
     }
 }

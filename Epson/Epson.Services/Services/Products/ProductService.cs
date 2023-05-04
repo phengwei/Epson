@@ -4,6 +4,7 @@ using Epson.Services.Interface.Products;
 using AutoMapper;
 using Epson.Services.DTO.Products;
 using Serilog;
+using Epson.Services.Interface.AuditTrails;
 
 namespace Epson.Services.Services.Products
 {
@@ -12,16 +13,21 @@ namespace Epson.Services.Services.Products
         private readonly IMapper _mapper;
         private readonly IRepository<Product> _ProductRepository;
         private readonly ILogger _logger;
+        private readonly IAuditTrailService _auditTrailService;
 
         public ProductService
             (IMapper mapper,
             IRepository<Product> productRepository,
-            ILogger logger)
+            ILogger logger,
+            IAuditTrailService auditTrailService)
         {
             _mapper = mapper;
             _ProductRepository = productRepository;
             _logger = logger;
+            _auditTrailService = auditTrailService;
         }
+
+        public const string Entity = "Product";
 
         public ProductDTO GetProductById(int id)
         {
@@ -51,7 +57,7 @@ namespace Epson.Services.Services.Products
             return productDTOs;
         }
 
-        public bool InsertProduct(Product product)
+        public bool InsertProduct(Product product, string userId)
         {
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
@@ -60,6 +66,9 @@ namespace Epson.Services.Services.Products
             {
                 _ProductRepository.Add(product);
                 _logger.Information("Inserting product {ProductName}", product.Name);
+
+                var actionDetails = $"Inserted product {product.Id} of {product.Name} for a price of {product.Price}";
+                _auditTrailService.CreateAuditTrail(product.Id, Entity, DateTime.UtcNow, userId, actionDetails, "Insert");
 
                 return true;
             }
@@ -71,29 +80,33 @@ namespace Epson.Services.Services.Products
             }
         }
 
-        public bool UpdateProduct(Product product)
+        public bool UpdateProduct(Product product, string userId)
         {
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
 
-            if (GetProductById(product.Id) == null)
-                throw new ArgumentNullException(nameof(product));
+            var oldProduct = GetProductById(product.Id);
+
             try
             {
                 _ProductRepository.Update(product);
                 _logger.Information("Updating product {ProductName}", product.Name);
 
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Error updating product {ProductName}", product.Name);
+                var actionDetails = $"Changed the following product details : ";
 
-                return false;
+                if (product.Name != oldProduct.Name)
+                    actionDetails += $"[Name] from '{oldProduct.Name}' to '{product.Name}' ";
+
+                if (product.Price != oldProduct.Price)
+                    actionDetails += $"[Price] from '{oldProduct.Price}' to '{product.Price}' ";
+
+                _auditTrailService.CreateAuditTrail(product.Id, Entity, DateTime.UtcNow, userId, actionDetails, "Update");
+
+                return true;
             }
         }
 
-        public bool DeleteProduct(Product product)
+        public bool DeleteProduct(Product product, string userId)
         {
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
@@ -105,6 +118,10 @@ namespace Epson.Services.Services.Products
             {
                 _ProductRepository.Delete(product.Id);
                 _logger.Information("Deleting product {ProductName}", product.Name);
+
+                var actionDetails = $"Deleted the product {product.Id} ({product.Name})";
+                _auditTrailService.CreateAuditTrail(product.Id, Entity, DateTime.UtcNow, userId, actionDetails, "Delete");
+
 
                 return true;
             }

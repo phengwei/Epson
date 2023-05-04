@@ -83,7 +83,7 @@ namespace Epson.Controllers.API
                 UpdatedById = user.Id
             };
 
-            if (_productService.InsertProduct(product))
+            if (_productService.InsertProduct(product, user.Id))
                 return Ok();
             else
                 return BadRequest("Failed to insert product");
@@ -116,7 +116,7 @@ namespace Epson.Controllers.API
                 UpdatedById = user.Id
             };
 
-            if (_productService.UpdateProduct(updatedProduct))
+            if (_productService.UpdateProduct(updatedProduct, user.Id))
                 return Ok();
             else
                 return BadRequest("Failed to update product");
@@ -129,7 +129,9 @@ namespace Epson.Controllers.API
 
             var productToDelete = _mapper.Map<Product>(product);
 
-            if (_productService.DeleteProduct(productToDelete))
+            var user = _workContext.CurrentUser;
+
+            if (_productService.DeleteProduct(productToDelete, user.Id))
                 return Ok();
             else
                 return BadRequest("Failed to delete product");
