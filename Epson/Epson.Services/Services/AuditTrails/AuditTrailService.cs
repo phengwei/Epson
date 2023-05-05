@@ -1,5 +1,6 @@
 ﻿using Epson.Core.Domain.AuditTrail;
 using Epson.Data;
+using Epson.Services.DTO.Products;
 using Epson.Services.Interface.AuditTrails;
 
 namespace Epson.Services.Services.AuditTrails
@@ -27,6 +28,11 @@ namespace Epson.Services.Services.AuditTrails
             };
 
             _auditTrailRepository.Add(auditEntry);
+        }
+
+        public List<AuditTrail> GetProductAuditTrails()
+        {
+            return _auditTrailRepository.Table.Where(x => x.Entity == "Product").ToList();
         }
     }
 }

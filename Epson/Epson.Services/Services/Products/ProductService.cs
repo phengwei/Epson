@@ -104,6 +104,12 @@ namespace Epson.Services.Services.Products
 
                 return true;
             }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error updating product {ProductName}", product.Name);
+
+                return false;
+            }
         }
 
         public bool DeleteProduct(Product product, string userId)
