@@ -12,6 +12,7 @@
   import MobileNav from '~/components/MobileNav.vue';
   
   export default {
+    auth: false,
     name: 'DefaultLayout',
     computed: {
       ...mapGetters(['isAuthenticated'])

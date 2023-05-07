@@ -5,6 +5,6 @@ export default function ({ store, redirect }) {
     if (store.state.auth.loggedIn) {
 
       console.log("store.state.auth.loggedIn == true");
-      return redirect('/')
+      return redirect('/dashboard')
     }
   }

@@ -15,7 +15,7 @@
                         <!-- Primary Navbar items -->
                         <div class="hidden md:flex items-center w-full justify-end " v-if="isAuthenticated">
                             <nuxt-link
-                                to="/"
+                                to="/user"
                                 class="w-40  h-full hover:bg-[#003399] flex justify-center items-center  font-semibold transition duration-300"
                                 >{{ loggedInUser.userName }}</nuxt-link
                             >

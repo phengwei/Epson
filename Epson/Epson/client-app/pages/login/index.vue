@@ -71,6 +71,7 @@
       
     name :"auth-login",
     middleware: 'guest',
+    auth: false,
       components: {
       },
       
@@ -86,7 +87,7 @@
           title: "Epson Unity Management Login"
         }
       },
-      created() {
+      beforeMount() {
         if (this.$auth.loggedIn) {
             this.$router.push('/dashboard');
         }

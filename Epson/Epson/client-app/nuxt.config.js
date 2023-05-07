@@ -193,7 +193,7 @@ export default {
     redirect: {
       login: '/login',
       logout: '/login',
-      callback: '/',
+      callback: '/login',
       home: '/dashboard'
     }
   },
@@ -217,6 +217,7 @@ export default {
   axios: {
     // Workaround to avoid enforcing hard-coded localhost:3000: https://github.com/nuxt-community/axios-module/issues/308
     baseURL: 'https://localhost:7223',
+    https: true,
     proxy: true
   },
 
@@ -272,6 +273,9 @@ export default {
         // _: 'lodash'
       })
     ]
+  },
+  vuetify: {
+    treeShake: true
   },
 
 

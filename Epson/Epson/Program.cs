@@ -162,18 +162,18 @@ app.MapControllers();
 
 app.UseSpaStaticFiles();
 
-//app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
-//{
-//    builder.UseSpa(spa =>
-//    {
-//        spa.Options.SourcePath = "client-app";
-//        if (app.Environment.IsDevelopment())
-//        {
-//            // Launch development server for Nuxt
-//            spa.UseNuxtDevelopmentServer();
-//        }
-//    });
-//});
+app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
+{
+    builder.UseSpa(spa =>
+    {
+        spa.Options.SourcePath = "client-app";
+        if (app.Environment.IsDevelopment())
+        {
+            // Launch development server for Nuxt
+            spa.UseNuxtDevelopmentServer();
+        }
+    });
+});
 
 
 app.Run();
