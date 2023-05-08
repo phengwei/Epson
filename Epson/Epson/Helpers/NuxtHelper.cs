@@ -52,13 +52,17 @@ namespace NuxtIntegration.Helpers
 
                 //var processInfo = new ProcessStartInfo
                 //{
-                //    FileName = @"C:\Program Files\nodejs\npm.cmd",
-                //    Arguments = "run dev",
+                //    FileName = isWindows ? "cmd" : "/bin/bash",
+                //    Arguments = $"{(isWindows ? "/c npm.cmd" : "-c npm")} run dev",
                 //    WorkingDirectory = clientAppPath,
                 //    RedirectStandardError = true,
                 //    RedirectStandardInput = true,
                 //    RedirectStandardOutput = true,
                 //    UseShellExecute = false,
+                //    Environment =
+                //    {
+                //        { "PATH", $"{Environment.GetEnvironmentVariable("PATH")};/path/to/npm" }
+                //    }
                 //};
 
                 var process = Process.Start(processInfo);
