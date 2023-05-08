@@ -25,6 +25,8 @@ using Epson.Services.Interface.SLA;
 using Epson.Services.Services.SLA;
 using Epson.Services.Interface.AuditTrails;
 using Epson.Services.Services.AuditTrails;
+using Autofac.Core;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -125,7 +127,10 @@ builder.Services.AddScoped<IRequestModelFactory, RequestModelFactory>();
 builder.Services.AddScoped<ISLAModelFactory, SLAModelFactory>();
 #endregion
 
-builder.Services.AddSpaStaticFiles(options => options.RootPath = "client-app/dist");
+builder.Services.AddSpaStaticFiles(options =>
+{
+    options.RootPath = "client-app/dist";
+});
 
 var app = builder.Build();
 
@@ -145,7 +150,7 @@ app.UseSwaggerUI(c =>
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+app.UseSpaStaticFiles();
 
 app.UseRouting();
 app.UseAuthentication();
@@ -157,23 +162,18 @@ app.UseEndpoints(endpoints =>
     endpoints.MapControllers();
 });
 
-app.MapRazorPages();
+//app.MapRazorPages();
 app.MapControllers();
 
-app.UseSpaStaticFiles();
-
-app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
+app.UseSpa(spa =>
 {
-    builder.UseSpa(spa =>
+    spa.Options.DefaultPageStaticFileOptions = new StaticFileOptions
     {
-        spa.Options.SourcePath = "client-app";
-        if (app.Environment.IsDevelopment())
-        {
-            // Launch development server for Nuxt
-            spa.UseNuxtDevelopmentServer();
-        }
-    });
+        FileProvider = new PhysicalFileProvider(
+            Path.Combine(Directory.GetCurrentDirectory(), "client-app", "dist")
+        ),
+        RequestPath = ""
+    };
 });
-
 
 app.Run();
