@@ -1,12 +1,12 @@
 <template>
     <div>
-        <h1>Welcome to my Nuxt.js app!</h1>
-        <p>This is the homepage.</p>
+        <h1>Welcome to my Nuxt app!</h1>
+        <p>This is the default landing page.</p>
     </div>
 </template>
 
 <script>
     export default {
-        name: 'IndexPage'
+        name: 'Index',
     }
 </script>

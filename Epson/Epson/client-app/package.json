@@ -9,6 +9,9 @@
     "dev": "nuxt dev --port 3001"
   },
   "dependencies": {
+    "@nuxtjs/auth": "^4.9.1",
+    "@nuxtjs/auth-next": "^5.0.0-1667386184.dfbbb54",
+    "@nuxtjs/pwa": "^3.3.5",
     "core-js": "^3.8.3",
     "vue": "^3.2.13",
     "vue-router": "^4.1.6"
