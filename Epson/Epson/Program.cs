@@ -150,7 +150,7 @@ app.UseSwaggerUI(c =>
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseSpaStaticFiles();
+//app.UseSpaStaticFiles();
 
 app.UseRouting();
 app.UseAuthentication();
@@ -159,21 +159,22 @@ app.UseAuthorization();
 app.UseSession();
 app.UseEndpoints(endpoints =>
 {
-    endpoints.MapControllers();
+    endpoints.MapControllerRoute(
+    name: "default",
+    pattern: "{controller}/{action=Index}/{id?}");
 });
 
-//app.MapRazorPages();
-app.MapControllers();
-
-app.UseSpa(spa =>
+app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
 {
-    spa.Options.DefaultPageStaticFileOptions = new StaticFileOptions
+    builder.UseSpa(spa =>
     {
-        FileProvider = new PhysicalFileProvider(
-            Path.Combine(Directory.GetCurrentDirectory(), "client-app", "dist")
-        ),
-        RequestPath = ""
-    };
+        spa.Options.SourcePath = "client-app";
+        if (app.Environment.IsDevelopment())
+        {
+            // Launch development server for Nuxt
+            spa.UseNuxtDevelopmentServer();
+        }
+    });
 });
 
 app.Run();

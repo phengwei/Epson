@@ -1,0 +1,1 @@
+export { default } from "file:///C:/Users/richa/Documents/GitHub/Epson/Epson/Epson/client-app/node_modules/@nuxt/vite-builder/dist/runtime/client.manifest.mjs"

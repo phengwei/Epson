@@ -17,7 +17,7 @@ namespace NuxtIntegration.Helpers
         // default port number of 'npm run dev'
         private static int Port { get; } = 3001;
         private static Uri DevelopmentServerEndpoint { get; } = new Uri($"http://localhost:{Port}");
-        private static TimeSpan Timeout { get; } = TimeSpan.FromSeconds(30);
+        private static TimeSpan Timeout { get; } = TimeSpan.FromMinutes(120);
         // done message of 'npm run dev' command.
         private static string DoneMessage { get; } = "DONE  Compiled successfully in";
 
@@ -38,9 +38,11 @@ namespace NuxtIntegration.Helpers
 
                 //  var npm = System.Environment.GetEnvironmentVariable("npm");
 
-                var processInfo = new ProcessStartInfo( "npm", "run dev")
+                var clientAppPath = Path.Combine(Directory.GetCurrentDirectory(), "client-app");
+
+                var processInfo = new ProcessStartInfo("npm", "run dev")
                 {
-                    WorkingDirectory = "client-app",
+                    WorkingDirectory = clientAppPath,
                     RedirectStandardError = true,
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
@@ -48,21 +50,17 @@ namespace NuxtIntegration.Helpers
 
                 };
 
-                /**
-                var processInfo = new ProcessStartInfo
-                {
-                    FileName = isWindows ? "cmd" : "npm",
-                    Arguments = $"{(isWindows ? "/c npm " : "")}run dev",
-                    
-                    // FileName = "npm",
-                    // Arguments = "run dev",
-                    WorkingDirectory = "client-app",
-                    RedirectStandardError = true,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                };
-                **/
+                //var processInfo = new ProcessStartInfo
+                //{
+                //    FileName = @"C:\Program Files\nodejs\npm.cmd",
+                //    Arguments = "run dev",
+                //    WorkingDirectory = clientAppPath,
+                //    RedirectStandardError = true,
+                //    RedirectStandardInput = true,
+                //    RedirectStandardOutput = true,
+                //    UseShellExecute = false,
+                //};
+
                 var process = Process.Start(processInfo);
                 var tcs = new TaskCompletionSource<int>();
                 _ = Task.Run(() =>
