@@ -104,6 +104,7 @@ namespace Epson.Controllers.API
             }
             var roles = await _userManager.GetRolesAsync(user);
 
+            response.Data.UserId = user.Id;
             response.Data.UserName = user.UserName;
             response.Data.Email = user.Email;
             response.Data.Roles = (List<string>)roles;
