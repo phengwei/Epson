@@ -6,6 +6,9 @@
 # install dependencies
 $ npm install
 
+or do
+npm install --ignore-scripts node-sass
+
 # serve with hot reload at localhost:3000
 $ npm run dev
 
