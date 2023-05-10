@@ -5,6 +5,9 @@ using AutoMapper;
 using Epson.Services.DTO.Products;
 using Serilog;
 using Epson.Services.Interface.AuditTrails;
+using Epson.Core.Domain.Categories;
+using Epson.Core.Domain.Requests;
+using Epson.Services.Interface.Categories;
 
 namespace Epson.Services.Services.Products
 {
@@ -12,19 +15,25 @@ namespace Epson.Services.Services.Products
     {
         private readonly IMapper _mapper;
         private readonly IRepository<Product> _ProductRepository;
+        private readonly IRepository<ProductCategory> _ProductCategoryRepository;
         private readonly ILogger _logger;
         private readonly IAuditTrailService _auditTrailService;
+        private readonly ICategoryService _categoryService;
 
         public ProductService
             (IMapper mapper,
             IRepository<Product> productRepository,
+            IRepository<ProductCategory> productCategoryRepository,
             ILogger logger,
-            IAuditTrailService auditTrailService)
+            IAuditTrailService auditTrailService,
+            ICategoryService categoryService)
         {
             _mapper = mapper;
             _ProductRepository = productRepository;
+            _ProductCategoryRepository = productCategoryRepository;
             _logger = logger;
             _auditTrailService = auditTrailService;
+            _categoryService = categoryService;
         }
 
         public const string Entity = "Product";
@@ -57,18 +66,30 @@ namespace Epson.Services.Services.Products
             return productDTOs;
         }
 
-        public bool InsertProduct(Product product, string userId)
+        public bool InsertProduct(Product product, List<ProductCategory> productCategories, string userId)
         {
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
 
             try
             {
-                _ProductRepository.Add(product);
+                product.Id = _ProductRepository.Add(product);
                 _logger.Information("Inserting product {ProductName}", product.Name);
 
                 var actionDetails = $"Inserted product {product.Id} of {product.Name} for a price of {product.Price}";
                 _auditTrailService.CreateAuditTrail(product.Id, Entity, DateTime.UtcNow, userId, actionDetails, "Insert");
+
+                foreach (var productCategory in productCategories)
+                {
+                    var category = _categoryService.GetCategoryById(productCategory.CategoryId);
+
+                    if (category == null)
+                        return false;
+
+                    productCategory.ProductId = product.Id;
+                    productCategory.CategoryId = category.Id;
+                    InsertProductCategory(productCategory);
+                }
 
                 return true;
             }
@@ -80,7 +101,25 @@ namespace Epson.Services.Services.Products
             }
         }
 
-        public bool UpdateProduct(Product product, string userId)
+        private bool InsertProductCategory(ProductCategory productCategory)
+        {
+            if (productCategory == null)
+                throw new ArgumentNullException(nameof(productCategory));
+
+            try
+            {
+                _ProductCategoryRepository.Add(productCategory);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error creating product category {id}", productCategory.Id);
+                return false;
+            }
+        }
+
+        public bool UpdateProduct(Product product, List<ProductCategory> productCategories, string userId)
         {
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
@@ -91,6 +130,15 @@ namespace Epson.Services.Services.Products
             {
                 _ProductRepository.Update(product);
                 _logger.Information("Updating product {ProductName}", product.Name);
+
+                DeleteProductCategoriesOfProduct(product.Id);
+
+                foreach (var productCategory in productCategories)
+                {
+                    productCategory.ProductId = product.Id;
+
+                    InsertProductCategory(productCategory);
+                }
 
                 var actionDetails = $"Changed the following product details : ";
 
@@ -112,6 +160,30 @@ namespace Epson.Services.Services.Products
             }
         }
 
+        private bool DeleteProductCategoriesOfProduct(int productId)
+        {
+            if (productId == 0 || productId == null)
+                return false;
+
+            if (GetProductById(productId) == null)
+                return false;
+
+            var productCategories = _ProductCategoryRepository.GetAll().Where(x => x.ProductId == productId).ToList();
+            try
+            {
+                foreach (var productCategory in productCategories)
+                    _ProductCategoryRepository.Delete(productCategory.Id);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error deleting product categories of product {productId}", productId);
+
+                return false;
+            }
+        }
+
         public bool DeleteProduct(Product product, string userId)
         {
             if (product == null)
@@ -124,6 +196,8 @@ namespace Epson.Services.Services.Products
             {
                 _ProductRepository.Delete(product.Id);
                 _logger.Information("Deleting product {ProductName}", product.Name);
+
+                DeleteProductCategoriesOfProduct(product.Id);
 
                 var actionDetails = $"Deleted the product {product.Id} ({product.Name})";
                 _auditTrailService.CreateAuditTrail(product.Id, Entity, DateTime.UtcNow, userId, actionDetails, "Delete");

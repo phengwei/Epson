@@ -9,7 +9,7 @@ namespace Epson.Core.Domain.Categories
     public class ProductCategory
     {
         public int Id { get; set; }
-        public int categoryId { get; set; }
-        public int productId { get; set; }
+        public int CategoryId { get; set; }
+        public int ProductId { get; set; }
     }
 }

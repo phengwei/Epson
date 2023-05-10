@@ -83,7 +83,7 @@ namespace Epson.Controllers.API
                 UpdatedById = user.Id
             };
 
-            if (_productService.InsertProduct(product, user.Id))
+            if (_productService.InsertProduct(product, model.ProductCategories, user.Id))
                 return Ok();
             else
                 return BadRequest("Failed to insert product");
@@ -116,7 +116,7 @@ namespace Epson.Controllers.API
                 UpdatedById = user.Id
             };
 
-            if (_productService.UpdateProduct(updatedProduct, user.Id))
+            if (_productService.UpdateProduct(updatedProduct, model.ProductCategories, user.Id))
                 return Ok();
             else
                 return BadRequest("Failed to update product");

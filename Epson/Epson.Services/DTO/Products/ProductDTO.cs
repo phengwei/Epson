@@ -1,4 +1,5 @@
-﻿using FluentMigrator.Infrastructure;
+﻿using Epson.Core.Domain.Categories;
+using FluentMigrator.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -19,5 +20,6 @@ namespace Epson.Services.DTO.Products
         public string UpdatedById { get; set; }
         public DateTime CreatedOnUTC { get; set; }
         public DateTime? UpdatedOnUTC { get; set; }
+        public List<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
     }
 }
