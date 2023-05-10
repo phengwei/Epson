@@ -1,5 +1,5 @@
 {
-  "name": "coke-contest",
+  "name": "epson",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -8,10 +8,6 @@
     "build": "nuxt build",
     "start": "nuxt start",
     "generatebackup": "nuxt generate",
-    "generatebbbbb": "env BUILD_REST_URL=http://016608-cny2022c3loco-test.ap-southeast-1.elasticbeanstalk.com node --max-old-space-size=8192 node_modules/nuxt/bin/nuxt.js generate",
-    "generatetest": "env BUILD_REST_URL=https://lotusscny2022test.coca-cola.com.my node --max-old-space-size=8192 node_modules/nuxt/bin/nuxt.js generate",
-    "generate_lotus_prod": "env BUILD_REST_URL=https://lotusscny2022.coca-cola.com.my node --max-old-space-size=8192 node_modules/nuxt/bin/nuxt.js generate",
-    "generate": "env BUILD_REST_URL=https://cny2022.coca-cola.com.my node --max-old-space-size=8192 node_modules/nuxt/bin/nuxt.js generate",
     "lint:js": "eslint --ext \".js,.vue\" --ignore-path .gitignore .",
     "lint": "npm run lint:js",
     "test": "jest"

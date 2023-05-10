@@ -157,7 +157,6 @@ app.UseEndpoints(endpoints =>
     endpoints.MapControllers();
 });
 
-app.MapRazorPages();
 app.MapControllers();
 
 app.UseSpaStaticFiles();
