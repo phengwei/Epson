@@ -69,7 +69,7 @@ namespace Epson.Data.Migrations
                     b.ToTable("Audit_Trail");
                 });
 
-            modelBuilder.Entity("Epson.Core.Domain.Category.Category", b =>
+            modelBuilder.Entity("Epson.Core.Domain.Categories.Category", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -98,7 +98,7 @@ namespace Epson.Data.Migrations
                     b.ToTable("Category");
                 });
 
-            modelBuilder.Entity("Epson.Core.Domain.Category.ProductCategory", b =>
+            modelBuilder.Entity("Epson.Core.Domain.Categories.ProductCategory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

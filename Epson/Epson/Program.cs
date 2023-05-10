@@ -25,6 +25,8 @@ using Epson.Services.Interface.SLA;
 using Epson.Services.Services.SLA;
 using Epson.Services.Interface.AuditTrails;
 using Epson.Services.Services.AuditTrails;
+using Epson.Services.Interface.Categories;
+using Epson.Services.Services.Categories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -107,6 +109,7 @@ builder.Services.AddSingleton(mapper);
 
 #region Services
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IAuditTrailService, AuditTrailService>();
 builder.Services.AddScoped<ISLAService, SLAService>();
@@ -121,6 +124,7 @@ builder.Services.AddHostedService<EmailBackgroundService>();
 
 #region Factories
 builder.Services.AddScoped<IProductModelFactory, ProductModelFactory>();
+builder.Services.AddScoped<ICategoryModelFactory, CategoryModelFactory>();
 builder.Services.AddScoped<IRequestModelFactory, RequestModelFactory>();
 builder.Services.AddScoped<ISLAModelFactory, SLAModelFactory>();
 #endregion

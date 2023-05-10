@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using Epson.Core.Domain.Categories;
 using Epson.Core.Domain.Email;
 using Epson.Core.Domain.Products;
 using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.SLA;
+using Epson.Services.DTO.Categories;
 using Epson.Services.DTO.Email;
 using Epson.Services.DTO.Products;
 using Epson.Services.DTO.Requests;
@@ -22,6 +24,8 @@ namespace Epson.Services.DTO
             #region Product
             CreateMap<ProductDTO, Product>();
             CreateMap<Product, ProductDTO>();
+            CreateMap<Category, CategoryDTO>();
+            CreateMap<CategoryDTO, Category>();
             #endregion
 
             #region Email

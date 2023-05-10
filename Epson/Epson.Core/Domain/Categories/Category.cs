@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Epson.Core.Domain.Category
+namespace Epson.Core.Domain.Categories
 {
     public class Category : BaseEntityExtension
     {

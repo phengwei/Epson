@@ -1,5 +1,5 @@
 ﻿using Epson.Core.Domain.AuditTrail;
-using Epson.Core.Domain.Category;
+using Epson.Core.Domain.Categories;
 using Epson.Core.Domain.Email;
 using Epson.Core.Domain.Products;
 using Epson.Core.Domain.Requests;
