@@ -1,7 +1,7 @@
 <template>
   <div class="sla-holiday-management">
     <h1>SLA - Holiday Calendar Management</h1>
-    <form @submit.prevent="addHoliday" class="form-container">
+    <form class="form-container">
       <div class="form-group">
         <label for="holidayDate">Holiday Date:</label>
         <input type="date" id="holidayDate" v-model="holidayDate" required class="border-input">
@@ -38,39 +38,28 @@
     methods: {
       async saveSLAHoliday() {
         try {
-          const response = await fetch('api/sla/addslaholiday', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              data: {
-                Date: this.holidayDate,
-                Description: this.description,
-                IsAdhoc: this.isAdhoc
-              }
-            })
-          });
-
-          if (response.ok) {
+          await this.$axios.post(`${this.$config.restUrl}/api/sla/addslaholiday`, {
+            data: {
+              Date: this.holidayDate,
+              Description: this.description,
+              IsAdhoc: this.isAdhoc
+            }
+          }).then(response => {
             console.log('SLA holiday added successfully');
-          } else {
-            console.error('Failed to add SLA holiday');
-          }
+          })
         } catch (error) {
           console.error('There was a problem adding SLA holiday');
         }
       },
       async getSLAHolidays() {
         try {
-          const response = await fetch('api/sla/getslaholidays');
+          this.loading = true
+          await this.$axios.get(`${this.$config.restUrl}/api/sla/getslaholidays`).then(result => {
+            this.holidayDate = result.data.data.date
+            this.description = result.data.data.description
+            this.isAdhoc = result.data.data.isAdhoc
+          })
 
-          const obj = await response.json();
-          this.holidayDate = obj.data.date;
-          this.description = obj.data.description;
-          this.isAdhoc = obj.data.isAdhoc;
-
-          console.log(this);
         } catch (error) {
           console.error('There was a problem fetching the SLA holidays:', error);
         }

@@ -11,6 +11,9 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using System.Text;
+using Microsoft.Identity.Client;
+using Epson.Core.Domain.Requests;
+using Epson.Core.Domain.Enum;
 
 namespace Epson.Services.Services.SLA
 {
@@ -19,6 +22,7 @@ namespace Epson.Services.Services.SLA
         private readonly IMapper _mapper;
         private readonly IRepository<SLAHoliday> _SLAHolidayRepository;
         private readonly IRepository<SLAStaffLeave> _SLAStaffLeaveRepository;
+        private readonly IRepository<Request> _requestRepository;
         private readonly ILogger _logger;
         private readonly IOptions<SLASetting> _slaSetting;
         private readonly IConfiguration _configuration;
@@ -27,6 +31,7 @@ namespace Epson.Services.Services.SLA
             (IMapper mapper,
             IRepository<SLAHoliday> slaHolidayRepository,
             IRepository<SLAStaffLeave> slaStaffLeaveRepository,
+            IRepository<Request> requestRepository,
             ILogger logger,
             IOptions<SLASetting> slaSetting,
             IConfiguration configuration)
@@ -34,6 +39,7 @@ namespace Epson.Services.Services.SLA
             _mapper = mapper;
             _SLAHolidayRepository = slaHolidayRepository;
             _SLAStaffLeaveRepository = slaStaffLeaveRepository;
+            _requestRepository = requestRepository;
             _logger = logger;
             _slaSetting = slaSetting;
             _configuration = configuration;
@@ -161,5 +167,72 @@ namespace Epson.Services.Services.SLA
             return _mapper.Map<SLASettingDTO>(_slaSetting.Value);
         }
 
+        public decimal GetAverageTimeToResolutionInHours(string userId)
+        {
+            var ticketsResolved = _requestRepository.Table
+                .Where(x => x.CreatedById == userId 
+                && x.ApprovalState == (int)ApprovalStateEnum.Approved)
+                .ToList();
+
+            TimeSpan totalResolutionTime = TimeSpan.Zero;
+
+            foreach (var ticket in ticketsResolved)
+                totalResolutionTime += ticket.TimeToResolution;
+
+            decimal averageTimeToResolution = (decimal)totalResolutionTime.TotalHours / ticketsResolved.Count;
+            averageTimeToResolution = Math.Round(averageTimeToResolution, 2);
+
+            return averageTimeToResolution;
+        }
+
+        public int GetBreachedTicketCount(string userId)
+        {
+            var ticketsBreached = _requestRepository.Table
+                .Where(x => x.Breached &&
+                            x.CreatedById == userId &&
+                            x.ApprovalState == (int)ApprovalStateEnum.Approved)
+                .ToList();
+
+            return ticketsBreached.Count;
+        }
+
+        public int GetTotalTicketCount(string userId)
+        {
+            var totalTickets = _requestRepository.Table
+                .Where(x => x.CreatedById == userId)
+                .ToList();
+
+            return totalTickets.Count;
+        }
+
+        public int GetApprovedTickets(string userId)
+        {
+            var approvedTickets = _requestRepository.Table
+                .Where(x => x.CreatedById == userId &&
+                            x.ApprovalState == (int)ApprovalStateEnum.Approved)
+                .ToList();
+
+            return approvedTickets.Count;
+        }
+
+        public decimal GetSuccessRateOfTickets(string userId)
+        {
+            var successTickets = _requestRepository.Table
+                .Where(x => x.CreatedById == userId &&
+                            !x.Breached &&
+                            x.ApprovalState == (int)ApprovalStateEnum.Approved)
+                .ToList();
+
+            var totalTickets = GetApprovedTickets(userId);
+
+            decimal successRate = 0;
+            if (totalTickets > 0)
+            {
+                successRate = (decimal)successTickets.Count / totalTickets;
+                successRate = Math.Round(successRate * 100, 2); 
+            }
+
+            return successRate;
+        }
     }
 }

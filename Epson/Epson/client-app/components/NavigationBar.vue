@@ -14,29 +14,21 @@
                         </div>
                         <!-- Primary Navbar items -->
                         <div class="hidden md:flex items-center w-full justify-end " v-if="isAuthenticated">
-                            <nuxt-link
-                                to="/user"
-                                class="w-40  h-full hover:bg-[#003399] flex justify-center items-center  font-semibold transition duration-300"
-                                >{{ loggedInUser.userName }}</nuxt-link
-                            >
-                            <nuxt-link
-                                to="/dashboard"
-                                class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300"
-                                >Dashboard</nuxt-link
-                            >
-                          <!-- to be moved to admin configuration screen in the future -->
-                          <nuxt-link
-                                to="/sla"
-                                class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300"
-                                >SLA Management</nuxt-link
-                            >
+                          <nuxt-link to="/user"
+                                     class="w-40  h-full hover:bg-[#003399] flex justify-center items-center  font-semibold transition duration-300">{{ loggedInUser.userName }}</nuxt-link>
+                          <nuxt-link to="/dashboard"
+                                     class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Dashboard</nuxt-link>
 
-                            <a
-                                class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300 cursor-pointer"
-                                target="_blank"
-                                @click="logout"
-                                >Logout</a
-                            >
+                          <nuxt-link to="/slaDashboard"
+                                     class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">SLA Overview</nuxt-link>
+
+                          <!-- to be moved to admin configuration screen in the future -->
+                          <nuxt-link to="/sla"
+                                     class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">SLA Management</nuxt-link>
+
+                          <a class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300 cursor-pointer"
+                             target="_blank"
+                             @click="logout">Logout</a>
                         </div>
                     </div>
                     <!-- Mobile menu button -->

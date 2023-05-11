@@ -75,45 +75,35 @@
       },
       async saveSLASettings() {
         try {
-          const response = await fetch('api/sla/updateslasettings', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              data: {
-                IncludeHoliday: this.holidays,
-                IncludeStaffLeaves: this.staffLeaves,
-                IncludeWorkingHours: this.workingHours,
-                WorkingStartHour: parseInt(this.workingHoursStart.split(':')[0]),
-                WorkingStartMinute: parseInt(this.workingHoursStart.split(':')[1]),
-                WorkingEndHour: parseInt(this.workingHoursEnd.split(':')[0]),
-                WorkingEndMinute: parseInt(this.workingHoursEnd.split(':')[1]),
-                DeadlineInHours: parseInt(this.deadlineHours)
-              }
-            })
-          });
-
-          if (response.ok) {
-            console.log('SLA settings updated successfully');
-          } else {
-            console.error('Failed to update SLA settings');
-          }
+          await this.$axios.post(`${this.$config.restUrl}/api/sla/updateslasettings`, {
+            data: {
+              IncludeHoliday: this.holidays,
+              IncludeStaffLeaves: this.staffLeaves,
+              IncludeWorkingHours: this.workingHours,
+              WorkingStartHour: parseInt(this.workingHoursStart.split(':')[0]),
+              WorkingStartMinute: parseInt(this.workingHoursStart.split(':')[1]),
+              WorkingEndHour: parseInt(this.workingHoursEnd.split(':')[0]),
+              WorkingEndMinute: parseInt(this.workingHoursEnd.split(':')[1]),
+              DeadlineInHours: parseInt(this.deadlineHours)
+            }
+          }).then(response => {
+            console.log('SLA holiday added successfully');
+          })
         } catch (error) {
           console.error('There was a problem updating SLA settings');
         }
       },
       async getSLASettings() {
         try {
-          const response = await fetch('api/sla/getslasettings');
-
-          const obj = await response.json();
-          this.workingHours = obj.data.includeWorkingHours;
-          this.workingHoursStart = `${obj.data.workingStartHour.toString().padStart(2, '0')}:${obj.data.workingStartMinute.toString().padStart(2, '0')}`;
-          this.workingHoursEnd = `${obj.data.workingEndHour.toString().padStart(2, '0')}:${obj.data.workingEndMinute.toString().padStart(2, '0')}`;
-          this.deadlineHours = obj.data.deadlineInHours;
-          this.holidays = obj.data.includeHoliday;
-          this.staffLeaves = obj.data.includeStaffLeaves;
+          this.loading = true
+          await this.$axios.get(`${this.$config.restUrl}/api/sla/getslasettings`).then(result => {
+            this.workingHours = result.data.data.includeWorkingHours
+            this.workingHoursStart = `${result.data.data.workingStartHour.toString().padStart(2, '0')}:${result.data.data.workingStartMinute.toString().padStart(2, '0')}`;
+            this.workingHoursEnd = `${result.data.data.workingEndHour.toString().padStart(2, '0')}:${result.data.data.workingEndMinute.toString().padStart(2, '0')}`;
+            this.deadlineHours = result.data.data.deadlineInHours
+            this.holidays = result.data.data.includeHoliday
+            this.staffLeaves = result.data.data.includeStaffLeaves
+          })
 
         } catch (error) {
           console.error('There was a problem fetching the SLA settings:', error);

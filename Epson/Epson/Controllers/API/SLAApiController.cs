@@ -20,7 +20,7 @@ using System.Text;
 
 namespace Epson.Controllers.API
 {
-    //[Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
     [Route("api/sla")]
     public class SLAApiController : BaseApiController
     {
@@ -193,6 +193,21 @@ namespace Epson.Controllers.API
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpGet("getslametrics")]
+        public async Task<IActionResult> GetSLAMetricsModel()
+        {
+            var currentUserId = _workContext.CurrentUser.Id;
+            var response = new GenericResponseModel<SLAMetricsModel>();
+
+            response.Data.AverageTimeToResolutionInHours = _slaService.GetAverageTimeToResolutionInHours(currentUserId);
+            response.Data.TotalTickets = _slaService.GetTotalTicketCount(currentUserId);
+            response.Data.BreachedTickets = _slaService.GetBreachedTicketCount(currentUserId);
+            response.Data.SuccessRate = _slaService.GetSuccessRateOfTickets(currentUserId);
+
+            return Ok(response);
+        }
+
         private void ReloadConfiguration()
         {
             var configurationRoot = (IConfigurationRoot)_configuration;

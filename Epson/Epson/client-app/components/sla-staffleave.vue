@@ -20,7 +20,7 @@
         <label for="reason">Reason:</label>
         <textarea id="reason" v-model="reason" required></textarea>
       </div>
-      <button type="button" @click="validateAndSaveSLAStaffLeave">Add Staff Leave</button>
+      <button type="submit" @click="validateAndSaveSLAStaffLeave">Add Staff Leave</button>
     </form>
   </div>
 </template>
@@ -85,26 +85,16 @@
       },
       async saveSLAStaffLeave() {
         try {
-          const response = await fetch('api/sla/addslastaffleave', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              data: {
-                startDate: this.startDate,
-                endDate: this.endDate,
-                reason: this.reason,
-                staffId: this.selectedStaff
-              }
-            })
-          });
-
-          if (response.ok) {
-            console.log('SLA Staff Leave added successfully');
-          } else {
-            console.error('Failed to add SLA staff leave');
-          }
+          await this.$axios.post(`${this.$config.restUrl}/api/sla/addslastaffleave`, {
+            data: {
+              startDate: this.startDate,
+              endDate: this.endDate,
+              reason: this.reason,
+              staffId: this.selectedStaff
+            }
+          }).then(response => {
+            console.log('SLA holiday added successfully');
+          })
         } catch (error) {
           console.error('There was a problem adding SLA staff leave');
         }
