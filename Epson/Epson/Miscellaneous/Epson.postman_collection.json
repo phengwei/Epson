@@ -280,7 +280,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"data\": {\r\n    \"name\": \"printer1\",\r\n    \"price\": 31,\r\n    \"productCategories\": [\r\n      {\r\n        \"categoryId\": 1\r\n      }\r\n    ]\r\n  }\r\n}",
+							"raw": "{\r\n  \"data\": {\r\n    \"name\": \"testproductcategory\",\r\n    \"price\": 31,\r\n    \"productCategories\": [\r\n      {\r\n        \"categoryId\": 1\r\n      }\r\n    ]\r\n  }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -311,7 +311,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImY1YjRkY2E3LWJjMWMtNGU2MS04NzA0LTc4YmM1OWQzYWY1OSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJwaGVuZ3dlaSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InJpY2hhcmRuZzYyMEBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiQWRtaW4iLCJQcm9kdWN0IiwiU2FsZXMiXSwiZXhwIjoxNjgyNzY4MTg5LCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo3MjIzIiwiYXVkIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NzIyMyJ9.AC9vbCHg_LMNX6fUzPt8s7SuOA56EyW7wrZPqWEd_Ik",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImY1YjRkY2E3LWJjMWMtNGU2MS04NzA0LTc4YmM1OWQzYWY1OSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJwaGVuZ3dlaSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InJpY2hhcmRuZzYyMEBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiQWRtaW4iLCJQcm9kdWN0IiwiU2FsZXMiXSwiZXhwIjoxNjgzODA5NzkxLCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo3MjIzIiwiYXVkIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NzIyMyJ9.v1-a7qU6Jw4faoDugmkn5TOISFgu3JD-EeQAeW3Pnyc",
 									"type": "string"
 								}
 							]
@@ -320,7 +320,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"data\": {\r\n    \"id\": 6,\r\n    \"name\": \"productupdate2d\",\r\n    \"price\": 34\r\n  }\r\n}",
+							"raw": "{\r\n  \"data\": {\r\n    \"id\": 19,\r\n    \"name\": \"productupdate2d\",\r\n    \"price\": 134,    \r\n    \"productCategories\": [\r\n      {\r\n        \"categoryId\": 2\r\n      }\r\n    ]\r\n  }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -393,7 +393,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImY1YjRkY2E3LWJjMWMtNGU2MS04NzA0LTc4YmM1OWQzYWY1OSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJwaGVuZ3dlaSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InJpY2hhcmRuZzYyMEBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiQWRtaW4iLCJQcm9kdWN0IiwiU2FsZXMiXSwiZXhwIjoxNjgzMTE5MzczLCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo3MjIzIiwiYXVkIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NzIyMyJ9.wkaiBjk9lfbmmlre0ut6FZ_jC2K8YQueSbsdRwjtg3c",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImY1YjRkY2E3LWJjMWMtNGU2MS04NzA0LTc4YmM1OWQzYWY1OSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJwaGVuZ3dlaSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InJpY2hhcmRuZzYyMEBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiQWRtaW4iLCJQcm9kdWN0IiwiU2FsZXMiXSwiZXhwIjoxNzQzNzkyNzk4LCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo3MjIzIiwiYXVkIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NzIyMyJ9.pYHL_8PXv_ggaNIVKDVkbA7hbd84EjJyucLQBY0hDYA",
 									"type": "string"
 								}
 							]
@@ -402,7 +402,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"data\": {\r\n    \"segment\": \"string\",\r\n    \"totalBudget\": 500,\r\n    \"approvalState\": 10,\r\n    \"priority\": 1,\r\n    \"deadline\": \"2023-05-02T13:07:58.352Z\",\r\n    \"totalPrice\": 0,\r\n    \"requestProducts\": [\r\n      {\r\n        \"FulfillerId\": \"string\",\r\n        \"productId\": 9,\r\n        \"quantity\": 3\r\n      }\r\n    ]\r\n  }\r\n}",
+							"raw": "{\r\n  \"data\": {\r\n    \"segment\": \"string\",\r\n    \"approvalState\": 10,\r\n    \"priority\": 1,\r\n    \"requestProducts\": [\r\n      {\r\n        \"fulfillerId\": \"string\",\r\n        \"productId\": 18,\r\n        \"quantity\": 3,\r\n        \"budget\": 20\r\n      },\r\n      {\r\n        \"fulfillerId\": \"string\",\r\n        \"productId\": 17,\r\n        \"quantity\": 3,\r\n        \"budget\": 40\r\n      }\r\n    ]\r\n  }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -484,7 +484,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImY1YjRkY2E3LWJjMWMtNGU2MS04NzA0LTc4YmM1OWQzYWY1OSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJwaGVuZ3dlaSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InJpY2hhcmRuZzYyMEBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiQWRtaW4iLCJQcm9kdWN0IiwiU2FsZXMiXSwiZXhwIjoxNjgzMTIxMzQ2LCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo3MjIzIiwiYXVkIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NzIyMyJ9.FWL0ChBw11AgtEwxgVusjCOZ9skmF2xx8l53empe6PQ",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImY1YjRkY2E3LWJjMWMtNGU2MS04NzA0LTc4YmM1OWQzYWY1OSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJwaGVuZ3dlaSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InJpY2hhcmRuZzYyMEBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiQWRtaW4iLCJQcm9kdWN0IiwiU2FsZXMiXSwiZXhwIjoxNzQzNzkyNzk4LCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo3MjIzIiwiYXVkIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NzIyMyJ9.pYHL_8PXv_ggaNIVKDVkbA7hbd84EjJyucLQBY0hDYA",
 									"type": "string"
 								}
 							]
@@ -492,7 +492,7 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "https://localhost:7223/api/request/approverequest?id=20",
+							"raw": "https://localhost:7223/api/request/approverequest?id=22",
 							"protocol": "https",
 							"host": [
 								"localhost"
@@ -506,7 +506,7 @@
 							"query": [
 								{
 									"key": "id",
-									"value": "20"
+									"value": "22"
 								}
 							]
 						}
@@ -558,7 +558,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImQ2MjZiYjE3LThmMjMtNDRiYi1hYmQwLTgyY2E0MDgyOTdmYiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJzdGFycmFpbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InZhcnVzNTA1MEBnbWFpbC5jb20uY29tIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiUHJvZHVjdCIsImV4cCI6MTY4MzEyMDMzNiwiaXNzIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NzIyMyIsImF1ZCI6Imh0dHBzOi8vbG9jYWxob3N0OjcyMjMifQ.zYvd6vvtbHwD_0zob4E6Wy7EGd_n4MsekymdnHb3cvM",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImY1YjRkY2E3LWJjMWMtNGU2MS04NzA0LTc4YmM1OWQzYWY1OSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJwaGVuZ3dlaSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InJpY2hhcmRuZzYyMEBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiQWRtaW4iLCJQcm9kdWN0IiwiU2FsZXMiXSwiZXhwIjoxNzQzNzkyNzk4LCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo3MjIzIiwiYXVkIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NzIyMyJ9.pYHL_8PXv_ggaNIVKDVkbA7hbd84EjJyucLQBY0hDYA",
 									"type": "string"
 								}
 							]
@@ -566,7 +566,7 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "https://localhost:7223/api/request/fulfillrequest?requestId=20&productId=9&totalprice=300",
+							"raw": "https://localhost:7223/api/request/fulfillrequest?requestId=22&productId=18&fulfilledPrice=300",
 							"protocol": "https",
 							"host": [
 								"localhost"
@@ -580,14 +580,14 @@
 							"query": [
 								{
 									"key": "requestId",
-									"value": "20"
+									"value": "22"
 								},
 								{
 									"key": "productId",
-									"value": "9"
+									"value": "18"
 								},
 								{
-									"key": "totalprice",
+									"key": "fulfilledPrice",
 									"value": "300"
 								}
 							]
