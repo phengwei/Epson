@@ -25,7 +25,7 @@ namespace Epson.Controllers.API
         private readonly IWorkContext _workContext;
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
-
+        private readonly IConfiguration _configuration;
 
         public RequestApiController(
             IRequestService requestService,
@@ -33,7 +33,8 @@ namespace Epson.Controllers.API
             IRequestModelFactory requestModelFactory,
             IWorkContext workContext,
             IMapper mapper,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IConfiguration configuration)
         {
             _requestService = requestService;
             _productService = productService;
@@ -41,6 +42,7 @@ namespace Epson.Controllers.API
             _workContext = workContext;
             _mapper = mapper;
             _userManager = userManager;
+            _configuration = configuration;
         }
         [HttpGet("getrequestbyid")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin")]
@@ -84,6 +86,7 @@ namespace Epson.Controllers.API
             var model = queryModel.Data;
 
             var user = _workContext.CurrentUser;
+            var deadlineInHours = _configuration.GetValue<int>("SLA:DeadlineInHours");
 
             var request = new Request
             {
@@ -92,11 +95,10 @@ namespace Epson.Controllers.API
                 CreatedById = user.Id,
                 UpdatedById = user.Id,
                 Segment = model.Segment,
-                TotalBudget = model.TotalBudget,
                 ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction,
                 Priority = model.Priority,
-                Deadline = (DateTime)model.Deadline
-            };
+                Deadline = DateTime.UtcNow.AddHours(deadlineInHours)
+        };
 
             if (_requestService.InsertRequest(request, model.RequestProducts))
                 return Ok();
@@ -161,7 +163,7 @@ namespace Epson.Controllers.API
 
         [HttpPost("fulfillrequest")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product")]
-        public async Task<IActionResult> FulfillRequest(int requestId, int productId, decimal totalPrice)
+        public async Task<IActionResult> FulfillRequest(int requestId, int productId, decimal fulfilledPrice)
         {
             var request = _requestService.GetRequestById(requestId);
             var product = _productService.GetProductById(productId);
@@ -174,7 +176,7 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (_requestService.FulfillRequest(user, _mapper.Map<Request>(request), _mapper.Map<Product>(product), totalPrice))
+            if (_requestService.FulfillRequest(user, _mapper.Map<Request>(request), _mapper.Map<Product>(product), fulfilledPrice))
                 return Ok("Request has been fulfilled");
             else
                 return BadRequest("Failed to fulfill request");

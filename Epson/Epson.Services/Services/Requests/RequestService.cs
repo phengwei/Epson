@@ -2,6 +2,7 @@
 using Epson.Core.Domain.Enum;
 using Epson.Core.Domain.Products;
 using Epson.Core.Domain.Requests;
+using Epson.Core.Domain.SLA;
 using Epson.Core.Domain.Users;
 using Epson.Data;
 using Epson.Services.DTO.Requests;
@@ -88,7 +89,9 @@ namespace Epson.Services.Services.Requests
 
             try
             {
+                request.TotalBudget = GetTotalBudgetOfRequestProducts(requestProducts);
                 request.Id = _RequestRepository.Add(request);
+
                 _logger.Information("Creating request {id}", request.Id);
 
                 foreach (var requestProduct in requestProducts)
@@ -109,6 +112,15 @@ namespace Epson.Services.Services.Requests
             }
         }
 
+        private decimal GetTotalBudgetOfRequestProducts(List<RequestProduct> requestProducts)
+        {
+            decimal totalBudget = 0;
+
+            foreach (var requestProduct in requestProducts)
+                totalBudget += requestProduct.Budget;
+
+            return totalBudget;
+        }
         private bool InsertRequestProduct(RequestProduct requestProduct)
         {
             if (requestProduct == null)
@@ -175,7 +187,7 @@ namespace Epson.Services.Services.Requests
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error deleting request products of request{requestid}", requestId);
+                _logger.Error(ex, "Error deleting request products of request {requestid}", requestId);
 
                 return false;
             }
@@ -198,6 +210,9 @@ namespace Epson.Services.Services.Requests
             request.UpdatedOnUTC = DateTime.UtcNow;
             request.UpdatedById = user.Id;
             request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
+
+            if (DateTime.UtcNow > request.Deadline)
+                request.Breached = true;
 
             try
             {
@@ -227,7 +242,7 @@ namespace Epson.Services.Services.Requests
             if (requestProductToFulfill == null)
                 return false;
 
-            requestProductToFulfill.Price = totalPrice;
+            requestProductToFulfill.FulfilledPrice = totalPrice;
             requestProductToFulfill.HasFulfilled = true;
 
             try
@@ -236,7 +251,7 @@ namespace Epson.Services.Services.Requests
                 _logger.Information("Fulfilling request product {id}", requestProductToFulfill.Id);
 
                 //calculates total price for all requested products
-                decimal totalUpdatedPrice = requestProducts.Sum(x => x.Price);
+                decimal totalUpdatedPrice = requestProducts.Sum(x => x.FulfilledPrice);
                 request.TotalPrice = totalUpdatedPrice;
 
                 //checks for all hasfulfilled field 
@@ -267,6 +282,10 @@ namespace Epson.Services.Services.Requests
             {
                 DateTime startTime = new DateTime(ticketCreateTime.Year, ticketCreateTime.Month, ticketCreateTime.Day, _slaSetting.Value.WorkingStartHour, _slaSetting.Value.WorkingStartMinute, 0);
                 DateTime endTime = new DateTime(approvedTime.Year, approvedTime.Month, approvedTime.Day, _slaSetting.Value.WorkingEndHour, _slaSetting.Value.WorkingEndMinute, 0);
+
+                //convert to UTC
+                startTime = startTime.ToUniversalTime();
+                endTime = endTime.ToUniversalTime();
 
                 //calculate the number of full working days between the start and end dates
                 int fullDays = 0;

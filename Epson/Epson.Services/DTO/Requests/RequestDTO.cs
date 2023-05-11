@@ -14,6 +14,7 @@ namespace Epson.Services.DTO.Requests
         public DateTime Deadline { get; set; }
         public Decimal TotalPrice { get; set; }
         public TimeSpan TimeToResolution { get; set; }
+        public bool Breached { get; set; }
         public DateTime CreatedOnUTC { get; set; }
         public DateTime? UpdatedOnUTC { get; set; }
         public string CreatedById { get; set; }
