@@ -85,8 +85,8 @@
 <style scoped>
   .sla-holiday-management {
     display: flex;
-    justify-content: flex-end; /* Align form to the right */
-    align-items: flex-start; /* Align form to the top */
+    justify-content: flex-end; 
+    align-items: flex-start; 
     flex-direction: column;
     margin: 10rem;
   }

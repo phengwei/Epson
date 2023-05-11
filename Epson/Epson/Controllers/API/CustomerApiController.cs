@@ -9,6 +9,7 @@ using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Epson.Model.Products;
 using System.Security.Claims;
+using Epson.Infrastructure;
 
 namespace Epson.Controllers.API
 {
@@ -104,7 +105,7 @@ namespace Epson.Controllers.API
             }
             var roles = await _userManager.GetRolesAsync(user);
 
-            response.Data.UserId = user.Id;
+            response.Data.Id = user.Id;
             response.Data.UserName = user.UserName;
             response.Data.Email = user.Email;
             response.Data.Roles = (List<string>)roles;
@@ -163,19 +164,24 @@ namespace Epson.Controllers.API
             return Ok();
         }
 
-
-        [Authorize(Roles = "Admin")]
-        [HttpGet("testadmin")]
-        public IActionResult TestAdmin()
+        [HttpGet("getallstaff")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAllStaff()
         {
-            return Ok("Admin access successful");
-        }
+            var response = new GenericResponseModel<List<UserModel>>();
 
-        [Authorize(Roles = "Sales")]
-        [HttpGet("testsales")]
-        public IActionResult TestSales()
-        {
-            return Ok("Sales user access successful");
+            var productUsers = await _userManager.GetUsersInRoleAsync("Product");
+            var salesUsers = await _userManager.GetUsersInRoleAsync("Sales");
+
+            var productSalesUsers = productUsers.Concat(salesUsers).Distinct(new ApplicationUserComparer()).ToList();
+
+            response.Data = productSalesUsers.Select(user => new UserModel
+            {
+                Id = user.Id,
+                UserName = user.UserName
+            }).ToList();
+
+            return Ok(response);
         }
     }
 }
