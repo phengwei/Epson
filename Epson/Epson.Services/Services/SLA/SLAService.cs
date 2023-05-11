@@ -8,6 +8,9 @@ using Epson.Services.Interface.SLA;
 using Epson.Core.Domain.SLA;
 using Epson.Services.DTO.SLA;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
+using System.Text.Json;
+using System.Text;
 
 namespace Epson.Services.Services.SLA
 {
@@ -18,19 +21,22 @@ namespace Epson.Services.Services.SLA
         private readonly IRepository<SLAStaffLeave> _SLAStaffLeaveRepository;
         private readonly ILogger _logger;
         private readonly IOptions<SLASetting> _slaSetting;
+        private readonly IConfiguration _configuration;
 
         public SLAService
             (IMapper mapper,
             IRepository<SLAHoliday> slaHolidayRepository,
             IRepository<SLAStaffLeave> slaStaffLeaveRepository,
             ILogger logger,
-            IOptions<SLASetting> slaSetting)
+            IOptions<SLASetting> slaSetting,
+            IConfiguration configuration)
         {
             _mapper = mapper;
             _SLAHolidayRepository = slaHolidayRepository;
             _SLAStaffLeaveRepository = slaStaffLeaveRepository;
             _logger = logger;
             _slaSetting = slaSetting;
+            _configuration = configuration;
         }
 
         public SLAHolidayDTO GetSLAHolidayById(int id)

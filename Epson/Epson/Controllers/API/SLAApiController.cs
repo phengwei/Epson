@@ -11,6 +11,12 @@ using Epson.Services.Interface.SLA;
 using Epson.Model.SLA;
 using Epson.Core.Domain.SLA;
 using Epson.Services.Interface.Requests;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System;
+using System.IO;
+using Microsoft.Extensions.Hosting;
+using System.Text;
 
 namespace Epson.Controllers.API
 {
@@ -22,18 +28,24 @@ namespace Epson.Controllers.API
         private readonly ISLAModelFactory _slaModelFactory;
         private readonly IWorkContext _workContext;
         private readonly IMapper _mapper;
+        private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _hostEnvironment;
 
 
         public SLAApiController(
             ISLAService slaService,
             ISLAModelFactory slaModelFactory,
             IWorkContext workContext,
-            IMapper mapper)
+            IMapper mapper,
+            IConfiguration configuration,
+            IWebHostEnvironment hostEnvironment)
         {
             _slaService = slaService;
             _slaModelFactory = slaModelFactory;
             _workContext = workContext;
             _mapper = mapper;
+            _configuration = configuration;
+            _hostEnvironment = hostEnvironment;
         }
 
         [HttpGet("getslaholidays")]
@@ -146,6 +158,45 @@ namespace Epson.Controllers.API
             response.Data = slaSettingsModel;
 
             return Ok(response);
+        }
+
+        // Changes will only take place after restarting application
+        [HttpPost("updateslasettings")]
+        public IActionResult UpdateSLASettings([FromBody] BaseQueryModel<SLASetting> queryModel)
+        {
+            var slaSetting = queryModel.Data;
+            try
+            {
+                var appSettingsPath = Path.Combine(_hostEnvironment.ContentRootPath, "appsettings.json");
+
+                var json = System.IO.File.ReadAllText(appSettingsPath);
+                dynamic jsonObj = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
+
+                jsonObj["SLA"]["IncludeHoliday"] = slaSetting.IncludeHoliday;
+                jsonObj["SLA"]["IncludeStaffLeaves"] = slaSetting.IncludeStaffLeaves;
+                jsonObj["SLA"]["IncludeWorkingHours"] = slaSetting.IncludeWorkingHours;
+                jsonObj["SLA"]["WorkingStartHour"] = slaSetting.WorkingStartHour;
+                jsonObj["SLA"]["WorkingStartMinute"] = slaSetting.WorkingStartMinute;
+                jsonObj["SLA"]["WorkingEndHour"] = slaSetting.WorkingEndHour;
+                jsonObj["SLA"]["WorkingEndMinute"] = slaSetting.WorkingEndMinute;
+                jsonObj["SLA"]["DeadlineInHours"] = slaSetting.DeadlineInHours;
+
+                var updatedJsonString = Newtonsoft.Json.JsonConvert.SerializeObject(jsonObj, Newtonsoft.Json.Formatting.Indented);
+
+                System.IO.File.WriteAllText(appSettingsPath, updatedJsonString);
+                ReloadConfiguration();
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        private void ReloadConfiguration()
+        {
+            var configurationRoot = (IConfigurationRoot)_configuration;
+            configurationRoot.Reload();
         }
     }
 }

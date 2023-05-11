@@ -39,7 +39,7 @@
       </div>
 
       <div class="form-actions">
-        <button type="button" @click="test">Save</button>
+        <button type="submit" @click="saveSLASettings">Save</button>
         <button type="button" @click="resetForm">Reset</button>
       </div>
     </form>
@@ -73,8 +73,37 @@
         this.holidays = false;
         this.staffLeaves = false;
       },
-      test() {
-        console.log(this);
+      async saveSLASettings() {
+        try {
+          const response = await fetch('api/sla/updateslasettings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              data: {
+                IncludeHoliday: this.holidays,
+                IncludeStaffLeaves: this.staffLeaves,
+                IncludeWorkingHours: this.workingHours,
+                WorkingStartHour: parseInt(this.workingHoursStart.split(':')[0]),
+                WorkingStartMinute: parseInt(this.workingHoursStart.split(':')[1]),
+                WorkingEndHour: parseInt(this.workingHoursEnd.split(':')[0]),
+                WorkingEndMinute: parseInt(this.workingHoursEnd.split(':')[1]),
+                DeadlineInHours: parseInt(this.deadlineHours)
+              }
+            })
+          });
+
+          if (response.ok) {
+            // Success
+            console.log('SLA settings updated successfully');
+          } else {
+            // Error
+            console.error('Failed to update SLA settings');
+          }
+        } catch (error) {
+          console.error('There was a problem updating SLA settings');
+        }
       },
       async getSLASettings() {
         try {

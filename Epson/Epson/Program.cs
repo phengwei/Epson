@@ -27,6 +27,9 @@ using Epson.Services.Interface.AuditTrails;
 using Epson.Services.Services.AuditTrails;
 using Epson.Services.Interface.Categories;
 using Epson.Services.Services.Categories;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Epson.Core.Domain.SLA;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -117,6 +120,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IWorkContext, WorkContext>();
 builder.Services.AddSingleton<JwtSettings>();
 builder.Services.AddSingleton<SLASetting>();
+builder.Services.AddSingleton<IOptionsMonitor<SLASetting>, OptionsMonitor<SLASetting>>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EntityRepository<>));
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddHostedService<EmailBackgroundService>();
