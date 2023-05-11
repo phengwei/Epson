@@ -91,5 +91,25 @@ namespace Epson.Factories
 
             return slaStaffLeaveModels;
         }
+
+        public SLASettingModel PrepareSLASettingModel(SLASettingDTO slaSetting)
+        {
+            if (slaSetting != null)
+            {
+                var slaSettingModel = new SLASettingModel();
+                slaSettingModel.IncludeHoliday = slaSetting.IncludeHoliday;
+                slaSettingModel.IncludeStaffLeaves = slaSetting.IncludeStaffLeaves;
+                slaSettingModel.IncludeWorkingHours = slaSetting.IncludeWorkingHours;
+                slaSettingModel.WorkingStartHour = slaSetting.WorkingStartHour;
+                slaSettingModel.WorkingStartMinute = slaSetting.WorkingStartMinute;
+                slaSettingModel.WorkingEndHour = slaSetting.WorkingEndHour;
+                slaSettingModel.WorkingEndMinute = slaSetting.WorkingEndMinute;
+                slaSettingModel.DeadlineInHours = slaSetting.DeadlineInHours;
+
+                return slaSettingModel;
+            }
+
+            return new SLASettingModel();
+        }
     }
 }

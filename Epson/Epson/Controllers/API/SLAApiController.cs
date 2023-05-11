@@ -22,21 +22,18 @@ namespace Epson.Controllers.API
         private readonly ISLAModelFactory _slaModelFactory;
         private readonly IWorkContext _workContext;
         private readonly IMapper _mapper;
-        private readonly IRequestService _requestService;
 
 
         public SLAApiController(
             ISLAService slaService,
             ISLAModelFactory slaModelFactory,
             IWorkContext workContext,
-            IMapper mapper,
-            IRequestService requestService)
+            IMapper mapper)
         {
             _slaService = slaService;
             _slaModelFactory = slaModelFactory;
             _workContext = workContext;
             _mapper = mapper;
-            _requestService = requestService;
         }
 
         [HttpGet("getslaholidays")]
@@ -135,6 +132,20 @@ namespace Epson.Controllers.API
                 return Ok();
             else
                 return BadRequest("Failed to delete SLA Staff Leave");
+        }
+
+        [HttpGet("getslasettings")]
+        public async Task<IActionResult> GetSLASettings()
+        {
+            var response = new GenericResponseModel<SLASettingModel>();
+
+            var slaSettings = _slaService.GetSLASettings();
+
+            var slaSettingsModel = _slaModelFactory.PrepareSLASettingModel(slaSettings);
+
+            response.Data = slaSettingsModel;
+
+            return Ok(response);
         }
     }
 }

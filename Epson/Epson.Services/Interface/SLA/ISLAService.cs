@@ -19,5 +19,6 @@ namespace Epson.Services.Interface.SLA
         public bool InsertSLAStaffLeave(SLAStaffLeave slaStaffLeave);
         public bool DeleteSLAHoliday(SLAHoliday slaHoliday);
         public bool DeleteStaffLeaveHoliday(SLAStaffLeave slaStaffLeave);
+        public SLASettingDTO GetSLASettings();
     }
 }

@@ -9,6 +9,7 @@ using Epson.Services.DTO.Email;
 using Epson.Services.DTO.Products;
 using Epson.Services.DTO.Requests;
 using Epson.Services.DTO.SLA;
+using Epson.Services.Interface.SLA;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,6 +48,8 @@ namespace Epson.Services.DTO
             CreateMap<SLAHolidayDTO, SLAHoliday>();
             CreateMap<SLAStaffLeave, SLAStaffLeaveDTO>();
             CreateMap<SLAStaffLeaveDTO, SLAStaffLeave>();
+            CreateMap<SLASettingDTO, SLASetting>();
+            CreateMap<SLASetting, SLASettingDTO>();
             #endregion
         }
     }

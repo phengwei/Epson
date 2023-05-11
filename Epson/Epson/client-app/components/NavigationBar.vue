@@ -24,6 +24,13 @@
                                 class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300"
                                 >Dashboard</nuxt-link
                             >
+                          <!-- to be moved to admin configuration screen in the future -->
+                          <nuxt-link
+                                to="/sla"
+                                class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300"
+                                >SLA Management</nuxt-link
+                            >
+
                             <a
                                 class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300 cursor-pointer"
                                 target="_blank"

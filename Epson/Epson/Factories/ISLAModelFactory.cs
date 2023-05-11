@@ -11,5 +11,6 @@ namespace Epson.Factories
         public SLAStaffLeaveModel PrepareSLAStaffLeaveModel(SLAStaffLeaveDTO slaStaffLeave);
         public List<SLAHolidayModel> PrepareSLAHolidayModels(List<SLAHolidayDTO> slaHolidays);
         public List<SLAStaffLeaveModel> PrepareSLAStaffLeaveModels(List<SLAStaffLeaveDTO> slaStaffLeave);
+        public SLASettingModel PrepareSLASettingModel(SLASettingDTO slaSetting);
     }
 }

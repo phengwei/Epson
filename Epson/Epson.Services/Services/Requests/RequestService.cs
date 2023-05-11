@@ -256,7 +256,6 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        //todo: add deadline configuration?
         public TimeSpan CalculateResolutionTime(DateTime approvedTime, DateTime ticketCreateTime, List<SLAStaffLeaveDTO> staffLeaves, List<SLAHolidayDTO> holidays)
         {
             //calculate resolution time

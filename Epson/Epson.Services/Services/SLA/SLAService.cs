@@ -7,6 +7,7 @@ using Serilog;
 using Epson.Services.Interface.SLA;
 using Epson.Core.Domain.SLA;
 using Epson.Services.DTO.SLA;
+using Microsoft.Extensions.Options;
 
 namespace Epson.Services.Services.SLA
 {
@@ -16,14 +17,14 @@ namespace Epson.Services.Services.SLA
         private readonly IRepository<SLAHoliday> _SLAHolidayRepository;
         private readonly IRepository<SLAStaffLeave> _SLAStaffLeaveRepository;
         private readonly ILogger _logger;
-        private readonly SLASetting _slaSetting;
+        private readonly IOptions<SLASetting> _slaSetting;
 
         public SLAService
             (IMapper mapper,
             IRepository<SLAHoliday> slaHolidayRepository,
             IRepository<SLAStaffLeave> slaStaffLeaveRepository,
             ILogger logger,
-            SLASetting slaSetting)
+            IOptions<SLASetting> slaSetting)
         {
             _mapper = mapper;
             _SLAHolidayRepository = slaHolidayRepository;
@@ -147,6 +148,11 @@ namespace Epson.Services.Services.SLA
 
                 return false;
             }
+        }
+
+        public SLASettingDTO GetSLASettings()
+        {
+            return _mapper.Map<SLASettingDTO>(_slaSetting.Value);
         }
 
     }
