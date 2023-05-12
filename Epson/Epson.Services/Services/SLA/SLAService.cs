@@ -62,7 +62,7 @@ namespace Epson.Services.Services.SLA
 
         public List<SLAHolidayDTO> GetSLAHolidays()
         {
-            var slaHolidays = _SLAHolidayRepository.GetAll();
+            var slaHolidays = _SLAHolidayRepository.GetAll().DistinctBy(holiday => holiday.Date).ToList();
 
             return _mapper.Map<List<SLAHolidayDTO>>(slaHolidays);
         }

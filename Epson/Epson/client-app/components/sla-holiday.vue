@@ -3,6 +3,10 @@
     <h1>SLA - Holiday Calendar Management</h1>
     <form class="form-container">
       <div class="form-group">
+        <label for="calendar">Holiday Calendar:</label>
+        <customdatepicker :existing-holidays="existingHolidays" :is-editable="false"></customdatepicker>
+      </div>
+      <div class="form-group">
         <label for="holidayDate">Holiday Date:</label>
         <input type="date" id="holidayDate" v-model="holidayDate" required class="border-input">
       </div>
@@ -14,17 +18,20 @@
         <label for="isAdhoc">Is Adhoc:</label>
         <input type="checkbox" id="isAdhoc" v-model="isAdhoc">
       </div>
-      <button type="submit" @click="saveSLAHoliday">Add Holiday</button>
+      <button type="submit" @click.prevent="saveSLAHoliday">Add Holiday</button>
     </form>
   </div>
 </template>
 
-
 <script>
   import { mapGetters } from 'vuex';
+  import Swal from 'sweetalert2';
   export default {
     name: 'SLA-Holiday',
     middleware: 'auth',
+    components: {
+      customdatepicker: () => process.client ? import('~/components/CustomDatePicker.vue') : null
+    },
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser'])
     },
@@ -32,36 +39,68 @@
       return {
         holidayDate: null,
         description: '',
-        isAdhoc: false
+        isAdhoc: false,
+        existingHolidays: []
       };
     },
     methods: {
       async saveSLAHoliday() {
         try {
+          const holidayDateString = new Date(this.holidayDate).toISOString();
+          const holidayDate = new Date(holidayDateString);
+          holidayDate.setHours(holidayDate.getHours() - 8);
+          const updatedHolidayDateString = holidayDate.toISOString();
+
+          if (this.existingHolidays.includes(updatedHolidayDateString)) {
+            Swal.fire({
+              title: 'Error!',
+              text: 'This date is already a holiday.',
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+            return;
+          }
+
+          if (!this.holidayDate) {
+            Swal.fire({
+              title: 'Error!',
+              text: 'Please select a holiday date.',
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+            return;
+          }
+
           await this.$axios.post(`${this.$config.restUrl}/api/sla/addslaholiday`, {
             data: {
               Date: this.holidayDate,
               Description: this.description,
               IsAdhoc: this.isAdhoc
             }
-          }).then(response => {
-            console.log('SLA holiday added successfully');
-          })
+          });
+          console.log('SLA holiday added successfully');
         } catch (error) {
           console.error('There was a problem adding SLA holiday');
         }
       },
       async getSLAHolidays() {
         try {
-          this.loading = true
-          await this.$axios.get(`${this.$config.restUrl}/api/sla/getslaholidays`).then(result => {
-            this.holidayDate = result.data.data.date
-            this.description = result.data.data.description
-            this.isAdhoc = result.data.data.isAdhoc
-          })
-
+          this.loading = true;
+          const response = await this.$axios.get(`${this.$config.restUrl}/api/sla/getslaholidays`);
+          const responseData = response.data.data;
+          if (Array.isArray(responseData)) {
+            this.existingHolidays = responseData.map(item => {
+              const date = new Date(item.date);
+              return date.toISOString();
+            });
+            console.log("existingholidays on load", this.existingHolidays);
+          } else {
+            console.error('SLA holidays data is missing or invalid:', responseData);
+          }
         } catch (error) {
           console.error('There was a problem fetching the SLA holidays:', error);
+        } finally {
+          this.loading = false;
         }
       }
     },
@@ -71,11 +110,12 @@
   };
 </script>
 
+
 <style scoped>
   .sla-holiday-management {
     display: flex;
-    justify-content: flex-end; 
-    align-items: flex-start; 
+    justify-content: flex-end;
+    align-items: flex-start;
     flex-direction: column;
     margin: 10rem;
   }
@@ -128,4 +168,5 @@
     border: none;
     cursor: pointer;
   }
+
 </style>
