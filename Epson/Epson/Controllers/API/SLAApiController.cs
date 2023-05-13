@@ -76,6 +76,20 @@ namespace Epson.Controllers.API
             return Ok(response);
         }
 
+        [HttpGet("getslastaffleavesbystaff")]
+        public async Task<IActionResult> GetSLAStaffLeavesByStaff(string staffId)
+        {
+            var response = new GenericResponseModel<List<SLAStaffLeaveModel>>();
+
+            var slaStaffLeaves = _slaService.GetSLAStaffLeaves().Where(x => x.StaffId == staffId).ToList();
+
+            var slaStaffLeaveModels = _slaModelFactory.PrepareSLAStaffLeaveModels(slaStaffLeaves);
+
+            response.Data = slaStaffLeaveModels;
+
+            return Ok(response);
+        }
+
 
         [HttpPost("addslaholiday")]
         public async Task<IActionResult> AddSLAHoliday([FromBody] BaseQueryModel<SLAHolidayModel> queryModel)

@@ -4,7 +4,7 @@
     <form class="form-container">
       <div class="form-group">
         <label for="calendar">Holiday Calendar:</label>
-        <customdatepicker :existing-holidays="existingHolidays" :is-editable="false"></customdatepicker>
+        <holidaydatepicker :existing-holidays="existingHolidays" :is-editable="false"></holidaydatepicker>
       </div>
       <div class="form-group">
         <label for="holidayDate">Holiday Date:</label>
@@ -30,7 +30,7 @@
     name: 'SLA-Holiday',
     middleware: 'auth',
     components: {
-      customdatepicker: () => process.client ? import('~/components/CustomDatePicker.vue') : null
+      holidaydatepicker: () => process.client ? import('~/components/HolidayDatePicker.vue') : null
     },
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser'])
@@ -93,7 +93,7 @@
               const date = new Date(item.date);
               return date.toISOString();
             });
-            console.log("existingholidays on load", this.existingHolidays);
+
           } else {
             console.error('SLA holidays data is missing or invalid:', responseData);
           }

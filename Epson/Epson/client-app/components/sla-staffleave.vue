@@ -9,6 +9,14 @@
         </select>
       </div>
       <div class="form-group">
+        <label for="leaveCalendar">Leave Calendar:</label>
+        <datepicker id="leaveCalendar"
+                    :value="calendarDate"
+                    :disabled-dates="disabledDates"
+                    :highlighted="highlightedDates"
+                    inline />
+      </div>
+      <div class="form-group">
         <label for="startDate">Start Date:</label>
         <input type="date" id="startDate" v-model="startDate" :min="minLeaveDate" required class="border-input">
       </div>
@@ -29,13 +37,22 @@
 
   export default {
     name: 'SLA-StaffLeaves',
+    components: {
+      Datepicker: () => process.client ? import('vuejs-datepicker') : null
+    },
     data() {
       return {
         startDate: null,
         endDate: null,
         reason: '',
         staffMembers: [],
-        selectedStaff: ''
+        selectedStaff: '',
+        staffLeaves: [],
+        calendarDate: new Date(),
+        disabledDates: {
+          to: new Date("2023-04-29T16:00:00.000Z")
+        },
+        highlightedDates: {}
       };
     },
     computed: {
@@ -57,6 +74,29 @@
         if (!newValue) {
           this.endDate = null;
         }
+      },
+      staffLeaves: {
+        handler(newValue) {
+          if (newValue) {
+            this.highlightedDates = {
+              customPredictor(date) {
+                return newValue.some(leave =>
+                  new Date(leave.startDate).toDateString() <= date.toDateString() &&
+                  new Date(leave.endDate).toDateString() >= date.toDateString()
+                );
+              }
+            };
+          }
+        },
+        deep: true
+      },
+      selectedStaff: {
+        handler(newValue) {
+          if (newValue) {
+            this.getSLAStaffLeavesByStaff(newValue);
+          }
+        },
+        immediate: true
       }
     },
     mounted() {
@@ -70,15 +110,26 @@
             title: 'Invalid Date Range',
             text: 'The end date cannot be earlier than the start date.',
           });
-        } else {  
+        } else {
           this.saveSLAStaffLeave();
         }
       },
       async getAllStaffs() {
         try {
           const response = await fetch('api/customer/getallstaff');
-          const obj = await response.json();
-          this.staffMembers = obj.data;
+          const { data } = await response.json();
+          this.staffMembers = data;
+
+          const t = [
+            "2023-04-29T16:00:00.000Z",
+            "2023-05-04T16:00:00.000Z",
+            "2023-05-03T16:00:00.000Z",
+            "2023-05-09T16:00:00.000Z"
+          ];
+
+
+          console.log("HHA", new Date(new Date().setDate(new Date().getDate() - 1)));
+          console.log("HHA", t);
         } catch (error) {
           console.error('There was a problem fetching the staff:', error);
         }
@@ -92,11 +143,24 @@
               reason: this.reason,
               staffId: this.selectedStaff
             }
-          }).then(response => {
-            console.log('SLA holiday added successfully');
-          })
+          });
+          console.log('SLA staff leave added successfully');
         } catch (error) {
-          console.error('There was a problem adding SLA staff leave');
+          console.error('There was a problem adding SLA staff leave:', error);
+        }
+      },
+      async getSLAStaffLeavesByStaff(staffId) {
+        try {
+          const { data } = await this.$axios.get(`${this.$config.restUrl}/api/sla/getslastaffleavesbystaff`, {
+            params: {
+              staffId
+            }
+          });
+          const staffLeaves = data;
+
+          console.log('SLA staff leaves:', staffLeaves);
+        } catch (error) {
+          console.error('There was a problem fetching SLA staff leaves:', error);
         }
       }
     }
@@ -151,4 +215,15 @@
     border: none;
     cursor: pointer;
   }
+
+  #leaveCalendar {
+    margin-top: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .vdp-datepicker__calendar .cell.highlighted {
+    background-color: #ffc107;
+  }
 </style>
+
