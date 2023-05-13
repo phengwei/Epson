@@ -66,6 +66,28 @@ namespace Epson.Services.Services.Products
             return productDTOs;
         }
 
+        public List<ProductDTO> GetProductsByCategory(int categoryId)
+        {
+            var productCategories = _ProductCategoryRepository.GetAll().Where(x => x.CategoryId == categoryId).ToList();
+            var products = _ProductRepository.GetAll();
+
+            var productDTOs = products.Select(x => new ProductDTO
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Price = x.Price,
+                CreatedById = x.CreatedById,
+                CreatedOnUTC = x.CreatedOnUTC,
+                UpdatedById = x.UpdatedById,
+                UpdatedOnUTC = x.UpdatedOnUTC
+            })
+           .Where(p => productCategories.Any(pc => pc.ProductId == p.Id))
+            .OrderBy(x => x.Name)
+            .ToList();
+
+            return productDTOs;
+        }
+
         public bool InsertProduct(Product product, List<ProductCategory> productCategories, string userId)
         {
             if (product == null)
