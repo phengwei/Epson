@@ -1,4 +1,5 @@
 ﻿using Epson.Core.Domain.Email;
+using Epson.Core.Domain.Requests;
 using Epson.Services.DTO.Email;
 using System;
 using System.Collections.Generic;
@@ -15,5 +16,7 @@ namespace Epson.Services.Interface.Email
         public List<EmailQueueDTO> GetUnsentEmailQueues();
         public bool InsertEmailQueue(EmailQueue emailQueue);
         public void SendEmailBatch();
+        public EmailQueue CreateRequestEmailQueue(Request request, List<RequestProduct> requestProducts);
+        public EmailQueue CreateFulfillEmailQueue(Request request, RequestProduct requestProduct, bool hasFulfillmentComplete);
     }
 }

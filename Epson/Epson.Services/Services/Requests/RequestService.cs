@@ -7,6 +7,7 @@ using Epson.Core.Domain.Users;
 using Epson.Data;
 using Epson.Services.DTO.Requests;
 using Epson.Services.DTO.SLA;
+using Epson.Services.Interface.Email;
 using Epson.Services.Interface.Products;
 using Epson.Services.Interface.Requests;
 using Epson.Services.Interface.SLA;
@@ -21,6 +22,7 @@ namespace Epson.Services.Services.Requests
         private readonly IRepository<Request> _RequestRepository;
         private readonly IRepository<RequestProduct> _RequestProductRepository;
         private readonly IProductService _productService;
+        private readonly IEmailService _emailService;
         private readonly ILogger _logger;
         private readonly ISLAService _slaService;
         private readonly IOptions<SLASetting> _slaSetting;
@@ -30,6 +32,7 @@ namespace Epson.Services.Services.Requests
             IRepository<Request> requestRepository,
             IRepository<RequestProduct> requestProductRepository,
             IProductService productService,
+            IEmailService emailService,
             ILogger logger,
             ISLAService slaService,
             IOptions<SLASetting> slaSetting)
@@ -38,6 +41,7 @@ namespace Epson.Services.Services.Requests
             _RequestRepository = requestRepository;
             _RequestProductRepository = requestProductRepository;
             _productService = productService;
+            _emailService = emailService;
             _logger = logger;
             _slaService = slaService;
             _slaSetting = slaSetting;
@@ -102,6 +106,10 @@ namespace Epson.Services.Services.Requests
                     requestProduct.FulfillerId = product.CreatedById;
                     InsertRequestProduct(requestProduct);
                 }
+
+                var requestQueue = _emailService.CreateRequestEmailQueue(request, requestProducts);
+                _emailService.InsertEmailQueue(requestQueue);
+
                 return true;
             }
             catch (Exception ex)
@@ -259,6 +267,9 @@ namespace Epson.Services.Services.Requests
 
                 if (allProductsFulfilled)
                     request.ApprovalState = (int)ApprovalStateEnum.PendingRequesterAction;
+
+                var fulfillRequestQueue = _emailService.CreateFulfillEmailQueue(request, requestProductToFulfill, allProductsFulfilled);
+                _emailService.InsertEmailQueue(fulfillRequestQueue);
 
                 _RequestRepository.Update(request);
 
