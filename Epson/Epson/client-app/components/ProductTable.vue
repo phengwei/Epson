@@ -237,7 +237,6 @@ export default {
         const vm = this;
         if (this.editedIndex > -1) {
           try {
-            console.log("test");
             await this.$axios.post(`${this.$config.restUrl}/api/product/editproduct`, {
               data: {
                 id: this.editedItem.id,
@@ -254,7 +253,7 @@ export default {
             }).catch(err => {
               console.log(err);
               console.log(err.response);
-              vm.$swal('Failed to add', err.response.data.message, 'error');
+              vm.$swal('Failed to update', err.response.data.message, 'error');
             })
           } catch (err){
             console.log(err);

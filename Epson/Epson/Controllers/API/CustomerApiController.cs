@@ -143,6 +143,26 @@ namespace Epson.Controllers.API
             return BadRequest();
         }
 
+        [HttpDelete("deleteuser")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DeleteUser(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            var rolesForUser = await _userManager.GetRolesAsync(user);
+
+
+            IdentityResult result;
+            foreach (var role in rolesForUser)
+                result = await _userManager.RemoveFromRoleAsync(user, role);
+
+            result = await _userManager.DeleteAsync(user);
+
+            return Ok();
+        }
+
         [HttpGet("getcurrentuser")]
         public async Task<IActionResult> GetCurrentUser()
         {
