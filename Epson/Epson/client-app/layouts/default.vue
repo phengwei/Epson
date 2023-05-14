@@ -1,7 +1,7 @@
 <template>
   <div>
     <MobileNav v-if="isAuthenticated" />
-    <NavigationBar v-if="isAuthenticated" />
+    <NavigationBar />
     <div class="content-container">
       <Nuxt />
     </div>

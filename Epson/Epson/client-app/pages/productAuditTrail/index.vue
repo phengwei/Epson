@@ -41,7 +41,6 @@
         this.$axios.get(`${this.$config.restUrl}/api/audittrail/getproductaudittrail`)
           .then(response => {
             this.auditTrails = response.data.data;
-            console.log("audit trail", this.auditTrails);
           })
           .catch(error => {
             console.error('Error fetching product audit trail:', error);
