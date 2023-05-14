@@ -183,5 +183,22 @@ namespace Epson.Controllers.API
 
             return Ok(response);
         }
+
+        [HttpGet("getallrequesters")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAllRequester()
+        {
+            var response = new GenericResponseModel<List<UserModel>>();
+
+            var salesUsers = await _userManager.GetUsersInRoleAsync("Sales");
+
+            response.Data = salesUsers.Select(user => new UserModel
+            {
+                Id = user.Id,
+                UserName = user.UserName
+            }).ToList();
+
+            return Ok(response);
+        }
     }
 }

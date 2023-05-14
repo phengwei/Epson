@@ -26,42 +26,22 @@ public class ReportService : IReportService
         _userManager = userManager;
     }
 
-    public async Task<List<RequesterSales>> GetMonthlySalesByRequester()
+    public async Task<List<RequesterSales>> GetMonthlySalesByRequester(string requesterId)
     {
         var monthlySales = _requestRepository.Table
-            .Where(r => r.ApprovalState == 30)
-            .Join(
-                _requestProductRepository.Table,
-                r => r.Id,
-                rp => rp.RequestId,
-                (r, rp) => new { Request = r, RequestProduct = rp }
-            )
-            .Join(
-                _productRepository.Table,
-                j => j.RequestProduct.ProductId,
-                p => p.Id,
-                (j, p) => new { j.Request, j.RequestProduct, Product = p }
-            )
-            .GroupBy(
-                j => new
-                {
-                    Month = j.Request.CreatedOnUTC.ToString("yyyy-MM"),
-                    RequesterId = j.Request.CreatedById
-                }
-            )
+            .Where(r => r.ApprovalState == 30 && r.CreatedById == requesterId)
+            .GroupBy(r => new
+            {
+                Month = r.CreatedOnUTC.ToString("yyyy-MM"),
+                Requester = r.CreatedById
+            })
             .Select(g => new RequesterSales
             {
                 Month = g.Key.Month,
-                RequesterId = g.Key.RequesterId,
-                MonthlySales = g.Sum(x => x.RequestProduct.Quantity * x.Product.Price),
+                RequesterName = g.Key.Requester,
+                MonthlySales = g.Sum(r => r.TotalPrice)
             })
             .ToList();
-
-        foreach (var sales in monthlySales)
-        {
-            ApplicationUser user = await _userManager.FindByIdAsync(sales.RequesterId);
-            sales.RequesterName = user?.UserName ?? "Unknown";
-        }
 
         return monthlySales;
     }
@@ -70,21 +50,13 @@ public class ReportService : IReportService
     {
         var topRequesters = _requestRepository.Table
             .Where(r => r.ApprovalState == 30)
-            .Join(
-                _requestProductRepository.Table,
-                r => r.Id,
-                rp => rp.RequestId,
-                (r, rp) => new { Request = r, RequestProduct = rp }
-            )
-            .GroupBy(
-                j => j.Request.CreatedById,
-                (key, group) => new RequesterSales
-                {
-                    RequesterId = key,
-                    TotalNumberOfSales = group.Count(),
-                    TotalSales = group.Sum(x => x.Request.TotalPrice)
-                }
-            )
+            .GroupBy(r => r.CreatedById)
+            .Select(g => new RequesterSales
+            {
+                RequesterId = g.Key,
+                TotalNumberOfSales = g.Count(),
+                TotalSales = g.Sum(r => r.TotalPrice)
+            })
             .OrderByDescending(x => x.TotalSales)
             .Take(10)
             .ToList();

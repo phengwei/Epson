@@ -41,7 +41,9 @@ export default {
     { src: '~/plugins/vue-countdown.js', ssr: false }, 
     { src: '~/plugins/tailable.js', ssr: false }, 
     { src: '~/plugins/dateFilter.js', ssr: false }, 
-    { src: '~/plugins/sanitize.js', ssr: false }, 
+    { src: '~/plugins/sanitize.js', ssr: false },
+    { src: '~/plugins/client-detection.js', ssr: false },
+    { src: '~/plugins/vue-chartkick.js', ssr: false },
    ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
