@@ -33,56 +33,36 @@
               New Product
             </v-btn>
           </template>
+          
           <v-card>
             <v-card-title>
               <span class="text-h5">{{ formTitle }}</span>
             </v-card-title>
-
             <v-card-text>
-              <v-container>
-                <v-row>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                  >
-                    <v-text-field
-                      v-model="editedItem.name"
-                      label="Product name"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                  >
-                    <v-text-field
-                      v-model="editedItem.price"
-                      label="Price"
-                    ></v-text-field>
-                  </v-col>
-                  
-                </v-row>
-              </v-container>
-            </v-card-text>
+              <label>Product Category</label>
+              <div v-for="category in categories" :key="category.id">
+                <style>
+                </style>
+                <div class="blue-checkbox">
+                  <input type="checkbox" v-model="selectedCategories" :value="category" @change="checkboxChanged(category)">
+                  <label class="category-name">{{ category.name }}</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Product Name</label>
+                <input v-model="editedItem.name" class="border-input" label="Product name"></input>
+              </div>
+              <div class="form-group">
+                <label>Price</label>
+                <input v-model="editedItem.price" class="border-input" label="Price"></input>
+              </div>
 
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                color="blue darken-1"
-                text
-                @click="close"
-              >
-                Cancel
-              </v-btn>
-              <v-btn
-                color="blue darken-1"
-                text
-                @click="save"
-              >
-                Save
-              </v-btn>
-            </v-card-actions>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
+                <v-btn color="blue darken-1" text @click="save">Save</v-btn>
+              </v-card-actions>
+            </v-card-text>
           </v-card>
         </v-dialog>
         <v-dialog v-model="dialogDelete" max-width="500px">
@@ -147,7 +127,9 @@ export default {
         ],
         options: {},
         products: [],
+        categories: [],
         loading: true,
+        selectedCategories: [],
         totalProducts: 0,
         editedIndex: -1,
         editedItem: {
@@ -165,6 +147,9 @@ export default {
       formTitle () {
         return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
       },
+      selectedCategoryList() {
+        return this.categories.filter((category) => this.selectedCategories.includes(category.id));
+      }
     },
     watch: {
       options: {
@@ -180,14 +165,23 @@ export default {
         val || this.closeDelete()
       },
     },
-
+    created() {
+      // Initialize the options object with an empty array for each category
+      this.getCategoryFromApi();
+    },
     methods: {
       getDataFromApi () {
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/product/getproducts`).then(result => {
-          console.log('result', result);
           this.products = result.data.data
-          this.totalProducts = result.data.data.length
+          this.loading = false
+        })
+      },
+      async getCategoryFromApi() {
+        this.loading = true
+        await this.$axios.get(`${this.$config.restUrl}/api/category/getcategories`).then(result => {
+          this.categories = result.data.data
+          this.categoriesLength = result.data.data.length
           this.loading = false
         })
       },
@@ -202,7 +196,11 @@ export default {
         this.editedItem = Object.assign({}, item)
         this.dialogDelete = true
       },
-
+      checkboxChanged(selectedCategory) {
+        
+        console.log(this.selectedCategories);
+       
+      },
       async deleteItemConfirm () {
         const vm = this;
         // method for delete item
@@ -236,16 +234,22 @@ export default {
         })
       },
 
-      async save () {
+      async save() {
+        console.log(this.editedIndex);
         const vm = this;
         if (this.editedIndex > -1) {
           // method for edit item
-          try{
+          try {
+            console.log("test");
             await this.$axios.post(`${this.$config.restUrl}/api/product/editproduct`, {
               data: {
                 id: this.editedItem.id,
                 name: this.editedItem.name,
-                price: this.editedItem.price
+                price: this.editedItem.price,
+                productcategories: this.selectedCategories.map(category => ({
+                  categoryid: category.id,
+                  productId: this.editedItem.id
+                }))
               }
             }).then(response => {
               console.log('res', response);
@@ -253,18 +257,22 @@ export default {
             }).catch(err => {
               console.log(err);
               console.log(err.response);
-              vm.$swal('Failed to edit', err.response.data.message, 'error');
+              vm.$swal('Failed to add', err.response.data.message, 'error');
             })
           } catch (err){
             console.log(err);
           }
         } else {
           // method for add item
-          try{
+          try {
             await this.$axios.post(`${this.$config.restUrl}/api/product/addproduct`, {
               data: {
                 name: this.editedItem.name,
-                price: this.editedItem.price
+                price: this.editedItem.price,
+                productcategories: this.selectedCategories.map(category => ({
+                  categoryid: category.id,
+                  productId: this.editedItem.id
+                }))
               }
             }).then(response => {
               console.log('res', response);
@@ -278,13 +286,52 @@ export default {
             console.log(err);
           }
         }
-        this.close()
+        this.loading = false;
+        this.close();
       },
 
     },
 }
 </script>
-
 <style>
+  .form-group {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+  }
 
+  label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: black;
+  }
+
+  .border-input {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.5rem;
+    width: 100%;
+  }
+
+  .blue-checkbox {
+    margin-bottom: 1rem;
+  }
+
+    .blue-checkbox input[type="checkbox"]:checked {
+      background-color: #4285f4;
+      border-color: #4285f4;
+    }
+
+  input[type="checkbox"] {
+    margin-right: 0.5rem;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 3px;
+    border: 2px solid #ccc;
+    width: 1.2em;
+    height: 1.2em;
+    margin-left: 5%
+  }
 </style>
