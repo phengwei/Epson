@@ -259,5 +259,18 @@ namespace Epson.Controllers.API
 
             return Ok(response);
         }
+
+        [HttpGet("getallroles")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAllRoles()
+        {
+            var response = new GenericResponseModel<List<Role>>();
+
+            var roles = _roleManager.Roles.ToList();
+
+            response.Data = roles;
+
+            return Ok(response);
+        }
     }
 }

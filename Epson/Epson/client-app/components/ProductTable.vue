@@ -166,7 +166,6 @@ export default {
       },
     },
     created() {
-      // Initialize the options object with an empty array for each category
       this.getCategoryFromApi();
     },
     methods: {
@@ -203,7 +202,6 @@ export default {
       },
       async deleteItemConfirm () {
         const vm = this;
-        // method for delete item
         try{
             await this.$axios.post(`${this.$config.restUrl}/api/product/deleteproduct?id=${this.editedItem.id}`).then(response => {
               console.log('res', response);
@@ -238,7 +236,6 @@ export default {
         console.log(this.editedIndex);
         const vm = this;
         if (this.editedIndex > -1) {
-          // method for edit item
           try {
             console.log("test");
             await this.$axios.post(`${this.$config.restUrl}/api/product/editproduct`, {
@@ -263,7 +260,6 @@ export default {
             console.log(err);
           }
         } else {
-          // method for add item
           try {
             await this.$axios.post(`${this.$config.restUrl}/api/product/addproduct`, {
               data: {
@@ -275,7 +271,6 @@ export default {
                 }))
               }
             }).then(response => {
-              console.log('res', response);
               this.getDataFromApi();
             }).catch(err => {
               console.log(err);
