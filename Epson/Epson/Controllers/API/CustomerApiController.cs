@@ -101,6 +101,48 @@ namespace Epson.Controllers.API
             return BadRequest(ModelState);
         }
 
+        [HttpPost("edituser")]
+        [AllowAnonymous]
+        public async Task<IActionResult> EditUser([FromBody] BaseQueryModel<RegisterModel> queryModel)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var model = queryModel.Data;
+
+            var user = await _userManager.FindByIdAsync(model.Id);
+            if (user != null)
+            {
+                user.UserName = model.Username;
+                user.Email = model.Email;
+                user.PhoneNumber = model.Phone;
+
+                var result = await _userManager.UpdateAsync(user);
+
+                if (result.Succeeded)
+                {
+                    var userRoles = await _userManager.GetRolesAsync(user);
+
+                    var rolesToAdd = model.Roles.Except(userRoles);
+                    var rolesToRemove = userRoles.Except(model.Roles);
+
+                    foreach (var role in rolesToAdd)
+                        if (await _roleManager.RoleExistsAsync(role))
+                            await _userManager.AddToRoleAsync(user, role);
+
+                    foreach (var role in rolesToRemove)
+                        if (await _roleManager.RoleExistsAsync(role))
+                            await _userManager.RemoveFromRoleAsync(user, role);
+                    return Ok();
+                }
+            }
+            else
+            {
+                return NotFound();
+            }
+            return BadRequest();
+        }
+
         [HttpGet("getcurrentuser")]
         public async Task<IActionResult> GetCurrentUser()
         {
