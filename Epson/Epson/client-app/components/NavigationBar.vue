@@ -25,6 +25,8 @@
             <div class="relative group" @click="toggleDropdown" ref="dropdown" v-if="loggedInUser.roles.includes('Admin')">
               <span class="w-40 h-full flex justify-center items-center font-semibold transition duration-300 cursor-pointer">Admin Center</span>
               <div class="absolute left-0 mt-1 w-48 rounded-md shadow-lg py-1 bg-white text-black z-50" :class="{ 'hidden': !showDropdown }">
+                <nuxt-link to="/manageUser"
+                           class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Manage Users</nuxt-link>
                 <nuxt-link to="/sla"
                            class="block px-4 py-2 hover:bg-[#003399] hover:text-white">SLA Configuration</nuxt-link>
                 <nuxt-link to="/productAuditTrail"

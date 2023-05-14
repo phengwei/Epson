@@ -58,7 +58,7 @@ namespace Epson.Controllers.API
             return Unauthorized("User unauthorized");
         }
 
-        [HttpPost("register")]
+        [HttpPost("addnewuser")]
         [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] BaseQueryModel<RegisterModel> queryModel)
         {
@@ -73,12 +73,21 @@ namespace Epson.Controllers.API
             {
                 UserName = model.Username,
                 Email = model.Email,
+                PhoneNumber = model.Phone
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
             {
+                foreach (var roleName in model.Roles)
+                {
+                    if (await _roleManager.RoleExistsAsync(roleName))
+                    {
+                        await _userManager.AddToRoleAsync(user, roleName);
+                    }
+                }
+
                 var token = await _jwtService.GenerateToken(user);
 
                 return Ok(new { token });
@@ -108,7 +117,7 @@ namespace Epson.Controllers.API
             response.Data.Id = user.Id;
             response.Data.UserName = user.UserName;
             response.Data.Email = user.Email;
-            response.Data.Roles = (List<string>)roles;
+            response.Data.Roles = roles;
 
             return Ok(response);
         }
@@ -178,7 +187,8 @@ namespace Epson.Controllers.API
             response.Data = productSalesUsers.Select(user => new UserModel
             {
                 Id = user.Id,
-                UserName = user.UserName
+                UserName = user.UserName,
+                Email = user.Email
             }).ToList();
 
             return Ok(response);
@@ -195,8 +205,57 @@ namespace Epson.Controllers.API
             response.Data = salesUsers.Select(user => new UserModel
             {
                 Id = user.Id,
-                UserName = user.UserName
+                UserName = user.UserName,
+                Email = user.Email
             }).ToList();
+
+            return Ok(response);
+        }
+
+        [HttpGet("getallfulfillers")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAllFulfiller()
+        {
+            var response = new GenericResponseModel<List<UserModel>>();
+
+            var salesUsers = await _userManager.GetUsersInRoleAsync("Product");
+
+            response.Data = salesUsers.Select(user => new UserModel
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Email = user.Email
+            }).ToList();
+
+            return Ok(response);
+        }
+
+        [HttpGet("getallusers")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var response = new GenericResponseModel<List<UserModel>>();
+
+            var users = _userManager.Users.ToList();
+
+            var userModels = new List<UserModel>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+
+                var userModel = new UserModel
+                {
+                    Id = user.Id,
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    Roles = roles.ToList()
+                };
+
+                userModels.Add(userModel);
+            }
+
+            response.Data = userModels;
 
             return Ok(response);
         }
