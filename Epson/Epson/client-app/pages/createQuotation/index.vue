@@ -5,7 +5,7 @@
 <script>
   import requestQuotation from '~/components/RequestQuotation.vue';
   export default {
-    name: "product-list",
+    name: "requestQuotation",
     components: {
       requestQuotation
     }
