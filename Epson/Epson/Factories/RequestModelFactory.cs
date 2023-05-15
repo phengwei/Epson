@@ -4,17 +4,21 @@ using Epson.Data;
 using Epson.Model.Request;
 using Epson.Services.DTO.Products;
 using Epson.Services.DTO.Requests;
+using Epson.Services.Interface.Products;
 
 namespace Epson.Factories
 {
     public class RequestModelFactory : IRequestModelFactory
     {
         private readonly IMapper _mapper;
+        private readonly IProductService _productService;
 
         public RequestModelFactory
-            (IMapper mapper)
+            (IMapper mapper,
+            IProductService productService)
         {
             _mapper = mapper;
+            _productService = productService;
         }
         public RequestModel PrepareRequestModel(RequestDTO request)
         {
@@ -68,7 +72,14 @@ namespace Epson.Factories
                     Deadline = request.Deadline,
                     TotalPrice = request.TotalPrice,
                     TimeToResolution = request.TimeToResolution,
-                    RequestProducts = request.RequestProducts,
+                    RequestProductsModel = request.RequestProducts.Select(rp => new RequestProductModel
+                    {
+                        Id = rp.Id,
+                        RequestId = rp.RequestId,
+                        ProductId = rp.ProductId,
+                        Quantity = rp.Quantity,
+                        ProductName = _productService.GetProductById(rp.ProductId).Name
+                    }).ToList(),
                 };
                 requestModels.Add(requestModel);
             }
