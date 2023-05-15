@@ -26,9 +26,28 @@
                     <div class="modal-content container mx-auto h-auto mt-16 mb-16 text-center">
                         <!--Body-->
                         <ul class="text-left">
-                            <li><nuxt-link to="/" class="block  px-2 py-8 text-white hover:text-white hover:bg-[#003399] font-semibold transition duration-300">{{ loggedInUser.userName }}</nuxt-link></li>
+                            <li><a @click="toUser" class="block  px-2 py-8 text-white hover:text-white hover:bg-[#003399] font-semibold transition duration-300">{{ loggedInUser.userName }}</a></li>
                             <hr />
-                            <li><nuxt-link to="/dashboard" class="block text-white font-semibold px-2 py-8 hover:text-white hover:bg-[#003399] transition duration-300">Dashboard</nuxt-link></li>
+                            <li><a @click="toDashboard" class="block text-white font-semibold px-2 py-8 hover:text-white hover:bg-[#003399] transition duration-300">Dashboard</a></li>
+                            <hr />
+                            <li><a @click="toReport" class="block  px-2 py-8 text-white hover:text-white hover:bg-[#003399] font-semibold transition duration-300">Report</a></li>
+                            <hr />
+                            <li><a @click="toSLAOverview" class="block text-white font-semibold px-2 py-8 hover:text-white hover:bg-[#003399] transition duration-300">SLA Overview</a></li>
+                            <hr />
+                            <!-- Admin Center Dropdown -->
+                            <li>
+                                <div class="relative group" @click="toggleDropdown" v-if="loggedInUser.roles.includes('Admin')">
+                                    <span class="block  px-2 py-8 text-white hover:text-white hover:bg-[#003399] font-semibold transition duration-300">Admin Center</span>
+                                    <div class="absolute left-0 mt-1 w-48 rounded-md shadow-lg py-1 bg-white text-black z-50" :class="{ 'hidden': !showDropdown }">
+                                        <a @click="toUserManagement"
+                                                class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Manage Users</a>
+                                        <a @click="toSla"
+                                                class="block px-4 py-2 hover:bg-[#003399] hover:text-white">SLA Configuration</a>
+                                        <a @click="toProductAuditTrail"
+                                                class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Product Audit Trail</a>
+                                    </div>
+                                </div>
+                            </li>   
                             <hr />
                             <li><a target="_blank" class="block px-2 text-white font-semibold py-8 hover:text-white hover:bg-[#003399] transition duration-300" @click="logout">Logout</a></li>
                             <hr />
@@ -49,17 +68,68 @@ export default {
     name: 'MobileNav',
     data () {
       return {
-        showPopup: false
+        showPopup: false,
+        showDropdown: false,
       }
     },
     computed: {
         ...mapGetters(['isAuthenticated', 'loggedInUser'])
     },
     methods: {
+        toggleDropdown() {
+            this.showDropdown = !this.showDropdown
+        },
         closeModal () {
+            this.showPopup = false
+            this.showDropdown = false
+            document.body.classList.remove('stop-scrolling')
+            EventBus.$emit('CLOSE_MOBILE_HEADER', this.showPopup)
+        },
+        toUser(){
+            this.showPopup = false
+            this.showDropdown = false
+            document.body.classList.remove('stop-scrolling')
+            EventBus.$emit('CLOSE_MOBILE_HEADER', this.showPopup)
+            this.$router.push('/user');
+        },
+        toDashboard(){
+            this.showPopup = false
+            this.showDropdown = false
+            document.body.classList.remove('stop-scrolling')
+            EventBus.$emit('CLOSE_MOBILE_HEADER', this.showPopup)
+            this.$router.push('/dashboard');
+        },
+        toReport(){
+            this.showPopup = false
+            this.showDropdown = false
+            document.body.classList.remove('stop-scrolling')
+            EventBus.$emit('CLOSE_MOBILE_HEADER', this.showPopup)
+            this.$router.push('/reporting');
+        },
+        toSLAOverview(){
+            this.showPopup = false
+            this.showDropdown = false
+            document.body.classList.remove('stop-scrolling')
+            EventBus.$emit('CLOSE_MOBILE_HEADER', this.showPopup)
+            this.$router.push('/slaDashboard');
+        },
+        toUserManagement(){
             this.showPopup = false
             document.body.classList.remove('stop-scrolling')
             EventBus.$emit('CLOSE_MOBILE_HEADER', this.showPopup)
+            this.$router.push('/userManagement');
+        },
+        toSla(){
+            this.showPopup = false
+            document.body.classList.remove('stop-scrolling')
+            EventBus.$emit('CLOSE_MOBILE_HEADER', this.showPopup)
+            this.$router.push('/sla');
+        },
+        toProductAuditTrail(){
+            this.showPopup = false
+            document.body.classList.remove('stop-scrolling')
+            EventBus.$emit('CLOSE_MOBILE_HEADER', this.showPopup)
+            this.$router.push('/productAuditTrail');
         },
         async logout(){
             await this.$auth.logout().then(response => {
