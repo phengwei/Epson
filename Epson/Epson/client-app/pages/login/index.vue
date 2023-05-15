@@ -74,7 +74,7 @@
     },
     beforeMount() {
       if (this.$auth.loggedIn) {
-        this.$router.push('/dashboard');
+        this.$router.push('/reporting');
       }
     },
     mounted() {
@@ -94,7 +94,22 @@
               }
             }
           }).then(response => {
-            this.$router.push('/dashboard');
+            const userRoles = this.$auth.user.data.roles;
+            console.log("roles", this.$auth.user.data.roles);
+            if (userRoles.includes('Admin')) {
+              this.$router.push('/userManagement');
+            } else if (userRoles.includes('Product')) {
+              this.$router.push('/productDashboard');
+            } else if (userRoles.includes('Sales')) {
+              this.$router.push('/user');
+            } else {
+              Swal.fire({
+                title: 'Error!',
+                text: 'Unknown user role',
+                icon: 'error',
+                confirmButtonText: 'OK'
+              });
+            }
           }).catch(function (error) {
             console.log(error)
             Swal.fire({
@@ -108,6 +123,7 @@
           console.log(err);
         }
       }
+
     }
 
   }

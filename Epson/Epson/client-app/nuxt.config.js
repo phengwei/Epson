@@ -196,7 +196,7 @@ export default {
       login: '/login',
       logout: '/login',
       callback: '/login',
-      home: '/dashboard'
+      home: '/reporting'
     }
   },
 

@@ -10,8 +10,17 @@
 
   export default {
     name: 'IndexApp',
-    created() {
-      this.$router.push('/dashboard');
+    beforeMount() {
+      const userRoles = this.$auth.user.data.roles;
+      if (userRoles.includes('Admin')) {
+        this.$router.push('/userManagement');
+      } else if (userRoles.includes('Product')) {
+        this.$router.push('/productDashboard');
+      } else if (userRoles.includes('Sales')) {
+        this.$router.push('/user');
+      } else {
+        this.$router.push('/reporting'); 
+      }
     }
   }
 </script>

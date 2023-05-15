@@ -1,5 +1,5 @@
 <template>
-  <main class="dashboard-header">
+  <main class="dashboard-header"  v-if="loggedInUser.roles.includes('Product')">
     <div class="grid-container">
       <div class="row">
         <div class="grid-item">
@@ -30,7 +30,7 @@
   import ItemsPendingFulfilmentTable from '~/components/ItemsPendingFulfilmentTable.vue';
 
   export default {
-    name: 'DashboardMain',
+    name: 'ProductDashboard',
     middleware: 'auth',
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser'])
