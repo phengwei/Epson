@@ -30,18 +30,22 @@
           <input v-model="priority" class="border-input" type="text" placeholder="Priority">
         </div>
         <button type="submit" @click="submitQuotation">Submit</button>
+        <button type="submit" @click="saveDraft">Save Draft</button>
       </v-card-text>
     </v-card>
   </div>
 </template>
 
 <script>
+
+
   export default {
     name: "request-quotation",
     data() {
       return {
         categories: [],
         selectedCategories: [],
+        isChecked: [],
         selectedProducts: {},
         options: {},
         priority: 0,
@@ -56,17 +60,49 @@
       });
       this.fetchCategories();
     },
+    mounted() {
+      this.loadDraft();
+    },
     methods: {
       async fetchCategories() {
         try {
-          const response = await this.$axios.get(`${this.$config.restUrl}/api/category/getcategories`);
-          this.categories = response.data.data;
+          await this.$axios.get(`${this.$config.restUrl}/api/category/getcategories`).then(response => {
+            this.categories = response.data.data;
+            this.loadDraft();
+
+          });
+
         } catch (error) {
           console.error(error);
         }
       },
+      loadDraft() {
+        this.selectedCategories = [];
+
+        for (const category in this.categories) {
+          if (localStorage.getItem("savedItem-selectedProductId" + this.categories[category].id) != null && localStorage.getItem("savedItem-selectedProductName" + this.categories[category].id)) {
+            this.selectedCategories.push({ id: localStorage.getItem("savedItem-selectedProductId" + this.categories[category].id), name: localStorage.getItem("savedItem-selectedProductName" + this.categories[category].id) });
+          }
+          
+        }
+      },
+      saveDraft() {
+
+        localStorage.clear();
+
+        for (const category in this.selectedCategories) {
+          localStorage.setItem("savedItem-selectedProductId" + this.selectedCategories[category].id, this.selectedCategories[category].id);
+          localStorage.setItem("savedItem-selectedProductName" + this.selectedCategories[category].id, this.selectedCategories[category].name);
+        }
+        for (const item in this.selectedProducts) {
+          
+          localStorage.setItem("savedItem-quantity" + item, this.quantity[item]);
+          localStorage.setItem("savedItem-budget" + item, this.budget[item]);
+        }
+      },
       checkboxChanged(selectedCategory) {
         const categoryId = selectedCategory.id;
+
         if (this.selectedProducts[categoryId] === undefined) {
           // Initialize selectedProducts object with default values for the selected category
           this.selectedProducts[categoryId] = '';
@@ -76,16 +112,19 @@
         this.submitForm(selectedCategory);
       },
       async submitForm(selectedCategory) {
-        const categoryId = selectedCategory.id;
-        const formValues = {
-          categoryId,
-        };
-        try {
-          const response = await this.$axios.get(`${this.$config.restUrl}/api/product/getproductbycategory`, { params: formValues });
-          this.$set(this.options, categoryId, response.data.data); // Use $set to update the options for the selected category
-        } catch (error) {
-          console.error(error);
+        if (selectedCategory.id != null) {
+          const categoryId = selectedCategory.id;
+          const formValues = {
+            categoryId,
+          };
+          try {
+            const response = await this.$axios.get(`${this.$config.restUrl}/api/product/getproductbycategory`, { params: formValues });
+            this.$set(this.options, categoryId, response.data.data); // Use $set to update the options for the selected category
+          } catch (error) {
+            console.error(error);
+          }
         }
+        
       },
       async submitQuotation() {
         const quotationData = {
@@ -137,12 +176,14 @@
     font-size: 2rem;
     text-align: center;
   }
+
   .border-input {
     border: 1px solid #ccc;
     border-radius: 4px;
     padding: 0.5rem;
     width: 100%;
   }
+
   .form-container {
     max-width: 400px;
     padding: 2rem;
@@ -190,6 +231,7 @@
     justify-content: center;
     flex-direction: column;
   }
+
   button {
     padding: 0.5rem 1rem;
     background-color: #003399;
@@ -197,6 +239,7 @@
     border: none;
     cursor: pointer;
   }
+
   @media (max-width: 768px) {
     form {
       max-width: 300px;

@@ -1,13 +1,15 @@
 <template>
-    <requestQuotation />
+  <v-app>
+    <request-quotation />
+  </v-app>
 </template>
-
 <script>
-  import requestQuotation from '~/components/RequestQuotation.vue';
+  import RequestQuotation from '~/components/RequestQuotation.vue';
+
   export default {
-    name: "requestQuotation",
+    name: "App",
     components: {
-      requestQuotation
+      RequestQuotation
     }
   };
 </script>
