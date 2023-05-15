@@ -33,6 +33,7 @@
         <button type="submit" @click="saveDraft">Save Draft</button>
       </v-card-text>
     </v-card>
+
   </div>
 </template>
 
@@ -78,21 +79,39 @@
       },
       loadDraft() {
         this.selectedCategories = [];
-
+        
         for (const category in this.categories) {
-          if (localStorage.getItem("savedItem-selectedProductId" + this.categories[category].id) != null && localStorage.getItem("savedItem-selectedProductName" + this.categories[category].id)) {
-            this.selectedCategories.push({ id: localStorage.getItem("savedItem-selectedProductId" + this.categories[category].id), name: localStorage.getItem("savedItem-selectedProductName" + this.categories[category].id) });
+          const categoryId = this.categories[category].id;
+          if (localStorage.getItem("savedItem-selectedProductId" + categoryId) != null && localStorage.getItem("savedItem-selectedProductName" + categoryId)) {
+            this.selectedCategories.push({ id: localStorage.getItem("savedItem-selectedProductId" + categoryId), name: localStorage.getItem("savedItem-selectedProductName" + categoryId) });
+            this.checkboxChanged(this.categories[category]);
           }
-          
+
+          if (localStorage.getItem("savedItem-quantity" + categoryId) != null) {
+            this.quantity[categoryId] = localStorage.getItem("savedItem-quantity" + categoryId);
+          }
+
+          if (localStorage.getItem("savedItem-budget" + categoryId) != null) {
+            console.log("AA");
+            console.log(localStorage.getItem("savedItem-budget" + categoryId)); 
+            this.budget[categoryId] = localStorage.getItem("savedItem-budget" + categoryId);
+          }
         }
       },
       saveDraft() {
 
         localStorage.clear();
+        
 
-        for (const category in this.selectedCategories) {
-          localStorage.setItem("savedItem-selectedProductId" + this.selectedCategories[category].id, this.selectedCategories[category].id);
-          localStorage.setItem("savedItem-selectedProductName" + this.selectedCategories[category].id, this.selectedCategories[category].name);
+        for (const categoryIndex in this.selectedCategories) {
+          localStorage.setItem("savedItem-selectedProductId" + this.selectedCategories[categoryIndex].id, this.selectedCategories[categoryIndex].id);
+          localStorage.setItem("savedItem-selectedProductName" + this.selectedCategories[categoryIndex].id, this.selectedCategories[categoryIndex].name);
+          for (const quantityIndex in this.quantity) {
+            localStorage.setItem("savedItem-quantity" + this.selectedCategories[categoryIndex].id, this.quantity[quantityIndex]);
+          }
+          for (const budgetIndex in this.quantity) {
+            localStorage.setItem("savedItem-budget" + this.selectedCategories[categoryIndex].id, this.budget[budgetIndex]);
+          }
         }
         for (const item in this.selectedProducts) {
           
