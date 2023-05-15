@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using Epson.Core.Domain.Enum;
 using Epson.Core.Domain.Requests;
+using Epson.Core.Domain.Users;
 using Epson.Data;
 using Epson.Model.Request;
 using Epson.Services.DTO.Products;
 using Epson.Services.DTO.Requests;
 using Epson.Services.Interface.Products;
+using Microsoft.AspNetCore.Identity;
 
 namespace Epson.Factories
 {
@@ -13,13 +15,15 @@ namespace Epson.Factories
     {
         private readonly IMapper _mapper;
         private readonly IProductService _productService;
-
+        private readonly UserManager<ApplicationUser> _userManager;
         public RequestModelFactory
             (IMapper mapper,
-            IProductService productService)
+            IProductService productService,
+            UserManager<ApplicationUser> userManager)
         {
             _mapper = mapper;
             _productService = productService;
+            _userManager = userManager;
         }
         public RequestModel PrepareRequestModel(RequestDTO request)
         {
@@ -81,7 +85,9 @@ namespace Epson.Factories
                         RequestId = rp.RequestId,
                         ProductId = rp.ProductId,
                         Quantity = rp.Quantity,
-                        ProductName = _productService.GetProductById(rp.ProductId).Name
+                        ProductName = _productService.GetProductById(rp.ProductId).Name,
+                        FulfillerId = rp.FulfillerId,
+                        FulfillerName = _userManager.FindByIdAsync(rp.FulfillerId).Result.UserName
                     }).ToList(),
                 };
                 requestModels.Add(requestModel);
