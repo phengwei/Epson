@@ -67,7 +67,8 @@ namespace Epson.Factories
                     Priority = request.Priority,
                     Deadline = request.Deadline,
                     TotalPrice = request.TotalPrice,
-                    TimeToResolution = request.TimeToResolution
+                    TimeToResolution = request.TimeToResolution,
+                    RequestProducts = request.RequestProducts,
                 };
                 requestModels.Add(requestModel);
             }
