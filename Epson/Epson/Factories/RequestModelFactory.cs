@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Epson.Core.Domain.Enum;
 using Epson.Core.Domain.Requests;
 using Epson.Data;
 using Epson.Model.Request;
@@ -68,6 +69,7 @@ namespace Epson.Factories
                     Segment = request.Segment,
                     TotalBudget = request.TotalBudget,
                     ApprovalState = request.ApprovalState,
+                    ApprovalStateStr = ((ApprovalStateEnum)request.ApprovalState).ToString(),
                     Priority = request.Priority,
                     Deadline = request.Deadline,
                     TotalPrice = request.TotalPrice,
@@ -75,6 +77,7 @@ namespace Epson.Factories
                     RequestProductsModel = request.RequestProducts.Select(rp => new RequestProductModel
                     {
                         Id = rp.Id,
+                        Budget = rp.Budget,
                         RequestId = rp.RequestId,
                         ProductId = rp.ProductId,
                         Quantity = rp.Quantity,

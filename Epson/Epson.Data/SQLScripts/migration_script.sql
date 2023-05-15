@@ -3,3 +3,6 @@ ADD COLUMN budget DECIMAL(10, 2);
 
 ALTER TABLE request
 ADD COLUMN breached BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE requestproduct
+ADD COLUMN fulfilledDate DATETIME;
