@@ -158,13 +158,13 @@
       },
       async submitQuotation() {
         const quotationData = {
-          ApprovalState: 10,
+          ApprovalState: 20,
           Priority: this.priority,
           requestProducts: [],
         };
         for (const categoryId in this.selectedProducts) {
           const productId = this.selectedProducts[categoryId];
-          if (productId !== '') {
+          if (productId !== '' && productId !== null ) {
             const product = {
               id: productId,
               fulfillerId: "string",
@@ -176,12 +176,11 @@
         }
         try {
           const vm = this;
-          console.log(quotationData);
           await this.$axios.post(`${this.$config.restUrl}/api/request/createrequest`, {
             data: {
               segment: "string",
-              approvalState: 10,
-              priority: 1,
+              approvalState: 20,
+              priority: this.priority,
               RequestProducts: quotationData.requestProducts
 
             }
