@@ -25,9 +25,13 @@
             <input v-model="budget[category.id]" class="border-input" type="text" placeholder="Budget">
           </div>
         </div>
-        <div class="form-group">
+        <div class="form-group" v-if="isPriorityVisible">
           <label>Priority</label>
-          <input v-model="priority" class="border-input" type="text" placeholder="Priority">
+          <select v-model="priority.value" class="border-input">
+            <option v-for="option in priority.options" :value="option.value" :key="option.value">
+              {{ option.label }}
+            </option>
+          </select>
         </div>
         <button type="submit" @click="submitQuotation">Submit</button>
         <button type="submit" @click="saveDraft">Save Draft</button>
@@ -49,13 +53,19 @@
         isChecked: [],
         selectedProducts: {},
         options: {},
-        priority: 0,
+        priority: {
+          value: 1,
+          options: [
+            { value: 1, label: 'High' },
+            { value: 2, label: 'Medium' },
+            { value: 3, label: 'Low' }
+          ]
+        },
         quantity: {},
         budget: {},
       };
     },
     created() {
-      // Initialize the options object with an empty array for each category
       this.categories.forEach(category => {
         this.options[category.id] = [];
       });
@@ -63,6 +73,11 @@
     },
     mounted() {
       this.loadDraft();
+    },
+    computed: {
+      isPriorityVisible() {
+        return this.selectedCategories.length > 0;
+      },
     },
     methods: {
       async fetchCategories() {
@@ -128,6 +143,7 @@
             }
           }
         }
+        this.$swal('Request draft saved');
         
       },
       checkboxChanged(selectedCategory) {
@@ -179,7 +195,7 @@
           await this.$axios.post(`${this.$config.restUrl}/api/request/createrequest`, {
             data: {
               segment: "string",
-              approvalState: 20,
+              approvalState: 10,
               priority: this.priority,
               RequestProducts: quotationData.requestProducts
 
@@ -190,7 +206,7 @@
           }).catch(err => {
             console.log(err);
             console.log(err.response);
-            vm.$swal('Failed to edit', err.response.data.message, 'error');
+            vm.$swal('Failed to submit request', err.response.data.message, 'error');
           })
         } catch (error) {
           console.log(error);
