@@ -1,5 +1,5 @@
 <template>
-  <section class="w-full h-screen flex items-center justify-center">
+  <main class="w-full h-full flex items-center justify-center">
     <div class="absolute top-0 w-full h-full bg-gray-900"></div>
     <div class="container mx-auto px-4 h-full">
       <div class="flex content-center items-center justify-center h-full">
@@ -44,13 +44,14 @@
         </div>
       </div>
     </div>
-  </section>
+  </main>
 </template>
 
 
 
 <script>
 
+  import Swal from 'sweetalert2';
   export default {
 
     name: "auth-login",
@@ -84,7 +85,6 @@
     methods: {
 
       async login() {
-        const vm = this;
         try {
           await this.$auth.loginWith('local', {
             data: {
@@ -96,10 +96,16 @@
           }).then(response => {
             this.$router.push('/dashboard');
           }).catch(function (error) {
-            vm.$swal('Login Failed', error.response.data.message, 'error');
+            console.log(error)
+            Swal.fire({
+              title: 'Error!',
+              text: 'Login failed',
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
           });
         } catch (err) {
-          console.log(err)
+          console.log(err);
         }
       }
     }

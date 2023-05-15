@@ -35,7 +35,6 @@
             </div>
 
             <a class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300 cursor-pointer"
-               target="_blank"
                @click="logout">Logout</a>
           </div>
         </div>
@@ -83,7 +82,8 @@
       return {
         showMobileMenu: false,
         showPopup: false,
-        showDropdown: false,  
+        showDropdown: false,
+        dropdown: null
       }
     },
     components: {
@@ -92,11 +92,11 @@
       toggleDropdown() {
         this.showDropdown = !this.showDropdown
       },
-      hideDropdown(e) {
+      /* hideDropdown(e) {
         if (!this.$refs.dropdown.contains(e.target)) {
           this.showDropdown = false
         }
-      },
+      }, */
       updateScroll() {
         this.scrollPosition = window.scrollY
       },
@@ -107,8 +107,10 @@
         EventBus.$emit('OPEN_MOBILE_HEADER', this.showPopup)
       },
       async logout() {
-        await this.$auth.logout().then(response => {
+        await this.$auth.logout({
+        }).then(response => {
           this.$router.push("/login");
+          this.$router.go(0);
         })
       }
     },

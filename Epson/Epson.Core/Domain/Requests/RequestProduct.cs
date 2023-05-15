@@ -16,5 +16,6 @@ namespace Epson.Core.Domain.Requests
         public string FulfillerId { get; set; }
         public decimal FulfilledPrice { get; set; }
         public bool HasFulfilled { get; set; }
+        public DateTime FulfilledDate { get; set; }
     }
 }

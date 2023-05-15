@@ -1,10 +1,8 @@
 <template>
   <div>
     <MobileNav v-if="isAuthenticated" />
-    <NavigationBar />
-    <div class="content-container">
-      <Nuxt />
-    </div>
+    <NavigationBar v-if="isAuthenticated" />
+      <Nuxt class="mt-24"/>
   </div>
 </template>
 
@@ -26,8 +24,3 @@
   }
 </script>
 
-<style>
-  .content-container {
-    margin-top: 7rem; 
-  }
-</style>
