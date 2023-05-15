@@ -12,7 +12,7 @@ export default function ({ store, redirect }) {
     } else if (userRoles.includes('Product')) {
       return redirect('/productDashboard'); 
     } else if (userRoles.includes('Sales')) {
-      return redirect('/user');
+      return redirect('/salesDashboard');
     } else {
       console.log('Unknown user role');
     }

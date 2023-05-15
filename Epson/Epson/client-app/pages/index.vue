@@ -17,7 +17,7 @@
       } else if (userRoles.includes('Product')) {
         this.$router.push('/productDashboard');
       } else if (userRoles.includes('Sales')) {
-        this.$router.push('/user');
+        this.$router.push('/salesDashboard');
       } else {
         this.$router.push('/reporting'); 
       }
