@@ -5,14 +5,17 @@ using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.SLA;
 using Epson.Core.Domain.Users;
 using Epson.Data;
+using Epson.Services.DTO.Report;
 using Epson.Services.DTO.Requests;
 using Epson.Services.DTO.SLA;
 using Epson.Services.Interface.Email;
 using Epson.Services.Interface.Products;
 using Epson.Services.Interface.Requests;
 using Epson.Services.Interface.SLA;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
+using System.Globalization;
 
 namespace Epson.Services.Services.Requests
 {
@@ -78,7 +81,8 @@ namespace Epson.Services.Services.Requests
                 Priority = x.Priority,
                 Deadline = x.Deadline,
                 TotalPrice = x.TotalPrice,
-                TimeToResolution = x.TimeToResolution
+                TimeToResolution = x.TimeToResolution,
+                RequestProducts = _RequestProductRepository.Table.Where(y => y.RequestId == x.Id).ToList()
             })
             .OrderBy(x => x.CreatedOnUTC)
             .ToList();
@@ -252,6 +256,7 @@ namespace Epson.Services.Services.Requests
 
             requestProductToFulfill.FulfilledPrice = totalPrice;
             requestProductToFulfill.HasFulfilled = true;
+            requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
 
             try
             {
@@ -282,49 +287,105 @@ namespace Epson.Services.Services.Requests
             }
         }
 
+        public  List<FulfillmentSummary> GetFulfillmentSummary(DateTime startDate, DateTime endDate, string granularity)
+        {
+            var requestProducts = _RequestProductRepository.Table.Where(rp => rp.FulfilledDate != DateTime.MinValue && rp.FulfilledDate >= startDate && rp.FulfilledDate <= endDate);
+
+            List<FulfillmentSummary> fulfillmentSummary;
+
+            switch (granularity)
+            {
+                case "day":
+                    fulfillmentSummary = requestProducts.GroupBy(rp => rp.FulfilledDate.Date)
+                                    .Select(group => new FulfillmentSummary
+                                    {
+                                        Date = group.Key,
+                                        Fulfillments = group.Count()
+                                    }).ToList();
+                    break;
+                case "week":
+                    fulfillmentSummary = requestProducts.GroupBy(rp => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(rp.FulfilledDate.Date, CalendarWeekRule.FirstDay, DayOfWeek.Sunday))
+                                    .Select(group => new FulfillmentSummary
+                                    {
+                                        Week = group.Key,
+                                        Fulfillments = group.Count()
+                                    }).ToList();
+                    break;
+                case "month":
+                    fulfillmentSummary = requestProducts.GroupBy(rp => rp.FulfilledDate.Date.Month)
+                                    .Select(group => new FulfillmentSummary
+                                    {
+                                        Month = group.Key,
+                                        Fulfillments = group.Count()
+                                    }).ToList();
+                    break;
+                default:
+                    throw new Exception("Invalid granularity. Please specify 'day', 'week', or 'month'.");
+            }
+
+            return fulfillmentSummary;
+        }
+
+        public Dictionary<string, int> GetRequestSummary(DateTime startDate, DateTime endDate, string granularity)
+        {
+            var requests = GetRequests();
+            var filteredRequests = requests.Where(r => r.CreatedOnUTC >= startDate && r.CreatedOnUTC <= endDate);
+
+            Dictionary<string, int> summary;
+
+            switch (granularity.ToLower())
+            {
+                case "day":
+                    summary = filteredRequests.GroupBy(r => r.CreatedOnUTC.ToString("yyyy-MM-dd")).ToDictionary(g => g.Key, g => g.Count());
+                    break;
+                case "week":
+                    summary = filteredRequests.GroupBy(r => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(r.CreatedOnUTC, CalendarWeekRule.FirstDay, DayOfWeek.Sunday).ToString()).ToDictionary(g => g.Key, g => g.Count());
+                    break;
+                case "month":
+                    summary = filteredRequests.GroupBy(r => r.CreatedOnUTC.ToString("yyyy-MM")).ToDictionary(g => g.Key, g => g.Count());
+                    break;
+                default:
+                    throw new ArgumentException("Invalid granularity. Allowed values are 'day', 'week', 'month'");
+            }
+
+            return summary;
+        }
+
         public TimeSpan CalculateResolutionTime(DateTime approvedTime, DateTime ticketCreateTime, List<SLAStaffLeaveDTO> staffLeaves, List<SLAHolidayDTO> holidays)
         {
-            //calculate resolution time
             TimeSpan resolutionTime = approvedTime - ticketCreateTime;
 
-            //calculate resolution time if working hours is included 
             TimeSpan workingHoursResolutionTime = TimeSpan.Zero;
             if (_slaSetting.Value.IncludeWorkingHours == true)
             {
                 DateTime startTime = new DateTime(ticketCreateTime.Year, ticketCreateTime.Month, ticketCreateTime.Day, _slaSetting.Value.WorkingStartHour, _slaSetting.Value.WorkingStartMinute, 0);
                 DateTime endTime = new DateTime(approvedTime.Year, approvedTime.Month, approvedTime.Day, _slaSetting.Value.WorkingEndHour, _slaSetting.Value.WorkingEndMinute, 0);
 
-                //convert to UTC
                 startTime = startTime.ToUniversalTime();
                 endTime = endTime.ToUniversalTime();
 
-                //calculate the number of full working days between the start and end dates
                 int fullDays = 0;
                 if (startTime < endTime)
                 {
                     fullDays = (int)(endTime - startTime).TotalDays;
                     if (startTime.DayOfWeek > endTime.DayOfWeek)
                     {
-                        fullDays -= 2; //adjust for weekends between start and end dates
+                        fullDays -= 2;
                     }
                     else if (endTime.DayOfWeek == DayOfWeek.Saturday)
                     {
-                        fullDays -= 1; //adjust for end date on a weekend
+                        fullDays -= 1; 
                     }
                 }
 
-                //calculate the working hours for the full days
                 workingHoursResolutionTime = TimeSpan.FromHours(fullDays * 8);
 
-                //calculate the working hours for the partial day (if any)
                 if (fullDays == 0)
                 {
-                    //if the start and end dates are on the same day, calculate the working hours between them
                     workingHoursResolutionTime = TimeSpan.FromTicks(Math.Min(endTime.Ticks, approvedTime.Ticks) - Math.Max(startTime.Ticks, ticketCreateTime.Ticks));
                 }
                 else
                 {
-                    //if there are full working days between the start and end dates, calculate the working hours for the partial day(s) at the start and end
                     DateTime partialDayStart = startTime.AddDays(fullDays);
                     DateTime partialDayEnd = endTime;
                     if (partialDayStart.DayOfWeek != DayOfWeek.Saturday && partialDayStart.DayOfWeek != DayOfWeek.Sunday) // if partial day is a weekday
@@ -334,7 +395,6 @@ namespace Epson.Services.Services.Requests
                 }
             }
 
-            //adjust resolution time based on SLA settings
             if (_slaSetting.Value.IncludeHoliday == true)
             {
                 resolutionTime -= GetTimeSpanOfHolidayDates(ticketCreateTime, approvedTime, holidays.Select(x => x.Date).ToList());
@@ -344,7 +404,6 @@ namespace Epson.Services.Services.Requests
                 resolutionTime -= GetTimeSpanOfStaffLeaves(ticketCreateTime, approvedTime, staffLeaves.Select(l => (l.StartDate, l.EndDate)).ToList());
             }
 
-            //choose the appropriate resolution time based on SLA settings
             if (_slaSetting.Value.IncludeWorkingHours == true && workingHoursResolutionTime < resolutionTime)
             {
                 return workingHoursResolutionTime;
