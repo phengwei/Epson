@@ -109,6 +109,7 @@
       async logout() {
         await this.$auth.logout({
         }).then(response => {
+          localStorage.clear();
           this.$router.push("/login");
           this.$router.go(0);
         })

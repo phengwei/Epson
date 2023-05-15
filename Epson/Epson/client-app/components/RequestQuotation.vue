@@ -3,7 +3,7 @@
     <h1>Create Quotation</h1>
     <v-card class="mx-auto" width="800">
       <v-card-text>
-        <div v-for="category in categories" :key="category.id">
+        <div v-for="(category, index) in categories" :key="'C'+index">
           <div class="blue-checkbox">
             <input type="checkbox" v-model="selectedCategories" :value="category" @change="checkboxChanged(category)">
             <label class="category-name">{{ category.name }}</label>
@@ -78,46 +78,57 @@
         }
       },
       loadDraft() {
-        this.selectedCategories = [];
-        
-        for (const category in this.categories) {
-          const categoryId = this.categories[category].id;
-          if (localStorage.getItem("savedItem-selectedProductId" + categoryId) != null && localStorage.getItem("savedItem-selectedProductName" + categoryId)) {
-            this.selectedCategories.push({ id: localStorage.getItem("savedItem-selectedProductId" + categoryId), name: localStorage.getItem("savedItem-selectedProductName" + categoryId) });
-            this.checkboxChanged(this.categories[category]);
-          }
+        try {
+          this.selectedCategories = [];
 
-          if (localStorage.getItem("savedItem-quantity" + categoryId) != null) {
-            this.quantity[categoryId] = localStorage.getItem("savedItem-quantity" + categoryId);
-          }
+          for (const category in this.categories) {
+            const categoryId = this.categories[category].id;
+            if (localStorage.getItem("savedItem-selectedCategoryId" + categoryId) != null && localStorage.getItem("savedItem-selectedCategoryName" + categoryId)) {
+              this.selectedCategories.push({ id: localStorage.getItem("savedItem-selectedCategoryId" + categoryId), name: localStorage.getItem("savedItem-selectedCategoryName" + categoryId) });
+              this.checkboxChanged(this.categories[category]);
+            }
 
-          if (localStorage.getItem("savedItem-budget" + categoryId) != null) {
-            console.log("AA");
-            console.log(localStorage.getItem("savedItem-budget" + categoryId)); 
-            this.budget[categoryId] = localStorage.getItem("savedItem-budget" + categoryId);
+            if (localStorage.getItem("savedItem-quantity" + categoryId) !== "null") {
+              this.quantity[categoryId] = localStorage.getItem("savedItem-quantity" + categoryId);
+            }
+
+            if (localStorage.getItem("savedItem-budget" + categoryId) !== "null") {
+
+              this.budget[categoryId] = localStorage.getItem("savedItem-budget" + categoryId);
+            }
+
+            if (localStorage.getItem("savedItem-selectedProductCategory" + categoryId) !== "null") {
+              this.selectedProducts[categoryId] = localStorage.getItem("savedItem-selectedProductCategory" + categoryId);
+            }
           }
+        } catch (error) {
+          console.error(error);
         }
       },
       saveDraft() {
 
         localStorage.clear();
-        
 
         for (const categoryIndex in this.selectedCategories) {
-          localStorage.setItem("savedItem-selectedProductId" + this.selectedCategories[categoryIndex].id, this.selectedCategories[categoryIndex].id);
-          localStorage.setItem("savedItem-selectedProductName" + this.selectedCategories[categoryIndex].id, this.selectedCategories[categoryIndex].name);
+          localStorage.setItem("savedItem-selectedCategoryId" + this.selectedCategories[categoryIndex].id, this.selectedCategories[categoryIndex].id);
+          localStorage.setItem("savedItem-selectedCategoryName" + this.selectedCategories[categoryIndex].id, this.selectedCategories[categoryIndex].name);
           for (const quantityIndex in this.quantity) {
-            localStorage.setItem("savedItem-quantity" + this.selectedCategories[categoryIndex].id, this.quantity[quantityIndex]);
+            if (this.quantity[quantityIndex] !== null) {
+              localStorage.setItem("savedItem-quantity" + this.selectedCategories[categoryIndex].id, this.quantity[quantityIndex]);
+            }
           }
           for (const budgetIndex in this.quantity) {
-            localStorage.setItem("savedItem-budget" + this.selectedCategories[categoryIndex].id, this.budget[budgetIndex]);
+            if (this.budget[budgetIndex] !== null) {
+              localStorage.setItem("savedItem-budget" + this.selectedCategories[categoryIndex].id, this.budget[budgetIndex]);
+            }
+          }
+          for (const productIndex in this.selectedProducts) {
+            if (this.selectedProducts[productIndex] !== null) {
+              localStorage.setItem("savedItem-selectedProductCategory" + this.selectedCategories[categoryIndex].id, this.selectedProducts[productIndex]);
+            }
           }
         }
-        for (const item in this.selectedProducts) {
-          
-          localStorage.setItem("savedItem-quantity" + item, this.quantity[item]);
-          localStorage.setItem("savedItem-budget" + item, this.budget[item]);
-        }
+        
       },
       checkboxChanged(selectedCategory) {
         const categoryId = selectedCategory.id;
