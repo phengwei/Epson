@@ -16,7 +16,7 @@
       <div class="row">
         <div class="grid-item full-width request-table">
           <v-app>
-            <ProductTable />
+            <SalesRequestSummary />
           </v-app>
         </div>
       </div>
@@ -28,6 +28,7 @@
   import { mapGetters } from 'vuex';
   import ProductTable from '~/components/ProductTable.vue';
   import ItemsPendingFulfilmentTable from '~/components/ItemsPendingFulfilmentTable.vue';
+  import SalesRequestSummary from '~/components/SalesRequestSummary.vue';
 
   export default {
     name: 'ProductDashboard',
@@ -40,7 +41,8 @@
     },
     components: {
       ProductTable,
-      ItemsPendingFulfilmentTable
+      ItemsPendingFulfilmentTable,
+      SalesRequestSummary
     }
   };
 </script>
@@ -82,5 +84,6 @@
 
   .request-table {
     margin-top: 5rem;
+    margin-bottom: 5rem;
   }
 </style>

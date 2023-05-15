@@ -287,7 +287,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public  List<FulfillmentSummary> GetFulfillmentSummary(DateTime startDate, DateTime endDate, string granularity)
+        public List<FulfillmentSummary> GetFulfillmentSummary(DateTime startDate, DateTime endDate, string granularity)
         {
             var requestProducts = _RequestProductRepository.Table.Where(rp => rp.FulfilledDate != DateTime.MinValue && rp.FulfilledDate >= startDate && rp.FulfilledDate <= endDate);
 
@@ -297,27 +297,27 @@ namespace Epson.Services.Services.Requests
             {
                 case "day":
                     fulfillmentSummary = requestProducts.GroupBy(rp => rp.FulfilledDate.Date)
-                                    .Select(group => new FulfillmentSummary
-                                    {
-                                        Date = group.Key,
-                                        Fulfillments = group.Count()
-                                    }).ToList();
+                                .Select(group => new FulfillmentSummary
+                                {
+                                    Period = group.Key.ToString("MMMM dd, yyyy"),
+                                    Fulfillments = group.Count()
+                                }).ToList();
                     break;
                 case "week":
                     fulfillmentSummary = requestProducts.GroupBy(rp => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(rp.FulfilledDate.Date, CalendarWeekRule.FirstDay, DayOfWeek.Sunday))
-                                    .Select(group => new FulfillmentSummary
-                                    {
-                                        Week = group.Key,
-                                        Fulfillments = group.Count()
-                                    }).ToList();
+                                .Select(group => new FulfillmentSummary
+                                {
+                                    Period = "Week " + group.Key.ToString(),
+                                    Fulfillments = group.Count()
+                                }).ToList();
                     break;
                 case "month":
                     fulfillmentSummary = requestProducts.GroupBy(rp => rp.FulfilledDate.Date.Month)
-                                    .Select(group => new FulfillmentSummary
-                                    {
-                                        Month = group.Key,
-                                        Fulfillments = group.Count()
-                                    }).ToList();
+                                .Select(group => new FulfillmentSummary
+                                {
+                                    Period = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(group.Key),
+                                    Fulfillments = group.Count()
+                                }).ToList();
                     break;
                 default:
                     throw new Exception("Invalid granularity. Please specify 'day', 'week', or 'month'.");

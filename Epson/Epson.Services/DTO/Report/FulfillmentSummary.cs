@@ -8,9 +8,7 @@ namespace Epson.Services.DTO.Report
 {
     public class FulfillmentSummary
     {
-        public DateTime? Date { get; set; }
-        public int? Week { get; set; }
-        public int? Month { get; set; }
+        public string Period { get; set; }
         public int Fulfillments { get; set; }
     }
 }
