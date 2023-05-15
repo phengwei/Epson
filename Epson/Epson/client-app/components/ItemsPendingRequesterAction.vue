@@ -5,10 +5,11 @@
                     :items="requests"
                     :options.sync="options"
                     :items-per-page="5"
-                    :loading="loading">
+                    :loading="loading"
+                    class="elevation-1">
         <template v-slot:top>
           <v-toolbar flat>
-            <v-toolbar-title>Requests</v-toolbar-title>
+            <v-toolbar-title>Items Pending Requester Action</v-toolbar-title>
             <v-divider class="mx-4" inset vertical></v-divider>
             <v-spacer></v-spacer>
           </v-toolbar>
@@ -26,7 +27,6 @@
             <span class="text-h5">{{ formTitle }}</span>
           </v-card-title>
           <v-card-text>
-            <!-- Dialog content goes here -->
             <label>Request</label>
             <div class="form-group">
               <label>CreatedOnUTC</label>
@@ -87,7 +87,7 @@
             align: 'start',
             value: 'totalBudget',
           },
-          { text: 'Approve Request', value: 'actions', sortable: false },
+          { text: 'Approve', value: 'actions', sortable: false },
         ],
         options: {},
         requests: [],
@@ -172,9 +172,9 @@
     },
   }
 </script>
-<style>
+
+<style scoped>
   .table-container {
-    width: 800px;
     display: flex;
     justify-content: center;
     align-items: center;

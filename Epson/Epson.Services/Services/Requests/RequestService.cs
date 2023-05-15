@@ -326,29 +326,44 @@ namespace Epson.Services.Services.Requests
             return fulfillmentSummary;
         }
 
-        public Dictionary<string, int> GetRequestSummary(DateTime startDate, DateTime endDate, string granularity)
+        public List<SalesSummary> GetRequestSummary(DateTime startDate, DateTime endDate, string granularity)
         {
             var requests = GetRequests();
             var filteredRequests = requests.Where(r => r.CreatedOnUTC >= startDate && r.CreatedOnUTC <= endDate);
 
-            Dictionary<string, int> summary;
+            List<SalesSummary> salesSummary;
 
             switch (granularity.ToLower())
             {
                 case "day":
-                    summary = filteredRequests.GroupBy(r => r.CreatedOnUTC.ToString("yyyy-MM-dd")).ToDictionary(g => g.Key, g => g.Count());
+                    salesSummary = filteredRequests.GroupBy(r => r.CreatedOnUTC.Date)
+                                .Select(group => new SalesSummary
+                                {
+                                    Period = group.Key.ToString("MMMM dd, yyyy"),
+                                    Sales = group.Count()
+                                }).ToList();
                     break;
                 case "week":
-                    summary = filteredRequests.GroupBy(r => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(r.CreatedOnUTC, CalendarWeekRule.FirstDay, DayOfWeek.Sunday).ToString()).ToDictionary(g => g.Key, g => g.Count());
+                    salesSummary = filteredRequests.GroupBy(r => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(r.CreatedOnUTC.Date, CalendarWeekRule.FirstDay, DayOfWeek.Sunday))
+                                .Select(group => new SalesSummary
+                                {
+                                    Period = "Week " + group.Key.ToString(),
+                                    Sales = group.Count()
+                                }).ToList();
                     break;
                 case "month":
-                    summary = filteredRequests.GroupBy(r => r.CreatedOnUTC.ToString("yyyy-MM")).ToDictionary(g => g.Key, g => g.Count());
+                    salesSummary = filteredRequests.GroupBy(r => r.CreatedOnUTC.Date.Month)
+                                .Select(group => new SalesSummary
+                                {
+                                    Period = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(group.Key),
+                                    Sales = group.Count()
+                                }).ToList();
                     break;
                 default:
                     throw new ArgumentException("Invalid granularity. Allowed values are 'day', 'week', 'month'");
             }
 
-            return summary;
+            return salesSummary;
         }
 
         public TimeSpan CalculateResolutionTime(DateTime approvedTime, DateTime ticketCreateTime, List<SLAStaffLeaveDTO> staffLeaves, List<SLAHolidayDTO> holidays)

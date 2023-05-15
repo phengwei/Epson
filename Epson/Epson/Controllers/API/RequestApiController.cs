@@ -227,11 +227,12 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getrequestsummary")]
-        public async Task<IActionResult> GetRequestSummary([FromQuery] DateTime startDate, [FromQuery] DateTime endDate, [FromQuery] string granularity)
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
+        public async Task<IActionResult> GetRequestSummary(DateTime startDate, DateTime endDate, string granularity)
         {
             try
             {
-                var response = new GenericResponseModel<Dictionary<string, int>>();
+                var response = new GenericResponseModel<List<SalesSummary>>();
                 var summary = _requestService.GetRequestSummary(startDate, endDate, granularity);
                 response.Data = summary;
                 return Ok(response);

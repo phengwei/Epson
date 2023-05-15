@@ -16,7 +16,7 @@
       <div class="row">
         <div class="grid-item full-width request-table">
           <v-app>
-            <SalesRequestSummary />
+            <FulfillmentRequestSummary />
           </v-app>
         </div>
       </div>
@@ -28,7 +28,7 @@
   import { mapGetters } from 'vuex';
   import ProductTable from '~/components/ProductTable.vue';
   import ItemsPendingFulfilmentTable from '~/components/ItemsPendingFulfilmentTable.vue';
-  import SalesRequestSummary from '~/components/SalesRequestSummary.vue';
+  import FulfillmentRequestSummary from '~/components/FulfillmentRequestSummary.vue';
 
   export default {
     name: 'ProductDashboard',
@@ -42,7 +42,7 @@
     components: {
       ProductTable,
       ItemsPendingFulfilmentTable,
-      SalesRequestSummary
+      FulfillmentRequestSummary
     }
   };
 </script>

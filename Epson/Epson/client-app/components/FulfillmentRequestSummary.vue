@@ -6,7 +6,7 @@
       <label>Start Date: <input type="date" v-model="startDate" /></label>
       <label>End Date: <input type="date" v-model="endDate" /></label>
       <label>
-        By:
+        Granularity:
         <select v-model="granularity">
           <option value="day">Day</option>
           <option value="week">Week</option>
@@ -22,6 +22,7 @@
   import BarChart from '~/components/BarChart.vue'
 
   export default {
+    name: 'FulfillmentRequestSummary',
     components: {
       BarChart
     },
@@ -39,15 +40,15 @@
     },
     methods: {
       async fetchData() {
-        const response = await this.$axios.get(`${this.$config.restUrl}/api/request/getrequestsummary?startDate=${this.startDate}&endDate=${this.endDate}&granularity=${this.granularity}`);
+        const response = await this.$axios.get(`${this.$config.restUrl}/api/request/getfulfillmentsummary?startDate=${this.startDate}&endDate=${this.endDate}&granularity=${this.granularity}`);
         const responseData = response.data.data;
 
         const chartData = {
           labels: responseData.map(item => item.period),  
           datasets: [
             {
-              label: 'Number of Requests',
-              data: responseData.map(item => item.sales),
+              label: 'Fulfillments',
+              data: responseData.map(item => item.fulfillments),
               backgroundColor: 'rgba(75,192,192,0.4)', 
               borderColor: 'rgba(75,192,192,1)',
               borderWidth: 1

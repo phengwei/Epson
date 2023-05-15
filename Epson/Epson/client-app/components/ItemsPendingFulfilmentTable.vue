@@ -141,12 +141,10 @@
             if (result.isConfirmed) {
               this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?requestId=${this.editedItem.requestId}&productId=${this.editedItem.productId}&fulfilledPrice=${this.editedItem.fulfilledPrice}`)
                 .then(response => {
-                  console.log("success editeditem", this.editedItem);
                   this.closeDialog();
                   Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success');
                 }).catch(error => {
                   console.log('error', error);
-                  console.log("failed edited item", this.editedItem);
                   Swal.fire('Error', 'Failed to fulfill request', 'error');
                 });
             }
