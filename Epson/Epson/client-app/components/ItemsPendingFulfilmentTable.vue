@@ -1,290 +1,202 @@
 <template>
-    <v-data-table
-        :headers="headers"
-        :items="products"
-        :options.sync="options"
-        :items-per-page="5"
-        :loading="loading"
-        class="elevation-1"
-      >
-      <template v-slot:top>
-        <v-toolbar
-          flat
-        >
-          <v-toolbar-title>Items Pending For Fulfilment</v-toolbar-title>
-          <v-divider
-            class="mx-4"
-            inset
-            vertical
-          ></v-divider>
-          <v-spacer></v-spacer>
-          <v-dialog
-            v-model="dialog"
-            max-width="500px"
-          >
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                color="primary"
-                dark
-                class="mb-2"
-                v-bind="attrs"
-                v-on="on"
-              >
-                New Product
-              </v-btn>
-            </template>
-            <v-card>
-              <v-card-title>
-                <span class="text-h5">{{ formTitle }}</span>
-              </v-card-title>
-  
-              <v-card-text>
-                <v-container>
-                  <v-row>
-                    <v-col
-                      cols="12"
-                      sm="6"
-                      md="4"
-                    >
-                      <v-text-field
-                        v-model="editedItem.name"
-                        label="Product name"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col
-                      cols="12"
-                      sm="6"
-                      md="4"
-                    >
-                      <v-text-field
-                        v-model="editedItem.price"
-                        label="Price"
-                      ></v-text-field>
-                    </v-col>
-                    
-                  </v-row>
-                </v-container>
-              </v-card-text>
-  
+  <v-data-table :headers="headers"
+                :items="itemsPendingFulfilment"
+                :loading="loading"
+                class="elevation-1">
+    <template v-slot:top>
+      <v-toolbar flat>
+        <v-toolbar-title>Items Pending Fulfillment</v-toolbar-title>
+        <v-divider class="mx-4" inset vertical></v-divider>
+        <v-spacer></v-spacer>
+
+        <v-dialog v-model="dialog" max-width="500px">
+          <v-card>
+            <v-card-title>
+              <span class="text-h5">{{ formTitle }}</span>
+            </v-card-title>
+            <v-card-text>
+              <div class="form-group">
+                <label>Product</label>
+                <input v-model="editedItem.productName" class="border-input" label="Product" readonly></input>
+              </div>
+              <div class="form-group">
+                <label>Budget</label>
+                <input v-model="editedItem.budget" class="border-input" label="Budget" readonly></input>
+              </div>
+              <div class="form-group">
+                <label>Quantity</label>
+                <input v-model="editedItem.quantity" class="border-input" label="Quantity" readonly></input>
+              </div>
+              <div class="form-group">
+                <label>Fulfilled Price</label>
+                <input v-model="editedItem.fulfilledPrice" class="border-input" label="Fulfilled Price"></input>
+              </div>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn
-                  color="blue darken-1"
-                  text
-                  @click="close"
-                >
-                  Cancel
-                </v-btn>
-                <v-btn
-                  color="blue darken-1"
-                  text
-                  @click="save"
-                >
-                  Save
-                </v-btn>
+                <v-btn color="blue darken-1" text @click="closeDialog">Cancel</v-btn>
+                <v-btn color="blue darken-1" text @click="fulfillRequest">Fulfill Request</v-btn>
               </v-card-actions>
-            </v-card>
-          </v-dialog>
-          <v-dialog v-model="dialogDelete" max-width="500px">
-            <v-card>
-              <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
-                <v-btn color="blue darken-1" text @click="deleteItemConfirm">OK</v-btn>
-                <v-spacer></v-spacer>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-        </v-toolbar>
-      </template>
-      <template v-slot:item.actions="{ item }">
-        <v-icon
-          small
-          class="mr-2"
-          @click="editItem(item)"
-        >
-          mdi-pencil
-        </v-icon>
-        <v-icon
-          small
-          @click="deleteItem(item)"
-        >
-          mdi-delete
-        </v-icon>
-      </template>
-      <template v-slot:no-data>
-        <v-btn
-          color="primary"
-          @click="initialize"
-        >
-          Reset
-        </v-btn>
-      </template></v-data-table>
-  </template>
-  
-  <script>
+            </v-card-text>
+          </v-card>
+        </v-dialog>
+      </v-toolbar>
+    </template>
+
+    <template v-slot:item.actions="{ item }">
+      <v-icon small
+              class="mr-2"
+              @click="editItem(item)">
+        mdi-pencil
+      </v-icon>
+    </template>
+
+    <template v-slot:no-data>
+      <v-btn color="primary" @click="fetchPendingItems">
+        Reset
+      </v-btn>
+    </template>
+  </v-data-table>
+</template>
+
+<script>
+  import Swal from 'sweetalert2';
   export default {
-      name: 'ItemsPendingFulfilmentTable',
-      data () {
-        return {
-          dialog: false,
-          dialogDelete: false,
-          headers: [
+    name: 'ItemsPendingFulfilmentTable',
+    data() {
+      return {
+        dialog: false,
+        headers: [
           {
-              text: 'ID',
-              align: ' d-none',
-              value: 'id',
-            },
-            {
-              text: 'Product Name',
-              align: 'start',
-              value: 'name',
-            },
-            { text: 'Price', value: 'price' },
-            { text: 'Actions', value: 'actions', sortable: false },
-          ],
-          options: {},
-          products: [],
-          loading: true,
-          totalProducts: 0,
-          editedIndex: -1,
-          editedItem: {
-            id: 0,
-            name: '',
-            price: 0,
+            text: 'ID',
+            align: ' d-none',
+            value: 'id',
           },
-          defaultItem: {
-            name: '',
-            price: 0,
-          },
-          }
+          { text: 'Product', value: 'productName' },
+          { text: 'Budget', value: 'budget' },
+          { text: 'Quantity', value: 'quantity' },
+          { text: 'Fulfill Request', value: 'actions', sortable: false },
+        ],
+        itemsPendingFulfilment: [],
+        loading: false,
+        editedItem: {
+          productName: '',
+          budget: '',
+          fulfilledPrice: null
+        },
+      }
+    },
+    computed: {
+      formTitle() {
+        return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
       },
-      computed: {
-        formTitle () {
-          return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
+    },
+    watch: {
+      options: {
+        handler() {
+          this.getFulfillerItem()
         },
+        deep: true,
       },
-      watch: {
-        options: {
-          handler () {
-            this.getDataFromApi()
-          },
-          deep: true,
-        },
-        dialog (val) {
-          val || this.close()
-        },
-        dialogDelete (val) {
-          val || this.closeDelete()
-        },
+      dialog(val) {
+        val || this.close()
+      }
+    },
+    created() {
+      this.getFulfillerItem();
+    },
+    methods: {
+      getFulfillerItem() {
+        this.loading = true
+        this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`).then(result => {
+          this.itemsPendingFulfilment = [];
+          result.data.data.forEach(item => {
+            item.requestProductsModel.forEach(product => {
+              this.itemsPendingFulfilment.push({
+                ...item,
+                ...product,
+                productName: product.productName,
+                budget: product.budget,
+                quantity: product.quantity,
+              });
+            });
+          });
+          this.loading = false
+        })
       },
-  
-      methods: {
-        getDataFromApi () {
-          this.loading = true
-          this.$axios.get(`${this.$config.restUrl}/api/product/getproducts`).then(result => {
-            console.log('result', result);
-            this.products = result.data.data
-            this.totalProducts = result.data.data.length
-            this.loading = false
-          })
-        },
-        editItem (item) {
-          this.editedIndex = this.products.indexOf(item)
-          this.editedItem = Object.assign({}, item)
-          this.dialog = true
-        },
-  
-        deleteItem (item) {
-          this.editedIndex = this.products.indexOf(item)
-          this.editedItem = Object.assign({}, item)
-          this.dialogDelete = true
-        },
-  
-        async deleteItemConfirm () {
-          const vm = this;
-          // method for delete item
-          try{
-              await this.$axios.post(`${this.$config.restUrl}/api/product/deleteproduct?id=${this.editedItem.id}`).then(response => {
-                console.log('res', response);
-                this.getDataFromApi();
-              }).catch(err => {
-                console.log(err);
-                console.log(err.response);
-                vm.$swal('Failed to delete', err.response.data.message, 'error');
-              })
-            } catch (err){
-              console.log(err);
+      editItem(item) {
+        this.editedItem = { ...item };
+        this.dialog = true;
+      },
+      fulfillRequest() {
+        if (this.editedItem && this.editedItem.fulfilledPrice !== null) {
+          Swal.fire({
+            title: 'Fulfill Request',
+            text: 'Are you sure you want to fulfill this request?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Fulfill',
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?requestId=${this.editedItem.requestId}&productId=${this.editedItem.productId}&fulfilledPrice=${this.editedItem.fulfilledPrice}`)
+                .then(response => {
+                  console.log("success editeditem", this.editedItem);
+                  this.closeDialog();
+                  Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success');
+                }).catch(error => {
+                  console.log('error', error);
+                  console.log("failed edited item", this.editedItem);
+                  Swal.fire('Error', 'Failed to fulfill request', 'error');
+                });
             }
-          this.closeDelete()
-        },
-  
-        close () {
-          this.dialog = false
-          this.$nextTick(() => {
-            this.editedItem = Object.assign({}, this.defaultItem)
-            this.editedIndex = -1
-          })
-        },
-  
-        closeDelete () {
-          this.dialogDelete = false
-          this.$nextTick(() => {
-            this.editedItem = Object.assign({}, this.defaultItem)
-            this.editedIndex = -1
-          })
-        },
-  
-        async save () {
-          const vm = this;
-          if (this.editedIndex > -1) {
-            // method for edit item
-            try{
-              await this.$axios.post(`${this.$config.restUrl}/api/product/editproduct`, {
-                data: {
-                  id: this.editedItem.id,
-                  name: this.editedItem.name,
-                  price: this.editedItem.price
-                }
-              }).then(response => {
-                console.log('res', response);
-                this.getDataFromApi();
-              }).catch(err => {
-                console.log(err);
-                console.log(err.response);
-                vm.$swal('Failed to edit', err.response.data.message, 'error');
-              })
-            } catch (err){
-              console.log(err);
-            }
-          } else {
-            // method for add item
-            try{
-              await this.$axios.post(`${this.$config.restUrl}/api/product/addproduct`, {
-                data: {
-                  name: this.editedItem.name,
-                  price: this.editedItem.price
-                }
-              }).then(response => {
-                console.log('res', response);
-                this.getDataFromApi();
-              }).catch(err => {
-                console.log(err);
-                console.log(err.response);
-                vm.$swal('Failed to add', err.response.data.message, 'error');
-              })
-            } catch (err){
-              console.log(err);
-            }
-          }
-          this.close()
-        },
-  
+          });
+        }
       },
+      close() {
+        this.dialog = false
+        this.$nextTick(() => {
+          this.editedItem = Object.assign({}, this.defaultItem)
+          this.editedIndex = -1
+        })
+      },
+      closeDialog() {
+        this.dialog = false;
+        this.editedItem = {
+          productName: '',
+          budget: '',
+          fulfilledPrice: ''
+        };
+      },
+      closeDelete() {
+        this.dialogDelete = false
+        this.$nextTick(() => {
+          this.editedItem = Object.assign({}, this.defaultItem)
+          this.editedIndex = -1
+        })
+      }
+    },
   }
-  </script>
-  
-  <style>
-  
-  </style>
+</script>
+
+<style scoped>
+  .form-group {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: black;
+  }
+
+  .border-input {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.5rem;
+    width: 100%;
+  }
+</style>

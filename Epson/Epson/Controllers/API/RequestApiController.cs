@@ -168,13 +168,16 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product")]
         public async Task<IActionResult> FulfillRequest(int requestId, int productId, decimal fulfilledPrice)
         {
+            if (requestId == 0 || productId == 0)
+                return NotFound("Resources not found!");
+
             var request = _requestService.GetRequestById(requestId);
             var product = _productService.GetProductById(productId);
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
             if (request == null || product == null)
-                return NotFound("Request not found!");
+                return NotFound("Resources not found!");
 
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
