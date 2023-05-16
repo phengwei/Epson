@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Epson.Factories;
 using Epson.Core.Domain.Requests;
 using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Epson.Services.Interface.Requests;
 using Epson.Model.Request;
@@ -16,6 +15,7 @@ using Epson.Core.Domain.Products;
 using Epson.Services.DTO.Requests;
 using System.Globalization;
 using Epson.Services.DTO.Report;
+using Epson.Services.Interface.Users;
 
 namespace Epson.Controllers.API
 {
@@ -24,6 +24,7 @@ namespace Epson.Controllers.API
     {
         private readonly IRequestService _requestService;
         private readonly IProductService _productService;
+        private readonly IUserService _userService;
         private readonly IRequestModelFactory _requestModelFactory;
         private readonly IWorkContext _workContext;
         private readonly IMapper _mapper;
@@ -33,6 +34,7 @@ namespace Epson.Controllers.API
         public RequestApiController(
             IRequestService requestService,
             IProductService productService,
+            IUserService userService,
             IRequestModelFactory requestModelFactory,
             IWorkContext workContext,
             IMapper mapper,
@@ -41,6 +43,7 @@ namespace Epson.Controllers.API
         {
             _requestService = requestService;
             _productService = productService;
+            _userService = userService;
             _requestModelFactory = requestModelFactory;
             _workContext = workContext;
             _mapper = mapper;
@@ -291,6 +294,12 @@ namespace Epson.Controllers.API
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
+            var authorizedUsers = _userService.GetGovtUsersWithProductRole();
+
+            if (!authorizedUsers.Any(u => u.Id == user.Id))
+                return Unauthorized(); 
+            
+
             var requests = _requestService.GetRequests()
                 .Select(x => new RequestDTO
                 {
@@ -309,7 +318,7 @@ namespace Epson.Controllers.API
                     TotalPrice = x.TotalPrice,
                     TimeToResolution = x.TimeToResolution,
                     RequestProducts = x.RequestProducts
-                        .Where(rp => rp.FulfillerId == user.Id && rp.HasFulfilled == false)
+                        .Where(rp => rp.HasFulfilled == false)
                         .ToList()
                 })
                 .Where(x => x.RequestProducts.Any())

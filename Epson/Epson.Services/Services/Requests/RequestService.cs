@@ -107,7 +107,6 @@ namespace Epson.Services.Services.Requests
                     var product = _productService.GetProductById(requestProduct.ProductId);
 
                     requestProduct.RequestId = request.Id;
-                    requestProduct.FulfillerId = product.CreatedById;
                     InsertRequestProduct(requestProduct);
                 }
 
@@ -171,7 +170,6 @@ namespace Epson.Services.Services.Requests
                     var product = _productService.GetProductById(requestProduct.ProductId);
 
                     requestProduct.RequestId = request.Id;
-                    requestProduct.FulfillerId = product.CreatedById;
 
                     InsertRequestProduct(requestProduct);
                 }
@@ -260,6 +258,7 @@ namespace Epson.Services.Services.Requests
 
             requestProductToFulfill.FulfilledPrice = totalPrice;
             requestProductToFulfill.HasFulfilled = true;
+            requestProductToFulfill.FulfillerId = user.Id;
             requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
 
             try
@@ -277,10 +276,11 @@ namespace Epson.Services.Services.Requests
                 if (allProductsFulfilled)
                     request.ApprovalState = (int)ApprovalStateEnum.PendingRequesterAction;
 
-                var fulfillRequestQueue = _emailService.CreateFulfillEmailQueue(request, requestProductToFulfill, allProductsFulfilled);
-                _emailService.InsertEmailQueue(fulfillRequestQueue);
-
                 _RequestRepository.Update(request);
+
+                var updatedRequest = _mapper.Map<Request>(GetRequestById(request.Id));
+                var fulfillRequestQueue = _emailService.CreateFulfillEmailQueue(updatedRequest, requestProductToFulfill, allProductsFulfilled);
+                _emailService.InsertEmailQueue(fulfillRequestQueue);
 
                 return true;
             }

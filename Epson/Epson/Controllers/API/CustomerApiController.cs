@@ -307,7 +307,6 @@ namespace Epson.Controllers.API
             var response = new GenericResponseModel<List<UserModel>>();
 
             var users = _userService.GetAllUsers();
-
             var userModels = new List<UserModel>();
 
             foreach (var user in users)

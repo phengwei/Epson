@@ -13,5 +13,6 @@ namespace Epson.Services.Interface.Users
         public TeamDTO GetTeamById(int id);
         public List<TeamDTO> GetTeams();
         public List<ApplicationUser> GetAllUsers();
+        public List<ApplicationUser> GetGovtUsersWithProductRole();
     }
 }

@@ -19,6 +19,7 @@ using Epson.Core.Domain.Users;
 using Epson.Services.Interface.Products;
 using Epson.Services.Interface.Users;
 using Epson.Services.DTO.Users;
+using Epson.Core.Domain.Enum;
 
 namespace Epson.Services.Services.Users
 {
@@ -56,6 +57,26 @@ namespace Epson.Services.Services.Users
         {
             List<ApplicationUser> users = _userManager.Users.ToList();
             return users;
+        }
+
+        public List<ApplicationUser> GetGovtUsersWithProductRole()
+        {
+            var team = _TeamRepository.Table.FirstOrDefault(x => x.Name == TeamEnum.Govt.ToString().ToUpper());
+            var govtUsers = GetAllUsers().Where(x => x.TeamId == team.Id).ToList();
+
+            var productRoleUsers = new List<ApplicationUser>();
+
+            foreach (var user in govtUsers)
+            {
+                var userRoles = _userManager.GetRolesAsync(user).Result;
+
+                if (userRoles.Contains("Product"))
+                {
+                    productRoleUsers.Add(user);
+                }
+            }
+
+            return productRoleUsers;
         }
     }
 }

@@ -12,7 +12,7 @@
         <v-dialog v-model="dialog" max-width="500px">
           <v-card>
             <v-card-title>
-              <span class="text-h5">{{ formTitle }}</span>
+              <span class="text-h5">Fulfill request</span>
             </v-card-title>
             <v-card-text>
               <div class="form-group">
@@ -84,11 +84,6 @@
           fulfilledPrice: null
         },
       }
-    },
-    computed: {
-      formTitle() {
-        return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
-      },
     },
     watch: {
       options: {
