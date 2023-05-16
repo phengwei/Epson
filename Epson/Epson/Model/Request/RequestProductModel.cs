@@ -1,4 +1,5 @@
-﻿using Epson.Core.Domain.Requests;
+﻿using Epson.Core.Domain.Categories;
+using Epson.Core.Domain.Requests;
 
 namespace Epson.Model.Request
 {
@@ -15,5 +16,6 @@ namespace Epson.Model.Request
         public decimal FulfilledPrice { get; set; }
         public bool HasFulfilled { get; set; }
         public DateTime FulfilledDate { get; set; }
+        public List<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
     }
 }

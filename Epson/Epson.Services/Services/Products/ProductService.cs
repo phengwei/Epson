@@ -88,6 +88,11 @@ namespace Epson.Services.Services.Products
             return productDTOs;
         }
 
+        public List<ProductCategory> GetProductCategoriesByProductId(int productId)
+        {
+            return _ProductCategoryRepository.GetAll().Where(x => x.ProductId == productId).ToList();
+        }
+
         public bool InsertProduct(Product product, List<ProductCategory> productCategories, string userId)
         {
             if (product == null)
