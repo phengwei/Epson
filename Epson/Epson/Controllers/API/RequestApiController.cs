@@ -243,7 +243,8 @@ namespace Epson.Controllers.API
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
             var requests = _requestService.GetRequests().Where(x => x.CreatedById == user.Id
-                                                                && x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
+                                                                && x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction 
+                                                                || x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation)
                                                                     .ToList();
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests);
