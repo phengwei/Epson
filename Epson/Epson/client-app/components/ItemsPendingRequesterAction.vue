@@ -9,7 +9,7 @@
                     class="elevation-1">
         <template v-slot:top>
           <v-toolbar flat>
-            <v-toolbar-title>Items Pending Requester Action</v-toolbar-title>
+            <v-toolbar-title>Request Responded</v-toolbar-title>
             <v-divider class="mx-4" inset vertical></v-divider>
             <v-spacer></v-spacer>
           </v-toolbar>
@@ -47,8 +47,8 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="close">Approve</v-btn>
-            <v-btn color="blue darken-1" text @click="save">Reject</v-btn>
+            <v-btn color="blue darken-1" text @click="close">Win Deal</v-btn>
+            <v-btn color="blue darken-1" text @click="save">Lose Deal</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>

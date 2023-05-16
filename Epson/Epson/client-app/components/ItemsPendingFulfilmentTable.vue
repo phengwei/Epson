@@ -5,7 +5,7 @@
                 class="elevation-1">
     <template v-slot:top>
       <v-toolbar flat>
-        <v-toolbar-title>Items Pending Fulfillment</v-toolbar-title>
+        <v-toolbar-title>New Request</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-spacer></v-spacer>
 
@@ -28,13 +28,13 @@
                 <input v-model="editedItem.quantity" class="border-input" label="Quantity" readonly></input>
               </div>
               <div class="form-group">
-                <label>Fulfilled Price</label>
-                <input v-model="editedItem.fulfilledPrice" class="border-input" label="Fulfilled Price"></input>
+                <label>Approved Price</label>
+                <input v-model="editedItem.fulfilledPrice" class="border-input" label="Approved Price"></input>
               </div>
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="blue darken-1" text @click="closeDialog">Cancel</v-btn>
-                <v-btn color="blue darken-1" text @click="fulfillRequest">Fulfill Request</v-btn>
+                <v-btn color="blue darken-1" text @click="fulfillRequest">Approve</v-btn>
               </v-card-actions>
             </v-card-text>
           </v-card>

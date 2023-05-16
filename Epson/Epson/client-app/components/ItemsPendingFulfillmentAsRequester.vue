@@ -7,7 +7,7 @@
                 class="elevation-1">
     <template v-slot:top>
       <v-toolbar flat>
-        <v-toolbar-title>Items Pending Fulfillment As Requester</v-toolbar-title>
+        <v-toolbar-title>Pending</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-spacer></v-spacer>
         <v-dialog v-model="dialog" max-width="500px">
