@@ -75,7 +75,7 @@
         this.populateForm(request);
       }
       else {
-        this.loadDraft();
+        await this.loadDraft();
       }
     },
     computed: {
@@ -93,9 +93,13 @@
           if (category) {
             this.selectedCategories.push(category);
             await this.fetchProductsForCategory(category);
-            this.selectedProducts[category.id] = productModel.productId;
+            this.selectedProducts[category.id] = productModel.productName;
             this.quantity[category.id] = productModel.quantity;
             this.budget[category.id] = productModel.budget;
+            console.log(category.id);
+            console.log(this.selectedProducts[category.id]);
+            console.log(this.quantity[category.id]);
+            console.log(this.budget[category.id]);
           }
         }
         this.priority.value = 0;
@@ -122,16 +126,13 @@
       async loadDraft() {
         try {
           this.selectedCategories = [];
+          for (let i = 0; i < this.categories.length; i++) {
 
-          for (const category in this.categories) {
-            const categoryId = this.categories[category].id;
+            const category = this.categories.find((c) => c.id === this.categories[i].id);
+            const categoryId = category.id;
             if (localStorage.getItem("savedItem-selectedCategoryId" + categoryId) != null && localStorage.getItem("savedItem-selectedCategoryName" + categoryId)) {
-              this.selectedCategories.push({
-                id: localStorage.getItem("savedItem-selectedCategoryId" + categoryId)
-              });
-
-              const categoryObj = this.selectedCategories[this.selectedCategories.length - 1];
-              await this.fetchProductsForCategory(categoryObj);
+              this.selectedCategories.push({ id: localStorage.getItem("savedItem-selectedCategoryId" + categoryId), name: localStorage.getItem("savedItem-selectedCategoryName" + categoryId) });
+              await this.fetchProductsForCategory(category);
             }
 
             if (localStorage.getItem("savedItem-quantity" + categoryId) !== "null") {
@@ -145,8 +146,9 @@
             if (localStorage.getItem("savedItem-selectedProductCategory" + categoryId) !== "null") {
               this.selectedProducts[categoryId] = localStorage.getItem("savedItem-selectedProductCategory" + categoryId);
             }
-            console.log(localStorage);
           }
+          this.priority.value = 0;
+
         } catch (error) {
           console.error(error);
         }
