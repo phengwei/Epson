@@ -31,6 +31,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Epson.Core.Domain.SLA;
 using Epson.Services.Interface.Report;
+using Epson.Services.Interface.Users;
+using Epson.Services.Services.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -113,6 +115,7 @@ builder.Services.AddSingleton(mapper);
 
 #region Services
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IRequestService, RequestService>();

@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Epson.Core.Domain.Users
+namespace Epson.Services.DTO.Users
 {
-    public class UserTeam
+    public class TeamDTO
     {
         public int Id { get; set; }
-        public string UserId { get; set; }
-        public int TeamId { get; set; } 
+        public string Name { get; set; }
     }
 }

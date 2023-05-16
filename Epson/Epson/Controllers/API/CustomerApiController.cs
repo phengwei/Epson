@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Epson.Model.Products;
 using System.Security.Claims;
 using Epson.Infrastructure;
+using Epson.Services.Interface.Users;
+using AutoMapper;
 
 namespace Epson.Controllers.API
 {
@@ -21,23 +23,29 @@ namespace Epson.Controllers.API
         private readonly RoleManager<Role> _roleManager;
         private readonly JwtSettings _jwtSettings;
         private readonly JwtService _jwtService;
+        private readonly IUserService _userService;
         private readonly IConfiguration _configuration;
         private readonly Serilog.ILogger _logger;
+        private readonly IMapper _mapper;
 
         public CustomerApiController(
             UserManager<ApplicationUser> userManager,
             RoleManager<Role> roleManager,
             JwtSettings jwtSettings,
             JwtService jwtService,
+            IUserService userService,
             IConfiguration configuration,
-            Serilog.ILogger logger)
+            Serilog.ILogger logger,
+            IMapper mapper)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _jwtSettings = jwtSettings;
             _jwtService = jwtService;
+            _userService = userService;
             _configuration = configuration;
             _logger = logger;
+            _mapper = mapper;
         }
         [HttpPost("login")]
         [AllowAnonymous]
@@ -298,7 +306,7 @@ namespace Epson.Controllers.API
         {
             var response = new GenericResponseModel<List<UserModel>>();
 
-            var users = _userManager.Users.ToList();
+            var users = _userService.GetAllUsers();
 
             var userModels = new List<UserModel>();
 
@@ -311,7 +319,8 @@ namespace Epson.Controllers.API
                     Id = user.Id,
                     UserName = user.UserName,
                     Email = user.Email,
-                    Roles = roles.ToList()
+                    Roles = roles.ToList(),
+                    Teams = _mapper.Map<Team>(_userService.GetTeamById(user.TeamId)).Name
                 };
 
                 userModels.Add(userModel);
