@@ -127,19 +127,18 @@ namespace Epson.Controllers.API
             if (request == null)
                 return NotFound("Request not found!");
 
-            if (request.ApprovalState == (int)ApprovalStateEnum.AmendQuotation)
+            if (request.ApprovalState != (int)ApprovalStateEnum.AmendQuotation)
                 return BadRequest("Request is not in the state of approval!");
 
             var updatedRequest = new Request
             {
                 Id = request.Id,
                 UpdatedOnUTC = DateTime.UtcNow,
+                CreatedById = user.Id,
                 UpdatedById = user.Id,
                 Segment = model.Segment,
-                TotalBudget = model.TotalBudget,
                 ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction,
-                Priority = model.Priority,
-                Deadline = (DateTime)model.Deadline
+                Priority = model.Priority
             };
 
             if (_requestService.UpdateRequest(updatedRequest, model.RequestProducts))

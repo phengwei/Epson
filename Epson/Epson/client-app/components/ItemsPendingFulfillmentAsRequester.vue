@@ -37,40 +37,49 @@
           </v-card>
         </v-dialog>
       </v-toolbar>
-      <v-toolbar flat>
-        <v-dialog v-model="quotationDialog" max-width="500px">
-          <v-card class="mx-auto" width="800">
-            <v-card-text>
-              <div v-for="(category, index) in categories" :key="'C'+index">
-                <div class="blue-checkbox">
-                  <input type="checkbox" v-model="selectedCategories" :value="category" @change="checkboxChanged(category)">
-                  <label class="category-name">{{ category.name }}</label>
-                </div>
-
-              </div>
-              <div v-for="category in selectedCategories" :key="category.id">
-                <div class="form-group">
-                  <label>{{ category.name }}</label>
-                  <select v-if="!isViewMode" v-model="selectedProducts[category.id]" required class="border-input">
-                    <option v-for="option in options[category.id]" :value="option.id" :key="option.id">{{ option.name }}</option>
-                  </select>
-                  <span v-else>{{ selectedProducts[category.id] }}</span>
-                </div>
-                <div class="form-group">
-                  <label>Quantity</label>
-                  <input v-model="quantity[category.id]" class="border-input" type="text" :readonly="isViewMode">
-                </div>
-                <div class="form-group">
-                  <label>Budget</label>
-                  <input v-model="budget[category.id]" class="border-input" type="text" :readonly="isViewMode">
-                </div>
+      <v-dialog v-model="quotationDialog" max-width="500px">
+        <v-card class="mx-auto" width="800">
+          <v-card-title class="py-4">
+            <span class="text-h5">Edit Quotation</span>
+          </v-card-title>
+          <v-card-text>
+            <label>Product Categories</label>
+            <div v-for="(category, index) in categories" :key="'C'+index">
+              <div class="blue-checkbox">
+                <input type="checkbox" v-model="selectedCategories" :value="category" @change="checkboxChanged(category)">
+                <label class="category-name">{{ category.name }}</label>
               </div>
 
-              <button type="submit" @click="editQuotation">Edit Quotation</button>
-            </v-card-text>
-          </v-card>
-        </v-dialog>
-      </v-toolbar>
+            </div>
+            <div v-for="category in selectedCategories" :key="category.id">
+              <div class="form-group">
+                <label>{{ category.name }}</label>
+                <select v-model="selectedProducts[category.id]" required class="border-input">
+                  <option v-for="option in options[category.id]" :value="option.id" :key="option.id">{{ option.name }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Quantity</label>
+                <input v-model="quantity[category.id]" class="border-input" type="text">
+              </div>
+              <div class="form-group">
+                <label>Budget</label>
+                <input v-model="budget[category.id]" class="border-input" type="text">
+              </div>
+              <div class="form-group" v-if="isPriorityVisible">
+                <label>Priority</label>
+                <select v-model="priority.value" class="border-input">
+                  <option v-for="option in priority.options" :value="option.value" :key="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <button class="dialog-button" type="submit" @click="editQuotation">Edit Quotation</button>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
     </template>
     <template v-slot:item.actions="{ item }">
       <v-icon small
@@ -109,7 +118,7 @@
           {
             text: 'Request #',
             align: 'start',
-            value: 'createdOnUTC',
+            value: 'id',
           },
           {
             text: 'Created Time',
@@ -140,8 +149,14 @@
         selectedProducts: {},
         quantity: {},
         budget: {},
-        priority : 0
-
+        priority: {
+          value: 1,
+          options: [
+            { value: 1, label: 'High' },
+            { value: 2, label: 'Medium' },
+            { value: 3, label: 'Low' }
+          ]
+        },
       }
     },
     created() {
@@ -157,9 +172,6 @@
       isPriorityVisible() {
         return this.selectedCategories && this.selectedCategories.length > 0;
       },
-      isViewMode() {
-        return this.$route.query.view === 'true';
-      },
 
     },
     watch: {
@@ -168,7 +180,12 @@
           this.getPendingFulfillmentAsRequester()
         },
         deep: true,
-      }
+      },
+      quotationDialog(newVal, oldVal) {
+        if (newVal === false && oldVal === true) {
+          this.resetData();
+        }
+      },
     },
     methods: {
       getPendingFulfillmentAsRequester() {
@@ -211,7 +228,6 @@
           cancelButtonText: 'No'
         }).then((result) => {
           if (result.isConfirmed) {
-            // Call the method to perform the amend quotation action
             this.$axios.post(`${this.$config.restUrl}/api/request/setrequesttoamendquotation?requestId=${item.id}`).then(result => {
               for (const requests in result.data.data) {
                 result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('MMMM Do YYYY');
@@ -221,15 +237,15 @@
         });
       },
       async dialogQuotation(item) {
+        console.log("quantity", this.selectedProducts);
         this.requestId = item.id;
-        console.log("a: ",item);
         this.quotationDialog = true;
         for (const productModel of item.requestProductsModel) {
           const category = this.categories.find((category) => category.id === productModel.productCategory.categoryId);
           if (category) {
             this.selectedCategories.push(category);
             await this.fetchProductsForCategory(category);
-            this.selectedProducts[category.id] = productModel.productName;
+            this.selectedProducts[category.id] = productModel.productId;
             this.quantity[category.id] = productModel.quantity;
             this.budget[category.id] = productModel.budget;
             console.log(category.id);
@@ -240,6 +256,14 @@
         }
         this.priority = 0;
       },
+      resetData() {
+        this.requestId = 0;
+        this.selectedCategories = [];
+        this.selectedProducts = {};
+        this.quantity = {};
+        this.budget = {};
+        this.priority = 0;
+      },
       async fetchProductsForCategory(category) {
         try {
           const response = await this.$axios.get(`${this.$config.restUrl}/api/product/getproductbycategory`, { params: { categoryId: category.id } });
@@ -248,12 +272,46 @@
           console.error(error);
         }
       },
-      editQuotation(item) {
+      async editQuotation() {
+        const quotationData = {
+          ApprovalState: 20,
+          Priority: this.priority,
+          requestProducts: [],
+        };
+        for (const categoryId in this.selectedProducts) {
+          const idProduct = this.selectedProducts[categoryId];
+          if (idProduct !== '' && idProduct !== null) {
+            const product = {
+              productId: idProduct,
+              fulfillerId: "string",
+              quantity: this.quantity[categoryId],
+              budget: this.budget[categoryId],
+            };
+            quotationData.requestProducts.push(product);
+          }
+        }
+        try {
+          const vm = this;
+          await this.$axios.post(`${this.$config.restUrl}/api/request/editrequest`, {
+            data: {
+              id: this.requestId,
+              segment: "string",
+              approvalState: 10,
+              priority: this.priority.value,
+              RequestProducts: quotationData.requestProducts
+            }
+          }).then(response => {
+            this.$swal('Request updated');
+            this.quotationDialog = false;
+            this.$router.go();
 
-        
-
-        
-        console.log(this.selectedCategories);
+          }).catch(err => {
+            console.log(err);
+            vm.$swal('Failed to update request', err.response.data.message, 'error');
+          })
+        } catch (error) {
+          console.log(error);
+        }
       },
       async fetchCategories() {
         try {
@@ -292,6 +350,14 @@
 
   .blue-checkbox {
     margin-bottom: 1rem;
+  }
+
+  .dialog-button {
+    padding: 0.5rem 1rem;
+    background-color: #003399 !important;
+    color: #fff !important;
+    border: none;
+    cursor: pointer;
   }
 
     .blue-checkbox input[type="checkbox"]:checked {

@@ -160,6 +160,7 @@ namespace Epson.Services.Services.Requests
                 throw new ArgumentNullException(nameof(request));
             try
             {
+                request.TotalBudget = GetTotalBudgetOfRequestProducts(requestProducts);
                 _RequestRepository.Update(request);
                 _logger.Information("Updating request {id}", request.Id);
 
@@ -167,7 +168,10 @@ namespace Epson.Services.Services.Requests
 
                 foreach (var requestProduct in requestProducts)
                 {
+                    var product = _productService.GetProductById(requestProduct.ProductId);
+
                     requestProduct.RequestId = request.Id;
+                    requestProduct.FulfillerId = product.CreatedById;
 
                     InsertRequestProduct(requestProduct);
                 }
