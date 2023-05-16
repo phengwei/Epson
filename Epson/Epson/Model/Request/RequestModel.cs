@@ -10,7 +10,7 @@ namespace Epson.Model.Request
         public string Segment { get; set; }
         public decimal TotalBudget { get; set; }
         public int ApprovalState { get; set; }
-        public string ApprovalStateStr { get; set; }
+        public string? ApprovalStateStr { get; set; }
         public int Priority { get; set; }
         public DateTime? Deadline { get; set; }
         public Decimal? TotalPrice { get; set; }

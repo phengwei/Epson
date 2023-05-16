@@ -5,24 +5,25 @@
       <v-card-text>
         <div v-for="(category, index) in categories" :key="'C'+index">
           <div class="blue-checkbox">
-            <input type="checkbox" v-model="selectedCategories" :value="category" @change="checkboxChanged(category)">
+            <input type="checkbox" v-model="selectedCategories" :value="category" @change="checkboxChanged(category)" :disabled="isViewMode">
             <label class="category-name">{{ category.name }}</label>
           </div>
         </div>
         <div v-for="category in selectedCategories" :key="category.id">
           <div class="form-group">
-            <label>Select Product</label>
-            <select v-model="selectedProducts[category.id]" required class="border-input">
+            <label>Selected Product for {{ category.name }}</label>
+            <select v-if="!isViewMode" v-model="selectedProducts[category.id]" required class="border-input">
               <option v-for="option in options[category.id]" :value="option.id" :key="option.id">{{ option.name }}</option>
             </select>
+            <span v-else>{{ selectedProducts[category.id] }}</span>
           </div>
           <div class="form-group">
             <label>Quantity</label>
-            <input v-model="quantity[category.id]" class="border-input" type="text" placeholder="Quantity">
+            <input v-model="quantity[category.id]" class="border-input" type="text" :readonly="isViewMode">
           </div>
           <div class="form-group">
             <label>Budget</label>
-            <input v-model="budget[category.id]" class="border-input" type="text" placeholder="Budget">
+            <input v-model="budget[category.id]" class="border-input" type="text" :readonly="isViewMode">
           </div>
         </div>
         <div class="form-group" v-if="isPriorityVisible">
@@ -33,8 +34,9 @@
             </option>
           </select>
         </div>
-        <button type="submit" @click="submitQuotation">Submit</button>
-        <button type="submit" @click="saveDraft">Save Draft</button>
+        <button type="submit" @click="submitQuotation" v-if="!isViewMode">Submit</button>
+        <button type="submit" @click="saveDraft" v-if="!isViewMode">Save Draft</button>
+        <button type="submit" @click="redirectToRequest">Return to Request</button>
       </v-card-text>
     </v-card>
 
@@ -65,29 +67,56 @@
         budget: {},
       };
     },
-    created() {
-      this.categories.forEach(category => {
-        this.options[category.id] = [];
-      });
-      this.fetchCategories();
-    },
-    mounted() {
-      this.loadDraft();
+    async created() {
+      await this.fetchCategories();
+      if (this.$route.query.view) {
+        const request = JSON.parse(this.$route.query.request);
+        this.populateForm(request);
+      }
+      else {
+        this.loadDraft();
+      }
     },
     computed: {
       isPriorityVisible() {
-        return this.selectedCategories.length > 0;
+        return this.selectedCategories && this.selectedCategories.length > 0;
+      },
+      isViewMode() {
+        return this.$route.query.view === 'true';
       },
     },
     methods: {
+      async populateForm(requestData) {
+        for (const productModel of requestData.requestProductsModel) {
+          for (const productCategory of productModel.productCategories) {
+            const category = this.categories.find((category) => category.id === productCategory.categoryId);
+            if (category) {
+              this.selectedCategories.push(category);
+              await this.fetchProductsForCategory(category);
+              this.selectedProducts[category.id] = productModel.productId;
+              this.quantity[category.id] = productModel.quantity;
+              this.budget[category.id] = productModel.budget;
+              
+            }
+          }
+          this.priority.value = 0;
+        }
+      },
       async fetchCategories() {
         try {
-          await this.$axios.get(`${this.$config.restUrl}/api/category/getcategories`).then(response => {
-            this.categories = response.data.data;
-            this.loadDraft();
-
-          });
-
+          const response = await this.$axios.get(`${this.$config.restUrl}/api/category/getcategories`);
+          this.categories = response.data.data;
+          for (const category of this.categories) {
+            await this.fetchProductsForCategory(category);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      },
+      async fetchProductsForCategory(category) {
+        try {
+          const response = await this.$axios.get(`${this.$config.restUrl}/api/product/getproductbycategory`, { params: { categoryId: category.id } });
+          this.$set(this.options, category.id, response.data.data);
         } catch (error) {
           console.error(error);
         }
@@ -144,18 +173,26 @@
           }
         }
         this.$swal('Request draft saved');
-        
+
       },
       checkboxChanged(selectedCategory) {
-        const categoryId = selectedCategory.id;
+        if (selectedCategory) {
+          const categoryId = selectedCategory.id;
 
-        if (this.selectedProducts[categoryId] === undefined) {
-          // Initialize selectedProducts object with default values for the selected category
-          this.selectedProducts[categoryId] = '';
-          this.quantity[categoryId] = null;
-          this.budget[categoryId] = null;
+          if (this.selectedCategories.includes(selectedCategory)) {
+            if (this.selectedProducts[categoryId] === undefined) {
+              this.selectedProducts[categoryId] = '';
+              this.quantity[categoryId] = null;
+              this.budget[categoryId] = null;
+            }
+            this.submitForm(selectedCategory);
+          } else {
+            this.$delete(this.selectedProducts, categoryId);
+            this.$delete(this.quantity, categoryId);
+            this.$delete(this.budget, categoryId);
+            this.$delete(this.options, categoryId);
+          }
         }
-        this.submitForm(selectedCategory);
       },
       async submitForm(selectedCategory) {
         if (selectedCategory.id != null) {
@@ -165,12 +202,15 @@
           };
           try {
             const response = await this.$axios.get(`${this.$config.restUrl}/api/product/getproductbycategory`, { params: formValues });
-            this.$set(this.options, categoryId, response.data.data); // Use $set to update the options for the selected category
+            this.$set(this.options, categoryId, response.data.data);
           } catch (error) {
             console.error(error);
           }
         }
-        
+
+      },
+      redirectToRequest() {
+        this.$router.push('/request');
       },
       async submitQuotation() {
         const quotationData = {
@@ -179,10 +219,10 @@
           requestProducts: [],
         };
         for (const categoryId in this.selectedProducts) {
-          const productId = this.selectedProducts[categoryId];
-          if (productId !== '' && productId !== null ) {
+          const idProduct = this.selectedProducts[categoryId];
+          if (idProduct !== '' && idProduct !== null) {
             const product = {
-              id: productId,
+              productId: idProduct,
               fulfillerId: "string",
               quantity: this.quantity[categoryId],
               budget: this.budget[categoryId],
@@ -196,16 +236,15 @@
             data: {
               segment: "string",
               approvalState: 10,
-              priority: this.priority,
+              priority: this.priority.value,
               RequestProducts: quotationData.requestProducts
 
             }
           }).then(response => {
-            console.log('res', response);
-            this.getDataFromApi();
+            this.$swal('Request created');
+            this.$router.push('/request');
           }).catch(err => {
             console.log(err);
-            console.log(err.response);
             vm.$swal('Failed to submit request', err.response.data.message, 'error');
           })
         } catch (error) {
@@ -213,8 +252,9 @@
         }
       }
     }
-  };
+  }
 </script>
+
 <style scoped>
   h1 {
     margin-top: 0;

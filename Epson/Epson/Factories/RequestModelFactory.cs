@@ -3,9 +3,11 @@ using Epson.Core.Domain.Enum;
 using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.Users;
 using Epson.Data;
+using Epson.Model.Categories;
 using Epson.Model.Request;
 using Epson.Services.DTO.Products;
 using Epson.Services.DTO.Requests;
+using Epson.Services.Interface.Categories;
 using Epson.Services.Interface.Products;
 using Microsoft.AspNetCore.Identity;
 
@@ -15,14 +17,17 @@ namespace Epson.Factories
     {
         private readonly IMapper _mapper;
         private readonly IProductService _productService;
+        private readonly ICategoryService _categoryService;
         private readonly UserManager<ApplicationUser> _userManager;
         public RequestModelFactory
             (IMapper mapper,
             IProductService productService,
+            ICategoryService categoryService,
             UserManager<ApplicationUser> userManager)
         {
             _mapper = mapper;
             _productService = productService;
+            _categoryService = categoryService;
             _userManager = userManager;
         }
         public RequestModel PrepareRequestModel(RequestDTO request)
@@ -88,7 +93,12 @@ namespace Epson.Factories
                         ProductName = _productService.GetProductById(rp.ProductId).Name,
                         FulfillerId = rp.FulfillerId,
                         FulfillerName = _userManager.FindByIdAsync(rp.FulfillerId).Result.UserName,
-                        ProductCategories = _productService.GetProductCategoriesByProductId(rp.ProductId)
+                        ProductCategories = _productService.GetProductCategoriesByProductId(rp.ProductId).Select(pc => new ProductCategoryModel
+                        {
+                            ProductId = pc.ProductId,
+                            CategoryId = pc.CategoryId,
+                            CategoryName = _categoryService.GetCategoryById(pc.CategoryId).Name
+                        }).ToList()
                     }).ToList(),
                 };
                 requestModels.Add(requestModel);
