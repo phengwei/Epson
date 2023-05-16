@@ -3,6 +3,7 @@
     <h1>Create Quotation</h1>
     <v-card class="mx-auto" width="800">
       <v-card-text>
+        <label>Product Categories</label>
         <div v-for="(category, index) in categories" :key="'C'+index">
           <div class="blue-checkbox">
             <input type="checkbox" v-model="selectedCategories" :value="category" @change="checkboxChanged(category)" :disabled="isViewMode">
@@ -11,7 +12,7 @@
         </div>
         <div v-for="category in selectedCategories" :key="category.id">
           <div class="form-group">
-            <label>Selected Product for {{ category.name }}</label>
+            <label>{{ category.name }}</label>
             <select v-if="!isViewMode" v-model="selectedProducts[category.id]" required class="border-input">
               <option v-for="option in options[category.id]" :value="option.id" :key="option.id">{{ option.name }}</option>
             </select>
@@ -88,19 +89,16 @@
     methods: {
       async populateForm(requestData) {
         for (const productModel of requestData.requestProductsModel) {
-          for (const productCategory of productModel.productCategories) {
-            const category = this.categories.find((category) => category.id === productCategory.categoryId);
-            if (category) {
-              this.selectedCategories.push(category);
-              await this.fetchProductsForCategory(category);
-              this.selectedProducts[category.id] = productModel.productId;
-              this.quantity[category.id] = productModel.quantity;
-              this.budget[category.id] = productModel.budget;
-              
-            }
+          const category = this.categories.find((category) => category.id === productModel.productCategory.categoryId);
+          if (category) {
+            this.selectedCategories.push(category);
+            await this.fetchProductsForCategory(category);
+            this.selectedProducts[category.id] = productModel.productId;
+            this.quantity[category.id] = productModel.quantity;
+            this.budget[category.id] = productModel.budget;
           }
-          this.priority.value = 0;
         }
+        this.priority.value = 0;
       },
       async fetchCategories() {
         try {
@@ -121,15 +119,19 @@
           console.error(error);
         }
       },
-      loadDraft() {
+      async loadDraft() {
         try {
           this.selectedCategories = [];
 
           for (const category in this.categories) {
             const categoryId = this.categories[category].id;
             if (localStorage.getItem("savedItem-selectedCategoryId" + categoryId) != null && localStorage.getItem("savedItem-selectedCategoryName" + categoryId)) {
-              this.selectedCategories.push({ id: localStorage.getItem("savedItem-selectedCategoryId" + categoryId), name: localStorage.getItem("savedItem-selectedCategoryName" + categoryId) });
-              this.checkboxChanged(this.categories[category]);
+              this.selectedCategories.push({
+                id: localStorage.getItem("savedItem-selectedCategoryId" + categoryId)
+              });
+
+              const categoryObj = this.selectedCategories[this.selectedCategories.length - 1];
+              await this.fetchProductsForCategory(categoryObj);
             }
 
             if (localStorage.getItem("savedItem-quantity" + categoryId) !== "null") {
@@ -137,13 +139,13 @@
             }
 
             if (localStorage.getItem("savedItem-budget" + categoryId) !== "null") {
-
               this.budget[categoryId] = localStorage.getItem("savedItem-budget" + categoryId);
             }
 
             if (localStorage.getItem("savedItem-selectedProductCategory" + categoryId) !== "null") {
               this.selectedProducts[categoryId] = localStorage.getItem("savedItem-selectedProductCategory" + categoryId);
             }
+            console.log(localStorage);
           }
         } catch (error) {
           console.error(error);

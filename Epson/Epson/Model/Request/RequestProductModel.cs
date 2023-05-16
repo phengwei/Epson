@@ -17,6 +17,6 @@ namespace Epson.Model.Request
         public decimal FulfilledPrice { get; set; }
         public bool HasFulfilled { get; set; }
         public DateTime FulfilledDate { get; set; }
-        public List<ProductCategoryModel> ProductCategories { get; set; } = new List<ProductCategoryModel>();
+        public ProductCategoryModel ProductCategory { get; set; } = new ProductCategoryModel();
     }
 }

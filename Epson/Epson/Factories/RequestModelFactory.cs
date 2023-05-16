@@ -93,12 +93,12 @@ namespace Epson.Factories
                         ProductName = _productService.GetProductById(rp.ProductId).Name,
                         FulfillerId = rp.FulfillerId,
                         FulfillerName = _userManager.FindByIdAsync(rp.FulfillerId).Result.UserName,
-                        ProductCategories = _productService.GetProductCategoriesByProductId(rp.ProductId).Select(pc => new ProductCategoryModel
+                        ProductCategory = _productService.GetProductCategoriesByProductId(rp.ProductId).Select(pc => new ProductCategoryModel
                         {
                             ProductId = pc.ProductId,
                             CategoryId = pc.CategoryId,
                             CategoryName = _categoryService.GetCategoryById(pc.CategoryId).Name
-                        }).ToList()
+                        }).FirstOrDefault()
                     }).ToList(),
                 };
                 requestModels.Add(requestModel);
