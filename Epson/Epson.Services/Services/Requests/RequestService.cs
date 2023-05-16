@@ -287,6 +287,28 @@ namespace Epson.Services.Services.Requests
             }
         }
 
+        public bool SetRequestToAmendQuotation(Request request)
+        {
+            var req = GetRequestById(request.Id);
+
+            if (req == null)
+                throw new Exception("Invalid request.");
+
+            request.ApprovalState = (int)ApprovalStateEnum.AmendQuotation;
+
+            try
+            {
+                _RequestRepository.Update(request);
+                _logger.Information("Setting Approval state to amend quotation of request {id}", request.Id);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error setting approval state for request {id}", request.Id);
+                return false;
+            }
+        }
+
         public List<FulfillmentSummary> GetFulfillmentSummary(DateTime startDate, DateTime endDate, string granularity)
         {
             var requestProducts = _RequestProductRepository.Table.Where(rp => rp.FulfilledDate != DateTime.MinValue && rp.FulfilledDate >= startDate && rp.FulfilledDate <= endDate);

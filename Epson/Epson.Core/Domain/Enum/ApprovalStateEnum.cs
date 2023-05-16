@@ -12,6 +12,7 @@ namespace Epson.Core.Domain.Enum
 
         PendingRequesterAction = 20,
 
-        Approved = 30
+        Approved = 30,
+        AmendQuotation = 40
     }
 }

@@ -14,6 +14,7 @@ namespace Epson.Services.Interface.Requests
         public bool InsertRequest(Request request, List<RequestProduct> requestProducts);
         public bool UpdateRequest(Request request, List<RequestProduct> requestProducts);
         public bool ApproveRequest(ApplicationUser user, Request request);
+        public bool SetRequestToAmendQuotation(Request request);
         public bool FulfillRequest(ApplicationUser user, Request request, Product product, decimal totalPrice);
         public List<FulfillmentSummary> GetFulfillmentSummary(DateTime startDate, DateTime endDate, string granularity);
         public List<SalesSummary> GetRequestSummary(DateTime startDate, DateTime endDate, string granularity);

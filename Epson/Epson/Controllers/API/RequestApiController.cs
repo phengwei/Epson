@@ -127,6 +127,9 @@ namespace Epson.Controllers.API
             if (request == null)
                 return NotFound("Request not found!");
 
+            if (request.ApprovalState == (int)ApprovalStateEnum.AmendQuotation)
+                return BadRequest("Request is not in the state of approval!");
+
             var updatedRequest = new Request
             {
                 Id = request.Id,
@@ -187,6 +190,30 @@ namespace Epson.Controllers.API
             else
                 return BadRequest("Failed to fulfill request");
         }
+
+        [HttpPost("setrequesttoamendquotation")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin")]
+        public async Task<IActionResult> SetRequestToAmendQuotation(int requestId)
+        {
+            if (requestId == 0)
+                return NotFound("Resources not found!");
+
+            var request = _requestService.GetRequestById(requestId);
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (request == null)
+                return NotFound("Resources not found!");
+
+            if (user == null)
+                return Unauthorized("User not authorized to perform this operation");
+
+            if (_requestService.SetRequestToAmendQuotation(_mapper.Map<Request>(request)))
+                return Ok("Request has been set to amend quotation");
+            else
+                return BadRequest("Failed to set amend quotation for request");
+        }
+
 
         [HttpGet("getpendingrequesteritem")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
