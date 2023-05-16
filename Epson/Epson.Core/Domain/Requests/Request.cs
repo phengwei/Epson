@@ -19,5 +19,7 @@ namespace Epson.Core.Domain.Requests
         public Decimal TotalPrice { get; set; }
         public TimeSpan TimeToResolution { get; set; }
         public bool Breached { get; set; }
+        public string DealJustification { get; set; }
+        public string CustomerName { get; set; }
     }
 }

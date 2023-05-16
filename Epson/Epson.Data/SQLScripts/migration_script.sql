@@ -15,3 +15,7 @@ CREATE TABLE Team (
 ALTER TABLE AspNetUsers
 ADD TeamId INT,
 ADD CONSTRAINT FK_AspNetUsers_Team FOREIGN KEY (TeamId) REFERENCES Team(Id);
+
+ALTER TABLE Request
+ADD CustomerName VARCHAR(100),
+ADD DealJustification VARCHAR(200);

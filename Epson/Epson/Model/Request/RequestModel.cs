@@ -20,6 +20,8 @@ namespace Epson.Model.Request
         public DateTime? UpdatedOnUTC { get; set; }
         public string? CreatedById { get; set; }
         public string? UpdatedById { get; set; }
+        public string DealJustification { get; set; }
+        public string CustomerName { get; set; }
         public List<RequestProduct> RequestProducts { get; set; } = new List<RequestProduct>();
         public List<RequestProductModel> RequestProductsModel { get; set; } = new List<RequestProductModel>();
     }
