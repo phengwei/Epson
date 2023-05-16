@@ -29,6 +29,8 @@ namespace Epson.Data.Context
         public DbSet<RequestProduct> RequestProduct { get; set; }
         public DbSet<SLAHoliday> SLAHoliday { get; set; }
         public DbSet<SLAStaffLeave> SLAStaffLeave { get; set; }
+        public DbSet<Team> Team { get; set; }
+        public DbSet<UserTeam> UserTeam { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
