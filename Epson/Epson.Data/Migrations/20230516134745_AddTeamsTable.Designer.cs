@@ -3,6 +3,7 @@ using System;
 using Epson.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Epson.Data.Migrations
 {
     [DbContext(typeof(EpsonDbContext))]
-    partial class EpsonDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230516134745_AddTeamsTable")]
+    partial class AddTeamsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -288,16 +291,8 @@ namespace Epson.Data.Migrations
                     b.Property<DateTime>("CreatedOnUTC")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("CustomerName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<DateTime>("Deadline")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<string>("DealJustification")
-                        .IsRequired()
-                        .HasColumnType("longtext");
 
                     b.Property<int>("Priority")
                         .HasColumnType("int");
@@ -450,9 +445,6 @@ namespace Epson.Data.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("longtext");
 
-                    b.Property<int>("TeamId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("tinyint(1)");
 
@@ -496,6 +488,24 @@ namespace Epson.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Team");
+                });
+
+            modelBuilder.Entity("Epson.Core.Domain.Users.UserTeam", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserTeam");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

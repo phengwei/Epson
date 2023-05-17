@@ -82,6 +82,7 @@
         headers: [
           { text: 'User Name', value: 'userName' },
           { text: 'Email', value: 'email' },
+          { text: 'Team', value: 'teams' },
           { text: 'Actions', value: 'actions', sortable: false },
         ],
         tabItems: ['Sales', 'Product', 'Admin'],

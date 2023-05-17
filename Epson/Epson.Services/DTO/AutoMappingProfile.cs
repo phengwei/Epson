@@ -4,11 +4,13 @@ using Epson.Core.Domain.Email;
 using Epson.Core.Domain.Products;
 using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.SLA;
+using Epson.Core.Domain.Users;
 using Epson.Services.DTO.Categories;
 using Epson.Services.DTO.Email;
 using Epson.Services.DTO.Products;
 using Epson.Services.DTO.Requests;
 using Epson.Services.DTO.SLA;
+using Epson.Services.DTO.Users;
 using Epson.Services.Interface.SLA;
 using System;
 using System.Collections.Generic;
@@ -50,6 +52,11 @@ namespace Epson.Services.DTO
             CreateMap<SLAStaffLeaveDTO, SLAStaffLeave>();
             CreateMap<SLASettingDTO, SLASetting>();
             CreateMap<SLASetting, SLASettingDTO>();
+            #endregion
+
+            #region User
+            CreateMap<TeamDTO, Team>();
+            CreateMap<Team, TeamDTO>();
             #endregion
         }
     }

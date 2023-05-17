@@ -157,6 +157,38 @@ namespace Epson.Services.Services.Email
             return emailQueue;
         }
 
+        public EmailQueue CreateAmendQuotationEmailQueue(Request request, RequestProduct requestProduct)
+        {
+            //todo: configure to capture from user / request
+            var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
+            var requester = _userManager.FindByIdAsync(request.CreatedById);
+            var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
+            var productName = _productService.GetProductById(requestProduct.ProductId);
+
+            var subject = "";
+            subject = $"Request {request.Id} amended by {requester.Result.UserName} ";
+
+            var body = $"Request is in amend state by {fulfiller.Result.UserName} with these being the old fulfilled details:\n" +
+                       $"Product: {productName}\n" +
+                       $"Quantity: {requestProduct.Quantity}\n" +
+                       $"Price fulfilled: {requestProduct.FulfilledPrice}";
+
+            var emailQueue = new EmailQueue
+            {
+                Priority = request.Priority,
+                FromEmail = emailAccount.Username,
+                ToEmail = requester.Result.Email,
+                Subject = subject,
+                Body = body,
+                ScheduleTime = DateTime.UtcNow,
+                SendAttempts = 0,
+                SentTime = null,
+                EmailAccountId = emailAccount.Id
+            };
+
+            return emailQueue;
+        }
+
         public void SendEmailBatch()
         {
             var emailQueues = GetUnsentEmailQueues();

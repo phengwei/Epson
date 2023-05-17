@@ -107,7 +107,6 @@ namespace Epson.Services.Services.Requests
                     var product = _productService.GetProductById(requestProduct.ProductId);
 
                     requestProduct.RequestId = request.Id;
-                    requestProduct.FulfillerId = product.CreatedById;
                     InsertRequestProduct(requestProduct);
                 }
 
@@ -160,6 +159,7 @@ namespace Epson.Services.Services.Requests
                 throw new ArgumentNullException(nameof(request));
             try
             {
+                request.TotalBudget = GetTotalBudgetOfRequestProducts(requestProducts);
                 _RequestRepository.Update(request);
                 _logger.Information("Updating request {id}", request.Id);
 
@@ -167,6 +167,8 @@ namespace Epson.Services.Services.Requests
 
                 foreach (var requestProduct in requestProducts)
                 {
+                    var product = _productService.GetProductById(requestProduct.ProductId);
+
                     requestProduct.RequestId = request.Id;
 
                     InsertRequestProduct(requestProduct);
@@ -256,6 +258,7 @@ namespace Epson.Services.Services.Requests
 
             requestProductToFulfill.FulfilledPrice = totalPrice;
             requestProductToFulfill.HasFulfilled = true;
+            requestProductToFulfill.FulfillerId = user.Id;
             requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
 
             try
@@ -273,10 +276,11 @@ namespace Epson.Services.Services.Requests
                 if (allProductsFulfilled)
                     request.ApprovalState = (int)ApprovalStateEnum.PendingRequesterAction;
 
-                var fulfillRequestQueue = _emailService.CreateFulfillEmailQueue(request, requestProductToFulfill, allProductsFulfilled);
-                _emailService.InsertEmailQueue(fulfillRequestQueue);
-
                 _RequestRepository.Update(request);
+
+                var updatedRequest = _mapper.Map<Request>(GetRequestById(request.Id));
+                var fulfillRequestQueue = _emailService.CreateFulfillEmailQueue(updatedRequest, requestProductToFulfill, allProductsFulfilled);
+                _emailService.InsertEmailQueue(fulfillRequestQueue);
 
                 return true;
             }
@@ -296,15 +300,29 @@ namespace Epson.Services.Services.Requests
 
             request.ApprovalState = (int)ApprovalStateEnum.AmendQuotation;
 
+            List<RequestProduct> requestProducts = _RequestProductRepository.Table.Where(x => x.RequestId == req.Id).ToList();
+
             try
             {
                 _RequestRepository.Update(request);
                 _logger.Information("Setting Approval state to amend quotation of request {id}", request.Id);
+
+                foreach (var requestProduct in requestProducts)
+                {
+                    if (requestProduct.HasFulfilled == true)
+                    {
+                        var amendQuotationEmailQueue = _emailService.CreateAmendQuotationEmailQueue(request, requestProduct);
+                        _emailService.InsertEmailQueue(amendQuotationEmailQueue);
+                        requestProduct.HasFulfilled = false;
+                        requestProduct.FulfilledDate = DateTime.MinValue;
+                        requestProduct.FulfillerId = string.Empty;
+                    }
+                }
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error setting approval state for request {id}", request.Id);
+                _logger.Error(ex, "Error setting approval state to amend quotation for request {id}", request.Id);
                 return false;
             }
         }

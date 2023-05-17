@@ -6,14 +6,9 @@ using System.Threading.Tasks;
 
 namespace Epson.Core.Domain.Enum
 {
-    public enum ApprovalStateEnum
+    public enum TeamEnum
     {
-        PendingFulfillerAction = 10,
+        Govt = 10
 
-        PendingRequesterAction = 20,
-
-        Approved = 30,
-
-        AmendQuotation = 40
     }
 }
