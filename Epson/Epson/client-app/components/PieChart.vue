@@ -89,7 +89,6 @@
         axios.get('/api/report/getmonthlysalesbyrequester')
           .then(response => {
             this.monthlySales = response.data;
-            console.log("monthly sales", this.monthlySales);
           })
           .catch(error => {
             console.log(error);

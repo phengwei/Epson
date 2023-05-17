@@ -116,9 +116,7 @@
             "2023-05-09T16:00:00.000Z"
           ];
 
-
-          console.log("HHA", new Date(new Date().setDate(new Date().getDate() - 1)));
-          console.log("HHA", t);
+          console.log("staff", t);
         } catch (error) {
           console.error('There was a problem fetching the staff:', error);
         }

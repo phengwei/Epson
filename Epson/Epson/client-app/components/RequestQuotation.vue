@@ -110,7 +110,6 @@
             this.budget[category.id] = productModel.budget;
           }
         }
-        console.log("requestdata", requestData);
         this.priority.value = requestData.priority;
         this.customerName = requestData.customerName;
         this.dealJustification = requestData.dealJustification;

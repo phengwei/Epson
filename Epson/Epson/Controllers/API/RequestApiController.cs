@@ -240,6 +240,25 @@ namespace Epson.Controllers.API
             return Ok(response);
         }
 
+        [HttpGet("getfulfilledrequestasfulfiller")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product")]
+        public async Task<IActionResult> GetFulfilledRequestAsFulfiller()
+        {
+            var response = new GenericResponseModel<List<RequestModel>>();
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            var requests = _requestService.GetRequests()
+                                          .Where(x => x.RequestProducts.Any(rp => rp.FulfillerId == user.Id))
+                                          .ToList();
+
+            var requestModels = _requestModelFactory.PrepareRequestModels(requests);
+
+            response.Data = requestModels;
+
+            return Ok(response);
+        }
+
         [HttpGet("getpendingfulfillmentasrequester")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
         public async Task<IActionResult> GetPendingFulfillmentAsRequester()

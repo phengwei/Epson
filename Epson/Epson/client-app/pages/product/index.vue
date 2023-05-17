@@ -225,7 +225,6 @@
       },
 
       async save() {
-        console.log(this.editedIndex);
         const vm = this;
         if (this.editedIndex > -1) {
           try {

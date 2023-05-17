@@ -207,7 +207,6 @@
           }
           this.requests = result.data.data
           this.loading = false
-          console.log("requests", this.requests);
         })
       },
       checkboxChanged(selectedCategory) {
@@ -248,7 +247,6 @@
         });
       },
       async dialogQuotation(item) {
-        console.log("item", item);
         this.requestId = item.id;
         this.quotationDialog = true;
         for (const productModel of item.requestProductsModel) {

@@ -9,7 +9,7 @@
         </div>
         <div class="grid-item">
           <v-app>
-            <ItemsPendingFulfilmentTable />
+            <FulfilledRequestAsFulfiller />
           </v-app>
         </div>
       </div>
@@ -28,6 +28,7 @@
   import { mapGetters } from 'vuex';
   import ItemsPendingFulfilmentTable from '~/components/ItemsPendingFulfilmentTable.vue';
   import FulfillmentRequestSummary from '~/components/FulfillmentRequestSummary.vue';
+  import FulfilledRequestAsFulfiller from '~/components/FulfilledRequestAsFulfiller.vue';
 
   export default {
     name: 'ProductDashboard',
@@ -40,7 +41,8 @@
     },
     components: {
       ItemsPendingFulfilmentTable,
-      FulfillmentRequestSummary
+      FulfillmentRequestSummary,
+      FulfilledRequestAsFulfiller
     }
   };
 </script>

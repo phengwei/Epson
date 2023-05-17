@@ -141,11 +141,9 @@
           }
           this.requests = result.data.data
           this.loading = false
-          console.log("request", this.requests);
         })
       },
       editItem(item) {
-        console.log("item", item);
         this.editedIndex = this.requests.indexOf(item)
         this.editedItem = { ...item };
         this.editedItem.requestProductsModel.forEach(product => {
@@ -163,7 +161,6 @@
             this.close();
           }).catch(err => {
             console.log(err);
-            console.log(err.response);
             vm.$swal('Failed to approve', err.response.data.message, 'error');
           })
         } catch (err) {
@@ -173,7 +170,6 @@
       },
 
       async save() {
-        console.log(this.editedItem.id);
         const vm = this;
         try {
           await this.$axios.post(`${this.$config.restUrl}/api/request/approverequest?id=${this.editedItem.id}`).then(response => {
@@ -182,7 +178,6 @@
             this.dialog = false;
           }).catch(err => {
             console.log(err);
-            console.log(err.response);
             vm.$swal('Failed to update', err.response.data.message, 'error');
           })
         } catch (err) {
