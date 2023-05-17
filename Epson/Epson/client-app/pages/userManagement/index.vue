@@ -22,6 +22,14 @@
                 </div>
               </div>
               <div class="form-group">
+                <label>Team</label>
+                <select v-model="newUser.teamId" class="border-input">
+                  <option v-for="team in teams" :key="team.id" :value="team.id">
+                    {{ team.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="form-group">
                 <label>User Name</label>
                 <input v-model="newUser.userName" class="border-input" required></input>
               </div>
@@ -46,7 +54,7 @@
       <v-tabs v-model="tab" background-color="white">
         <v-tab v-for="(item, index) in tabItems" :key="index">{{ item }}</v-tab>
       </v-tabs>
-
+        
       <v-card-text>
         <v-tabs-items v-model="tab">
           <v-tab-item v-for="(item, index) in tabItems" :key="index">
@@ -88,6 +96,8 @@
         tabItems: ['Sales', 'Product', 'Admin'],
         tab: null,
         users: [],
+        teams: [],
+        isEditing: false,
       };
     },
     computed: {
@@ -98,6 +108,7 @@
     created() {
       this.getUsers();
       this.getAllRoles();
+      this.getTeams();
     },
     watch: {
       dialog(newVal) {
@@ -108,6 +119,7 @@
     },
     methods: {
       initializeUser() {
+        this.isEditing = false;
         this.newUser = {
           userName: '',
           email: '',
@@ -136,6 +148,16 @@
             console.error('Error fetching users:', error);
           });
       },
+      getTeams() {
+        this.$axios.get(`${this.$config.restUrl}/api/customer/getavailableteams`)
+          .then(response => {
+            this.teams = response.data.data;
+            console.log("teams", this.teams);
+          })
+          .catch(error => {
+            console.error('Error fetching teams:', error);
+          });
+      },
       getAllRoles() {
         this.$axios.get(`${this.$config.restUrl}/api/customer/getallroles`)
           .then(response => {
@@ -152,7 +174,8 @@
             email: this.newUser.email,
             phone: this.newUser.phone,
             password: 'Abcde123.',
-            roles: this.newUser.selectedRoles.map(role => role.name)
+            roles: this.newUser.selectedRoles.map(role => role.name),
+            teamId: this.newUser.teamId
           }
         }).then(response => {
           this.users.push(response.data);
@@ -170,13 +193,14 @@
         return this.users.filter(user => Array.isArray(user.roles) && user.roles.includes(tab));
       },
       editUser(item) {
+        this.isEditing = true;
         this.editedIndex = this.users.indexOf(item)
         this.newUser = Object.assign({}, item)
         this.newUser.selectedRoles = item.roles.map(roleName => {
           return this.roles.find(role => role.name === roleName)
         })
+        this.newUser.teamId = item.teamId;
         this.dialog = true
-        console.log("new user", this.newUser);
       },
       saveUser() {
         if (this.editedIndex > -1) {
@@ -187,7 +211,8 @@
               email: this.newUser.email,
               phone: this.newUser.phone,
               password: this.newUser.password,
-              roles: this.newUser.selectedRoles.map(role => role.name)
+              roles: this.newUser.selectedRoles.map(role => role.name),
+              teamId: this.newUser.teamId,
             }
           }).then(response => {
             Object.assign(this.users[this.editedIndex], response.data)

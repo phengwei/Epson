@@ -9,14 +9,6 @@
         </select>
       </div>
       <div class="form-group">
-        <label for="leaveCalendar">Leave Calendar:</label>
-        <datepicker id="leaveCalendar"
-                    :value="calendarDate"
-                    :disabled-dates="disabledDates"
-                    :highlighted="highlightedDates"
-                    inline />
-      </div>
-      <div class="form-group">
         <label for="startDate">Start Date:</label>
         <input type="date" id="startDate" v-model="startDate" :min="minLeaveDate" required class="border-input">
       </div>
@@ -37,9 +29,6 @@
 
   export default {
     name: 'SLA-StaffLeaves',
-    components: {
-      Datepicker: () => process.client ? import('vuejs-datepicker') : null
-    },
     data() {
       return {
         startDate: null,

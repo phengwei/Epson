@@ -192,6 +192,25 @@ namespace Epson.Controllers.API
             return Ok(response);
         }
 
+        [HttpGet("getavailableteams")]
+        public async Task<IActionResult> GetAvailableTeam()
+        {
+            var response = new GenericResponseModel<List<TeamModel>>();
+
+            var teams = _userService.GetTeams();
+
+            foreach (var team in teams)
+            {
+                TeamModel teamModel = new TeamModel();
+                teamModel.Id = team.Id;
+                teamModel.Name = team.Name;
+
+                response.Data.Add(teamModel);
+            }
+
+            return Ok(response);
+        }
+
         [HttpPost("logout")]
         public IActionResult Logout()
         {
@@ -319,6 +338,7 @@ namespace Epson.Controllers.API
                     UserName = user.UserName,
                     Email = user.Email,
                     Roles = roles.ToList(),
+                    TeamId = user.TeamId,
                     Teams = _mapper.Map<Team>(_userService.GetTeamById(user.TeamId)).Name
                 };
 
