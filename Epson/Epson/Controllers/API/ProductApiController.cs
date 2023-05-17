@@ -7,6 +7,7 @@ using Epson.Model.Products;
 using Epson.Factories;
 using Epson.Core.Domain.Products;
 using AutoMapper;
+using Epson.Services.DTO.Products;
 
 namespace Epson.Controllers.API
 {
@@ -69,7 +70,14 @@ namespace Epson.Controllers.API
         {
             var response = new GenericResponseModel<List<ProductModel>>();
 
-            var products = _productService.GetProducts();
+            var currentUser = _workContext.CurrentUser;
+
+            List<ProductDTO> products = new List<ProductDTO>();
+
+            if (currentUser.Roles.Contains("Admin"))
+                products = _productService.GetProducts();
+            else
+                products = _productService.GetProducts().Where(x => x.CreatedById == currentUser.Id).ToList();
 
             var productModels = _productModelFactory.PrepareProductModels(products);
 

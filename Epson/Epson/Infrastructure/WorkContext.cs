@@ -27,6 +27,11 @@ namespace Epson.Infrastructure
             authenticatedUser.Id = loggedInUser.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             authenticatedUser.Name = loggedInUser.Identity.Name;
 
+            authenticatedUser.Roles = loggedInUser.Claims
+                .Where(c => c.Type == ClaimTypes.Role)
+                .Select(c => c.Value)
+                .ToList();
+
             return authenticatedUser;
         }
 
