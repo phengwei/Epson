@@ -92,7 +92,7 @@ namespace Epson.Controllers.API
             var model = queryModel.Data;
 
             var user = _workContext.CurrentUser;
-            var deadlineInHours = _configuration.GetValue<int>("SLA:DeadlineInHours");
+            //var deadlineInHours = _configuration.GetValue<int>("SLA:DeadlineInHours");
 
             var request = new Request
             {
@@ -103,7 +103,9 @@ namespace Epson.Controllers.API
                 Segment = model.Segment,
                 ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction,
                 Priority = model.Priority,
-                Deadline = DateTime.UtcNow.AddHours(deadlineInHours)
+                Deadline = model.Deadline,
+                DealJustification = model.DealJustification,
+                CustomerName = model.CustomerName
         };
 
             if (_requestService.InsertRequest(request, model.RequestProducts))
@@ -136,10 +138,12 @@ namespace Epson.Controllers.API
             var updatedRequest = new Request
             {
                 Id = request.Id,
+                CreatedOnUTC = request.CreatedOnUTC,
                 UpdatedOnUTC = DateTime.UtcNow,
+                Deadline = model.Deadline,
                 CreatedById = user.Id,
                 UpdatedById = user.Id,
-                Segment = model.Segment,
+                Segment = request.Segment,
                 ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction,
                 Priority = model.Priority
             };

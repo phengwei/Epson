@@ -3,6 +3,10 @@
     <h1>Pricing Request</h1>
     <v-card class="mx-auto" width="800">
       <v-card-text>
+        <div class="form-group">
+          <label>Customer Name</label>
+          <input type="text" v-model="customerName" class="border-input" :readonly="isViewMode">
+        </div>
         <label>Product Categories</label>
         <div v-for="(category, index) in categories" :key="'C'+index">
           <div class="blue-checkbox">
@@ -20,20 +24,24 @@
           </div>
           <div class="form-group">
             <label>Quantity</label>
-            <input v-model="quantity[category.id]" class="border-input" type="text" :readonly="isViewMode">
+            <input v-model="quantity[category.id]" class="border-input" type="number" min="1" :readonly="isViewMode">
           </div>
           <div class="form-group">
             <label>Budget</label>
-            <input v-model="budget[category.id]" class="border-input" type="text" :readonly="isViewMode">
+            <input v-model="budget[category.id]" class="border-input" type="number" min="1" :readonly="isViewMode">
           </div>
         </div>
-        <div class="form-group" v-if="isPriorityVisible">
+        <div class="form-group">
           <label>Priority</label>
           <select v-model="priority.value" class="border-input">
             <option v-for="option in priority.options" :value="option.value" :key="option.value">
               {{ option.label }}
             </option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>Deal Justification</label>
+          <textarea v-model="dealJustification" class="border-input" :readonly="isViewMode"></textarea>
         </div>
         <button type="submit" @click="submitQuotation" v-if="!isViewMode">Submit</button>
         <button type="submit" @click="saveDraft" v-if="!isViewMode">Save Draft</button>
@@ -66,6 +74,8 @@
         },
         quantity: {},
         budget: {},
+        customerName: '',
+        dealJustification: '',
       };
     },
     async created() {
@@ -79,9 +89,6 @@
       }
     },
     computed: {
-      isPriorityVisible() {
-        return this.selectedCategories && this.selectedCategories.length > 0;
-      },
       isViewMode() {
         return this.$route.query.view === 'true';
       },
@@ -96,13 +103,12 @@
             this.selectedProducts[category.id] = productModel.productName;
             this.quantity[category.id] = productModel.quantity;
             this.budget[category.id] = productModel.budget;
-            console.log(category.id);
-            console.log(this.selectedProducts[category.id]);
-            console.log(this.quantity[category.id]);
-            console.log(this.budget[category.id]);
           }
         }
-        this.priority.value = 0;
+        console.log("requestdata", requestData);
+        this.priority.value = requestData.priority;
+        this.customerName = requestData.customerName;
+        this.dealJustification = requestData.dealJustification;
       },
       async fetchCategories() {
         try {
@@ -147,7 +153,9 @@
               this.selectedProducts[categoryId] = localStorage.getItem("savedItem-selectedProductCategory" + categoryId);
             }
           }
-          this.priority.value = 0;
+          this.customerName = localStorage.getItem("savedItem-customerName", this.customerName);
+          this.priority.value = localStorage.getItem("savedItem-priority", this.priority.value);
+          this.dealJustification = localStorage.getItem("savedItem-dealJustification", this.dealJustification);
 
         } catch (error) {
           console.error(error);
@@ -176,6 +184,9 @@
             }
           }
         }
+        localStorage.setItem("savedItem-customerName", this.customerName);
+        localStorage.setItem("savedItem-priority", this.priority.value);
+        localStorage.setItem("savedItem-dealJustification", this.dealJustification);
         this.$swal('Request draft saved');
 
       },
@@ -230,6 +241,8 @@
               fulfillerId: "string",
               quantity: this.quantity[categoryId],
               budget: this.budget[categoryId],
+              customerName: this.customerName[categoryId],
+              dealJustification: this.dealJustification[categoryId]
             };
             quotationData.requestProducts.push(product);
           }

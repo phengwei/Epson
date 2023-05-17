@@ -12,7 +12,7 @@ namespace Epson.Model.Request
         public int ApprovalState { get; set; }
         public string? ApprovalStateStr { get; set; }
         public int Priority { get; set; }
-        public DateTime? Deadline { get; set; }
+        public DateTime Deadline { get; set; }
         public Decimal? TotalPrice { get; set; }
         public TimeSpan? TimeToResolution { get; set; }
         public bool Breached { get; set; }
