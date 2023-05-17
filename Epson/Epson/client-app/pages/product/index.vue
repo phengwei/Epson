@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex justify-content-center align-items-center vh-100" data-app="true">
+  <div class="d-flex justify-content-center align-items-center vh-100" data-app="true" v-if="loggedInUser.roles.includes('Product')">
     <v-card class="mx-auto" style="width: 90%">
       <v-card-title class="d-flex justify-content-between align-items-center">
       </v-card-title>
@@ -92,8 +92,20 @@
 </template>
 
 <script>
+  import { mapGetters } from 'vuex';
+
   export default {
     name: 'ProductTable',
+    middleware: "auth",
+    computed: {
+      ...mapGetters(['isAuthenticated', 'loggedInUser']),
+      formTitle() {
+        return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
+      },
+      selectedCategoryList() {
+        return this.categories.filter((category) => this.selectedCategories.includes(category.id));
+      }
+    },
     data() {
       return {
         error: null,
@@ -129,14 +141,6 @@
           name: '',
           price: 0,
         },
-      }
-    },
-    computed: {
-      formTitle() {
-        return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
-      },
-      selectedCategoryList() {
-        return this.categories.filter((category) => this.selectedCategories.includes(category.id));
       }
     },
     watch: {

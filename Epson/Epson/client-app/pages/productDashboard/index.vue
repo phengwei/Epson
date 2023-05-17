@@ -9,7 +9,7 @@
         </div>
         <div class="grid-item">
           <v-app>
-            <ProductTable />
+            <ItemsPendingFulfilmentTable />
           </v-app>
         </div>
       </div>
@@ -26,7 +26,6 @@
 
 <script>
   import { mapGetters } from 'vuex';
-  import ProductTable from '~/components/ProductTable.vue';
   import ItemsPendingFulfilmentTable from '~/components/ItemsPendingFulfilmentTable.vue';
   import FulfillmentRequestSummary from '~/components/FulfillmentRequestSummary.vue';
 
@@ -40,7 +39,6 @@
       return {};
     },
     components: {
-      ProductTable,
       ItemsPendingFulfilmentTable,
       FulfillmentRequestSummary
     }
