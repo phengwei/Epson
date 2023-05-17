@@ -27,14 +27,9 @@
             <span class="text-h5">{{ formTitle }}</span>
           </v-card-title>
           <v-card-text>
-            <label>Request</label>
             <div class="form-group">
-              <label>CreatedOnUTC</label>
+              <label>Created On</label>
               <input v-model="editedItem.createdOnUTC" class="border-input" label="Date" disabled></input>
-            </div>
-            <div class="form-group">
-              <label>Priority</label>
-              <input v-model="editedItem.priority" class="border-input" label="Priority" disabled></input>
             </div>
             <div class="form-group">
               <label>Total Price</label>
@@ -44,11 +39,23 @@
               <label>Total Budget</label>
               <input v-model="editedItem.totalBudget" class="border-input" label="Budget" disabled></input>
             </div>
+            <div class="table-container">
+              <v-data-table :headers="productHeaders"
+                            :items="editedItem.requestProductsModel"
+                            :items-per-page="5"
+                            class="elevation-1">
+                <template v-slot:top>
+                  <v-toolbar flat>
+                    <v-toolbar-title>Requested Product Details</v-toolbar-title>
+                  </v-toolbar>
+                </template>
+              </v-data-table>
+            </div>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="close">Win Deal</v-btn>
             <v-btn color="blue darken-1" text @click="save">Lose Deal</v-btn>
+            <v-btn color="blue darken-1" text @click="close">Win Deal</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -73,14 +80,19 @@
             value: 'id',
           },
           {
+            text: 'Customer',
+            align: 'start',
+            value: 'customerName',
+          },
+          {
             text: 'Created Time',
             align: 'start',
             value: 'createdOnUTC',
           },
           {
-            text: 'Approval State',
+            text: 'Total Price',
             align: 'start',
-            value: 'approvalStateStr',
+            value: 'totalPrice',
           },
           {
             text: 'Total Budget',
@@ -88,6 +100,13 @@
             value: 'totalBudget',
           },
           { text: 'Approve', value: 'actions', sortable: false },
+        ],
+        productHeaders: [
+          { text: 'Product Name', align: 'start', value: 'productName' },
+          { text: 'Quantity', align: 'start', value: 'quantity' },
+          { text: 'Fulfiller Name', align: 'start', value: 'fulfillerName' },
+          { text: 'Fulfilled Date', align: 'start', value: 'fulfilledDate' },
+          { text: 'Fulfilled Price', align: 'start', value: 'fulfilledPrice' },
         ],
         options: {},
         requests: [],
@@ -112,24 +131,26 @@
         },
         deep: true,
       },
-      dialog(val) {
-        val || this.close()
-      },
     },
     methods: {
       getDataFromApi() {
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingrequesteritem`).then(result => {
           for (const requests in result.data.data) {
-            result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('MMMM Do YYYY, h:mm:ss a');
+            result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('MMMM Do YYYY');
           }
           this.requests = result.data.data
           this.loading = false
+          console.log("request", this.requests);
         })
       },
       editItem(item) {
+        console.log("item", item);
         this.editedIndex = this.requests.indexOf(item)
         this.editedItem = { ...item };
+        this.editedItem.requestProductsModel.forEach(product => {
+          product.fulfilledDate = moment(product.fulfilledDate).format('MMMM Do YYYY');
+        });
         this.dialog = true
       },
 
@@ -143,7 +164,7 @@
           }).catch(err => {
             console.log(err);
             console.log(err.response);
-            vm.$swal('Failed to update', err.response.data.message, 'error');
+            vm.$swal('Failed to approve', err.response.data.message, 'error');
           })
         } catch (err) {
           console.log(err);

@@ -40,16 +40,19 @@
       <v-dialog v-model="quotationDialog" max-width="500px">
         <v-card class="mx-auto" width="800">
           <v-card-title class="py-4">
-            <span class="text-h5">Edit Quotation</span>
+            <span class="text-h5">Edit Pricing Request</span>
           </v-card-title>
           <v-card-text>
+            <div class="form-group">
+              <label>Customer Name</label>
+              <input type="text" v-model="customerName" class="border-input" typeof="text">
+            </div>
             <label>Product Categories</label>
             <div v-for="(category, index) in categories" :key="'C'+index">
               <div class="blue-checkbox">
                 <input type="checkbox" v-model="selectedCategories" :value="category" @change="checkboxChanged(category)">
                 <label class="category-name">{{ category.name }}</label>
               </div>
-
             </div>
             <div v-for="category in selectedCategories" :key="category.id">
               <div class="form-group">
@@ -58,6 +61,7 @@
                   <option v-for="option in options[category.id]" :value="option.id" :key="option.id">{{ option.name }}</option>
                 </select>
               </div>
+
               <div class="form-group">
                 <label>Quantity</label>
                 <input v-model="quantity[category.id]" class="border-input" type="text">
@@ -66,7 +70,7 @@
                 <label>Budget</label>
                 <input v-model="budget[category.id]" class="border-input" type="text">
               </div>
-              <div class="form-group" v-if="isPriorityVisible">
+              <div class="form-group">
                 <label>Priority</label>
                 <select v-model="priority.value" class="border-input">
                   <option v-for="option in priority.options" :value="option.value" :key="option.value">
@@ -74,8 +78,15 @@
                   </option>
                 </select>
               </div>
+              <div class="form-group">
+                <label>Deal Justification</label>
+                <textarea v-model="dealJustification" class="border-input"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Deadline</label>
+                <input type="datetime-local" v-model="deadline" class="border-input">
+              </div>
             </div>
-
             <button class="dialog-button" type="submit" @click="editQuotation">Edit Quotation</button>
           </v-card-text>
         </v-card>
@@ -157,6 +168,9 @@
             { value: 3, label: 'Low' }
           ]
         },
+        customerName: '',
+        dealJustification: '',
+        deadline: '',
       }
     },
     created() {
@@ -168,9 +182,6 @@
     computed: {
       formTitle() {
         return 'Request'
-      },
-      isPriorityVisible() {
-        return this.selectedCategories && this.selectedCategories.length > 0;
       },
 
     },
@@ -237,7 +248,7 @@
         });
       },
       async dialogQuotation(item) {
-        console.log("quantity", this.selectedProducts);
+        console.log("item", item);
         this.requestId = item.id;
         this.quotationDialog = true;
         for (const productModel of item.requestProductsModel) {
@@ -248,13 +259,12 @@
             this.selectedProducts[category.id] = productModel.productId;
             this.quantity[category.id] = productModel.quantity;
             this.budget[category.id] = productModel.budget;
-            console.log(category.id);
-            console.log(this.selectedProducts[category.id]);
-            console.log(this.quantity[category.id]);
-            console.log(this.budget[category.id]);
           }
         }
-        this.priority = 0;
+        this.customerName = item.customerName;
+        this.dealJustification = item.dealJustification;
+        this.deadline = item.deadline;
+        this.priority.value = item.priority;
       },
       resetData() {
         this.requestId = 0;

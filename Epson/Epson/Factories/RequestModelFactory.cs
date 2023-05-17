@@ -96,8 +96,10 @@ namespace Epson.Factories
                         ProductId = rp.ProductId,
                         Quantity = rp.Quantity,
                         ProductName = _productService.GetProductById(rp.ProductId).Name,
+                        FulfilledDate = rp.FulfilledDate,
                         FulfillerId = rp.FulfillerId,
-                        //FulfillerName = _userManager.FindByIdAsync(rp.FulfillerId).Result.UserName,
+                        FulfillerName = rp.FulfillerId != null ? _userManager.FindByIdAsync(rp.FulfillerId).Result.UserName : null,
+                        FulfilledPrice = rp.FulfilledPrice,
                         ProductCategory = _productService.GetProductCategoriesByProductId(rp.ProductId).Select(pc => new ProductCategoryModel
                         {
                             ProductId = pc.ProductId,
