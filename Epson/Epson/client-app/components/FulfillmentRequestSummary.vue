@@ -6,7 +6,7 @@
       <label>Start Date: <input type="date" v-model="startDate" /></label>
       <label>End Date: <input type="date" v-model="endDate" /></label>
       <label>
-        Granularity:
+        By:
         <select v-model="granularity">
           <option value="day">Day</option>
           <option value="week">Week</option>

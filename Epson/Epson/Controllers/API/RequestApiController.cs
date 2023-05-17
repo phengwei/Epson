@@ -312,6 +312,8 @@ namespace Epson.Controllers.API
                     ApprovedTime = x.ApprovedTime,
                     CreatedById = x.CreatedById,
                     CreatedOnUTC = x.CreatedOnUTC,
+                    CustomerName = x.CustomerName,
+                    DealJustification = x.DealJustification,
                     UpdatedById = x.UpdatedById,
                     UpdatedOnUTC = x.UpdatedOnUTC,
                     Segment = x.Segment,

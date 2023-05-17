@@ -18,6 +18,7 @@ namespace Epson.Model.Request
         public bool Breached { get; set; }
         public DateTime? CreatedOnUTC { get; set; }
         public DateTime? UpdatedOnUTC { get; set; }
+        public string? CreatedBy { get; set; }
         public string? CreatedById { get; set; }
         public string? UpdatedById { get; set; }
         public string DealJustification { get; set; }

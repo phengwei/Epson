@@ -16,21 +16,34 @@
             </v-card-title>
             <v-card-text>
               <div class="form-group">
+                <label>Requested By</label>
+                <input v-model="editedItem.createdBy" class="border-input readonly-field" label="Requested By" readonly></input>
+              </div>
+              <div class="form-group">
+                <label>Customer</label>
+                <input v-model="editedItem.customerName" class="border-input readonly-field" label="Customer" readonly></input>
+              </div>
+              <div class="form-group">
                 <label>Product</label>
-                <input v-model="editedItem.productName" class="border-input" label="Product" readonly></input>
+                <input v-model="editedItem.productName" class="border-input readonly-field" label="Product" readonly></input>
               </div>
               <div class="form-group">
                 <label>Budget</label>
-                <input v-model="editedItem.budget" class="border-input" label="Budget" readonly></input>
+                <input v-model="editedItem.budget" class="border-input readonly-field" label="Budget" readonly></input>
               </div>
               <div class="form-group">
                 <label>Quantity</label>
-                <input v-model="editedItem.quantity" class="border-input" label="Quantity" readonly></input>
+                <input v-model="editedItem.quantity" class="border-input readonly-field" label="Quantity" readonly></input>
+              </div>
+              <div class="form-group">
+                <label>Deal Justification</label>
+                <input v-model="editedItem.dealJustification" class="border-input readonly-field" label="Deal Justification" readonly></input>
               </div>
               <div class="form-group">
                 <label>Approved Price</label>
-                <input v-model="editedItem.fulfilledPrice" class="border-input" label="Approved Price"></input>
+                <input v-model="editedItem.fulfilledPrice" type="number" class="border-input" label="Approved Price"></input>
               </div>
+
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="blue darken-1" text @click="closeDialog">Cancel</v-btn>
@@ -71,6 +84,8 @@
             align: ' d-none',
             value: 'id',
           },
+          { text: 'Requested By', value: 'createdBy' },
+          { text: 'Customer', value: 'customerName' },
           { text: 'Product', value: 'productName' },
           { text: 'Budget', value: 'budget' },
           { text: 'Quantity', value: 'quantity' },
@@ -79,9 +94,11 @@
         itemsPendingFulfilment: [],
         loading: false,
         editedItem: {
+          customerName: '',
           productName: '',
           budget: '',
-          fulfilledPrice: null
+          fulfilledPrice: null,
+          dealJustification: ''
         },
       }
     },
@@ -191,5 +208,9 @@
     border-radius: 4px;
     padding: 0.5rem;
     width: 100%;
+  }
+
+  .readonly-field {
+    background-color: #ddd;
   }
 </style>

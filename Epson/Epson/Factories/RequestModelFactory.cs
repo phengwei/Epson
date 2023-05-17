@@ -39,8 +39,10 @@ namespace Epson.Factories
                 requestModel.Id = request.Id;
                 requestModel.ApprovedBy = request.ApprovedBy;
                 requestModel.ApprovedTime = request.ApprovedTime;
+                requestModel.CustomerName = request.CustomerName;
                 requestModel.CreatedById = request.CreatedById;
                 requestModel.CreatedOnUTC = request.CreatedOnUTC;
+                requestModel.DealJustification = request.DealJustification;
                 requestModel.UpdatedById = request.UpdatedById;
                 requestModel.UpdatedOnUTC = request.UpdatedOnUTC;
                 requestModel.Segment = request.Segment;
@@ -72,6 +74,7 @@ namespace Epson.Factories
                     ApprovedBy = request.ApprovedBy,
                     ApprovedTime = request.ApprovedTime,
                     CustomerName = request.CustomerName,
+                    CreatedBy = _userManager.FindByIdAsync(request.CreatedById).Result.UserName,
                     CreatedById = request.CreatedById,
                     CreatedOnUTC = request.CreatedOnUTC,
                     DealJustification = request.DealJustification,
