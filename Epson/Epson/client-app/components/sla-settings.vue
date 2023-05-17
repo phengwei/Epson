@@ -33,11 +33,6 @@
         </label>
       </div>
 
-      <div class="deadline">
-        <label for="deadlineHours">Deadline in hours:</label>
-        <input type="number" id="deadlineHours" v-model="deadlineHours">
-      </div>
-
       <div class="form-actions">
         <button type="submit" @click="saveSLASettings">Save</button>
         <button type="button" @click="resetForm">Reset</button>
@@ -59,7 +54,6 @@
         workingHours: false,
         workingHoursStart: null,
         workingHoursEnd: null,
-        deadlineHours: null,
         holidays: false,
         staffLeaves: false,
       };
@@ -69,7 +63,6 @@
         this.workingHours = false;
         this.workingHoursStart = null;
         this.workingHoursEnd = null;
-        this.deadlineHours = null;
         this.holidays = false;
         this.staffLeaves = false;
       },
@@ -83,8 +76,7 @@
               WorkingStartHour: parseInt(this.workingHoursStart.split(':')[0]),
               WorkingStartMinute: parseInt(this.workingHoursStart.split(':')[1]),
               WorkingEndHour: parseInt(this.workingHoursEnd.split(':')[0]),
-              WorkingEndMinute: parseInt(this.workingHoursEnd.split(':')[1]),
-              DeadlineInHours: parseInt(this.deadlineHours)
+              WorkingEndMinute: parseInt(this.workingHoursEnd.split(':')[1])
             }
           }).then(response => {
             console.log('SLA holiday added successfully');
@@ -100,7 +92,6 @@
             this.workingHours = result.data.data.includeWorkingHours
             this.workingHoursStart = `${result.data.data.workingStartHour.toString().padStart(2, '0')}:${result.data.data.workingStartMinute.toString().padStart(2, '0')}`;
             this.workingHoursEnd = `${result.data.data.workingEndHour.toString().padStart(2, '0')}:${result.data.data.workingEndMinute.toString().padStart(2, '0')}`;
-            this.deadlineHours = result.data.data.deadlineInHours
             this.holidays = result.data.data.includeHoliday
             this.staffLeaves = result.data.data.includeStaffLeaves
           })

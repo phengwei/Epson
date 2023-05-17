@@ -1,19 +1,28 @@
 ﻿using AutoMapper;
 using Epson.Core.Domain.Products;
 using Epson.Data;
+using Epson.Model.Categories;
 using Epson.Model.Products;
 using Epson.Services.DTO.Products;
+using Epson.Services.Interface.Categories;
+using Epson.Services.Interface.Products;
 
 namespace Epson.Factories
 {
     public class ProductModelFactory : IProductModelFactory
     {
         private readonly IMapper _mapper;
+        private readonly IProductService _productService;
+        private readonly ICategoryService _categoryService;
 
         public ProductModelFactory
-            (IMapper mapper)
+            (IMapper mapper,
+            IProductService productService,
+            ICategoryService categoryService)
         {
             _mapper = mapper;
+            _productService = productService;
+            _categoryService = categoryService;
         }
         public ProductModel PrepareProductModel(ProductDTO product)
         {
@@ -27,6 +36,12 @@ namespace Epson.Factories
                 productModel.CreatedById = product.CreatedById;
                 productModel.CreatedOnUTC = product.CreatedOnUTC;
                 productModel.UpdatedOnUTC = product.UpdatedOnUTC;
+                productModel.ProductCategoriess = _productService.GetProductCategoriesByProductId(product.Id).Select(pc => new ProductCategoryModel
+                {
+                    ProductId = pc.ProductId,
+                    CategoryId = pc.CategoryId,
+                    CategoryName = _categoryService.GetCategoryById(pc.CategoryId).Name
+                }).ToList();
 
                 return productModel;
             }
@@ -50,8 +65,14 @@ namespace Epson.Factories
                     UpdatedById = product.UpdatedById,
                     CreatedById = product.CreatedById,
                     CreatedOnUTC = product.CreatedOnUTC,
-                    UpdatedOnUTC = product.UpdatedOnUTC
-                };
+                    UpdatedOnUTC = product.UpdatedOnUTC,
+                    ProductCategoriess = _productService.GetProductCategoriesByProductId(product.Id).Select(pc => new ProductCategoryModel
+                    {
+                        ProductId = pc.ProductId,
+                        CategoryId = pc.CategoryId,
+                        CategoryName = _categoryService.GetCategoryById(pc.CategoryId).Name
+                    }).ToList()
+            };
                 productModels.Add(productModel);
             }
 

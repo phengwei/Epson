@@ -45,11 +45,11 @@
                     </div>
                     <div class="form-group">
                       <label>Product Name</label>
-                      <input v-model="editedItem.name" class="border-input" label="Product name"></input>
+                      <input v-model="editedItem.name" class="border-input" label="Product name" required></input>
                     </div>
                     <div class="form-group">
                       <label>Price</label>
-                      <input v-model="editedItem.price" class="border-input" label="Price"></input>
+                      <input type="number" v-model="editedItem.price" class="border-input" label="Price" required></input>
                     </div>
 
                     <v-card-actions>
@@ -93,6 +93,7 @@
 
 <script>
   import { mapGetters } from 'vuex';
+  import Swal from 'sweetalert2'
 
   export default {
     name: 'ProductTable',
@@ -100,7 +101,7 @@
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser']),
       formTitle() {
-        return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
+        return this.editedIndex === -1 ? 'New Product' : 'Edit Product'
       },
       selectedCategoryList() {
         return this.categories.filter((category) => this.selectedCategories.includes(category.id));
@@ -146,7 +147,7 @@
     watch: {
       options: {
         handler() {
-          this.getDataFromApi()
+          this.getProducts()
         },
         deep: true,
       },
@@ -161,11 +162,12 @@
       this.getCategoryFromApi();
     },
     methods: {
-      getDataFromApi() {
+      getProducts() {
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/product/getproducts`).then(result => {
           this.products = result.data.data
           this.loading = false
+          console.log("products", this.products);
         })
       },
       async getCategoryFromApi() {
@@ -179,6 +181,9 @@
       editItem(item) {
         this.editedIndex = this.products.indexOf(item)
         this.editedItem = Object.assign({}, item)
+        this.selectedCategories = this.categories.filter(category =>
+          item.productCategoriess.find(pc => pc.categoryId === category.id)
+        )
         this.dialog = true
       },
 
@@ -197,7 +202,7 @@
         try {
           await this.$axios.post(`${this.$config.restUrl}/api/product/deleteproduct?id=${this.editedItem.id}`).then(response => {
             console.log('res', response);
-            this.getDataFromApi();
+            this.getProducts();
           }).catch(function (error) {
             console.log('vm error', error.response);
             vm.$swal('Failed to delete', error.response.data.errorList[0], 'error');
@@ -223,58 +228,93 @@
           this.editedIndex = -1
         })
       },
-
       async save() {
-        const vm = this;
-        if (this.editedIndex > -1) {
-          try {
-            await this.$axios.post(`${this.$config.restUrl}/api/product/editproduct`, {
-              data: {
-                id: this.editedItem.id,
-                name: this.editedItem.name,
-                price: this.editedItem.price,
-                productcategories: this.selectedCategories.map(category => ({
-                  categoryid: category.id,
-                  productId: this.editedItem.id
-                }))
-              }
-            }).then(response => {
-              console.log('res', response);
-              this.getDataFromApi();
-            }).catch(err => {
-              console.log(err);
-              console.log(err.response);
-              vm.$swal('Failed to update', err.response.data.message, 'error');
-            })
-          } catch (err) {
-            console.log(err);
-          }
-        } else {
-          try {
-            await this.$axios.post(`${this.$config.restUrl}/api/product/addproduct`, {
-              data: {
-                name: this.editedItem.name,
-                price: this.editedItem.price,
-                productcategories: this.selectedCategories.map(category => ({
-                  categoryid: category.id,
-                  productId: this.editedItem.id
-                }))
-              }
-            }).then(response => {
-              this.getDataFromApi();
-            }).catch(err => {
-              console.log(err);
-              console.log(err.response);
-              vm.$swal('Failed to add', err.response.data.message, 'error');
-            })
-          } catch (err) {
-            console.log(err);
-          }
+        if (!this.editedItem.name) {
+          Swal.fire(
+            'Error!',
+            'Product Name is required.',
+            'error'
+          );
+          return;
         }
-        this.loading = false;
-        this.close();
-      },
+        if (this.selectedCategories.length === 0) {
+          Swal.fire(
+            'Error!',
+            'You must select at least one category.',
+            'error'
+          );
+          return;
+        }
+        if (!this.editedItem.price || isNaN(this.editedItem.price)) {
+          Swal.fire(
+            'Error!',
+            'Price is required.',
+            'error'
+          );
+          return;
+        }
+        const vm = this;
+        const result = await Swal.fire({
+          title: 'Are you sure?',
+          text: "You won't be able to revert this!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, save it!'
+        });
 
+        if (result.isConfirmed) {
+          try {
+            let response;
+            if (this.editedIndex > -1) {
+              response = await this.$axios.post(`${this.$config.restUrl}/api/product/editproduct`, {
+                data: {
+                  id: this.editedItem.id,
+                  name: this.editedItem.name,
+                  price: this.editedItem.price,
+                  productcategories: this.selectedCategories.map(category => ({
+                    categoryid: category.id,
+                    productId: this.editedItem.id
+                  }))
+                }
+              });
+
+              console.log('res', response);
+              this.getProducts();
+              Swal.fire(
+                'Saved!',
+                'Your product has been updated.',
+                'success'
+              );
+            } else {
+              response = await this.$axios.post(`${this.$config.restUrl}/api/product/addproduct`, {
+                data: {
+                  name: this.editedItem.name,
+                  price: this.editedItem.price,
+                  productcategories: this.selectedCategories.map(category => ({
+                    categoryid: category.id,
+                    productId: this.editedItem.id
+                  }))
+                }
+              });
+
+              this.getProducts();
+              Swal.fire(
+                'Saved!',
+                'Your product has been added.',
+                'success'
+              );
+            }
+          } catch (err) {
+            console.log(err);
+            console.log(err.response);
+            vm.$swal('Failed to save', err.response.data.message, 'error');
+          }
+          this.loading = false;
+          this.close();
+        }
+      },
     },
   }
 </script>
