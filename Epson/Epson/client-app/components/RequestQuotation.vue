@@ -5,7 +5,7 @@
       <v-card-text>
         <div class="form-group">
           <label>Customer Name</label>
-          <input type="text" v-model="customerName" class="border-input" :readonly="isViewMode">
+          <input type="text" v-model="customerName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
         </div>
         <label>Product Categories</label>
         <div v-for="(category, index) in categories" :key="'C'+index">
@@ -17,23 +17,23 @@
         <div v-for="category in selectedCategories" :key="category.id">
           <div class="form-group">
             <label>{{ category.name }}</label>
-            <select v-if="!isViewMode" v-model="selectedProducts[category.id]" required class="border-input">
+            <select v-if="!isViewMode" v-model="selectedProducts[category.id]" required class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
               <option v-for="option in options[category.id]" :value="option.id" :key="option.id">{{ option.name }}</option>
             </select>
             <span v-else>{{ selectedProducts[category.id] }}</span>
           </div>
           <div class="form-group">
             <label>Quantity</label>
-            <input v-model="quantity[category.id]" class="border-input" type="number" min="1" :readonly="isViewMode">
+            <input v-model="quantity[category.id]" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
           </div>
           <div class="form-group">
             <label>Budget</label>
-            <input v-model="budget[category.id]" class="border-input" type="number" min="1" :readonly="isViewMode">
+            <input v-model="budget[category.id]" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
           </div>
         </div>
         <div class="form-group">
           <label>Priority</label>
-          <select v-model="priority.value" class="border-input">
+          <select v-model="priority.value" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
             <option v-for="option in priority.options" :value="option.value" :key="option.value">
               {{ option.label }}
             </option>
@@ -41,7 +41,11 @@
         </div>
         <div class="form-group">
           <label>Deal Justification</label>
-          <textarea v-model="dealJustification" class="border-input" :readonly="isViewMode"></textarea>
+          <textarea v-model="dealJustification" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Deadline</label>
+          <input type="datetime-local" v-model="deadline" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
         </div>
         <button type="submit" @click="submitQuotation" v-if="!isViewMode">Submit</button>
         <button type="submit" @click="saveDraft" v-if="!isViewMode">Save Draft</button>
@@ -76,6 +80,7 @@
         budget: {},
         customerName: '',
         dealJustification: '',
+        deadline: '',
       };
     },
     async created() {
@@ -109,6 +114,7 @@
         this.priority.value = requestData.priority;
         this.customerName = requestData.customerName;
         this.dealJustification = requestData.dealJustification;
+        this.deadline = requestData.deadline;
       },
       async fetchCategories() {
         try {
@@ -156,6 +162,7 @@
           this.customerName = localStorage.getItem("savedItem-customerName", this.customerName);
           this.priority.value = localStorage.getItem("savedItem-priority", this.priority.value);
           this.dealJustification = localStorage.getItem("savedItem-dealJustification", this.dealJustification);
+          this.dealJustification = localStorage.getItem("savedItem-deadline", this.deadline);
 
         } catch (error) {
           console.error(error);
@@ -187,6 +194,7 @@
         localStorage.setItem("savedItem-customerName", this.customerName);
         localStorage.setItem("savedItem-priority", this.priority.value);
         localStorage.setItem("savedItem-dealJustification", this.dealJustification);
+        localStorage.setItem("savedItem-deadline", this.deadline);
         this.$swal('Request draft saved');
 
       },
@@ -340,6 +348,10 @@
     color: #fff;
     border: none;
     cursor: pointer;
+  }
+
+  .readonly-field {
+    background-color: #ddd;
   }
 
   @media (max-width: 768px) {
