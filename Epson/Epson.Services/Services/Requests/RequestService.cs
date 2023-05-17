@@ -329,9 +329,13 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public List<FulfillmentSummary> GetFulfillmentSummary(DateTime startDate, DateTime endDate, string granularity)
+        public List<FulfillmentSummary> GetFulfillmentSummary(DateTime startDate, DateTime endDate, string granularity, string userId)
         {
-            var requestProducts = _RequestProductRepository.Table.Where(rp => rp.FulfilledDate != DateTime.MinValue && rp.FulfilledDate >= startDate && rp.FulfilledDate <= endDate);
+            var requestProducts = _RequestProductRepository.Table.
+                Where(rp => rp.FulfilledDate != DateTime.MinValue 
+                && rp.FulfilledDate >= startDate 
+                && rp.FulfilledDate <= endDate
+                && rp.FulfillerId == userId);
 
             List<FulfillmentSummary> fulfillmentSummary;
 
@@ -368,10 +372,13 @@ namespace Epson.Services.Services.Requests
             return fulfillmentSummary;
         }
 
-        public List<SalesSummary> GetRequestSummary(DateTime startDate, DateTime endDate, string granularity)
+        public List<SalesSummary> GetRequestSummary(DateTime startDate, DateTime endDate, string granularity, string userId)
         {
             var requests = GetRequests();
-            var filteredRequests = requests.Where(r => r.CreatedOnUTC >= startDate && r.CreatedOnUTC <= endDate);
+            var filteredRequests = requests.
+                Where(r => r.CreatedOnUTC >= startDate 
+                && r.CreatedOnUTC <= endDate
+                && r.CreatedById == userId);
 
             List<SalesSummary> salesSummary;
 

@@ -283,17 +283,15 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
         public async Task<IActionResult> GetRequestSummary(DateTime startDate, DateTime endDate, string granularity)
         {
-            try
-            {
-                var response = new GenericResponseModel<List<SalesSummary>>();
-                var summary = _requestService.GetRequestSummary(startDate, endDate, granularity);
-                response.Data = summary;
-                return Ok(response);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var response = new GenericResponseModel<List<SalesSummary>>();
+
+            var user = _workContext.CurrentUser;
+
+            var summary = _requestService.GetRequestSummary(startDate, endDate, granularity, user.Id);
+
+            response.Data = summary;
+
+            return Ok(response);
         }
 
         [HttpGet("getfulfillmentsummary")]
@@ -302,7 +300,9 @@ namespace Epson.Controllers.API
         {
             var response = new GenericResponseModel<List<FulfillmentSummary>>();
 
-            var fulfillmentSummary = _requestService.GetFulfillmentSummary(startDate, endDate, granularity);
+            var user = _workContext.CurrentUser;
+
+            var fulfillmentSummary = _requestService.GetFulfillmentSummary(startDate, endDate, granularity, user.Id);
 
             response.Data = fulfillmentSummary;
 
