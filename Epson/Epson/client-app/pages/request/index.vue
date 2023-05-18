@@ -55,7 +55,6 @@
               ...item,
               createdOnUTC: moment(item.createdOnUTC).format('MMMM Do YYYY')    
             }));
-            console.log("request", this.requests);
           })
           .catch(error => {
             console.error('Error fetching requests:', error);

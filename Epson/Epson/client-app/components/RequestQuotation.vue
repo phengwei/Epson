@@ -22,6 +22,14 @@
             </select>
             <span v-else>{{ selectedProducts[category.id] }}</span>
           </div>
+          <div class="form-group" v-if="approvalStateStr === 'Approved'">
+            <label>Approved By</label>
+            <input v-model="fulfillerName[category.id]" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></input>
+          </div>
+          <div class="form-group" v-if="approvalStateStr === 'Approved'">
+            <label>Approved Price</label>
+            <input v-model="fulfilledPrice[category.id]" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></input>
+          </div>
           <div class="form-group">
             <label>Quantity</label>
             <input v-model="quantity[category.id]" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
@@ -78,6 +86,9 @@
         },
         quantity: {},
         budget: {},
+        fulfilledPrice: {},
+        fulfillerName: {},
+        approvalStateStr: '',
         customerName: '',
         dealJustification: '',
         deadline: '',
@@ -123,12 +134,15 @@
             this.selectedProducts[category.id] = productModel.productName;
             this.quantity[category.id] = productModel.quantity;
             this.budget[category.id] = productModel.budget;
+            this.fulfilledPrice[category.id] = productModel.fulfilledPrice;
+            this.fulfillerName[category.id] = productModel.fulfillerName;
           }
         }
         this.priority.value = requestData.priority;
         this.customerName = requestData.customerName;
         this.dealJustification = requestData.dealJustification;
         this.deadline = requestData.deadline;
+        this.approvalStateStr = requestData.approvalStateStr;
       },
       async fetchCategories() {
         try {

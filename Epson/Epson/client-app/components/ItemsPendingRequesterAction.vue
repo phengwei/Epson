@@ -127,13 +127,13 @@
     watch: {
       options: {
         handler() {
-          this.getDataFromApi()
+          this.getPendingRequesterItem()
         },
         deep: true,
       },
     },
     methods: {
-      getDataFromApi() {
+      getPendingRequesterItem() {
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingrequesteritem`).then(result => {
           for (const requests in result.data.data) {
@@ -156,7 +156,7 @@
         const vm = this;
         try {
           await this.$axios.post(`${this.$config.restUrl}/api/request/approverequest?id=${this.editedItem.id}`).then(response => {
-            this.getDataFromApi();
+            this.getPendingRequesterItem();
             this.dialog = false;
             this.close();
           }).catch(err => {
@@ -173,7 +173,7 @@
         const vm = this;
         try {
           await this.$axios.post(`${this.$config.restUrl}/api/request/approverequest?id=${this.editedItem.id}`).then(response => {
-            this.getDataFromApi();
+            this.getPendingRequesterItem();
             this.close();
             this.dialog = false;
           }).catch(err => {

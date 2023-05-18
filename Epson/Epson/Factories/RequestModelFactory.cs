@@ -96,6 +96,7 @@ namespace Epson.Factories
                         ProductId = rp.ProductId,
                         Quantity = rp.Quantity,
                         ProductName = _productService.GetProductById(rp.ProductId).Name,
+                        HasFulfilled = rp.HasFulfilled,
                         FulfilledDate = rp.FulfilledDate,
                         FulfillerId = rp.FulfillerId,
                         FulfillerName = rp.FulfillerId != null ? _userManager.FindByIdAsync(rp.FulfillerId).Result.UserName : null,
