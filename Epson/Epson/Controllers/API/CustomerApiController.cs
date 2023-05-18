@@ -19,6 +19,7 @@ namespace Epson.Controllers.API
     [Route("api/customer")]
     public class CustomerApiController : BaseApiController
     {
+        private readonly IWorkContext _workContext;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<Role> _roleManager;
         private readonly JwtSettings _jwtSettings;
@@ -29,6 +30,7 @@ namespace Epson.Controllers.API
         private readonly IMapper _mapper;
 
         public CustomerApiController(
+            IWorkContext workContext,
             UserManager<ApplicationUser> userManager,
             RoleManager<Role> roleManager,
             JwtSettings jwtSettings,
@@ -38,6 +40,7 @@ namespace Epson.Controllers.API
             Serilog.ILogger logger,
             IMapper mapper)
         {
+            _workContext = workContext;
             _userManager = userManager;
             _roleManager = roleManager;
             _jwtSettings = jwtSettings;
@@ -226,9 +229,10 @@ namespace Epson.Controllers.API
 
         [HttpPost("changepassword")]
         [AllowAnonymous]
-        public async Task<IActionResult> ChangePassword(string userId, string currentPassword, string newPassword)
+        public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var currentUser = _workContext.CurrentUser;
+            var user = await _userManager.FindByIdAsync(currentUser.Id);
             if (user == null)
                 return NotFound();
 

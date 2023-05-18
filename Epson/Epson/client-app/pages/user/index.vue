@@ -50,10 +50,11 @@
 </template>
 
 <script>
-import { validationMixin } from 'vuelidate'
-import { required, minLength, sameAs } from 'vuelidate/lib/validators'
-import { mapGetters } from 'vuex';
-export default {
+  import Swal from 'sweetalert2';
+  import { validationMixin } from 'vuelidate'
+  import { required, minLength, sameAs } from 'vuelidate/lib/validators'
+  import { mapGetters } from 'vuex';
+  export default {
     name: 'UserIndex',
     mixins: [validationMixin],
     middleware: 'auth',
@@ -93,15 +94,42 @@ export default {
         },
     },
     methods: {
-        submit () {
-            this.$v.$touch()
-        },
-        clear () {
-            this.$v.$reset()
-            this.currentPass = ''
-            this.newPass = ''
-            this.confirmNewPass = ''
-        },
+      async submit() {
+        this.$v.$touch()
+        if (!this.$v.$invalid) { 
+          try {
+            const response = await this.$axios.post(`${this.$config.restUrl}/api/customer/changepassword?currentPassword=${this.currentPass}&newPassword=${this.newPass}`);
+            if (response.status === 200) {
+              Swal.fire(
+                'Changed!',
+                'Your password has been changed.',
+                'success'
+              ).then(() => {
+                location.reload();
+              });
+            } else {
+              Swal.fire(
+                'Failed!',
+                'Failed to change your password.',
+                'error'
+              );
+            }
+          } catch (error) {
+            console.error(error);
+            Swal.fire(
+              'Error!',
+              'There was a problem changing your password.',
+              'error'
+            );
+          }
+        }
+      },
+      clear () {
+          this.$v.$reset()
+          this.currentPass = ''
+          this.newPass = ''
+          this.confirmNewPass = ''
+      },
     }
 
 }
