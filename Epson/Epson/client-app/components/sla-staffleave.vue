@@ -131,7 +131,16 @@
               staffId: this.selectedStaff
             }
           });
-          console.log('SLA staff leave added successfully');
+          Swal.fire({
+            title: 'Success!',
+            text: 'SLA staff leave added successfully.',
+            icon: 'success',
+            confirmButtonText: 'OK'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              location.reload();
+            }
+          });
         } catch (error) {
           console.error('There was a problem adding SLA staff leave:', error);
         }

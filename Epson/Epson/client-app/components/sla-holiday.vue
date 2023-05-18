@@ -78,7 +78,16 @@
               IsAdhoc: this.isAdhoc
             }
           });
-          console.log('SLA holiday added successfully');
+          Swal.fire({
+            title: 'Success!',
+            text: 'SLA holiday added successfully.',
+            icon: 'success',
+            confirmButtonText: 'OK'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              location.reload();
+            }
+          });
         } catch (error) {
           console.error('There was a problem adding SLA holiday');
         }
