@@ -97,6 +97,21 @@
       isViewMode() {
         return this.$route.query.view === 'true';
       },
+      today() {
+        const date = new Date();
+        const year = date.getFullYear();
+        let month = date.getMonth() + 1;
+        let day = date.getDate();
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+
+        month = (month < 10) ? `0${month}` : month;
+        day = (day < 10) ? `0${day}` : day;
+        hours = (hours < 10) ? `0${hours}` : hours;
+        minutes = (minutes < 10) ? `0${minutes}` : minutes;
+
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
     },
     methods: {
       async populateForm(requestData) {
@@ -161,7 +176,7 @@
           this.customerName = localStorage.getItem("savedItem-customerName", this.customerName);
           this.priority.value = localStorage.getItem("savedItem-priority", this.priority.value);
           this.dealJustification = localStorage.getItem("savedItem-dealJustification", this.dealJustification);
-          this.dealJustification = localStorage.getItem("savedItem-deadline", this.deadline);
+          this.deadline = localStorage.getItem("savedItem-deadline", this.deadline);
 
         } catch (error) {
           console.error(error);
@@ -235,6 +250,10 @@
         this.$router.push('/request');
       },
       async submitQuotation() {
+        if (this.deadline < this.today) {
+          this.$swal('Error', 'Deadline should be later than today', 'error');
+          return;
+        }
         const quotationData = {
           ApprovalState: 20,
           Priority: this.priority,
@@ -245,11 +264,8 @@
           if (idProduct !== '' && idProduct !== null) {
             const product = {
               productId: idProduct,
-              fulfillerId: "string",
               quantity: this.quantity[categoryId],
               budget: this.budget[categoryId],
-              customerName: this.customerName[categoryId],
-              dealJustification: this.dealJustification[categoryId]
             };
             quotationData.requestProducts.push(product);
           }
@@ -261,12 +277,15 @@
               segment: "string",
               approvalState: 10,
               priority: this.priority.value,
-              RequestProducts: quotationData.requestProducts
-
+              RequestProducts: quotationData.requestProducts,
+              customerName: this.customerName,
+              dealJustification: this.dealJustification,
+              deadline: this.deadline
             }
           }).then(response => {
             this.$swal('Request created');
             this.$router.push('/request');
+            localStorage.clear();
           }).catch(err => {
             console.log(err);
             vm.$swal('Failed to submit request', err.response.data.message, 'error');

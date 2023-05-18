@@ -62,12 +62,6 @@
         mdi-pencil
       </v-icon>
     </template>
-
-    <template v-slot:no-data>
-      <v-btn color="primary" @click="fetchPendingItems">
-        Reset
-      </v-btn>
-    </template>
   </v-data-table>
 </template>
 

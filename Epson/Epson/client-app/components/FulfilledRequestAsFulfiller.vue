@@ -23,7 +23,7 @@
       return {
         headers: [
           { text: 'Request #', value: 'id' },
-          { text: 'Requester', value: 'customerName' },
+          { text: 'Requester', value: 'requestedBy' },
           { text: 'Product Name', value: 'productName' },
           { text: 'Quantity', value: 'quantity' },
           { text: 'Budget', value: 'budget' },
@@ -38,7 +38,7 @@
         return this.requests.flatMap(request =>
           request.requestProductsModel.map(product => ({
             id: request.id,
-            customerName: request.customerName,
+            requestedBy: request.createdBy,
             productName: product.productName,
             quantity: product.quantity,
             budget: product.budget,
