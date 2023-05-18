@@ -125,6 +125,7 @@ namespace Epson.Controllers.API
                 user.UserName = model.Username;
                 user.Email = model.Email;
                 user.PhoneNumber = model.Phone;
+                user.TeamId = model.TeamId;
 
                 var result = await _userManager.UpdateAsync(user);
 

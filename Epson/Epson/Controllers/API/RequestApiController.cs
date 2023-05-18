@@ -16,6 +16,7 @@ using Epson.Services.DTO.Requests;
 using System.Globalization;
 using Epson.Services.DTO.Report;
 using Epson.Services.Interface.Users;
+using Epson.Services.DTO.Products;
 
 namespace Epson.Controllers.API
 {
@@ -72,8 +73,14 @@ namespace Epson.Controllers.API
         public async Task<IActionResult> GetRequests()
         {
             var response = new GenericResponseModel<List<RequestModel>>();
+            var currentUser = _workContext.CurrentUser;
 
-            var requests = _requestService.GetRequests();
+            List<RequestDTO> requests = new List<RequestDTO>();
+
+            if (currentUser.Roles.Contains("Admin"))
+                requests = _requestService.GetRequests();
+            else
+                requests = _requestService.GetRequests().Where(x => x.CreatedById == currentUser.Id).ToList();
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests);
 

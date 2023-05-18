@@ -10,7 +10,7 @@ using Epson.Core.Domain.Categories;
 
 namespace Epson.Controllers.API
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Admin")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin")]
     [Route("api/category")]
     public class CategoryApiController : BaseApiController
     {

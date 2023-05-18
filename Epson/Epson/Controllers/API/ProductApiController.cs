@@ -11,7 +11,7 @@ using Epson.Services.DTO.Products;
 
 namespace Epson.Controllers.API
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Admin")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin")]
     [Route("api/product")]
     public class ProductApiController : BaseApiController
     {
@@ -136,7 +136,9 @@ namespace Epson.Controllers.API
                 Id = product.Id,
                 Name = model.Name,
                 Price = model.Price,
+                CreatedOnUTC = product.CreatedOnUTC,
                 UpdatedOnUTC = DateTime.UtcNow,
+                CreatedById = user.Id,
                 UpdatedById = user.Id
             };
 
