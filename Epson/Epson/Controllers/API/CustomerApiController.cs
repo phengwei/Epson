@@ -81,7 +81,8 @@ namespace Epson.Controllers.API
             {
                 UserName = model.Username,
                 Email = model.Email,
-                PhoneNumber = model.Phone
+                PhoneNumber = model.Phone,
+                TeamId = model.TeamId
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);

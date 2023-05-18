@@ -46,7 +46,7 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn color="blue darken-1" text @click="dialog = false">Cancel</v-btn>
-            <v-btn color="blue darken-1" text @click="saveUser">Save</v-btn>
+            <v-btn color="blue darken-1" text @click="saveUserConfirmation">Save</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -118,6 +118,21 @@
       }
     },
     methods: {
+      saveUserConfirmation() {
+        this.$swal({
+          title: 'Are you sure?',
+          text: "You are about to save the user data!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, save it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.saveUser();
+          }
+        })
+      },
       initializeUser() {
         this.isEditing = false;
         this.newUser = {
