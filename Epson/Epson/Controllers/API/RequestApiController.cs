@@ -145,8 +145,10 @@ namespace Epson.Controllers.API
             var updatedRequest = new Request
             {
                 Id = request.Id,
+                CustomerName = model.CustomerName,
                 CreatedOnUTC = request.CreatedOnUTC,
                 UpdatedOnUTC = DateTime.UtcNow,
+                DealJustification = model.DealJustification,
                 Deadline = model.Deadline,
                 CreatedById = user.Id,
                 UpdatedById = user.Id,

@@ -306,7 +306,10 @@
               segment: "string",
               approvalState: 10,
               priority: this.priority.value,
-              RequestProducts: quotationData.requestProducts
+              RequestProducts: quotationData.requestProducts,
+              customerName: this.customerName,
+              dealJustification: this.dealJustification,
+              deadline: this.deadline
             }
           }).then(response => {
             this.$swal('Request updated');

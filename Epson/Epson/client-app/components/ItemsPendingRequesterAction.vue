@@ -29,15 +29,15 @@
           <v-card-text>
             <div class="form-group">
               <label>Created On</label>
-              <input v-model="editedItem.createdOnUTC" class="border-input" label="Date" disabled></input>
+              <input v-model="editedItem.createdOnUTC" class="border-input readonly-field" label="Date" disabled></input>
             </div>
             <div class="form-group">
               <label>Total Price</label>
-              <input v-model="editedItem.totalPrice" class="border-input" label="Price" disabled></input>
+              <input v-model="editedItem.totalPrice" class="border-input readonly-field" label="Price" disabled></input>
             </div>
             <div class="form-group">
               <label>Total Budget</label>
-              <input v-model="editedItem.totalBudget" class="border-input" label="Budget" disabled></input>
+              <input v-model="editedItem.totalBudget" class="border-input readonly-field" label="Budget" disabled></input>
             </div>
             <div class="table-container">
               <v-data-table :headers="productHeaders"
@@ -64,6 +64,7 @@
 </template>
 
 <script>
+  import Swal from 'sweetalert2'
   import moment from 'moment';
 
   export default {
@@ -153,37 +154,50 @@
       },
 
       async close() {
-        const vm = this;
         try {
-          await this.$axios.post(`${this.$config.restUrl}/api/request/approverequest?id=${this.editedItem.id}`).then(response => {
+          const result = await this.$axios.post(`${this.$config.restUrl}/api/request/approverequest?id=${this.editedItem.id}`);
+          if (result.status === 200) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Deal won successfully!',
+              showConfirmButton: false,
+              timer: 1500
+            });
             this.getPendingRequesterItem();
             this.dialog = false;
-            this.close();
-          }).catch(err => {
-            console.log(err);
-            vm.$swal('Failed to approve', err.response.data.message, 'error');
-          })
+          }
         } catch (err) {
           console.log(err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: err.response ? err.response.data.message : "An error occurred!"
+          });
         }
-        
       },
 
       async save() {
-        const vm = this;
         try {
-          await this.$axios.post(`${this.$config.restUrl}/api/request/approverequest?id=${this.editedItem.id}`).then(response => {
+          const result = await this.$axios.post(`${this.$config.restUrl}/api/request/approverequest?id=${this.editedItem.id}`);
+          if (result.status === 200) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Deal lost successfully!',
+              showConfirmButton: false,
+              timer: 1500
+            });
             this.getPendingRequesterItem();
-            this.close();
             this.dialog = false;
-          }).catch(err => {
-            console.log(err);
-            vm.$swal('Failed to update', err.response.data.message, 'error');
-          })
+          }
         } catch (err) {
           console.log(err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: err.response ? err.response.data.message : "An error occurred!"
+          });
         }
-      },
+      }
 
     },
   }
@@ -235,5 +249,9 @@
     width: 1.2em;
     height: 1.2em;
     margin-left: 5%
+  }
+
+  .readonly-field {
+    background-color: #ddd;
   }
 </style>

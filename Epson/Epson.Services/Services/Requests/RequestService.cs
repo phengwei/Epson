@@ -171,6 +171,7 @@ namespace Epson.Services.Services.Requests
                 {
                     var product = _productService.GetProductById(requestProduct.ProductId);
 
+                    requestProduct.FulfillerId = null;
                     requestProduct.RequestId = request.Id;
 
                     InsertRequestProduct(requestProduct);
