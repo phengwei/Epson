@@ -18,6 +18,8 @@
 </template>
 
 <script>
+  import moment from 'moment';
+
   export default {
     name: 'ProductAuditTrail',
     data() {
@@ -40,12 +42,20 @@
       getProductAuditTrail() {
         this.$axios.get(`${this.$config.restUrl}/api/audittrail/getproductaudittrail`)
           .then(response => {
-            this.auditTrails = response.data.data;
+            this.auditTrails = response.data.data.map(item => {
+              item.actionTime = this.formatDate(item.actionTime);
+              return item;
+            });
+            this.loading = false;
           })
           .catch(error => {
             console.error('Error fetching product audit trail:', error);
+            this.loading = false;
           });
       },
+      formatDate(dateString) {
+        return moment(dateString).format('MMM DD, YYYY, h:mm:ss a');
+      }
     },
   };
 </script>
