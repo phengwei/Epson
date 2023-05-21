@@ -429,33 +429,36 @@ namespace Epson.Services.Services.Requests
                 startTime = startTime.ToUniversalTime();
                 endTime = endTime.ToUniversalTime();
 
-                int fullDays = 0;
-                if (startTime < endTime)
+                if (ticketCreateTime >= startTime && approvedTime <= endTime)
                 {
-                    fullDays = (int)(endTime - startTime).TotalDays;
-                    if (startTime.DayOfWeek > endTime.DayOfWeek)
+                    int fullDays = 0;
+                    if (startTime < endTime)
                     {
-                        fullDays -= 2;
+                        fullDays = (int)(endTime - startTime).TotalDays;
+                        if (startTime.DayOfWeek > endTime.DayOfWeek)
+                        {
+                            fullDays -= 2;
+                        }
+                        else if (endTime.DayOfWeek == DayOfWeek.Saturday)
+                        {
+                            fullDays -= 1;
+                        }
                     }
-                    else if (endTime.DayOfWeek == DayOfWeek.Saturday)
+
+                    workingHoursResolutionTime = TimeSpan.FromHours(fullDays * 8);
+
+                    if (fullDays == 0)
                     {
-                        fullDays -= 1; 
+                        workingHoursResolutionTime = TimeSpan.FromTicks(Math.Min(endTime.Ticks, approvedTime.Ticks) - Math.Max(startTime.Ticks, ticketCreateTime.Ticks));
                     }
-                }
-
-                workingHoursResolutionTime = TimeSpan.FromHours(fullDays * 8);
-
-                if (fullDays == 0)
-                {
-                    workingHoursResolutionTime = TimeSpan.FromTicks(Math.Min(endTime.Ticks, approvedTime.Ticks) - Math.Max(startTime.Ticks, ticketCreateTime.Ticks));
-                }
-                else
-                {
-                    DateTime partialDayStart = startTime.AddDays(fullDays);
-                    DateTime partialDayEnd = endTime;
-                    if (partialDayStart.DayOfWeek != DayOfWeek.Saturday && partialDayStart.DayOfWeek != DayOfWeek.Sunday) // if partial day is a weekday
+                    else
                     {
-                        workingHoursResolutionTime += TimeSpan.FromTicks(Math.Min(partialDayEnd.Ticks, approvedTime.Ticks) - Math.Max(partialDayStart.Ticks, ticketCreateTime.Ticks));
+                        DateTime partialDayStart = startTime.AddDays(fullDays);
+                        DateTime partialDayEnd = endTime;
+                        if (partialDayStart.DayOfWeek != DayOfWeek.Saturday && partialDayStart.DayOfWeek != DayOfWeek.Sunday) // if partial day is a weekday
+                        {
+                            workingHoursResolutionTime += TimeSpan.FromTicks(Math.Min(partialDayEnd.Ticks, approvedTime.Ticks) - Math.Max(partialDayStart.Ticks, ticketCreateTime.Ticks));
+                        }
                     }
                 }
             }

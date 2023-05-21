@@ -20,7 +20,7 @@ using System.Text;
 
 namespace Epson.Controllers.API
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin, Sales, Product")]
     [Route("api/sla")]
     public class SLAApiController : BaseApiController
     {

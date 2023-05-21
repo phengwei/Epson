@@ -286,6 +286,7 @@
           Priority: this.priority,
           requestProducts: [],
         };
+
         for (const categoryId in this.selectedProducts) {
           const idProduct = this.selectedProducts[categoryId];
           if (idProduct !== '' && idProduct !== null) {
@@ -298,8 +299,8 @@
             quotationData.requestProducts.push(product);
           }
         }
+
         try {
-          const vm = this;
           await this.$axios.post(`${this.$config.restUrl}/api/request/editrequest`, {
             data: {
               id: this.requestId,
@@ -311,17 +312,26 @@
               dealJustification: this.dealJustification,
               deadline: this.deadline
             }
-          }).then(response => {
-            this.$swal('Request updated');
-            this.quotationDialog = false;
-            this.$router.go();
+          });
 
-          }).catch(err => {
-            console.log(err);
-            vm.$swal('Failed to update request', err.response.data.message, 'error');
-          })
+          Swal.fire({
+            title: 'Request updated',
+            text: 'Do you want to reload the page to see the updated request?',
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, reload',
+            cancelButtonText: 'No, later'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              location.reload(); 
+            }
+          });
         } catch (error) {
-          console.log(error);
+          Swal.fire({
+            title: 'Failed to update request',
+            text: error.response.data.message,
+            icon: 'error'
+          });
         }
       },
       async fetchCategories() {
