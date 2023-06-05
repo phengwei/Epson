@@ -7,28 +7,47 @@
           <label>Customer Name</label>
           <input type="text" v-model="customerName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
         </div>
-        <div class="form-group">
-          <label>Product Categories</label>
-          <select v-model="product.category" @change="updateProductOptions" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-            <option v-for="category in categories" :value="category" :key="category.id">{{ category.name }}</option>
-          </select>
-          <label>Product</label>
-          <select v-model="product.productId" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-            <option v-for="option in productOptions" :value="option.id" :key="option.id">{{ option.name }}</option>
-          </select>
-          <label>Quantity</label>
-          <input v-model="product.quantity" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-          <label>Budget</label>
-          <input v-model="product.budget" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+        <v-dialog v-model="dialog" max-width="500px">
+          <v-card>
+            <v-card-title>
+              <span class="headline">Add Product</span>
+            </v-card-title>
+            <v-card-text>
+              <div class="form-group">
+                <label>Product Categories</label>
+                <select v-model="product.category" @change="updateProductOptions" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+                  <option v-for="category in categories" :value="category" :key="category.id">{{ category.name }}</option>
+                </select>
+                <label>Product</label>
+                <select v-model="product.productId" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+                  <option v-for="option in productOptions" :value="option.id" :key="option.id">{{ option.name }}</option>
+                </select>
+                <label>Quantity</label>
+                <input v-model="product.quantity" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+                <label>Budget</label>
+                <input v-model="product.budget" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+              </div>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="primary" @click="addProductRow">Add</v-btn>
+              <v-btn color="secondary" @click="dialog = false">Cancel</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+        <div class="table-actions">
+          <v-btn class="add-product-btn" fab small color="primary" @click="dialog = true">
+            <v-icon>mdi-plus</v-icon>
+          </v-btn>
         </div>
-        <button @click="addProductRow" v-if="!isViewMode">Add Product</button>
-        <table v-if="productsToShow.length > 0">
+        <table class="mb-5">
           <thead>
             <tr>
               <th>Category</th>
               <th>Product</th>
               <th>Quantity</th>
               <th>Budget</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -37,6 +56,11 @@
               <td>{{ product.productId ? findProductName(product.productId) : 'N/A' }}</td>
               <td>{{ product.quantity || 'N/A' }}</td>
               <td>{{ product.budget || 'N/A' }}</td>
+              <td>
+                <v-btn small color="error" @click="removeProduct(index)">
+                  <v-icon>mdi-delete</v-icon>
+                </v-btn>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -97,6 +121,7 @@
         customerName: '',
         dealJustification: '',
         deadline: '',
+        dialog: false,
       };
     },
     async created() {
@@ -140,9 +165,13 @@
           this.product.quantity = null;
           this.product.budget = null;
           this.productOptions = [];
+          this.dialog = false;
         } else {
           this.$swal('Error', 'Please fill out all product fields', 'error');
         }
+      },
+      removeProduct(index) {
+        this.productsToShow.splice(index, 1);
       },
       showAddedProducts(newProduct) {
         this.productsToShow.push(newProduct);
