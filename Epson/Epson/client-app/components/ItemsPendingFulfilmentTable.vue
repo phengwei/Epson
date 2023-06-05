@@ -12,7 +12,7 @@
         <v-dialog v-model="dialog" max-width="500px">
           <v-card>
             <v-card-title>
-              <span class="text-h5">Fulfill request</span>
+              <span class="text-h5">RESPONDENT - Product Managers</span>
             </v-card-title>
             <v-card-text>
               <div class="form-group">
@@ -28,7 +28,7 @@
                 <input v-model="editedItem.productName" class="border-input readonly-field" label="Product" readonly></input>
               </div>
               <div class="form-group">
-                <label>Budget</label>
+                <label>Project End User Price</label>
                 <input v-model="editedItem.budget" class="border-input readonly-field" label="Budget" readonly></input>
               </div>
               <div class="form-group">
@@ -40,7 +40,7 @@
                 <input v-model="editedItem.dealJustification" class="border-input readonly-field" label="Deal Justification" readonly></input>
               </div>
               <div class="form-group">
-                <label>Approved Price</label>
+                <label>Dealer Price</label>
                 <input v-model="editedItem.fulfilledPrice" type="number" class="border-input" label="Approved Price"></input>
               </div>
 

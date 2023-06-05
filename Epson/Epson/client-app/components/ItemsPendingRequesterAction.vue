@@ -32,11 +32,11 @@
               <input v-model="editedItem.createdOnUTC" class="border-input readonly-field" label="Date" disabled></input>
             </div>
             <div class="form-group">
-              <label>Total Price</label>
+              <label>Customer's Expected Pricing'</label>
               <input v-model="editedItem.totalPrice" class="border-input readonly-field" label="Price" disabled></input>
             </div>
             <div class="form-group">
-              <label>Total Budget</label>
+              <label>Project Budget</label>
               <input v-model="editedItem.totalBudget" class="border-input readonly-field" label="Budget" disabled></input>
             </div>
             <div class="table-container">
