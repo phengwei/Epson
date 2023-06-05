@@ -7,38 +7,39 @@
           <label>Customer Name</label>
           <input type="text" v-model="customerName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
         </div>
-        <label>Product Categories</label>
-        <div v-for="(category, index) in categories" :key="'C'+index">
-          <div class="blue-checkbox">
-            <input type="checkbox" v-model="selectedCategories" :value="category" @change="checkboxChanged(category)" :disabled="isViewMode">
-            <label class="category-name">{{ category.name }}</label>
-          </div>
+        <div class="form-group">
+          <label>Product Categories</label>
+          <select v-model="product.category" @change="updateProductOptions" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+            <option v-for="category in categories" :value="category" :key="category.id">{{ category.name }}</option>
+          </select>
+          <label>Product</label>
+          <select v-model="product.productId" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+            <option v-for="option in productOptions" :value="option.id" :key="option.id">{{ option.name }}</option>
+          </select>
+          <label>Quantity</label>
+          <input v-model="product.quantity" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <label>Budget</label>
+          <input v-model="product.budget" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
         </div>
-        <div v-for="category in selectedCategories" :key="category.id">
-          <div class="form-group">
-            <label>{{ category.name }}</label>
-            <select v-if="!isViewMode" v-model="selectedProducts[category.id]" required class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-              <option v-for="option in options[category.id]" :value="option.id" :key="option.id">{{ option.name }}</option>
-            </select>
-            <span v-else>{{ selectedProducts[category.id] }}</span>
-          </div>
-          <div class="form-group" v-if="approvalStateStr === 'Approved'">
-            <label>Approved By</label>
-            <input v-model="fulfillerName[category.id]" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></input>
-          </div>
-          <div class="form-group" v-if="approvalStateStr === 'Approved'">
-            <label>Approved Price</label>
-            <input v-model="fulfilledPrice[category.id]" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></input>
-          </div>
-          <div class="form-group">
-            <label>Quantity</label>
-            <input v-model="quantity[category.id]" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-          </div>
-          <div class="form-group">
-            <label>Budget</label>
-            <input v-model="budget[category.id]" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-          </div>
-        </div>
+        <button @click="addProductRow" v-if="!isViewMode">Add Product</button>
+        <table v-if="productsToShow.length > 0">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Product</th>
+              <th>Quantity</th>
+              <th>Budget</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(product, index) in productsToShow" :key="index">
+              <td>{{ product.category ? product.category.name : 'N/A' }}</td>
+              <td>{{ product.productId ? findProductName(product.productId) : 'N/A' }}</td>
+              <td>{{ product.quantity || 'N/A' }}</td>
+              <td>{{ product.budget || 'N/A' }}</td>
+            </tr>
+          </tbody>
+        </table>
         <div class="form-group">
           <label>Priority</label>
           <select v-model="priority.value" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
@@ -75,6 +76,10 @@
         selectedCategories: [],
         isChecked: [],
         selectedProducts: {},
+        product: { category: null, productId: null, quantity: null, budget: null },
+        products: [],
+        productOptions: [],
+        productsToShow: [],
         options: {},
         priority: {
           value: 1,
@@ -125,6 +130,45 @@
       }
     },
     methods: {
+      addProductRow() {
+        if (this.product.category && this.product.productId && this.product.quantity && this.product.budget) {
+          const newProduct = { ...this.product };
+          this.products.push(newProduct); 
+          this.showAddedProducts(newProduct); 
+          this.product.category = null;
+          this.product.productId = null;
+          this.product.quantity = null;
+          this.product.budget = null;
+          this.productOptions = [];
+        } else {
+          this.$swal('Error', 'Please fill out all product fields', 'error');
+        }
+      },
+      showAddedProducts(newProduct) {
+        this.productsToShow.push(newProduct);
+      },
+      findProductName(productId) {
+        for (const category of this.categories) {
+          for (const product of category.products) {
+            if (product.id === productId) {
+              return product.name;
+            }
+          }
+        }
+        return 'N/A';
+      },
+      async updateProductOptions() {
+        const category = this.product.category;
+
+        if (category) {
+          try {
+            const response = await this.$axios.get(`${this.$config.restUrl}/api/product/getproductbycategory`, { params: { categoryId: category.id } });
+            this.productOptions = response.data.data;
+          } catch (error) {
+            console.error(error);
+          }
+        }
+      },
       async populateForm(requestData) {
         for (const productModel of requestData.requestProductsModel) {
           const category = this.categories.find((category) => category.id === productModel.productCategory.categoryId);
@@ -313,6 +357,21 @@
 </script>
 
 <style scoped>
+  table {
+    width: 100%;
+    margin-top: 2rem;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
   h1 {
     margin-top: 0;
     font-size: 2rem;

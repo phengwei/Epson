@@ -1,19 +1,24 @@
 ﻿using AutoMapper;
 using Epson.Core.Domain.Categories;
+using Epson.Core.Domain.Products;
 using Epson.Data;
 using Epson.Model.Categories;
 using Epson.Services.DTO.Categories;
+using Epson.Services.Interface.Products;
 
 namespace Epson.Factories
 {
     public class CategoryModelFactory : ICategoryModelFactory
     {
         private readonly IMapper _mapper;
+        private readonly IProductService _productService;
 
         public CategoryModelFactory
-            (IMapper mapper)
+            (IMapper mapper,
+            IProductService productService)
         {
             _mapper = mapper;
+            _productService = productService;
         }
         public CategoryModel PrepareCategoryModel(CategoryDTO category)
         {
@@ -41,6 +46,7 @@ namespace Epson.Factories
                 {
                     Id = category.Id,
                     Name = category.Name,
+                    Products = _mapper.Map<List<Product>>(_productService.GetProductsByCategory(category.Id).ToList())
                 };
                 categoryModels.Add(categoryModel);
             }
