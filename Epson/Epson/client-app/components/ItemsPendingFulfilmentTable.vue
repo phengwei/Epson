@@ -23,6 +23,22 @@
                 <label>Customer</label>
                 <input v-model="editedItem.customerName" class="border-input readonly-field" label="Customer" readonly></input>
               </div>
+              <table class="mb-5 mini-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Budget</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(product, index) in productsToShow" :key="index">
+                    <td>{{ product.productName }}</td>
+                    <td>{{ product.quantity || 'N/A' }}</td>
+                    <td>{{ product.budget || 'N/A' }}</td>
+                  </tr>
+                </tbody>
+              </table>
               <div class="form-group">
                 <label>Product</label>
                 <input v-model="editedItem.productName" class="border-input readonly-field" label="Product" readonly></input>
@@ -86,6 +102,7 @@
           { text: 'Fulfill Request', value: 'actions', sortable: false },
         ],
         itemsPendingFulfilment: [],
+        productsToShow: [],
         loading: false,
         editedItem: {
           customerName: '',
@@ -116,6 +133,7 @@
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`).then(result => {
           this.itemsPendingFulfilment = [];
           result.data.data.forEach(item => {
+            console.log("item", item);
             item.requestProductsModel.forEach(product => {
               this.itemsPendingFulfilment.push({
                 ...item,
@@ -124,6 +142,12 @@
                 budget: product.budget,
                 quantity: product.quantity,
               });
+              const p = {
+                quantity: product.quantity,
+                budget: product.budget,
+                productName: product.productName
+              };
+              this.productsToShow.push(p);
             });
           });
           this.loading = false
@@ -184,6 +208,22 @@
 </script>
 
 <style scoped>
+  .mini-table {
+    width: 100%;
+    margin-top: 2rem;
+    border-collapse: collapse;
+  }
+
+    .mini-table th, .mini-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .mini-table tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
   .form-group {
     margin-bottom: 1rem;
     display: flex;
