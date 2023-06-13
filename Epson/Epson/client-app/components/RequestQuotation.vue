@@ -200,7 +200,7 @@
       },
       async populateForm(requestData) {
         for (const productModel of requestData.requestProductsModel) {
-          const categoryFound = this.categories.find((category) => category.id === productModel.productCategory.categoryId);
+          const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
           if (categoryFound) {
             this.selectedCategories.push(categoryFound);
             await this.fetchProductsForCategory(categoryFound);
@@ -349,6 +349,7 @@
           Priority: this.priority,
           requestProducts: [],
         };
+        console.log("productstoshow", this.productsToShow);
         for (const product in this.productsToShow) {
           const productToInsert = {
             productId: this.productsToShow[product].productId,

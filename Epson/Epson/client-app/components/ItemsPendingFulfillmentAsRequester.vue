@@ -47,45 +47,78 @@
               <label>Customer Name</label>
               <input type="text" v-model="customerName" class="border-input" typeof="text">
             </div>
-            <label>Product Categories</label>
-            <div v-for="(category, index) in categories" :key="'C'+index">
-              <div class="blue-checkbox">
-                <input type="checkbox" v-model="selectedCategories" :value="category" @change="checkboxChanged(category)">
-                <label class="category-name">{{ category.name }}</label>
-              </div>
+            <v-dialog v-model="dialog" max-width="500px">
+              <v-card>
+                <v-card-title>
+                  <span class="headline">Add Product</span>
+                </v-card-title>
+                <v-card-text>
+                  <div class="form-group">
+                    <label>Product Categories</label>
+                    <select v-model="product.category" @change="updateProductOptions">
+                      <option v-for="category in categories" :value="category" :key="category.id">{{ category.name }}</option>
+                    </select>
+                    <label>Product</label>
+                    <select v-model="product.productId">
+                      <option v-for="option in productOptions" :value="option.id" :key="option.id">{{ option.name }}</option>
+                    </select>
+                    <label>Quantity</label>
+                    <input v-model="product.quantity" class="border-input" type="number" min="1">
+                    <label>Budget</label>
+                    <input v-model="product.budget" class="border-input" type="number" min="1">
+                  </div>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="primary" @click="addProductRow">Add</v-btn>
+                  <v-btn color="secondary" @click="dialog = false">Cancel</v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+            <div class="table-actions mb-4">
+              <v-btn class="add-product-btn" fab small color="primary" @click="dialog = true">
+                <v-icon>mdi-plus</v-icon>
+              </v-btn>
             </div>
-            <div v-for="category in selectedCategories" :key="category.id">
-              <div class="form-group">
-                <label>{{ category.name }}</label>
-                <select v-model="selectedProducts[category.id]" required class="border-input">
-                  <option v-for="option in options[category.id]" :value="option.id" :key="option.id">{{ option.name }}</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Quantity</label>
-                <input v-model="quantity[category.id]" class="border-input" type="text">
-              </div>
-              <div class="form-group">
-                <label>Budget</label>
-                <input v-model="budget[category.id]" class="border-input" type="text">
-              </div>
-              <div class="form-group">
-                <label>Priority</label>
-                <select v-model="priority.value" class="border-input">
-                  <option v-for="option in priority.options" :value="option.value" :key="option.value">
-                    {{ option.label }}
-                  </option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Deal Justification</label>
-                <textarea v-model="dealJustification" class="border-input"></textarea>
-              </div>
-              <div class="form-group">
-                <label>Deadline</label>
-                <input type="datetime-local" v-model="deadline" class="border-input">
-              </div>
+            <table class="mb-5 mini-table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                  <th>Budget</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(product, index) in productsToShow" :key="index">
+                  <td>{{ product.category ? product.category.name : 'N/A' }}</td>
+                  <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
+                  <td>{{ product.quantity || 'N/A' }}</td>
+                  <td>{{ product.budget || 'N/A' }}</td>
+                  <td>
+                    <v-btn small color="error" @click="removeProduct(index)">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="form-group">
+              <label>Priority</label>
+              <select v-model="priority.value" class="border-input">
+                <option v-for="option in priority.options" :value="option.value" :key="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Deal Justification</label>
+              <textarea v-model="dealJustification" class="border-input"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Deadline</label>
+              <input type="datetime-local" v-model="deadline" class="border-input">
             </div>
             <button class="dialog-button" type="submit" @click="editQuotation">Edit Quotation</button>
           </v-card-text>
@@ -154,7 +187,10 @@
           price: 0,
         },
         requestId: 0,
-        
+        productOptions: [],
+        productsToShow: [],
+        product: { category: null, productId: null, quantity: null, budget: null },
+        products: [],
         selectedCategories: [],
         categories: [],
         selectedProducts: {},
@@ -199,6 +235,49 @@
       },
     },
     methods: {
+      addProductRow() {
+        if (this.product.category && this.product.productId && this.product.quantity && this.product.budget) {
+          const newProduct = { ...this.product };
+          this.products.push(newProduct);
+          this.showAddedProducts(newProduct);
+          this.product.category = null;
+          this.product.productId = null;
+          this.product.quantity = null;
+          this.product.budget = null;
+          this.productOptions = [];
+          this.dialog = false;
+        } else {
+          this.$swal('Error', 'Please fill out all product fields', 'error');
+        }
+      },
+      removeProduct(index) {
+        this.productsToShow.splice(index, 1);
+      },
+      showAddedProducts(newProduct) {
+        this.productsToShow.push(newProduct);
+      },
+      findProductName(productId) {
+        for (const category of this.categories) {
+          for (const product of category.products) {
+            if (product.id === productId) {
+              return product.name;
+            }
+          }
+        }
+        return 'N/A';
+      },
+      async updateProductOptions() {
+        const category = this.product.category;
+
+        if (category) {
+          try {
+            const response = await this.$axios.get(`${this.$config.restUrl}/api/product/getproductbycategory`, { params: { categoryId: category.id } });
+            this.productOptions = response.data.data;
+          } catch (error) {
+            console.error(error);
+          }
+        }
+      },
       getPendingFulfillmentAsRequester() {
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfillmentasrequester`).then(result => {
@@ -250,13 +329,18 @@
         this.requestId = item.id;
         this.quotationDialog = true;
         for (const productModel of item.requestProductsModel) {
-          const category = this.categories.find((category) => category.id === productModel.productCategory.categoryId);
-          if (category) {
-            this.selectedCategories.push(category);
-            await this.fetchProductsForCategory(category);
-            this.selectedProducts[category.id] = productModel.productId;
-            this.quantity[category.id] = productModel.quantity;
-            this.budget[category.id] = productModel.budget;
+          const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
+          if (categoryFound) {
+            this.selectedCategories.push(categoryFound);
+            await this.fetchProductsForCategory(categoryFound);
+            const p = {
+              category: categoryFound,
+              productId: productModel.productId,
+              quantity: productModel.quantity,
+              budget: productModel.budget,
+              productName: productModel.productName
+            };
+            this.productsToShow.push(p);
           }
         }
         this.customerName = item.customerName;
@@ -268,9 +352,10 @@
         this.requestId = 0;
         this.selectedCategories = [];
         this.selectedProducts = {};
+        this.productsToShow = [];
         this.quantity = {};
         this.budget = {};
-        this.priority = 0;
+        this.priority.value = 0;
       },
       async fetchProductsForCategory(category) {
         try {
@@ -287,17 +372,14 @@
           requestProducts: [],
         };
 
-        for (const categoryId in this.selectedProducts) {
-          const idProduct = this.selectedProducts[categoryId];
-          if (idProduct !== '' && idProduct !== null) {
-            const product = {
-              productId: idProduct,
-              fulfillerId: "string",
-              quantity: this.quantity[categoryId],
-              budget: this.budget[categoryId],
-            };
-            quotationData.requestProducts.push(product);
-          }
+        console.log("productstoshow", this.productsToShow);
+        for (const product in this.productsToShow) {
+          const productToInsert = {
+            productId: this.productsToShow[product].productId,
+            quantity: this.productsToShow[product].quantity,
+            budget: this.productsToShow[product].budget
+          };
+          quotationData.requestProducts.push(productToInsert);
         }
 
         try {
@@ -349,6 +431,22 @@
   }
 </script>
 <style>
+  .mini-table {
+    width: 100%;
+    margin-top: 2rem;
+    border-collapse: collapse;
+  }
+
+    .mini-table th, .mini-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .mini-table tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
   .form-group {
     margin-bottom: 1rem;
     display: flex;
