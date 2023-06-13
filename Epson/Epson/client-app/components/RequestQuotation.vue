@@ -35,8 +35,8 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-        <div class="table-actions">
-          <v-btn class="add-product-btn" fab small color="primary" @click="dialog = true">
+        <div class="table-actions mb-4">
+          <v-btn v-if="!isViewMode" class="add-product-btn" fab small color="primary" @click="dialog = true">
             <v-icon>mdi-plus</v-icon>
           </v-btn>
         </div>
@@ -53,11 +53,11 @@
           <tbody>
             <tr v-for="(product, index) in productsToShow" :key="index">
               <td>{{ product.category ? product.category.name : 'N/A' }}</td>
-              <td>{{ product.productId ? findProductName(product.productId) : 'N/A' }}</td>
+              <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
               <td>{{ product.quantity || 'N/A' }}</td>
               <td>{{ product.budget || 'N/A' }}</td>
               <td>
-                <v-btn small color="error" @click="removeProduct(index)">
+                <v-btn v-if="!isViewMode" small color="error" @click="removeProduct(index)">
                   <v-icon>mdi-delete</v-icon>
                 </v-btn>
               </td>
@@ -200,15 +200,18 @@
       },
       async populateForm(requestData) {
         for (const productModel of requestData.requestProductsModel) {
-          const category = this.categories.find((category) => category.id === productModel.productCategory.categoryId);
-          if (category) {
-            this.selectedCategories.push(category);
-            await this.fetchProductsForCategory(category);
-            this.selectedProducts[category.id] = productModel.productName;
-            this.quantity[category.id] = productModel.quantity;
-            this.budget[category.id] = productModel.budget;
-            this.fulfilledPrice[category.id] = productModel.fulfilledPrice;
-            this.fulfillerName[category.id] = productModel.fulfillerName;
+          const categoryFound = this.categories.find((category) => category.id === productModel.productCategory.categoryId);
+          if (categoryFound) {
+            this.selectedCategories.push(categoryFound);
+            await this.fetchProductsForCategory(categoryFound);
+            const p = {
+              category: categoryFound,
+              productid: productModel.productId,
+              quantity: productModel.quantity,
+              budget: productModel.budget,
+              productName: productModel.productName
+            };
+            this.productsToShow.push(p);
           }
         }
         this.priority.value = requestData.priority;
@@ -346,16 +349,13 @@
           Priority: this.priority,
           requestProducts: [],
         };
-        for (const categoryId in this.selectedProducts) {
-          const idProduct = this.selectedProducts[categoryId];
-          if (idProduct !== '' && idProduct !== null) {
-            const product = {
-              productId: idProduct,
-              quantity: this.quantity[categoryId],
-              budget: this.budget[categoryId],
-            };
-            quotationData.requestProducts.push(product);
-          }
+        for (const product in this.productsToShow) {
+          const productToInsert = {
+            productId: this.productsToShow[product].productId,
+            quantity: this.productsToShow[product].quantity,
+            budget: this.productsToShow[product].budget
+          };
+          quotationData.requestProducts.push(productToInsert);
         }
         try {
           const vm = this;
