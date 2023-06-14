@@ -353,7 +353,8 @@ namespace Epson.Controllers.API
                     TimeToResolution = x.TimeToResolution,
                     RequestProducts = x.RequestProducts
                         .Where(rp => rp.HasFulfilled == false)
-                        .ToList()
+                        .ToList(),
+                    CompetitorInformations = x.CompetitorInformations.ToList()
                 })
                 .Where(x => x.RequestProducts.Any())
                 .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)

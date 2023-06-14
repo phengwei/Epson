@@ -23,7 +23,8 @@
                 <label>Customer</label>
                 <input v-model="editedItem.customerName" class="border-input readonly-field" label="Customer" readonly></input>
               </div>
-              <table class="mb-5 mini-table">
+              <label>Products</label>
+              <table class="mb-5 mt-2 mini-table">
                 <thead>
                   <tr>
                     <th>Product</th>
@@ -36,6 +37,23 @@
                     <td>{{ product.productName }}</td>
                     <td>{{ product.quantity || 'N/A' }}</td>
                     <td>{{ product.budget || 'N/A' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <label>Competitor Information</label>
+              <table class="mb-5 mt-2 mini-table">
+                <thead>
+                  <tr>
+                    <th>Model</th>
+                    <th>Brand</th>
+                    <th>Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(competitor, index) in competitorsToShow" :key="index">
+                    <td>{{ competitor.model }}</td>
+                    <td>{{ competitor.brand }}</td>
+                    <td>{{ competitor.price }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -103,6 +121,7 @@
         ],
         itemsPendingFulfilment: [],
         productsToShow: [],
+        competitorsToShow: [],
         loading: false,
         editedItem: {
           customerName: '',
@@ -149,6 +168,14 @@
               };
               this.productsToShow.push(p);
             });
+            item.competitorInformationModel.forEach(comp => {
+              const c = {
+                model: comp.model,
+                brand: comp.brand,
+                price: comp.price
+              }
+              this.competitorsToShow.push(c);
+            })
           });
           this.loading = false
         })
