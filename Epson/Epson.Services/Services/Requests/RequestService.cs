@@ -202,7 +202,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool UpdateRequest(Request request, List<RequestProduct> requestProducts)
+        public bool UpdateRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -226,6 +226,16 @@ namespace Epson.Services.Services.Requests
 
                     InsertRequestProduct(requestProduct);
                 }
+
+                DeleteCompetitorInformationOfRequest(request.Id);
+
+                foreach (var competitorInformation in competitorInformations)
+                {
+                    competitorInformation.RequestId = request.Id;
+
+                    InsertCompetitorInformation(competitorInformation);
+                }
+
                 return true;
             }
             catch (Exception ex)

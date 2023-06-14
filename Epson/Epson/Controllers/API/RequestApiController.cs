@@ -157,7 +157,7 @@ namespace Epson.Controllers.API
                 Priority = model.Priority
             };
 
-            if (_requestService.UpdateRequest(updatedRequest, model.RequestProducts))
+            if (_requestService.UpdateRequest(updatedRequest, model.RequestProducts, model.CompetitorInformations))
                 return Ok();
             else
                 return BadRequest("Failed to update request");

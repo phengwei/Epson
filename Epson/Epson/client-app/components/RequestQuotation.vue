@@ -274,7 +274,6 @@
         }
       },
       async populateForm(requestData) {
-        console.log("requestData", requestData);
         for (const productModel of requestData.requestProductsModel) {
           const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
           if (categoryFound) {

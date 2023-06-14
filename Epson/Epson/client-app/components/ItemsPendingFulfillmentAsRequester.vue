@@ -47,7 +47,7 @@
               <label>Customer Name</label>
               <input type="text" v-model="customerName" class="border-input" typeof="text">
             </div>
-            <v-dialog v-model="dialog" max-width="500px">
+            <v-dialog v-model="dialogProduct" max-width="500px">
               <v-card>
                 <v-card-title>
                   <span class="headline">Add Product</span>
@@ -80,7 +80,8 @@
                 <v-icon>mdi-plus</v-icon>
               </v-btn>
             </div>
-            <table class="mb-5 mini-table">
+            <label>Products</label>
+            <table class="mb-5 mt-2 mini-table">
               <thead>
                 <tr>
                   <th>Category</th>
@@ -98,6 +99,56 @@
                   <td>{{ product.budget || 'N/A' }}</td>
                   <td>
                     <v-btn small color="error" @click="removeProduct(index)">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <v-dialog v-model="dialogCompetitor" max-width="500px">
+              <v-card>
+                <v-card-title>
+                  <span class="headline">Add Competitor Information</span>
+                </v-card-title>
+                <v-card-text>
+                  <div class="form-group">
+                    <label>Model</label>
+                    <input type="text" v-model="competitor.model" class="border-input">
+                    <label>Brand</label>
+                    <input type="text" v-model="competitor.brand" class="border-input">
+                    <label>Price</label>
+                    <input v-model="competitor.price" class="border-input" type="number" min="1">
+                  </div>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="primary" @click="addCompetitorInformationRow">Add</v-btn>
+                  <v-btn color="secondary" @click="dialog = false">Cancel</v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+            <div class="table-actions mb-4">
+              <v-btn class="add-competitor-btn" fab small color="primary" @click="dialogCompetitor = true">
+                <v-icon>mdi-plus</v-icon>
+              </v-btn>
+            </div>
+            <label>Competitor Information</label>
+            <table class="mb-5 mt-2 mini-table">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Brand</th>
+                  <th>Price</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(competitor, index) in competitorsToShow" :key="index">
+                  <td>{{ competitor.model }}</td>
+                  <td>{{ competitor.brand }}</td>
+                  <td>{{ competitor.price }}</td>
+                  <td>
+                    <v-btn small color="error" @click="removeCompetitorInformation(index)">
                       <v-icon>mdi-delete</v-icon>
                     </v-btn>
                   </td>
@@ -152,6 +203,8 @@
       return {
         error: null,
         dialog: false,
+        dialogProduct: false,
+        dialogCompetitor: false,
         dialogDelete: false,
         headers: [
           {
@@ -191,6 +244,9 @@
         productsToShow: [],
         product: { category: null, productId: null, quantity: null, budget: null },
         products: [],
+        competitorsToShow: [],
+        competitor: { model: null, brand: null, price: null },
+        competitors: [],
         selectedCategories: [],
         categories: [],
         selectedProducts: {},
@@ -235,6 +291,26 @@
       },
     },
     methods: {
+      addCompetitorInformationRow() {
+        if (this.competitor.brand && this.competitor.model && this.competitor.price) {
+          const newCompetitor = { ...this.competitor };
+          this.competitors.push(newCompetitor);
+          this.showAddedCompetitors(newCompetitor);
+          this.competitor.brand = null;
+          this.competitor.model = null;
+          this.competitor.price = null;
+          this.dialogCompetitor = false;
+        } else {
+          this.$swal('Error', 'Please fill out all product fields', 'error');
+        }
+      },
+      removeCompetitorInformation(index) {
+        this.competitorsToShow.splice(index, 1);
+      },
+      showAddedCompetitors(newCompetitor) {
+        this.competitorsToShow.push(newCompetitor);
+        console.log("competitorstoshow", this.competitorsToShow);
+      },
       addProductRow() {
         if (this.product.category && this.product.productId && this.product.quantity && this.product.budget) {
           const newProduct = { ...this.product };
@@ -245,7 +321,7 @@
           this.product.quantity = null;
           this.product.budget = null;
           this.productOptions = [];
-          this.dialog = false;
+          this.dialogProduct = false;
         } else {
           this.$swal('Error', 'Please fill out all product fields', 'error');
         }
@@ -343,6 +419,14 @@
             this.productsToShow.push(p);
           }
         }
+        for (const competitorModel of item.competitorInformationModel) {
+          const c = {
+            model: competitorModel.model,
+            brand: competitorModel.brand,
+            price: competitorModel.price
+          };
+          this.competitorsToShow.push(c);
+        }
         this.customerName = item.customerName;
         this.dealJustification = item.dealJustification;
         this.deadline = item.deadline;
@@ -353,6 +437,7 @@
         this.selectedCategories = [];
         this.selectedProducts = {};
         this.productsToShow = [];
+        this.competitorsToShow = [];
         this.quantity = {};
         this.budget = {};
         this.priority.value = 0;
@@ -370,9 +455,9 @@
           ApprovalState: 20,
           Priority: this.priority,
           requestProducts: [],
+          competitorInformations: []
         };
 
-        console.log("productstoshow", this.productsToShow);
         for (const product in this.productsToShow) {
           const productToInsert = {
             productId: this.productsToShow[product].productId,
@@ -380,6 +465,14 @@
             budget: this.productsToShow[product].budget
           };
           quotationData.requestProducts.push(productToInsert);
+        }
+        for (const competitor in this.competitorsToShow) {
+          const competitorToInsert = {
+            model: this.competitorsToShow[competitor].model,
+            brand: this.competitorsToShow[competitor].brand,
+            price: this.competitorsToShow[competitor].price
+          };
+          quotationData.competitorInformations.push(competitorToInsert);
         }
 
         try {
@@ -390,6 +483,7 @@
               approvalState: 10,
               priority: this.priority.value,
               RequestProducts: quotationData.requestProducts,
+              CompetitorInformations: quotationData.competitorInformations,
               customerName: this.customerName,
               dealJustification: this.dealJustification,
               deadline: this.deadline
