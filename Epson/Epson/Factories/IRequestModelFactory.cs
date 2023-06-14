@@ -10,5 +10,6 @@ namespace Epson.Factories
     {
         public RequestModel PrepareRequestModel(RequestDTO request);
         public List<RequestModel> PrepareRequestModels(List<RequestDTO> requests);
+        public List<RequestProductModel> PrepareRequestProductModel(List<RequestProductDTO> requestProducts);
     }
 }

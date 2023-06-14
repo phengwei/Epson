@@ -7,6 +7,7 @@ namespace Epson.Model.Request
     public class RequestProductModel
     {
         public int Id { get; set; }
+        public string RequestedBy { get; set; }
         public int RequestId { get; set; }
         public int ProductId { get; set; }
         public string? ProductName { get; set; }

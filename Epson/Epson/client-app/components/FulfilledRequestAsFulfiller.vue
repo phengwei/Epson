@@ -35,17 +35,16 @@
     },
     computed: {
       flattenedRequests() {
-        return this.requests.flatMap(request =>
-          request.requestProductsModel.map(product => ({
-            id: request.id,
-            requestedBy: request.createdBy,
-            productName: product.productName,
-            quantity: product.quantity,
-            budget: product.budget,
-            fulfilledPrice: product.fulfilledPrice,
-            fulfilledDate: moment(product.fulfilledDate).format('MMMM Do YYYY')
-          }))
-        );
+        console.log("request", this.requests);
+        return this.requests.map(product => ({
+          id: product.requestId,
+          requestedBy: product.requestedBy,
+          productName: product.productName,
+          quantity: product.quantity,
+          budget: product.budget,
+          fulfilledPrice: product.fulfilledPrice,
+          fulfilledDate: moment(product.fulfilledDate).format('MMMM Do YYYY')
+        }));
       }
     },
     created() {
@@ -55,6 +54,7 @@
       getFulfilledRequestAsFulfiller() {
         this.$axios.get(`${this.$config.restUrl}/api/request/getfulfilledrequestasfulfiller`)
           .then(response => {
+            console.log("this.response", this.response);
             this.requests = response.data.data;
           })
           .catch(error => {

@@ -253,15 +253,15 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product")]
         public async Task<IActionResult> GetFulfilledRequestAsFulfiller()
         {
-            var response = new GenericResponseModel<List<RequestModel>>();
+            var response = new GenericResponseModel<List<RequestProductModel>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-            var requests = _requestService.GetRequests()
-                                          .Where(x => x.RequestProducts.Any(rp => rp.FulfillerId == user.Id))
-                                          .ToList();
+            var requestProducts = _requestService.GetRequestProducts()
+                                                .Where(x => x.FulfillerId == user.Id)
+                                                .ToList();
 
-            var requestModels = _requestModelFactory.PrepareRequestModels(requests);
+            var requestModels = _requestModelFactory.PrepareRequestProductModel(requestProducts);
 
             response.Data = requestModels;
 

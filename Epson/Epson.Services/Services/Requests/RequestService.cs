@@ -92,6 +92,27 @@ namespace Epson.Services.Services.Requests
             return requestDTOs;
         }
 
+        public List<RequestProductDTO> GetRequestProducts()
+        {
+            var requestProducts = _RequestProductRepository.GetAll();
+
+            var requestProductDTOs = requestProducts.Select(x => new RequestProductDTO
+            {
+                Id = x.Id,
+                RequestId = x.RequestId,
+                ProductId = x.ProductId,
+                Quantity = x.Quantity,
+                Budget = x.Budget,
+                FulfillerId = x.FulfillerId,
+                FulfilledPrice = x.FulfilledPrice,
+                FulfilledDate = x.FulfilledDate,
+                HasFulfilled = x.HasFulfilled
+            })
+            .ToList();
+
+            return requestProductDTOs;
+    }
+
         public bool InsertRequest(Request request, List<RequestProduct> requestProducts)
         {
             if (request == null)

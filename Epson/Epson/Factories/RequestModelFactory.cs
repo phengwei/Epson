@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Epson.Core.Domain.Enum;
+using Epson.Core.Domain.Products;
 using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.Users;
 using Epson.Data;
@@ -9,6 +10,7 @@ using Epson.Services.DTO.Products;
 using Epson.Services.DTO.Requests;
 using Epson.Services.Interface.Categories;
 using Epson.Services.Interface.Products;
+using Epson.Services.Interface.Requests;
 using Microsoft.AspNetCore.Identity;
 
 namespace Epson.Factories
@@ -18,16 +20,19 @@ namespace Epson.Factories
         private readonly IMapper _mapper;
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
+        private readonly IRequestService _requestService;
         private readonly UserManager<ApplicationUser> _userManager;
         public RequestModelFactory
             (IMapper mapper,
             IProductService productService,
             ICategoryService categoryService,
+            IRequestService requestService,
             UserManager<ApplicationUser> userManager)
         {
             _mapper = mapper;
             _productService = productService;
             _categoryService = categoryService;
+            _requestService = requestService;
             _userManager = userManager;
         }
         public RequestModel PrepareRequestModel(RequestDTO request)
@@ -58,6 +63,37 @@ namespace Epson.Factories
             }
 
             return new RequestModel();
+        }
+
+        public List<RequestProductModel> PrepareRequestProductModel(List<RequestProductDTO> requestProducts)
+        {
+            if (requestProducts?.Count == 0 || requestProducts == null)
+                return new List<RequestProductModel>();
+
+            List<RequestProductModel> requestProductModels = new List<RequestProductModel>();
+            foreach (var requestProduct in requestProducts)
+            {
+                var requestProductModel = new RequestProductModel
+                {
+                    Id = requestProduct.Id,
+                    RequestedBy = _userManager.FindByIdAsync(_requestService.GetRequestById(requestProduct.RequestId).CreatedById).Result.UserName,
+                    ProductId = requestProduct.ProductId,
+                    ProductName = _productService.GetProductById(requestProduct.ProductId).Name,
+                    RequestId = requestProduct.RequestId,
+                    Quantity = requestProduct.Quantity,
+                    Budget = requestProduct.Budget,
+                    FulfillerId = requestProduct.FulfillerId,
+                    FulfillerName = requestProduct.FulfillerId != null ? _userManager.FindByIdAsync(requestProduct.FulfillerId).Result.UserName : null,
+                    FulfilledPrice = requestProduct.FulfilledPrice,
+                    FulfilledDate = requestProduct.FulfilledDate,
+                    HasFulfilled = requestProduct.HasFulfilled,
+                };
+
+                requestProductModels.Add(requestProductModel);
+            }
+
+
+            return requestProductModels;
         }
 
         public List<RequestModel> PrepareRequestModels(List<RequestDTO> requests)

@@ -349,7 +349,6 @@
           Priority: this.priority,
           requestProducts: [],
         };
-        console.log("productstoshow", this.productsToShow);
         for (const product in this.productsToShow) {
           const productToInsert = {
             productId: this.productsToShow[product].productId,
