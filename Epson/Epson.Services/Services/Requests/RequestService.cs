@@ -24,6 +24,7 @@ namespace Epson.Services.Services.Requests
         private readonly IMapper _mapper;
         private readonly IRepository<Request> _RequestRepository;
         private readonly IRepository<RequestProduct> _RequestProductRepository;
+        private readonly IRepository<CompetitorInformation> _CompetitorInformationRepository;
         private readonly IProductService _productService;
         private readonly IEmailService _emailService;
         private readonly ILogger _logger;
@@ -34,6 +35,7 @@ namespace Epson.Services.Services.Requests
             (IMapper mapper,
             IRepository<Request> requestRepository,
             IRepository<RequestProduct> requestProductRepository,
+            IRepository<CompetitorInformation> competitorInformationRepository,
             IProductService productService,
             IEmailService emailService,
             ILogger logger,
@@ -43,6 +45,7 @@ namespace Epson.Services.Services.Requests
             _mapper = mapper;
             _RequestRepository = requestRepository;
             _RequestProductRepository = requestProductRepository;
+            _CompetitorInformationRepository = competitorInformationRepository;
             _productService = productService;
             _emailService = emailService;
             _logger = logger;
@@ -65,12 +68,13 @@ namespace Epson.Services.Services.Requests
         public List<RequestDTO> GetRequests()
         {
             var requests = _RequestRepository.GetAll();
-
+            var comp = _CompetitorInformationRepository.Table.Where(x => x.RequestId == 42).ToList();
             var requestDTOs = requests.Select(x => new RequestDTO
             {
                 Id = x.Id,
                 ApprovedBy = x.ApprovedBy,
                 ApprovedTime = x.ApprovedTime,
+                CompetitorInformations = _CompetitorInformationRepository.Table.Where(p => p.RequestId == x.Id).ToList(),
                 CreatedById = x.CreatedById,
                 CreatedOnUTC = x.CreatedOnUTC,
                 CustomerName = x.CustomerName,
@@ -84,7 +88,8 @@ namespace Epson.Services.Services.Requests
                 Deadline = x.Deadline,
                 TotalPrice = x.TotalPrice,
                 TimeToResolution = x.TimeToResolution,
-                RequestProducts = _RequestProductRepository.Table.Where(y => y.RequestId == x.Id).ToList()
+                RequestProducts = _RequestProductRepository.Table.Where(y => y.RequestId == x.Id).ToList(),
+                
             })
             .OrderBy(x => x.CreatedOnUTC)
             .ToList();
@@ -113,7 +118,7 @@ namespace Epson.Services.Services.Requests
             return requestProductDTOs;
     }
 
-        public bool InsertRequest(Request request, List<RequestProduct> requestProducts)
+        public bool InsertRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -131,6 +136,12 @@ namespace Epson.Services.Services.Requests
 
                     requestProduct.RequestId = request.Id;
                     InsertRequestProduct(requestProduct);
+                }
+
+                foreach (var competitorInformation in competitorInformations)
+                {
+                    competitorInformation.RequestId = request.Id;
+                    InsertCompetitorInformation(competitorInformation);
                 }
 
                 var requestQueue = _emailService.CreateRequestEmailQueue(request, requestProducts);
@@ -169,6 +180,24 @@ namespace Epson.Services.Services.Requests
             catch (Exception ex)
             {
                 _logger.Error(ex, "Error creating product request {id}", requestProduct.Id);
+                return false;
+            }
+        }
+
+        private bool InsertCompetitorInformation(CompetitorInformation competitorInformation)
+        {
+            if (competitorInformation == null)
+                throw new ArgumentNullException(nameof(competitorInformation));
+
+            try
+            {
+                _CompetitorInformationRepository.Add(competitorInformation);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error creating competitor information {id}", competitorInformation.Id);
                 return false;
             }
         }
@@ -226,6 +255,30 @@ namespace Epson.Services.Services.Requests
             catch (Exception ex)
             {
                 _logger.Error(ex, "Error deleting request products of request {requestid}", requestId);
+
+                return false;
+            }
+        }
+
+        private bool DeleteCompetitorInformationOfRequest(int requestId)
+        {
+            if (requestId == 0 || requestId == null)
+                return false;
+
+            if (GetRequestById(requestId) == null)
+                return false;
+
+            var competitorInformations = _CompetitorInformationRepository.GetAll().Where(x => x.RequestId == requestId).ToList();
+            try
+            {
+                foreach (var competitorInformation in competitorInformations)
+                    _CompetitorInformationRepository.Delete(competitorInformation.Id);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error deleting competitor information of request {requestid}", requestId);
 
                 return false;
             }

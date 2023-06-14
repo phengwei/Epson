@@ -144,6 +144,14 @@ namespace Epson.Factories
                             CategoryName = _categoryService.GetCategoryById(pc.CategoryId).Name
                         }).FirstOrDefault()
                     }).ToList(),
+                    CompetitorInformationModel = request.CompetitorInformations.Select(x => new CompetitorInformationModel
+                    {
+                        Id = x.Id,
+                        RequestId = x.RequestId,
+                        Model = x.Model,
+                        Brand = x.Brand,
+                        Price = x.Price
+                    }).ToList(),
                 };
                 requestModels.Add(requestModel);
             }

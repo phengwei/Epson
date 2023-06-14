@@ -24,6 +24,8 @@ namespace Epson.Model.Request
         public string DealJustification { get; set; }
         public string CustomerName { get; set; }
         public List<RequestProduct> RequestProducts { get; set; } = new List<RequestProduct>();
+        public List<CompetitorInformation> CompetitorInformations { get; set; } = new List<CompetitorInformation>();
         public List<RequestProductModel> RequestProductsModel { get; set; } = new List<RequestProductModel>();
+        public List<CompetitorInformationModel> CompetitorInformationModel { get; set; } = new List<CompetitorInformationModel>();
     }
 }

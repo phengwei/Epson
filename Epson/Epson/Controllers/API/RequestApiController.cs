@@ -113,9 +113,9 @@ namespace Epson.Controllers.API
                 Deadline = model.Deadline,
                 DealJustification = model.DealJustification,
                 CustomerName = model.CustomerName
-        };
+            };
 
-            if (_requestService.InsertRequest(request, model.RequestProducts))
+            if (_requestService.InsertRequest(request, model.RequestProducts, model.CompetitorInformations))
                 return Ok();
             else
                 return BadRequest("Failed to create request");

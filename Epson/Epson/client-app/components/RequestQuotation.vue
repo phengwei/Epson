@@ -7,7 +7,7 @@
           <label>Customer Name</label>
           <input type="text" v-model="customerName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
         </div>
-        <v-dialog v-model="dialog" max-width="500px">
+        <v-dialog v-model="dialogProduct" max-width="500px">
           <v-card>
             <v-card-title>
               <span class="headline">Add Product</span>
@@ -36,11 +36,12 @@
           </v-card>
         </v-dialog>
         <div class="table-actions mb-4">
-          <v-btn v-if="!isViewMode" class="add-product-btn" fab small color="primary" @click="dialog = true">
+          <v-btn v-if="!isViewMode" class="add-product-btn" fab small color="primary" @click="dialogProduct = true">
             <v-icon>mdi-plus</v-icon>
           </v-btn>
         </div>
-        <table class="mb-5">
+        <label>Products</label>
+        <table class="mb-5 mt-2">
           <thead>
             <tr>
               <th>Category</th>
@@ -58,6 +59,56 @@
               <td>{{ product.budget || 'N/A' }}</td>
               <td>
                 <v-btn v-if="!isViewMode" small color="error" @click="removeProduct(index)">
+                  <v-icon>mdi-delete</v-icon>
+                </v-btn>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <v-dialog v-model="dialogCompetitor" max-width="500px">
+          <v-card>
+            <v-card-title>
+              <span class="headline">Add Competitor Information</span>
+            </v-card-title>
+            <v-card-text>
+              <div class="form-group">
+                <label>Model</label>
+                <input type="text" v-model="competitor.model" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+                <label>Brand</label>
+                <input type="text" v-model="competitor.brand" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+                <label>Price</label>
+                <input v-model="competitor.price" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+              </div>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="primary" @click="addCompetitorInformationRow">Add</v-btn>
+              <v-btn color="secondary" @click="dialog = false">Cancel</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+        <div class="table-actions mb-4">
+          <v-btn v-if="!isViewMode" class="add-competitor-btn" fab small color="primary" @click="dialogCompetitor = true">
+            <v-icon>mdi-plus</v-icon>
+          </v-btn>
+        </div>
+        <label>Competitor Information</label>
+        <table class="mb-5 mt-2">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Brand</th>
+              <th>Price</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(competitor, index) in competitorsToShow" :key="index">
+              <td>{{ competitor.model }}</td>
+              <td>{{ competitor.brand }}</td>
+              <td>{{ competitor.price }}</td>
+              <td>
+                <v-btn v-if="!isViewMode" small color="error" @click="removeCompetitorInformation(index)">
                   <v-icon>mdi-delete</v-icon>
                 </v-btn>
               </td>
@@ -102,8 +153,11 @@
         selectedProducts: {},
         product: { category: null, productId: null, quantity: null, budget: null },
         products: [],
+        competitor: { model: null, brand: null, price: null },
+        competitors: [],
         productOptions: [],
         productsToShow: [],
+        competitorsToShow: [],
         options: {},
         priority: {
           value: 1,
@@ -121,7 +175,8 @@
         customerName: '',
         dealJustification: '',
         deadline: '',
-        dialog: false,
+        dialogProduct: false,
+        dialogCompetitor: false,
       };
     },
     async created() {
@@ -155,6 +210,26 @@
       }
     },
     methods: {
+      addCompetitorInformationRow() {
+        if (this.competitor.brand && this.competitor.model && this.competitor.price) {
+          const newCompetitor = { ...this.competitor };
+          this.competitors.push(newCompetitor);
+          this.showAddedCompetitors(newCompetitor);
+          this.competitor.brand = null;
+          this.competitor.model = null;
+          this.competitor.price = null;
+          this.dialogCompetitor = false;
+        } else {
+          this.$swal('Error', 'Please fill out all product fields', 'error');
+        }
+      },
+      removeCompetitorInformation(index) {
+        this.competitorsToShow.splice(index, 1);
+      },
+      showAddedCompetitors(newCompetitor) {
+        this.competitorsToShow.push(newCompetitor);
+        console.log("competitorstoshow", this.competitorsToShow);
+      },
       addProductRow() {
         if (this.product.category && this.product.productId && this.product.quantity && this.product.budget) {
           const newProduct = { ...this.product };
@@ -165,7 +240,7 @@
           this.product.quantity = null;
           this.product.budget = null;
           this.productOptions = [];
-          this.dialog = false;
+          this.dialogProduct = false;
         } else {
           this.$swal('Error', 'Please fill out all product fields', 'error');
         }
@@ -199,6 +274,7 @@
         }
       },
       async populateForm(requestData) {
+        console.log("requestData", requestData);
         for (const productModel of requestData.requestProductsModel) {
           const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
           if (categoryFound) {
@@ -213,6 +289,14 @@
             };
             this.productsToShow.push(p);
           }
+        }
+        for (const competitorModel of requestData.competitorInformationModel) {
+          const c = {
+            model: competitorModel.model,
+            brand: competitorModel.brand,
+            price: competitorModel.price
+          };
+          this.competitorsToShow.push(c);
         }
         this.priority.value = requestData.priority;
         this.customerName = requestData.customerName;
@@ -348,6 +432,7 @@
           ApprovalState: 20,
           Priority: this.priority,
           requestProducts: [],
+          competitorInformations: []
         };
         for (const product in this.productsToShow) {
           const productToInsert = {
@@ -357,6 +442,14 @@
           };
           quotationData.requestProducts.push(productToInsert);
         }
+        for (const competitor in this.competitorsToShow) {
+          const competitorToInsert = {
+            model: this.competitorsToShow[competitor].model,
+            brand: this.competitorsToShow[competitor].brand,
+            price: this.competitorsToShow[competitor].price
+          };
+          quotationData.competitorInformations.push(competitorToInsert);
+        }
         try {
           const vm = this;
           await this.$axios.post(`${this.$config.restUrl}/api/request/createrequest`, {
@@ -365,6 +458,7 @@
               approvalState: 10,
               priority: this.priority.value,
               RequestProducts: quotationData.requestProducts,
+              CompetitorInformations: quotationData.competitorInformations,
               customerName: this.customerName,
               dealJustification: this.dealJustification,
               deadline: this.deadline
