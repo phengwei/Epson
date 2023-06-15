@@ -30,6 +30,7 @@
                     <th>Product</th>
                     <th>Quantity</th>
                     <th>Budget</th>
+                    <th>Tender Date</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -37,6 +38,7 @@
                     <td>{{ product.productName }}</td>
                     <td>{{ product.quantity || 'N/A' }}</td>
                     <td>{{ product.budget || 'N/A' }}</td>
+                    <td>{{ product.tenderDate || 'N/A' }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -72,6 +74,10 @@
               <div class="form-group">
                 <label>Deal Justification</label>
                 <input v-model="editedItem.dealJustification" class="border-input readonly-field" label="Deal Justification" readonly></input>
+              </div>
+              <div class="form-group">
+                <label>Delivery Date</label>
+                <input type="datetime-local" v-model="editedItem.deliveryDate" class="border-input" :min="today()" label="Delivery Date"></input>
               </div>
               <div class="form-group">
                 <label>Dealer Price</label>
@@ -128,7 +134,8 @@
           productName: '',
           budget: '',
           fulfilledPrice: null,
-          dealJustification: ''
+          dealJustification: '',
+          deliveryDate: ''
         },
       }
     },
@@ -146,7 +153,18 @@
     created() {
       this.getFulfillerItem();
     },
+
     methods: {
+      today() {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = ('0' + (date.getMonth() + 1)).slice(-2);
+        const day = ('0' + date.getDate()).slice(-2);
+        const hours = ('0' + date.getHours()).slice(-2);
+        const minutes = ('0' + date.getMinutes()).slice(-2);
+
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+      },
       getFulfillerItem() {
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`).then(result => {
@@ -164,7 +182,8 @@
               const p = {
                 quantity: product.quantity,
                 budget: product.budget,
-                productName: product.productName
+                productName: product.productName,
+                tenderDate: product.tenderDate
               };
               this.productsToShow.push(p);
             });
@@ -181,7 +200,7 @@
         })
       },
       editItem(item) {
-        this.editedItem = { ...item };
+        this.editedItem = { ...item, deliveryDate: this.today() };
         this.dialog = true;
       },
       fulfillRequest() {
@@ -196,7 +215,7 @@
             confirmButtonText: 'Fulfill',
           }).then((result) => {
             if (result.isConfirmed) {
-              this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?requestId=${this.editedItem.requestId}&productId=${this.editedItem.productId}&fulfilledPrice=${this.editedItem.fulfilledPrice}`)
+              this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?requestId=${this.editedItem.requestId}&productId=${this.editedItem.productId}&fulfilledPrice=${this.editedItem.fulfilledPrice}&deliveryDate=${this.editedItem.deliveryDate}`)
                 .then(response => {
                   this.closeDialog();
                   Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success');
@@ -206,6 +225,9 @@
                 });
             }
           });
+        }
+        else {
+          this.$swal('Error', 'Please fill in all fields!', 'error');
         }
       },
       close() {

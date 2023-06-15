@@ -26,6 +26,8 @@
                 <input v-model="product.quantity" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
                 <label>Budget</label>
                 <input v-model="product.budget" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+                <label>Tender Date</label>
+                <input type="datetime-local" v-model="product.tenderDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
               </div>
             </v-card-text>
             <v-card-actions>
@@ -48,7 +50,9 @@
               <th>Product</th>
               <th>Quantity</th>
               <th>Budget</th>
-              <th>Action</th>
+              <th>Tender Date</th>
+              <th v-if="isViewMode">Delivery Date</th>
+              <th v-if="!isViewMode">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -57,8 +61,10 @@
               <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
               <td>{{ product.quantity || 'N/A' }}</td>
               <td>{{ product.budget || 'N/A' }}</td>
-              <td>
-                <v-btn v-if="!isViewMode" small color="error" @click="removeProduct(index)">
+              <td>{{ product.tenderDate || 'N/A' }}</td>
+              <td v-if="isViewMode">{{ product.deliveryDate || 'N/A' }}</td>
+              <td v-if="!isViewMode">
+                <v-btn small color="error" @click="removeProduct(index)">
                   <v-icon>mdi-delete</v-icon>
                 </v-btn>
               </td>
@@ -141,8 +147,6 @@
 </template>
 
 <script>
-
-
   export default {
     name: "request-quotation",
     data() {
@@ -151,7 +155,7 @@
         selectedCategories: [],
         isChecked: [],
         selectedProducts: {},
-        product: { category: null, productId: null, quantity: null, budget: null },
+        product: { category: null, productId: null, quantity: null, budget: null, tenderDate: null, deliveryDate: null },
         products: [],
         competitor: { model: null, brand: null, price: null },
         competitors: [],
@@ -228,7 +232,6 @@
       },
       showAddedCompetitors(newCompetitor) {
         this.competitorsToShow.push(newCompetitor);
-        console.log("competitorstoshow", this.competitorsToShow);
       },
       addProductRow() {
         if (this.product.category && this.product.productId && this.product.quantity && this.product.budget) {
@@ -239,6 +242,7 @@
           this.product.productId = null;
           this.product.quantity = null;
           this.product.budget = null;
+          this.product.tenderDate = null;
           this.productOptions = [];
           this.dialogProduct = false;
         } else {
@@ -274,6 +278,7 @@
         }
       },
       async populateForm(requestData) {
+        console.log("requestdata", requestData);
         for (const productModel of requestData.requestProductsModel) {
           const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
           if (categoryFound) {
@@ -284,7 +289,9 @@
               productid: productModel.productId,
               quantity: productModel.quantity,
               budget: productModel.budget,
-              productName: productModel.productName
+              productName: productModel.productName,
+              tenderDate: productModel.tenderDate,
+              deliveryDate: productModel.deliveryDate
             };
             this.productsToShow.push(p);
           }
@@ -302,6 +309,8 @@
         this.dealJustification = requestData.dealJustification;
         this.deadline = requestData.deadline;
         this.approvalStateStr = requestData.approvalStateStr;
+        this.deliveryDate = requestData.deliveryDate;
+        this.tenderDate = requestData.tenderDate;
       },
       async fetchCategories() {
         try {
@@ -437,7 +446,8 @@
           const productToInsert = {
             productId: this.productsToShow[product].productId,
             quantity: this.productsToShow[product].quantity,
-            budget: this.productsToShow[product].budget
+            budget: this.productsToShow[product].budget,
+            tenderDate: this.productsToShow[product].tenderDate
           };
           quotationData.requestProducts.push(productToInsert);
         }

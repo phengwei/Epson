@@ -111,7 +111,9 @@ namespace Epson.Services.Services.Requests
                 FulfillerId = x.FulfillerId,
                 FulfilledPrice = x.FulfilledPrice,
                 FulfilledDate = x.FulfilledDate,
-                HasFulfilled = x.HasFulfilled
+                HasFulfilled = x.HasFulfilled,
+                TenderDate = x.TenderDate,
+                DeliveryDate = x.DeliveryDate
             })
             .ToList();
 
@@ -329,7 +331,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool FulfillRequest(ApplicationUser user, Request request, Product product, decimal totalPrice)
+        public bool FulfillRequest(ApplicationUser user, Request request, Product product, decimal totalPrice, DateTime deliveryDate)
         {
             var existingRequest = GetRequestById(request.Id);
             var existingProduct = _productService.GetProductById(product.Id);
@@ -347,6 +349,7 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.HasFulfilled = true;
             requestProductToFulfill.FulfillerId = user.Id;
             requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
+            requestProductToFulfill.DeliveryDate = deliveryDate;
 
             try
             {

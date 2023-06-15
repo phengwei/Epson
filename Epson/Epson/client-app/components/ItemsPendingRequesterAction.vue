@@ -108,6 +108,8 @@
           { text: 'Fulfiller Name', align: 'start', value: 'fulfillerName' },
           { text: 'Fulfilled Date', align: 'start', value: 'fulfilledDate' },
           { text: 'Fulfilled Price', align: 'start', value: 'fulfilledPrice' },
+          { text: 'Tender Date', align: 'start', value: 'tenderDate' },
+          { text: 'Delivery Date', align: 'start', value: 'deliveryDate' },
         ],
         options: {},
         requests: [],
@@ -137,6 +139,7 @@
       getPendingRequesterItem() {
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingrequesteritem`).then(result => {
+          console.log("requests", result);
           for (const requests in result.data.data) {
             result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('MMMM Do YYYY');
           }
@@ -149,6 +152,8 @@
         this.editedItem = { ...item };
         this.editedItem.requestProductsModel.forEach(product => {
           product.fulfilledDate = moment(product.fulfilledDate).format('MMMM Do YYYY');
+          product.tenderDate = moment(product.tenderDate).format('MMMM Do YYYY');
+          product.deliveryDate = moment(product.deliveryDate).format('MMMM Do YYYY');
         });
         this.dialog = true
       },

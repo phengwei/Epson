@@ -87,6 +87,8 @@ namespace Epson.Factories
                     FulfilledPrice = requestProduct.FulfilledPrice,
                     FulfilledDate = requestProduct.FulfilledDate,
                     HasFulfilled = requestProduct.HasFulfilled,
+                    TenderDate = requestProduct.TenderDate,
+                    DeliveryDate = requestProduct.DeliveryDate,
                 };
 
                 requestProductModels.Add(requestProductModel);
@@ -137,6 +139,8 @@ namespace Epson.Factories
                         FulfillerId = rp.FulfillerId,
                         FulfillerName = rp.FulfillerId != null ? _userManager.FindByIdAsync(rp.FulfillerId).Result.UserName : null,
                         FulfilledPrice = rp.FulfilledPrice,
+                        TenderDate = rp.TenderDate,
+                        DeliveryDate = rp.DeliveryDate,
                         ProductCategory = _productService.GetProductCategoriesByProductId(rp.ProductId).Select(pc => new ProductCategoryModel
                         {
                             ProductId = pc.ProductId,

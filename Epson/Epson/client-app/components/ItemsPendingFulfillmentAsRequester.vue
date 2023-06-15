@@ -37,7 +37,7 @@
           </v-card>
         </v-dialog>
       </v-toolbar>
-      <v-dialog v-model="quotationDialog" max-width="500px">
+      <v-dialog v-model="quotationDialog" max-width="800px">
         <v-card class="mx-auto" width="800">
           <v-card-title class="py-4">
             <span class="text-h5">Edit Pricing Request</span>
@@ -66,6 +66,8 @@
                     <input v-model="product.quantity" class="border-input" type="number" min="1">
                     <label>Budget</label>
                     <input v-model="product.budget" class="border-input" type="number" min="1">
+                    <label>Tender Date</label>
+                    <input type="datetime-local" v-model="product.tenderDate" class="border-input">
                   </div>
                 </v-card-text>
                 <v-card-actions>
@@ -76,7 +78,7 @@
               </v-card>
             </v-dialog>
             <div class="table-actions mb-4">
-              <v-btn class="add-product-btn" fab small color="primary" @click="dialog = true">
+              <v-btn class="add-product-btn" fab small color="primary" @click="dialogProduct = true">
                 <v-icon>mdi-plus</v-icon>
               </v-btn>
             </div>
@@ -88,6 +90,7 @@
                   <th>Product</th>
                   <th>Quantity</th>
                   <th>Budget</th>
+                  <th>Tender Date</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -97,6 +100,7 @@
                   <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
                   <td>{{ product.quantity || 'N/A' }}</td>
                   <td>{{ product.budget || 'N/A' }}</td>
+                  <td>{{ product.tenderDate || 'N/A' }}</td>
                   <td>
                     <v-btn small color="error" @click="removeProduct(index)">
                       <v-icon>mdi-delete</v-icon>
@@ -242,7 +246,7 @@
         requestId: 0,
         productOptions: [],
         productsToShow: [],
-        product: { category: null, productId: null, quantity: null, budget: null },
+        product: { category: null, productId: null, quantity: null, budget: null, tenderDate: null },
         products: [],
         competitorsToShow: [],
         competitor: { model: null, brand: null, price: null },
@@ -320,6 +324,7 @@
           this.product.productId = null;
           this.product.quantity = null;
           this.product.budget = null;
+          this.product.tenderDate = null;
           this.productOptions = [];
           this.dialogProduct = false;
         } else {
@@ -414,7 +419,8 @@
               productId: productModel.productId,
               quantity: productModel.quantity,
               budget: productModel.budget,
-              productName: productModel.productName
+              productName: productModel.productName,
+              tenderDate: productModel.tenderDate
             };
             this.productsToShow.push(p);
           }
@@ -462,7 +468,8 @@
           const productToInsert = {
             productId: this.productsToShow[product].productId,
             quantity: this.productsToShow[product].quantity,
-            budget: this.productsToShow[product].budget
+            budget: this.productsToShow[product].budget,
+            tenderDate: this.productsToShow[product].tenderDate,
           };
           quotationData.requestProducts.push(productToInsert);
         }

@@ -17,5 +17,7 @@ namespace Epson.Services.DTO.Requests
         public decimal FulfilledPrice { get; set; }
         public bool HasFulfilled { get; set; }
         public DateTime FulfilledDate { get; set; }
+        public DateTime TenderDate { get; set; }
+        public DateTime DeliveryDate { get; set; }
     }
 }

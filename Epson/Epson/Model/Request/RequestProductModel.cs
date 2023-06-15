@@ -19,5 +19,7 @@ namespace Epson.Model.Request
         public bool HasFulfilled { get; set; }
         public DateTime FulfilledDate { get; set; }
         public ProductCategoryModel ProductCategory { get; set; } = new ProductCategoryModel();
+        public DateTime TenderDate { get; set; }
+        public DateTime DeliveryDate { get; set; }
     }
 }
