@@ -23,13 +23,14 @@
                 <label>Customer</label>
                 <input v-model="editedItem.customerName" class="border-input readonly-field" label="Customer" readonly></input>
               </div>
-              <label>Products</label>
+              <label>Products Pending Fulfillment</label>
               <table class="mb-5 mt-2 mini-table">
                 <thead>
                   <tr>
                     <th>Product</th>
                     <th>Quantity</th>
                     <th>Budget</th>
+                    <th>Remarks</th>
                     <th>Tender Date</th>
                   </tr>
                 </thead>
@@ -38,6 +39,7 @@
                     <td>{{ product.productName }}</td>
                     <td>{{ product.quantity || 'N/A' }}</td>
                     <td>{{ product.budget || 'N/A' }}</td>
+                    <td>{{ product.remarks || 'N/A' }}</td>
                     <td>{{ product.tenderDate || 'N/A' }}</td>
                   </tr>
                 </tbody>
@@ -72,8 +74,16 @@
                 <input v-model="editedItem.quantity" class="border-input readonly-field" label="Quantity" readonly></input>
               </div>
               <div class="form-group">
-                <label>Deal Justification</label>
-                <input v-model="editedItem.dealJustification" class="border-input readonly-field" label="Deal Justification" readonly></input>
+                <label>Requirements</label>
+                <input v-model="editedItem.dealJustification" class="border-input readonly-field" label="Requirements" readonly></input>
+              </div>
+              <div class="form-group">
+                <label>Remarks</label>
+                <input v-model="editedItem.remarks" class="border-input readonly-field" label="Remarks" readonly></input>
+              </div>
+              <div class="form-group">
+                <label>Tender Date</label>
+                <input type="datetime-local" v-model="editedItem.tenderDate" class="border-input" :min="today()" label="Tender Date" readonly></input>
               </div>
               <div class="form-group">
                 <label>Delivery Date</label>
@@ -135,7 +145,9 @@
           budget: '',
           fulfilledPrice: null,
           dealJustification: '',
-          deliveryDate: ''
+          deliveryDate: '',
+          remarks: '',
+          tenderDate: ''
         },
       }
     },
@@ -170,7 +182,6 @@
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`).then(result => {
           this.itemsPendingFulfilment = [];
           result.data.data.forEach(item => {
-            console.log("item", item);
             item.requestProductsModel.forEach(product => {
               this.itemsPendingFulfilment.push({
                 ...item,
@@ -183,7 +194,8 @@
                 quantity: product.quantity,
                 budget: product.budget,
                 productName: product.productName,
-                tenderDate: product.tenderDate
+                tenderDate: product.tenderDate,
+                remarks: product.remarks
               };
               this.productsToShow.push(p);
             });

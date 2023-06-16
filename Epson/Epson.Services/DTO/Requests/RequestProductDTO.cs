@@ -19,5 +19,6 @@ namespace Epson.Services.DTO.Requests
         public DateTime FulfilledDate { get; set; }
         public DateTime TenderDate { get; set; }
         public DateTime DeliveryDate { get; set; }
+        public string Remarks { get; set; }
     }
 }

@@ -28,6 +28,8 @@
                 <input v-model="product.budget" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
                 <label>Tender Date</label>
                 <input type="datetime-local" v-model="product.tenderDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+                <label>Remarks</label>
+                <input type="text" v-model="product.remarks" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
               </div>
             </v-card-text>
             <v-card-actions>
@@ -50,6 +52,7 @@
               <th>Product</th>
               <th>Quantity</th>
               <th>Budget</th>
+              <th>Remarks</th>
               <th>Tender Date</th>
               <th v-if="isViewMode">Delivery Date</th>
               <th v-if="!isViewMode">Action</th>
@@ -61,6 +64,7 @@
               <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
               <td>{{ product.quantity || 'N/A' }}</td>
               <td>{{ product.budget || 'N/A' }}</td>
+              <td>{{ product.remarks || 'N/A' }}</td>
               <td>{{ product.tenderDate || 'N/A' }}</td>
               <td v-if="isViewMode">{{ product.deliveryDate || 'N/A' }}</td>
               <td v-if="!isViewMode">
@@ -130,7 +134,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Deal Justification</label>
+          <label>Requirements</label>
           <textarea v-model="dealJustification" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></textarea>
         </div>
         <div class="form-group">
@@ -155,7 +159,7 @@
         selectedCategories: [],
         isChecked: [],
         selectedProducts: {},
-        product: { category: null, productId: null, quantity: null, budget: null, tenderDate: null, deliveryDate: null },
+        product: { category: null, productId: null, quantity: null, budget: null, remarks: null, tenderDate: null, deliveryDate: null },
         products: [],
         competitor: { model: null, brand: null, price: null },
         competitors: [],
@@ -242,6 +246,7 @@
           this.product.productId = null;
           this.product.quantity = null;
           this.product.budget = null;
+          this.product.remarks = null;
           this.product.tenderDate = null;
           this.productOptions = [];
           this.dialogProduct = false;
@@ -278,7 +283,7 @@
         }
       },
       async populateForm(requestData) {
-        console.log("requestdata", requestData);
+        console.log("requestData", requestData);
         for (const productModel of requestData.requestProductsModel) {
           const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
           if (categoryFound) {
@@ -291,7 +296,8 @@
               budget: productModel.budget,
               productName: productModel.productName,
               tenderDate: productModel.tenderDate,
-              deliveryDate: productModel.deliveryDate
+              deliveryDate: productModel.deliveryDate,
+              remarks: productModel.remarks
             };
             this.productsToShow.push(p);
           }
@@ -447,7 +453,8 @@
             productId: this.productsToShow[product].productId,
             quantity: this.productsToShow[product].quantity,
             budget: this.productsToShow[product].budget,
-            tenderDate: this.productsToShow[product].tenderDate
+            tenderDate: this.productsToShow[product].tenderDate,
+            remarks: this.productsToShow[product].remarks,
           };
           quotationData.requestProducts.push(productToInsert);
         }

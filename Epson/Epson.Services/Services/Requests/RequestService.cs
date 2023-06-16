@@ -113,7 +113,8 @@ namespace Epson.Services.Services.Requests
                 FulfilledDate = x.FulfilledDate,
                 HasFulfilled = x.HasFulfilled,
                 TenderDate = x.TenderDate,
-                DeliveryDate = x.DeliveryDate
+                DeliveryDate = x.DeliveryDate,
+                Remarks = x.Remarks
             })
             .ToList();
 

@@ -54,8 +54,7 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="save">Lose Deal</v-btn>
-            <v-btn color="blue darken-1" text @click="close">Win Deal</v-btn>
+            <v-btn color="blue darken-1" text @click="close">Save</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -108,6 +107,7 @@
           { text: 'Fulfiller Name', align: 'start', value: 'fulfillerName' },
           { text: 'Fulfilled Date', align: 'start', value: 'fulfilledDate' },
           { text: 'Fulfilled Price', align: 'start', value: 'fulfilledPrice' },
+          { text: 'Remarks', align: 'start', value: 'remarks' },
           { text: 'Tender Date', align: 'start', value: 'tenderDate' },
           { text: 'Delivery Date', align: 'start', value: 'deliveryDate' },
         ],
@@ -139,7 +139,6 @@
       getPendingRequesterItem() {
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingrequesteritem`).then(result => {
-          console.log("requests", result);
           for (const requests in result.data.data) {
             result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('MMMM Do YYYY');
           }

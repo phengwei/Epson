@@ -66,6 +66,8 @@
                     <input v-model="product.quantity" class="border-input" type="number" min="1">
                     <label>Budget</label>
                     <input v-model="product.budget" class="border-input" type="number" min="1">
+                    <label>Remarks</label>
+                    <input type="text" v-model="product.remarks" class="border-input">
                     <label>Tender Date</label>
                     <input type="datetime-local" v-model="product.tenderDate" class="border-input">
                   </div>
@@ -90,6 +92,7 @@
                   <th>Product</th>
                   <th>Quantity</th>
                   <th>Budget</th>
+                  <th>Remarks</th>
                   <th>Tender Date</th>
                   <th>Action</th>
                 </tr>
@@ -100,6 +103,7 @@
                   <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
                   <td>{{ product.quantity || 'N/A' }}</td>
                   <td>{{ product.budget || 'N/A' }}</td>
+                  <td>{{ product.remarks || 'N/A' }}</td>
                   <td>{{ product.tenderDate || 'N/A' }}</td>
                   <td>
                     <v-btn small color="error" @click="removeProduct(index)">
@@ -168,7 +172,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label>Deal Justification</label>
+              <label>Requirements</label>
               <textarea v-model="dealJustification" class="border-input"></textarea>
             </div>
             <div class="form-group">
@@ -246,7 +250,7 @@
         requestId: 0,
         productOptions: [],
         productsToShow: [],
-        product: { category: null, productId: null, quantity: null, budget: null, tenderDate: null },
+        product: { category: null, productId: null, quantity: null, budget: null, remarks: null, tenderDate: null },
         products: [],
         competitorsToShow: [],
         competitor: { model: null, brand: null, price: null },
@@ -313,7 +317,6 @@
       },
       showAddedCompetitors(newCompetitor) {
         this.competitorsToShow.push(newCompetitor);
-        console.log("competitorstoshow", this.competitorsToShow);
       },
       addProductRow() {
         if (this.product.category && this.product.productId && this.product.quantity && this.product.budget) {
@@ -324,6 +327,7 @@
           this.product.productId = null;
           this.product.quantity = null;
           this.product.budget = null;
+          this.product.remarks = null;
           this.product.tenderDate = null;
           this.productOptions = [];
           this.dialogProduct = false;
@@ -420,7 +424,8 @@
               quantity: productModel.quantity,
               budget: productModel.budget,
               productName: productModel.productName,
-              tenderDate: productModel.tenderDate
+              tenderDate: productModel.tenderDate,
+              remarks: productModel.remarks
             };
             this.productsToShow.push(p);
           }
@@ -470,6 +475,7 @@
             quantity: this.productsToShow[product].quantity,
             budget: this.productsToShow[product].budget,
             tenderDate: this.productsToShow[product].tenderDate,
+            remarks: this.productsToShow[product].remarks,
           };
           quotationData.requestProducts.push(productToInsert);
         }

@@ -21,5 +21,6 @@ namespace Epson.Model.Request
         public ProductCategoryModel ProductCategory { get; set; } = new ProductCategoryModel();
         public DateTime TenderDate { get; set; }
         public DateTime DeliveryDate { get; set; }
+        public string Remarks { get; set; }
     }
 }
