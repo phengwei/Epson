@@ -18,9 +18,13 @@ namespace Epson.Model.Request
         public decimal FulfilledPrice { get; set; }
         public bool HasFulfilled { get; set; }
         public DateTime FulfilledDate { get; set; }
+        public TimeSpan TimeToResolution { get; set; }
+        public bool Breached { get; set; }
         public ProductCategoryModel ProductCategory { get; set; } = new ProductCategoryModel();
         public DateTime TenderDate { get; set; }
         public DateTime DeliveryDate { get; set; }
         public string Remarks { get; set; }
+        public DateTime CreatedOnUTC { get; set; }
+        public DateTime UpdatedOnUTC { get; set; }
     }
 }

@@ -136,7 +136,8 @@ namespace Epson.Services.Services.Requests
                 foreach (var requestProduct in requestProducts)
                 {
                     var product = _productService.GetProductById(requestProduct.ProductId);
-
+                    requestProduct.CreatedOnUTC = request.CreatedOnUTC;
+                    requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
                     requestProduct.RequestId = request.Id;
                     InsertRequestProduct(requestProduct);
                 }
@@ -226,6 +227,8 @@ namespace Epson.Services.Services.Requests
 
                     requestProduct.FulfillerId = null;
                     requestProduct.RequestId = request.Id;
+                    requestProduct.CreatedOnUTC = request.CreatedOnUTC;
+                    requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
 
                     InsertRequestProduct(requestProduct);
                 }
@@ -351,6 +354,11 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.FulfillerId = user.Id;
             requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
             requestProductToFulfill.DeliveryDate = deliveryDate;
+            requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;
+            requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate, requestProductToFulfill.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
+
+            if (DateTime.UtcNow > request.Deadline)
+                requestProductToFulfill.Breached = true;
 
             try
             {

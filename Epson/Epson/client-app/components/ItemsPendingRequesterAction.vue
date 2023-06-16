@@ -21,7 +21,7 @@
         </template>
       </v-data-table>
 
-      <v-dialog v-model="dialog" max-width="500px">
+      <v-dialog v-model="dialog" max-width="800px">
         <v-card>
           <v-card-title>
             <span class="text-h5">{{ formTitle }}</span>
@@ -99,7 +99,7 @@
             align: 'start',
             value: 'totalBudget',
           },
-          { text: 'Approve', value: 'actions', sortable: false },
+          { text: 'Record', value: 'actions', sortable: false },
         ],
         productHeaders: [
           { text: 'Product Name', align: 'start', value: 'productName' },

@@ -23,6 +23,7 @@ namespace Epson.Services.Services.SLA
         private readonly IRepository<SLAHoliday> _SLAHolidayRepository;
         private readonly IRepository<SLAStaffLeave> _SLAStaffLeaveRepository;
         private readonly IRepository<Request> _requestRepository;
+        private readonly IRepository<RequestProduct> _requestProductRepository;
         private readonly ILogger _logger;
         private readonly IOptions<SLASetting> _slaSetting;
         private readonly IConfiguration _configuration;
@@ -32,6 +33,7 @@ namespace Epson.Services.Services.SLA
             IRepository<SLAHoliday> slaHolidayRepository,
             IRepository<SLAStaffLeave> slaStaffLeaveRepository,
             IRepository<Request> requestRepository,
+            IRepository<RequestProduct> requestProductRepository,
             ILogger logger,
             IOptions<SLASetting> slaSetting,
             IConfiguration configuration)
@@ -40,6 +42,7 @@ namespace Epson.Services.Services.SLA
             _SLAHolidayRepository = slaHolidayRepository;
             _SLAStaffLeaveRepository = slaStaffLeaveRepository;
             _requestRepository = requestRepository;
+            _requestProductRepository = requestProductRepository;
             _logger = logger;
             _slaSetting = slaSetting;
             _configuration = configuration;
@@ -170,9 +173,14 @@ namespace Epson.Services.Services.SLA
 
         public decimal GetAverageTimeToResolutionInHours(string userId)
         {
-            var ticketsResolved = _requestRepository.Table
-                .Where(x => x.CreatedById == userId 
-                && x.ApprovalState == (int)ApprovalStateEnum.Approved)
+            //var ticketsResolved = _requestRepository.Table
+            //    .Where(x => x.CreatedById == userId 
+            //    && x.ApprovalState == (int)ApprovalStateEnum.Approved)
+            //    .ToList();
+
+            var ticketsResolved = _requestProductRepository.Table
+                .Where(x => x.FulfillerId == userId &&
+                x.HasFulfilled == true)
                 .ToList();
 
             TimeSpan totalResolutionTime = TimeSpan.Zero;
@@ -188,10 +196,16 @@ namespace Epson.Services.Services.SLA
 
         public int GetBreachedTicketCount(string userId)
         {
-            var ticketsBreached = _requestRepository.Table
+            // get breached ticket using approver as metric
+            //var ticketsBreached = _requestRepository.Table
+            //    .Where(x => x.Breached &&
+            //                x.CreatedById == userId &&
+            //                x.ApprovalState == (int)ApprovalStateEnum.Approved)
+            //    .ToList();
+
+            var ticketsBreached = _requestProductRepository.Table
                 .Where(x => x.Breached &&
-                            x.CreatedById == userId &&
-                            x.ApprovalState == (int)ApprovalStateEnum.Approved)
+                            x.FulfillerId == userId)
                 .ToList();
 
             return ticketsBreached.Count;
@@ -199,8 +213,13 @@ namespace Epson.Services.Services.SLA
 
         public int GetTotalTicketCount(string userId)
         {
-            var totalTickets = _requestRepository.Table
-                .Where(x => x.CreatedById == userId)
+            //ticket count of requester
+            //var totalTickets = _requestRepository.Table
+            //    .Where(x => x.CreatedById == userId)
+            //    .ToList();
+
+            var totalTickets = _requestProductRepository.Table
+                .Where (x => x.FulfillerId == userId)
                 .ToList();
 
             return totalTickets.Count;
@@ -208,9 +227,14 @@ namespace Epson.Services.Services.SLA
 
         public int GetApprovedTickets(string userId)
         {
-            var approvedTickets = _requestRepository.Table
-                .Where(x => x.CreatedById == userId &&
-                            x.ApprovalState == (int)ApprovalStateEnum.Approved)
+            //var approvedTickets = _requestRepository.Table
+            //    .Where(x => x.CreatedById == userId &&
+            //                x.ApprovalState == (int)ApprovalStateEnum.Approved)
+            //    .ToList();
+
+            var approvedTickets = _requestProductRepository.Table
+                .Where(x => x.FulfillerId == userId &&
+                            x.HasFulfilled == true)
                 .ToList();
 
             return approvedTickets.Count;
@@ -218,10 +242,16 @@ namespace Epson.Services.Services.SLA
 
         public decimal GetSuccessRateOfTickets(string userId)
         {
-            var successTickets = _requestRepository.Table
-                .Where(x => x.CreatedById == userId &&
-                            !x.Breached &&
-                            x.ApprovalState == (int)ApprovalStateEnum.Approved)
+            //var successTickets = _requestRepository.Table
+            //    .Where(x => x.CreatedById == userId &&
+            //                !x.Breached &&
+            //                x.ApprovalState == (int)ApprovalStateEnum.Approved)
+            //    .ToList();
+
+            var successTickets = _requestProductRepository.Table
+                .Where(x => x.FulfillerId == userId &&
+                            x.HasFulfilled == true &&
+                            !x.Breached)
                 .ToList();
 
             var totalTickets = GetApprovedTickets(userId);
