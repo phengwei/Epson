@@ -21,5 +21,6 @@ namespace Epson.Core.Domain.Requests
         public bool Breached { get; set; }
         public string DealJustification { get; set; }
         public string CustomerName { get; set; }
+        public string Comments { get; set; }
     }
 }

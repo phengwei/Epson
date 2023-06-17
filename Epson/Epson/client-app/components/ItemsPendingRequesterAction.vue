@@ -39,6 +39,10 @@
               <label>Project Budget</label>
               <input v-model="editedItem.totalBudget" class="border-input readonly-field" label="Budget" disabled></input>
             </div>
+            <div class="form-group">
+              <label>Comments (if any)</label>
+              <textarea v-model="editedItem.comments" class="border-input"></textarea>
+            </div>
             <div class="table-container">
               <v-data-table :headers="productHeaders"
                             :items="editedItem.requestProductsModel"
@@ -119,6 +123,7 @@
           id: 0,
           name: '',
           price: 0,
+          comments: ''
         },
       }
     },
@@ -159,11 +164,11 @@
 
       async close() {
         try {
-          const result = await this.$axios.post(`${this.$config.restUrl}/api/request/approverequest?id=${this.editedItem.id}`);
+          const result = await this.$axios.post(`${this.$config.restUrl}/api/request/approverequest?id=${this.editedItem.id}&comments=${this.editedItem.comments}`);
           if (result.status === 200) {
             Swal.fire({
               icon: 'success',
-              title: 'Deal won successfully!',
+              title: 'Saved successfully!',
               showConfirmButton: false,
               timer: 1500
             });

@@ -112,7 +112,7 @@ namespace Epson.Controllers.API
                 Priority = model.Priority,
                 Deadline = model.Deadline,
                 DealJustification = model.DealJustification,
-                CustomerName = model.CustomerName
+                CustomerName = model.CustomerName,
             };
 
             if (_requestService.InsertRequest(request, model.RequestProducts, model.CompetitorInformations))
@@ -165,7 +165,7 @@ namespace Epson.Controllers.API
 
         [HttpPost("approverequest")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
-        public async Task<IActionResult> ApproveRequest(int id)
+        public async Task<IActionResult> ApproveRequest(int id, string comments)
         {
             var request = _requestService.GetRequestById(id);
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
@@ -176,7 +176,7 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (_requestService.ApproveRequest(user, _mapper.Map<Request>(request)))
+            if (_requestService.ApproveRequest(user, _mapper.Map<Request>(request), comments))
                 return Ok("Request has been approved");
             else
                 return BadRequest("Failed to approve request");

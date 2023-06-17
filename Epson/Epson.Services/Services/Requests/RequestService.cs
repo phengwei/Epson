@@ -88,8 +88,8 @@ namespace Epson.Services.Services.Requests
                 Deadline = x.Deadline,
                 TotalPrice = x.TotalPrice,
                 TimeToResolution = x.TimeToResolution,
-                RequestProducts = _RequestProductRepository.Table.Where(y => y.RequestId == x.Id).ToList(),
-                
+                Comments = x.Comments,
+                RequestProducts = _RequestProductRepository.Table.Where(y => y.RequestId == x.Id).ToList()
             })
             .OrderBy(x => x.CreatedOnUTC)
             .ToList();
@@ -300,7 +300,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool ApproveRequest(ApplicationUser user, Request request)
+        public bool ApproveRequest(ApplicationUser user, Request request, string comments)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -317,6 +317,7 @@ namespace Epson.Services.Services.Requests
             request.UpdatedOnUTC = DateTime.UtcNow;
             request.UpdatedById = user.Id;
             request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
+            request.Comments = comments;
 
             if (DateTime.UtcNow > request.Deadline)
                 request.Breached = true;
