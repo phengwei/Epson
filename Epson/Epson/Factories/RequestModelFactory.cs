@@ -127,6 +127,7 @@ namespace Epson.Factories
                     Deadline = request.Deadline,
                     TotalPrice = request.TotalPrice,
                     TimeToResolution = request.TimeToResolution,
+                    Comments = request.Comments,
                     RequestProductsModel = request.RequestProducts.Select(rp => new RequestProductModel
                     {
                         Id = rp.Id,

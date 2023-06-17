@@ -97,34 +97,36 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-        <div class="table-actions mb-4">
-          <v-btn v-if="!isViewMode" class="add-competitor-btn" fab small color="primary" @click="dialogCompetitor = true">
-            <v-icon>mdi-plus</v-icon>
-          </v-btn>
+        <div v-if="(competitorsToShow && competitorsToShow.length > 0 && isViewMode) || !isViewMode">
+          <div class="table-actions mb-4">
+            <v-btn v-if="!isViewMode" class="add-competitor-btn" fab small color="primary" @click="dialogCompetitor = true">
+              <v-icon>mdi-plus</v-icon>
+            </v-btn>
+          </div>
+          <label>Competitor Information</label>
+          <table class="mb-5 mt-2">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Brand</th>
+                <th>Price</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(competitor, index) in competitorsToShow" :key="index">
+                <td>{{ competitor.model }}</td>
+                <td>{{ competitor.brand }}</td>
+                <td>{{ competitor.price }}</td>
+                <td>
+                  <v-btn v-if="!isViewMode" small color="error" @click="removeCompetitorInformation(index)">
+                    <v-icon>mdi-delete</v-icon>
+                  </v-btn>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <label>Competitor Information</label>
-        <table class="mb-5 mt-2">
-          <thead>
-            <tr>
-              <th>Model</th>
-              <th>Brand</th>
-              <th>Price</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(competitor, index) in competitorsToShow" :key="index">
-              <td>{{ competitor.model }}</td>
-              <td>{{ competitor.brand }}</td>
-              <td>{{ competitor.price }}</td>
-              <td>
-                <v-btn v-if="!isViewMode" small color="error" @click="removeCompetitorInformation(index)">
-                  <v-icon>mdi-delete</v-icon>
-                </v-btn>
-              </td>
-            </tr>
-          </tbody>
-        </table>
         <div class="form-group">
           <label>Priority</label>
           <select v-model="priority.value" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
@@ -141,6 +143,10 @@
           <label>Deadline</label>
           <input type="datetime-local" v-model="deadline" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
         </div>
+        <div class="form-group" v-if="comments != ''">
+          <label>Comments</label>
+          <textarea v-model="comments" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></textarea>
+        </div>
         <button type="submit" @click="submitQuotation" v-if="!isViewMode">Submit</button>
         <button type="submit" @click="saveDraft" v-if="!isViewMode">Save Draft</button>
         <button type="submit" @click="redirectToRequest">Return to Request</button>
@@ -151,6 +157,8 @@
 </template>
 
 <script>
+  import moment from 'moment';
+
   export default {
     name: "request-quotation",
     data() {
@@ -185,6 +193,7 @@
         deadline: '',
         dialogProduct: false,
         dialogCompetitor: false,
+        comments: ''
       };
     },
     async created() {
@@ -283,7 +292,6 @@
         }
       },
       async populateForm(requestData) {
-        console.log("requestData", requestData);
         for (const productModel of requestData.requestProductsModel) {
           const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
           if (categoryFound) {
@@ -295,9 +303,9 @@
               quantity: productModel.quantity,
               budget: productModel.budget,
               productName: productModel.productName,
-              tenderDate: productModel.tenderDate,
-              deliveryDate: productModel.deliveryDate,
-              remarks: productModel.remarks
+              tenderDate: moment(productModel.tenderDate).format('MMMM Do YYYY'),
+              deliveryDate: moment(productModel.deliveryDate).format('MMMM Do YYYY'),
+              remarks: productModel.remarks,
             };
             this.productsToShow.push(p);
           }
@@ -317,6 +325,7 @@
         this.approvalStateStr = requestData.approvalStateStr;
         this.deliveryDate = requestData.deliveryDate;
         this.tenderDate = requestData.tenderDate;
+        this.comments = requestData.comments;
       },
       async fetchCategories() {
         try {
@@ -477,7 +486,8 @@
               CompetitorInformations: quotationData.competitorInformations,
               customerName: this.customerName,
               dealJustification: this.dealJustification,
-              deadline: this.deadline
+              deadline: this.deadline,
+              comments: '',
             }
           }).then(response => {
             this.$swal('Request created');

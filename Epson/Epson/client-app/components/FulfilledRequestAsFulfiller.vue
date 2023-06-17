@@ -35,7 +35,6 @@
     },
     computed: {
       flattenedRequests() {
-        console.log("request", this.requests);
         return this.requests.map(product => ({
           id: product.requestId,
           requestedBy: product.requestedBy,
