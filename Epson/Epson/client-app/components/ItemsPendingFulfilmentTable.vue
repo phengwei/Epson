@@ -9,7 +9,7 @@
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-spacer></v-spacer>
 
-        <v-dialog v-model="dialog" max-width="500px">
+        <v-dialog v-model="dialog" max-width="800px">
           <v-card>
             <v-card-title>
               <span class="text-h5">RESPONDENT - Product Managers</span>
@@ -23,44 +23,25 @@
                 <label>Customer</label>
                 <input v-model="editedItem.customerName" class="border-input readonly-field" label="Customer" readonly></input>
               </div>
-              <label>Products Pending Fulfillment</label>
-              <table class="mb-5 mt-2 mini-table">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Quantity</th>
-                    <th>Budget</th>
-                    <th>Remarks</th>
-                    <th>Tender Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(product, index) in productsToShow" :key="index">
-                    <td>{{ product.productName }}</td>
-                    <td>{{ product.quantity || 'N/A' }}</td>
-                    <td>{{ product.budget || 'N/A' }}</td>
-                    <td>{{ product.remarks || 'N/A' }}</td>
-                    <td>{{ product.tenderDate || 'N/A' }}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <label>Competitor Information</label>
-              <table class="mb-5 mt-2 mini-table">
-                <thead>
-                  <tr>
-                    <th>Model</th>
-                    <th>Brand</th>
-                    <th>Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(competitor, index) in competitorsToShow" :key="index">
-                    <td>{{ competitor.model }}</td>
-                    <td>{{ competitor.brand }}</td>
-                    <td>{{ competitor.price }}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div v-if="competitorsToShow && competitorsToShow.length > 0">
+                <label>Competitor Information</label>
+                <table class="mb-5 mt-2 mini-table">
+                  <thead>
+                    <tr>
+                      <th>Model</th>
+                      <th>Brand</th>
+                      <th>Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(competitor, index) in competitorsToShow" :key="index">
+                      <td>{{ competitor.model }}</td>
+                      <td>{{ competitor.brand }}</td>
+                      <td>{{ competitor.price }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
               <div class="form-group">
                 <label>Product</label>
                 <input v-model="editedItem.productName" class="border-input readonly-field" label="Product" readonly></input>
@@ -79,7 +60,7 @@
               </div>
               <div class="form-group">
                 <label>Remarks</label>
-                <input v-model="editedItem.remarks" class="border-input readonly-field" label="Remarks" readonly></input>
+                <input v-model="editedItem.remarks" class="border-input" label="Remarks"></input>
               </div>
               <div class="form-group">
                 <label>Tender Date</label>
@@ -91,7 +72,7 @@
               </div>
               <div class="form-group">
                 <label>Dealer Price</label>
-                <input v-model="editedItem.fulfilledPrice" type="number" class="border-input" label="Approved Price"></input>
+                <input v-model="editedItem.fulfilledPrice" type="number" class="border-input" label="Approved Price" required></input>
               </div>
 
               <v-card-actions>
@@ -183,13 +164,23 @@
           this.itemsPendingFulfilment = [];
           result.data.data.forEach(item => {
             item.requestProductsModel.forEach(product => {
-              this.itemsPendingFulfilment.push({
+              const newItem = {
                 ...item,
                 ...product,
                 productName: product.productName,
                 budget: product.budget,
                 quantity: product.quantity,
+                competitors: [],
+              };
+              item.competitorInformationModel.forEach(comp => {
+                const c = {
+                  model: comp.model,
+                  brand: comp.brand,
+                  price: comp.price
+                }
+                newItem.competitors.push(c); 
               });
+              this.itemsPendingFulfilment.push(newItem);
               const p = {
                 quantity: product.quantity,
                 budget: product.budget,
@@ -199,24 +190,17 @@
               };
               this.productsToShow.push(p);
             });
-            item.competitorInformationModel.forEach(comp => {
-              const c = {
-                model: comp.model,
-                brand: comp.brand,
-                price: comp.price
-              }
-              this.competitorsToShow.push(c);
-            })
           });
           this.loading = false
         })
       },
       editItem(item) {
         this.editedItem = { ...item, deliveryDate: this.today() };
+        this.competitorsToShow = [...item.competitors]; 
         this.dialog = true;
       },
       fulfillRequest() {
-        if (this.editedItem && this.editedItem.fulfilledPrice !== null) {
+        if (this.editedItem && this.editedItem.fulfilledPrice !== null && this.editedItem.fulfilledPrice > 0) {
           Swal.fire({
             title: 'Fulfill Request',
             text: 'Are you sure you want to fulfill this request?',
@@ -227,7 +211,7 @@
             confirmButtonText: 'Fulfill',
           }).then((result) => {
             if (result.isConfirmed) {
-              this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?requestId=${this.editedItem.requestId}&productId=${this.editedItem.productId}&fulfilledPrice=${this.editedItem.fulfilledPrice}&deliveryDate=${this.editedItem.deliveryDate}`)
+              this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?requestId=${this.editedItem.requestId}&productId=${this.editedItem.productId}&fulfilledPrice=${this.editedItem.fulfilledPrice}&deliveryDate=${this.editedItem.deliveryDate}&remarks=${this.editedItem.remarks}`)
                 .then(response => {
                   this.closeDialog();
                   Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success');

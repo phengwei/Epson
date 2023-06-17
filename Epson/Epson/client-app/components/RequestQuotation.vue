@@ -28,9 +28,7 @@
                 <input v-model="product.budget" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
                 <label>Tender Date</label>
                 <input type="datetime-local" v-model="product.tenderDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-                <label>Remarks</label>
-                <input type="text" v-model="product.remarks" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-              </div>
+            </div>
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
@@ -52,7 +50,7 @@
               <th>Product</th>
               <th>Quantity</th>
               <th>Budget</th>
-              <th>Remarks</th>
+              <th v-if="isViewMode">Remarks</th>
               <th>Tender Date</th>
               <th v-if="isViewMode">Delivery Date</th>
               <th v-if="!isViewMode">Action</th>
@@ -64,7 +62,7 @@
               <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
               <td>{{ product.quantity || 'N/A' }}</td>
               <td>{{ product.budget || 'N/A' }}</td>
-              <td>{{ product.remarks || 'N/A' }}</td>
+              <td v-if="isViewMode">{{ product.remarks || 'N/A' }}</td>
               <td>{{ product.tenderDate || 'N/A' }}</td>
               <td v-if="isViewMode">{{ product.deliveryDate || 'N/A' }}</td>
               <td v-if="!isViewMode">
@@ -110,7 +108,7 @@
                 <th>Model</th>
                 <th>Brand</th>
                 <th>Price</th>
-                <th>Action</th>
+                <th v-if="!isViewMode">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -118,8 +116,8 @@
                 <td>{{ competitor.model }}</td>
                 <td>{{ competitor.brand }}</td>
                 <td>{{ competitor.price }}</td>
-                <td>
-                  <v-btn v-if="!isViewMode" small color="error" @click="removeCompetitorInformation(index)">
+                <td v-if="!isViewMode">
+                  <v-btn small color="error" @click="removeCompetitorInformation(index)">
                     <v-icon>mdi-delete</v-icon>
                   </v-btn>
                 </td>
@@ -255,7 +253,6 @@
           this.product.productId = null;
           this.product.quantity = null;
           this.product.budget = null;
-          this.product.remarks = null;
           this.product.tenderDate = null;
           this.productOptions = [];
           this.dialogProduct = false;
@@ -346,33 +343,16 @@
           console.error(error);
         }
       },
-      async loadDraft() {
+      loadDraft() {
         try {
           this.selectedCategories = [];
-          for (let i = 0; i < this.categories.length; i++) {
+          this.productsToShow = [];
 
-            const category = this.categories.find((c) => c.id === this.categories[i].id);
-            const categoryId = category.id;
-            if (localStorage.getItem("savedItem-selectedCategoryId" + categoryId) != null && localStorage.getItem("savedItem-selectedCategoryName" + categoryId)) {
-              this.selectedCategories.push({ id: localStorage.getItem("savedItem-selectedCategoryId" + categoryId), name: localStorage.getItem("savedItem-selectedCategoryName" + categoryId) });
-              await this.fetchProductsForCategory(category);
-            }
-
-            if (localStorage.getItem("savedItem-quantity" + categoryId) !== "null") {
-              this.quantity[categoryId] = localStorage.getItem("savedItem-quantity" + categoryId);
-            }
-
-            if (localStorage.getItem("savedItem-budget" + categoryId) !== "null") {
-              this.budget[categoryId] = localStorage.getItem("savedItem-budget" + categoryId);
-            }
-
-            if (localStorage.getItem("savedItem-selectedProductCategory" + categoryId) !== "null") {
-              this.selectedProducts[categoryId] = localStorage.getItem("savedItem-selectedProductCategory" + categoryId);
-            }
-          }
-          this.customerName = localStorage.getItem("savedItem-customerName", this.customerName);
+          this.productsToShow = JSON.parse(localStorage.getItem("savedItem-productsToShowList")) || [];
+          this.competitorsToShow = JSON.parse(localStorage.getItem("savedItem-competitorsToShowList")) || [];
+          this.customerName = localStorage.getItem("savedItem-customerName", this.customerName) || "";
           this.priority.value = localStorage.getItem("savedItem-priority", this.priority.value);
-          this.dealJustification = localStorage.getItem("savedItem-dealJustification", this.dealJustification);
+          this.dealJustification = localStorage.getItem("savedItem-dealJustification", this.dealJustification) || "";
           this.deadline = localStorage.getItem("savedItem-deadline", this.deadline);
 
         } catch (error) {
@@ -383,25 +363,8 @@
 
         localStorage.clear();
 
-        for (const categoryIndex in this.selectedCategories) {
-          localStorage.setItem("savedItem-selectedCategoryId" + this.selectedCategories[categoryIndex].id, this.selectedCategories[categoryIndex].id);
-          localStorage.setItem("savedItem-selectedCategoryName" + this.selectedCategories[categoryIndex].id, this.selectedCategories[categoryIndex].name);
-          for (const quantityIndex in this.quantity) {
-            if (this.quantity[quantityIndex] !== null) {
-              localStorage.setItem("savedItem-quantity" + this.selectedCategories[categoryIndex].id, this.quantity[quantityIndex]);
-            }
-          }
-          for (const budgetIndex in this.quantity) {
-            if (this.budget[budgetIndex] !== null) {
-              localStorage.setItem("savedItem-budget" + this.selectedCategories[categoryIndex].id, this.budget[budgetIndex]);
-            }
-          }
-          for (const productIndex in this.selectedProducts) {
-            if (this.selectedProducts[productIndex] !== null) {
-              localStorage.setItem("savedItem-selectedProductCategory" + this.selectedCategories[categoryIndex].id, this.selectedProducts[productIndex]);
-            }
-          }
-        }
+        localStorage.setItem("savedItem-productsToShowList", JSON.stringify(this.productsToShow));
+        localStorage.setItem("savedItem-competitorsToShowList", JSON.stringify(this.competitorsToShow));
         localStorage.setItem("savedItem-customerName", this.customerName);
         localStorage.setItem("savedItem-priority", this.priority.value);
         localStorage.setItem("savedItem-dealJustification", this.dealJustification);
@@ -463,7 +426,6 @@
             quantity: this.productsToShow[product].quantity,
             budget: this.productsToShow[product].budget,
             tenderDate: this.productsToShow[product].tenderDate,
-            remarks: this.productsToShow[product].remarks,
           };
           quotationData.requestProducts.push(productToInsert);
         }

@@ -499,7 +499,8 @@
               CompetitorInformations: quotationData.competitorInformations,
               customerName: this.customerName,
               dealJustification: this.dealJustification,
-              deadline: this.deadline
+              deadline: this.deadline,
+              comments: '',
             }
           });
 

@@ -28,8 +28,8 @@
     },
     data() {
       return {
-        startDate: '2023-04-01',
-        endDate: '2023-05-31',
+        startDate: '2023-05-01',
+        endDate: '2023-12-31',
         granularity: 'day',
         chartData: null,
         chartOptions: {

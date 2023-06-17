@@ -336,7 +336,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool FulfillRequest(ApplicationUser user, Request request, Product product, decimal totalPrice, DateTime deliveryDate)
+        public bool FulfillRequest(ApplicationUser user, Request request, Product product, decimal totalPrice, DateTime deliveryDate, string remarks)
         {
             var existingRequest = GetRequestById(request.Id);
             var existingProduct = _productService.GetProductById(product.Id);
@@ -357,6 +357,7 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.DeliveryDate = deliveryDate;
             requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;
             requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate, requestProductToFulfill.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
+            requestProductToFulfill.Remarks = remarks;
 
             if (DateTime.UtcNow > request.Deadline)
                 requestProductToFulfill.Breached = true;

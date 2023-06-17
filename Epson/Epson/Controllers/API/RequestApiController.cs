@@ -184,7 +184,7 @@ namespace Epson.Controllers.API
 
         [HttpPost("fulfillrequest")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product")]
-        public async Task<IActionResult> FulfillRequest(int requestId, int productId, decimal fulfilledPrice, DateTime deliveryDate)
+        public async Task<IActionResult> FulfillRequest(int requestId, int productId, decimal fulfilledPrice, DateTime deliveryDate, string remarks)
         {
             if (requestId == 0 || productId == 0)
                 return NotFound("Resources not found!");
@@ -200,7 +200,7 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (_requestService.FulfillRequest(user, _mapper.Map<Request>(request), _mapper.Map<Product>(product), fulfilledPrice, deliveryDate))
+            if (_requestService.FulfillRequest(user, _mapper.Map<Request>(request), _mapper.Map<Product>(product), fulfilledPrice, deliveryDate, remarks))
                 return Ok("Request has been fulfilled");
             else
                 return BadRequest("Failed to fulfill request");
