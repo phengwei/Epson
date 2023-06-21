@@ -33,7 +33,7 @@
     "core-js": "^3.19.3",
     "jquery": "^3.5.1",
     "moment": "^2.29.1",
-    "nuxt": "^2.15.8",
+    "nuxt": "^3.4.3",
     "nuxt-fontawesome": "^0.4.0",
     "nuxt-i18n": "^6.28.1",
     "tailable-pagination": "^0.1.22",
