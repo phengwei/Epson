@@ -227,7 +227,6 @@
         }
       },
       rejectRequest() {
-        console.log("this.edited", this.editedItem);
         Swal.fire({
           title: 'Reject Request?',
           showCancelButton: true,

@@ -8,6 +8,8 @@ namespace Epson.Core.Domain.Enum
 {
     public enum RequestProductStatusEnum
     {
+        Pending = 0,
+
         Cancelled = 10,
 
         Rejected = 20

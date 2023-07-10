@@ -21,6 +21,7 @@ namespace Epson.Model.Request
         public TimeSpan TimeToResolution { get; set; }
         public bool Breached { get; set; }
         public int Status { get; set; }
+        public string? StatusStr { get; set; }
         public ProductCategoryModel ProductCategory { get; set; } = new ProductCategoryModel();
         public DateTime TenderDate { get; set; }
         public DateTime DeliveryDate { get; set; }

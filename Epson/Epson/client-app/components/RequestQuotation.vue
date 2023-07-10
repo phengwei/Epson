@@ -53,6 +53,7 @@
               <th v-if="isViewMode">Remarks</th>
               <th>Tender Date</th>
               <th v-if="isViewMode">Delivery Date</th>
+              <th v-if="isViewMode">Status</th>
               <th v-if="!isViewMode">Action</th>
             </tr>
           </thead>
@@ -65,6 +66,7 @@
               <td v-if="isViewMode">{{ product.remarks || 'N/A' }}</td>
               <td>{{ product.tenderDate || 'N/A' }}</td>
               <td v-if="isViewMode">{{ product.deliveryDate || 'N/A' }}</td>
+              <td v-if="isViewMode">{{ product.statusStr || 'N/A' }}</td>
               <td v-if="!isViewMode">
                 <v-btn small color="error" @click="removeProduct(index)">
                   <v-icon>mdi-delete</v-icon>
@@ -303,6 +305,7 @@
               tenderDate: moment(productModel.tenderDate).format('MMMM Do YYYY'),
               deliveryDate: moment(productModel.deliveryDate).format('MMMM Do YYYY'),
               remarks: productModel.remarks,
+              statusStr: productModel.statusStr
             };
             this.productsToShow.push(p);
           }

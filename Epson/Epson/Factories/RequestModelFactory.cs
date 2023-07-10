@@ -92,6 +92,7 @@ namespace Epson.Factories
                     Breached = requestProduct.Breached,
                     TimeToResolution = requestProduct.TimeToResolution,
                     Status = requestProduct.Status,
+                    StatusStr = ((RequestProductStatusEnum)requestProduct.Status).ToString(),
                     Remarks = requestProduct.Remarks,
                 };
 
@@ -148,6 +149,7 @@ namespace Epson.Factories
                         DeliveryDate = rp.DeliveryDate,
                         TimeToResolution = rp.TimeToResolution,
                         Status = rp.Status,
+                        StatusStr = ((RequestProductStatusEnum)rp.Status).ToString(),
                         Remarks = rp.Remarks,
                         ProductCategory = _productService.GetProductCategoriesByProductId(rp.ProductId).Select(pc => new ProductCategoryModel
                         {
