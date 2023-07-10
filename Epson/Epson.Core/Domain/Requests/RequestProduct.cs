@@ -20,6 +20,7 @@ namespace Epson.Core.Domain.Requests
         public DateTime TenderDate { get; set; }
         public DateTime DeliveryDate { get; set; }
         public TimeSpan TimeToResolution { get; set; }
+        public int Status { get; set; }
         public string? Remarks { get; set; }
         public bool Breached { get; set; }
         public DateTime CreatedOnUTC { get; set; }

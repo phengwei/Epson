@@ -114,6 +114,8 @@ namespace Epson.Services.Services.Requests
                 HasFulfilled = x.HasFulfilled,
                 TenderDate = x.TenderDate,
                 DeliveryDate = x.DeliveryDate,
+                TimeToResolution = x.TimeToResolution,
+                Status = x.Status,
                 Remarks = x.Remarks
             })
             .ToList();
@@ -424,6 +426,92 @@ namespace Epson.Services.Services.Requests
             catch (Exception ex)
             {
                 _logger.Error(ex, "Error setting approval state to amend quotation for request {id}", request.Id);
+                return false;
+            }
+        }
+
+        public bool CancelRequest(Request request, string remarks)
+        {
+            var req = GetRequestById(request.Id);
+
+            if (req == null)
+                throw new Exception("Invalid request.");
+
+            request.ApprovalState = (int)ApprovalStateEnum.Cancelled;
+            request.Comments = remarks;
+
+            List<RequestProduct> requestProducts = _RequestProductRepository.Table.Where(x => x.RequestId == req.Id).ToList();
+
+            try
+            {
+                _RequestRepository.Update(request);
+                _logger.Information("Cancelled request {id}", request.Id);
+
+                foreach (var requestProduct in requestProducts)
+                {
+                    if (requestProduct.HasFulfilled == true)
+                    {
+                        var cancellationEmailQueue = _emailService.CreateCancellationEmailQueue(request, requestProduct);
+                        _emailService.InsertEmailQueue(cancellationEmailQueue);
+                        requestProduct.HasFulfilled = false;
+                        requestProduct.FulfilledDate = DateTime.MinValue;
+                        requestProduct.FulfillerId = string.Empty;
+                    }
+
+                    requestProduct.Status = (int)RequestProductStatusEnum.Cancelled;
+                    _RequestProductRepository.Update(requestProduct);
+                }
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error setting cancelling for request {id}", request.Id);
+                return false;
+            }
+        }
+
+        public bool RejectRequest(ApplicationUser user, RequestProduct requestProduct, string remarks)
+        {
+            var reqProduct = GetRequestProducts().Where(x => x.Id == requestProduct.Id).First();
+
+            if (reqProduct == null)
+                throw new Exception("Invalid request.");
+
+            var request = GetRequestById(requestProduct.RequestId);
+
+            requestProduct.Status = (int)RequestProductStatusEnum.Rejected;
+            requestProduct.Remarks = remarks;
+            requestProduct.HasFulfilled = true;
+            requestProduct.FulfillerId = user.Id;
+            requestProduct.FulfilledDate = DateTime.UtcNow;
+            requestProduct.UpdatedOnUTC = DateTime.UtcNow;
+            requestProduct.TimeToResolution = CalculateResolutionTime(requestProduct.FulfilledDate, requestProduct.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
+
+            List<RequestProduct> requestProducts = _RequestProductRepository.Table.Where(x => x.RequestId == requestProduct.RequestId).ToList();
+            bool allRejected = requestProducts.All(rp => rp.Status == (int)RequestProductStatusEnum.Rejected);
+
+            if (DateTime.UtcNow > request.Deadline)
+                requestProduct.Breached = true;
+
+            try
+            {
+                _RequestProductRepository.Update(requestProduct);
+                _logger.Information("Rejected request product {id}", reqProduct.Id);
+    
+                //if all products in a request is rejected, set status of request to reject
+                if (allRejected)
+                {
+                    request.ApprovalState = (int)ApprovalStateEnum.Rejected;
+                    _RequestRepository.Update(_mapper.Map<Request>(request));
+                }
+
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error reject request product {id}", requestProduct.Id);
                 return false;
             }
         }

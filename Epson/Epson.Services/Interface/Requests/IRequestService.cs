@@ -20,5 +20,7 @@ namespace Epson.Services.Interface.Requests
         public List<FulfillmentSummary> GetFulfillmentSummary(DateTime startDate, DateTime endDate, string granularity, string userId);
         public List<SalesSummary> GetRequestSummary(DateTime startDate, DateTime endDate, string granularity, string userId);
         public TimeSpan CalculateResolutionTime(DateTime approvedTime, DateTime ticketCreateTime, List<SLAStaffLeaveDTO> staffLeaves, List<SLAHolidayDTO> holidays);
+        public bool CancelRequest(Request request, string remarks);
+        public bool RejectRequest(ApplicationUser user, RequestProduct requestProduct, string remarks);
     }
 }

@@ -20,6 +20,7 @@ namespace Epson.Model.Request
         public DateTime FulfilledDate { get; set; }
         public TimeSpan TimeToResolution { get; set; }
         public bool Breached { get; set; }
+        public int Status { get; set; }
         public ProductCategoryModel ProductCategory { get; set; } = new ProductCategoryModel();
         public DateTime TenderDate { get; set; }
         public DateTime DeliveryDate { get; set; }

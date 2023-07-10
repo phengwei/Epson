@@ -192,6 +192,10 @@
         mdi-check
       </v-icon>
       <v-icon small
+              @click="cancelRequest(item)">
+        mdi-cancel
+      </v-icon>
+      <v-icon small
               @click="dialogQuotation(item)"
               v-if="item.approvalState === 40">
         mdi-pencil
@@ -402,13 +406,42 @@
           cancelButtonText: 'No'
         }).then((result) => {
           if (result.isConfirmed) {
-            this.$axios.post(`${this.$config.restUrl}/api/request/setrequesttoamendquotation?requestId=${item.id}`).then(result => {
+            this.$axios.post(`${this.$config.restUrl}/api/request/setrequesttoamendquotation?requestId=${item.id}`)
+            .then(response => {
+              this.closeDialog();
               for (const requests in result.data.data) {
                 result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('MMMM Do YYYY');
               }
+              Swal.fire('Amended!', 'Request is in amend stage.', 'success');
+            }).catch(error => {
+              console.log('error', error);
+              Swal.fire('Error', 'Failed to amend request', 'error');
             });
           }
         });
+      },
+      cancelRequest(item) {
+        Swal.fire({
+          title: 'Cancel Request?',
+          input: 'textarea', 
+          inputPlaceholder: 'Remark',
+          showCancelButton: true,
+          confirmButtonText: 'Cancel Request',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.$axios.post(`${this.$config.restUrl}/api/request/cancelrequest?requestId=${item.id}&remarks=${result.value}`)
+            .then(response => {
+                this.closeDialog();
+                for (const requests in result.data.data) {
+                  result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('MMMM Do YYYY');
+                }
+              Swal.fire('Cancelled!', 'Request has been cancelled.', 'success');
+            }).catch(error => {
+              console.log('error', error);
+              Swal.fire('Error', 'Failed to cancel request', 'error');
+            });
+          }
+        })
       },
       async dialogQuotation(item) {
         this.requestId = item.id;

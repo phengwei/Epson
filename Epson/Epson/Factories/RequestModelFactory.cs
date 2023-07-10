@@ -89,6 +89,9 @@ namespace Epson.Factories
                     HasFulfilled = requestProduct.HasFulfilled,
                     TenderDate = requestProduct.TenderDate,
                     DeliveryDate = requestProduct.DeliveryDate,
+                    Breached = requestProduct.Breached,
+                    TimeToResolution = requestProduct.TimeToResolution,
+                    Status = requestProduct.Status,
                     Remarks = requestProduct.Remarks,
                 };
 
@@ -143,6 +146,8 @@ namespace Epson.Factories
                         FulfilledPrice = rp.FulfilledPrice,
                         TenderDate = rp.TenderDate,
                         DeliveryDate = rp.DeliveryDate,
+                        TimeToResolution = rp.TimeToResolution,
+                        Status = rp.Status,
                         Remarks = rp.Remarks,
                         ProductCategory = _productService.GetProductCategoriesByProductId(rp.ProductId).Select(pc => new ProductCategoryModel
                         {

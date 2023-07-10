@@ -19,5 +19,6 @@ namespace Epson.Services.Interface.Email
         public EmailQueue CreateRequestEmailQueue(Request request, List<RequestProduct> requestProducts);
         public EmailQueue CreateFulfillEmailQueue(Request request, RequestProduct requestProduct, bool hasFulfillmentComplete);
         public EmailQueue CreateAmendQuotationEmailQueue(Request request, RequestProduct requestProduct);
+        public EmailQueue CreateCancellationEmailQueue(Request request, RequestProduct requestProduct);
     }
 }

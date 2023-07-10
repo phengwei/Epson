@@ -229,6 +229,52 @@ namespace Epson.Controllers.API
                 return BadRequest("Failed to set amend quotation for request");
         }
 
+        [HttpPost("cancelrequest")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin")]
+        public async Task<IActionResult> CancelRequest(int requestId, string remarks)
+        {
+            if (requestId == 0)
+                return NotFound("Resources not found!");
+
+            var request = _requestService.GetRequestById(requestId);
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (request == null)
+                return NotFound("Resources not found!");
+
+            if (user == null)
+                return Unauthorized("User not authorized to perform this operation");
+
+            if (_requestService.CancelRequest(_mapper.Map<Request>(request), remarks))
+                return Ok("Request has been cancelled");
+            else
+                return BadRequest("Failed to cancel request!");
+        }
+
+        [HttpPost("rejectrequestproduct")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin")]
+        public async Task<IActionResult> RejectRequest(int requestProductId, string remarks)
+        {
+            if (requestProductId == 0)
+                return NotFound("Resources not found!");
+
+            var requestProduct = _requestService.GetRequestProducts().Where(x => x.Id == requestProductId).First();
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (requestProduct == null)
+                return NotFound("Resources not found!");
+
+            if (user == null)
+                return Unauthorized("User not authorized to perform this operation");
+
+            if (_requestService.RejectRequest(user, _mapper.Map<RequestProduct>(requestProduct), remarks))
+                return Ok("Request has been rejected");
+            else
+                return BadRequest("Failed to reject request!");
+        }
+
 
         [HttpGet("getpendingrequesteritem")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]

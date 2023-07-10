@@ -77,7 +77,7 @@
 
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="closeDialog">Cancel</v-btn>
+                <v-btn color="blue darken-1" text @click="rejectRequest">Reject</v-btn>
                 <v-btn color="blue darken-1" text @click="fulfillRequest">Approve</v-btn>
               </v-card-actions>
             </v-card-text>
@@ -225,6 +225,25 @@
         else {
           this.$swal('Error', 'Please fill in all fields!', 'error');
         }
+      },
+      rejectRequest() {
+        console.log("this.edited", this.editedItem);
+        Swal.fire({
+          title: 'Reject Request?',
+          showCancelButton: true,
+          confirmButtonText: 'Reject Request',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.$axios.post(`${this.$config.restUrl}/api/request/rejectrequestproduct?requestProductId=${this.editedItem.id}&remarks=${this.editedItem.remarks}`)
+              .then(response => {
+                this.closeDialog();
+                Swal.fire('Rejected!', 'Request has been rejected.', 'success');
+              }).catch(error => {
+                console.log('error', error);
+                Swal.fire('Error', 'Failed to reject request', 'error');
+              });
+          }
+        })
       },
       close() {
         this.dialog = false
