@@ -3,10 +3,6 @@
     <h1>Pricing Request</h1>
     <v-card class="mx-auto" width="800">
       <v-card-text>
-        <div class="form-group">
-          <label>Customer Name</label>
-          <input type="text" v-model="customerName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-        </div>
         <v-dialog v-model="dialogProduct" max-width="500px">
           <v-card>
             <v-card-title>
@@ -28,7 +24,7 @@
                 <input v-model="product.budget" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
                 <label>Tender Date</label>
                 <input type="datetime-local" v-model="product.tenderDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-            </div>
+              </div>
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
@@ -37,44 +33,51 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-        <div class="table-actions mb-4">
-          <v-btn v-if="!isViewMode" class="add-product-btn" fab small color="primary" @click="dialogProduct = true">
-            <v-icon>mdi-plus</v-icon>
-          </v-btn>
-        </div>
-        <label>Products</label>
-        <table class="mb-5 mt-2">
-          <thead>
-            <tr>
-              <th>Category</th>
-              <th>Product</th>
-              <th>Quantity</th>
-              <th>Budget</th>
-              <th v-if="isViewMode">Remarks</th>
-              <th>Tender Date</th>
-              <th v-if="isViewMode">Delivery Date</th>
-              <th v-if="isViewMode">Status</th>
-              <th v-if="!isViewMode">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(product, index) in productsToShow" :key="index">
-              <td>{{ product.category ? product.category.name : 'N/A' }}</td>
-              <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
-              <td>{{ product.quantity || 'N/A' }}</td>
-              <td>{{ product.budget || 'N/A' }}</td>
-              <td v-if="isViewMode">{{ product.remarks || 'N/A' }}</td>
-              <td>{{ product.tenderDate || 'N/A' }}</td>
-              <td v-if="isViewMode">{{ product.deliveryDate || 'N/A' }}</td>
-              <td v-if="isViewMode">{{ product.statusStr || 'N/A' }}</td>
-              <td v-if="!isViewMode">
-                <v-btn small color="error" @click="removeProduct(index)">
-                  <v-icon>mdi-delete</v-icon>
-                </v-btn>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <v-card class="mb-5 mt-2">
+          <v-card-text>
+            <div class="table-actions mb-4">
+              <v-btn v-if="!isViewMode" color="primary" @click="dialogProduct = true">
+                Add New
+              </v-btn>
+            </div>
+            <table class="mb-5 mt-2">
+              <thead>
+                <tr class="header-row">
+                  <th colspan="3"><h2>PROPOSED MODEL</h2></th>
+                  <th colspan="5"><h2>PRICE EXPECTATION (RM)</h2></th>
+                </tr>
+                <tr>
+                  <th>Category</th>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                  <th>Budget</th>
+                  <th v-if="isViewMode">Remarks</th>
+                  <th>Tender Date</th>
+                  <th v-if="isViewMode">Delivery Date</th>
+                  <th v-if="isViewMode">Status</th>
+                  <th v-if="!isViewMode">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(product, index) in productsToShow" :key="index">
+                  <td>{{ product.category ? product.category.name : 'N/A' }}</td>
+                  <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
+                  <td>{{ product.quantity || 'N/A' }}</td>
+                  <td>{{ product.budget || 'N/A' }}</td>
+                  <td v-if="isViewMode">{{ product.remarks || 'N/A' }}</td>
+                  <td>{{ product.tenderDate || 'N/A' }}</td>
+                  <td v-if="isViewMode">{{ product.deliveryDate || 'N/A' }}</td>
+                  <td v-if="isViewMode">{{ product.statusStr || 'N/A' }}</td>
+                  <td v-if="!isViewMode">
+                    <v-btn small color="error" @click="removeProduct(index)">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </v-card-text>
+        </v-card>
         <v-dialog v-model="dialogCompetitor" max-width="500px">
           <v-card>
             <v-card-title>
@@ -97,35 +100,43 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-        <div v-if="(competitorsToShow && competitorsToShow.length > 0 && isViewMode) || !isViewMode">
-          <div class="table-actions mb-4">
-            <v-btn v-if="!isViewMode" class="add-competitor-btn" fab small color="primary" @click="dialogCompetitor = true">
-              <v-icon>mdi-plus</v-icon>
-            </v-btn>
-          </div>
-          <label>Competitor Information</label>
-          <table class="mb-5 mt-2">
-            <thead>
-              <tr>
-                <th>Model</th>
-                <th>Brand</th>
-                <th>Price</th>
-                <th v-if="!isViewMode">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(competitor, index) in competitorsToShow" :key="index">
-                <td>{{ competitor.model }}</td>
-                <td>{{ competitor.brand }}</td>
-                <td>{{ competitor.price }}</td>
-                <td v-if="!isViewMode">
-                  <v-btn small color="error" @click="removeCompetitorInformation(index)">
-                    <v-icon>mdi-delete</v-icon>
-                  </v-btn>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <v-card class="mb-5 mt-2">
+          <v-card-text>
+            <div class="table-actions mb-4">
+              <v-btn v-if="!isViewMode" color="primary" @click="dialogCompetitor = true">
+                Add New
+              </v-btn>
+            </div>
+            <table class="mb-5 mt-2">
+              <thead>
+                <tr class="header-row">
+                  <th colspan="4"><h2>COMPETITOR'S INFORMATION</h2></th>
+                </tr>
+                <tr>
+                  <th>Model</th>
+                  <th>Brand</th>
+                  <th>Price</th>
+                  <th v-if="!isViewMode">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(competitor, index) in competitorsToShow" :key="index">
+                  <td>{{ competitor.model }}</td>
+                  <td>{{ competitor.brand }}</td>
+                  <td>{{ competitor.price }}</td>
+                  <td v-if="!isViewMode">
+                    <v-btn small color="error" @click="removeCompetitorInformation(index)">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </v-card-text>
+        </v-card>
+        <div class="form-group">
+          <label>Customer Name</label>
+          <input type="text" v-model="customerName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
         </div>
         <div class="form-group">
           <label>Priority</label>
@@ -471,6 +482,19 @@
 </script>
 
 <style scoped>
+  .products-title {
+    font-size: 2em;
+    text-align: center;
+  }
+
+  .header-row {
+    background-color: #C0C0C0;
+  }
+    .header-row th {
+      text-align: center;
+      vertical-align: middle;
+    }
+
   table {
     width: 100%;
     margin-top: 2rem;
@@ -483,9 +507,6 @@
     text-align: left;
   }
 
-  tr:nth-child(even) {
-    background-color: #f2f2f2;
-  }
   h1 {
     margin-top: 0;
     font-size: 2rem;
