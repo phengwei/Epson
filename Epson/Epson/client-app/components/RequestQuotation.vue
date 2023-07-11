@@ -3,36 +3,10 @@
     <h1>Pricing Request</h1>
     <v-card class="mx-auto" width="800">
       <v-card-text>
-        <v-dialog v-model="dialogProduct" max-width="500px">
-          <v-card>
-            <v-card-title>
-              <span class="headline">Add Product</span>
-            </v-card-title>
-            <v-card-text>
-              <div class="form-group">
-                <label>Product Categories</label>
-                <select v-model="product.category" @change="updateProductOptions" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-                  <option v-for="category in categories" :value="category" :key="category.id">{{ category.name }}</option>
-                </select>
-                <label>Product</label>
-                <select v-model="product.productId" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-                  <option v-for="option in productOptions" :value="option.id" :key="option.id">{{ option.name }}</option>
-                </select>
-                <label>Quantity</label>
-                <input v-model="product.quantity" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-                <label>Budget</label>
-                <input v-model="product.budget" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-                <label>Tender Date</label>
-                <input type="datetime-local" v-model="product.tenderDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-              </div>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="primary" @click="addProductRow">Add</v-btn>
-              <v-btn color="secondary" @click="dialog = false">Cancel</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+        <ProductDialog :dialogProduct.sync="dialogProduct"
+                       :product="product"
+                       :isViewMode="isViewMode"
+                       @add-product="addProductRow" />
         <v-card class="mb-5 mt-2">
           <v-card-text>
             <div class="table-actions mb-4">
@@ -78,28 +52,10 @@
             </table>
           </v-card-text>
         </v-card>
-        <v-dialog v-model="dialogCompetitor" max-width="500px">
-          <v-card>
-            <v-card-title>
-              <span class="headline">Add Competitor Information</span>
-            </v-card-title>
-            <v-card-text>
-              <div class="form-group">
-                <label>Model</label>
-                <input type="text" v-model="competitor.model" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-                <label>Brand</label>
-                <input type="text" v-model="competitor.brand" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-                <label>Price</label>
-                <input v-model="competitor.price" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-              </div>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="primary" @click="addCompetitorInformationRow">Add</v-btn>
-              <v-btn color="secondary" @click="dialog = false">Cancel</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+        <CompetitorInformationDialog :dialogCompetitor.sync="dialogCompetitor"
+                       :competitor="competitor"
+                       :isViewMode="isViewMode"
+                       @add-competitor="addCompetitorRow" />
         <v-card class="mb-5 mt-2">
           <v-card-text>
             <div class="table-actions mb-4">
@@ -169,9 +125,15 @@
 
 <script>
   import moment from 'moment';
+  import ProductDialog from '~/components/ProductDialog.vue';
+  import CompetitorInformationDialog from '~/components/CompetitorInformationDialog.vue';
 
   export default {
     name: "request-quotation",
+    components: {
+      ProductDialog,
+      CompetitorInformationDialog
+    },
     data() {
       return {
         categories: [],
@@ -182,7 +144,6 @@
         products: [],
         competitor: { model: null, brand: null, price: null },
         competitors: [],
-        productOptions: [],
         productsToShow: [],
         competitorsToShow: [],
         options: {},
@@ -238,18 +199,14 @@
       }
     },
     methods: {
-      addCompetitorInformationRow() {
-        if (this.competitor.brand && this.competitor.model && this.competitor.price) {
-          const newCompetitor = { ...this.competitor };
-          this.competitors.push(newCompetitor);
-          this.showAddedCompetitors(newCompetitor);
-          this.competitor.brand = null;
-          this.competitor.model = null;
-          this.competitor.price = null;
-          this.dialogCompetitor = false;
-        } else {
-          this.$swal('Error', 'Please fill out all product fields', 'error');
-        }
+      addCompetitorRow(competitor) {
+        const newCompetitor = { ...competitor };
+        this.competitors.push(newCompetitor);
+        this.showAddedCompetitors(newCompetitor);
+        this.competitor.brand = null;
+        this.competitor.model = null;
+        this.competitor.price = null;
+        this.dialogCompetitor = false;
       },
       removeCompetitorInformation(index) {
         this.competitorsToShow.splice(index, 1);
@@ -257,21 +214,16 @@
       showAddedCompetitors(newCompetitor) {
         this.competitorsToShow.push(newCompetitor);
       },
-      addProductRow() {
-        if (this.product.category && this.product.productId && this.product.quantity && this.product.budget) {
-          const newProduct = { ...this.product };
-          this.products.push(newProduct); 
-          this.showAddedProducts(newProduct); 
-          this.product.category = null;
-          this.product.productId = null;
-          this.product.quantity = null;
-          this.product.budget = null;
-          this.product.tenderDate = null;
-          this.productOptions = [];
-          this.dialogProduct = false;
-        } else {
-          this.$swal('Error', 'Please fill out all product fields', 'error');
-        }
+      addProductRow(product) {
+        const newProduct = { ...product };
+        this.products.push(newProduct);
+        this.showAddedProducts(newProduct);
+        this.product.category = null;
+        this.product.productId = null;
+        this.product.quantity = null;
+        this.product.budget = null;
+        this.product.tenderDate = null;
+        this.dialogProduct = false;
       },
       removeProduct(index) {
         this.productsToShow.splice(index, 1);
@@ -288,18 +240,6 @@
           }
         }
         return 'N/A';
-      },
-      async updateProductOptions() {
-        const category = this.product.category;
-
-        if (category) {
-          try {
-            const response = await this.$axios.get(`${this.$config.restUrl}/api/product/getproductbycategory`, { params: { categoryId: category.id } });
-            this.productOptions = response.data.data;
-          } catch (error) {
-            console.error(error);
-          }
-        }
       },
       async populateForm(requestData) {
         for (const productModel of requestData.requestProductsModel) {
