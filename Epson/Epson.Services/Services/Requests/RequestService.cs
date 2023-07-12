@@ -68,7 +68,6 @@ namespace Epson.Services.Services.Requests
         public List<RequestDTO> GetRequests()
         {
             var requests = _RequestRepository.GetAll();
-            var comp = _CompetitorInformationRepository.Table.Where(x => x.RequestId == 42).ToList();
             var requestDTOs = requests.Select(x => new RequestDTO
             {
                 Id = x.Id,
@@ -97,6 +96,39 @@ namespace Epson.Services.Services.Requests
             return requestDTOs;
         }
 
+        public List<RequestDTO> GetUnfulfilledRequests(bool isCoverplus)
+        {
+            var requests = GetRequests()
+                .Select(x => new RequestDTO
+                {
+                    Id = x.Id,
+                    ApprovedBy = x.ApprovedBy,
+                    ApprovedTime = x.ApprovedTime,
+                    CreatedById = x.CreatedById,
+                    CreatedOnUTC = x.CreatedOnUTC,
+                    CustomerName = x.CustomerName,
+                    DealJustification = x.DealJustification,
+                    UpdatedById = x.UpdatedById,
+                    UpdatedOnUTC = x.UpdatedOnUTC,
+                    Segment = x.Segment,
+                    TotalBudget = x.TotalBudget,
+                    ApprovalState = x.ApprovalState,
+                    Priority = x.Priority,
+                    Deadline = x.Deadline,
+                    TotalPrice = x.TotalPrice,
+                    TimeToResolution = x.TimeToResolution,
+                    RequestProducts = x.RequestProducts
+                        .Where(rp => rp.HasFulfilled == false && (isCoverplus || !rp.IsCoverplus))
+                        .ToList(),
+                    CompetitorInformations = x.CompetitorInformations.ToList()
+                })
+                .Where(x => x.RequestProducts.Any())
+                .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
+                .ToList();
+
+            return requests;
+        }
+
         public List<RequestProductDTO> GetRequestProducts()
         {
             var requestProducts = _RequestProductRepository.GetAll();
@@ -116,12 +148,13 @@ namespace Epson.Services.Services.Requests
                 DeliveryDate = x.DeliveryDate,
                 TimeToResolution = x.TimeToResolution,
                 Status = x.Status,
-                Remarks = x.Remarks
+                Remarks = x.Remarks,
+                IsCoverplus = x.IsCoverplus
             })
             .ToList();
 
             return requestProductDTOs;
-    }
+        }
 
         public bool InsertRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations)
         {
@@ -695,5 +728,30 @@ namespace Epson.Services.Services.Requests
             return overlappingTime;
         }
 
+        //private RequestDTO MapToDTO(Request request)
+        //{
+        //    return new RequestDTO
+        //    {
+        //        Id = request.Id,
+        //        ApprovedBy = request.ApprovedBy,
+        //        ApprovedTime = request.ApprovedTime,
+        //        CompetitorInformations = request.CompetitorInformations,
+        //        CreatedById = request.CreatedById,
+        //        CreatedOnUTC = request.CreatedOnUTC,
+        //        CustomerName = request.CustomerName,
+        //        DealJustification = request.DealJustification,
+        //        UpdatedById = request.UpdatedById,
+        //        UpdatedOnUTC = request.UpdatedOnUTC,
+        //        Segment = request.Segment,
+        //        TotalBudget = request.TotalBudget,
+        //        ApprovalState = request.ApprovalState,
+        //        Priority = request.Priority,
+        //        Deadline = request.Deadline,
+        //        TotalPrice = request.TotalPrice,
+        //        TimeToResolution = request.TimeToResolution,
+        //        Comments = request.Comments,
+        //        RequestProducts = request.RequestProducts
+        //    };
+        //}
     }
 }

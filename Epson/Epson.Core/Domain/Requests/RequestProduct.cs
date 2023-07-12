@@ -25,5 +25,6 @@ namespace Epson.Core.Domain.Requests
         public bool Breached { get; set; }
         public DateTime CreatedOnUTC { get; set; }
         public DateTime? UpdatedOnUTC { get; set; }
+        public bool IsCoverplus { get; set; }
     }
 }

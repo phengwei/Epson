@@ -99,7 +99,6 @@ namespace Epson.Controllers.API
             var model = queryModel.Data;
 
             var user = _workContext.CurrentUser;
-            //var deadlineInHours = _configuration.GetValue<int>("SLA:DeadlineInHours");
 
             var request = new Request
             {
@@ -112,7 +111,7 @@ namespace Epson.Controllers.API
                 Priority = model.Priority,
                 Deadline = model.Deadline,
                 DealJustification = model.DealJustification,
-                CustomerName = model.CustomerName,
+                CustomerName = model.CustomerName, 
             };
 
             if (_requestService.InsertRequest(request, model.RequestProducts, model.CompetitorInformations))
@@ -372,39 +371,15 @@ namespace Epson.Controllers.API
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-            var authorizedUsers = _userService.GetGovtUsersWithProductRole();
+            var govtUsers = _userService.GetGovtUsersWithProductRole();
 
-            if (!authorizedUsers.Any(u => u.Id == user.Id))
-                return Unauthorized(); 
-            
+            if (!govtUsers.Any(u => u.Id == user.Id))
+                return Unauthorized();
 
-            var requests = _requestService.GetRequests()
-                .Select(x => new RequestDTO
-                {
-                    Id = x.Id,
-                    ApprovedBy = x.ApprovedBy,
-                    ApprovedTime = x.ApprovedTime,
-                    CreatedById = x.CreatedById,
-                    CreatedOnUTC = x.CreatedOnUTC,
-                    CustomerName = x.CustomerName,
-                    DealJustification = x.DealJustification,
-                    UpdatedById = x.UpdatedById,
-                    UpdatedOnUTC = x.UpdatedOnUTC,
-                    Segment = x.Segment,
-                    TotalBudget = x.TotalBudget,
-                    ApprovalState = x.ApprovalState,
-                    Priority = x.Priority,
-                    Deadline = x.Deadline,
-                    TotalPrice = x.TotalPrice,
-                    TimeToResolution = x.TimeToResolution,
-                    RequestProducts = x.RequestProducts
-                        .Where(rp => rp.HasFulfilled == false)
-                        .ToList(),
-                    CompetitorInformations = x.CompetitorInformations.ToList()
-                })
-                .Where(x => x.RequestProducts.Any())
-                .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
-                .ToList();
+            var coverplusUsers = await _userManager.GetUsersInRoleAsync(RoleEnum.Coverplus.ToString());
+            var isCoverplusUser = coverplusUsers.Any(x => x.Id == user.Id);
+
+            var requests = _requestService.GetUnfulfilledRequests(isCoverplusUser);
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests);
 

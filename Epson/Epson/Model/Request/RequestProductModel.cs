@@ -28,5 +28,6 @@ namespace Epson.Model.Request
         public string? Remarks { get; set; }
         public DateTime CreatedOnUTC { get; set; }
         public DateTime UpdatedOnUTC { get; set; }
+        public bool IsCoverplus { get; set; }
     }
 }

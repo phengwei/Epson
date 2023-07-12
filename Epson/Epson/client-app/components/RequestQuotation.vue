@@ -52,10 +52,53 @@
             </table>
           </v-card-text>
         </v-card>
-        <CompetitorInformationDialog :dialogCompetitor.sync="dialogCompetitor"
-                       :competitor="competitor"
+        <CoverplusDialog :dialogCoverplus.sync="dialogCoverplus"
+                       :coverplus="coverplus"
                        :isViewMode="isViewMode"
-                       @add-competitor="addCompetitorRow" />
+                       @add-coverplus="addCoverplusRow" />
+        <v-card class="mb-5 mt-2">
+          <v-card-text>
+            <div class="table-actions mb-4">
+              <v-btn v-if="!isViewMode" color="primary" @click="dialogCoverplus = true">
+                Add New
+              </v-btn>
+            </div>
+            <table class="mb-5 mt-2">
+              <thead>
+                <tr class="header-row">
+                  <th colspan="3"><h2>PROPOSED COVERPLUS</h2></th>
+                  <th colspan="2"><h2>PRICE EXPECTATION (RM)</h2></th>
+                </tr>
+                <tr>
+                  <th>Category</th>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                  <th>Budget</th>
+                  <th v-if="isViewMode">Status</th>
+                  <th v-if="!isViewMode">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(coverplus, index) in coverplusesToShow" :key="index">
+                  <td>{{ coverplus.category ? coverplus.category.name : 'N/A' }}</td>
+                  <td>{{ coverplus.productId ? findProductName(coverplus.productId) : coverplus.productName }}</td>
+                  <td>{{ coverplus.quantity || 'N/A' }}</td>
+                  <td>{{ coverplus.budget || 'N/A' }}</td>
+                  <td v-if="isViewMode">{{ coverplus.statusStr || 'N/A' }}</td>
+                  <td v-if="!isViewMode">
+                    <v-btn small color="error" @click="removeCoverplus(index)">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </v-card-text>
+        </v-card>
+        <CompetitorInformationDialog :dialogCompetitor.sync="dialogCompetitor"
+                                     :competitor="competitor"
+                                     :isViewMode="isViewMode"
+                                     @add-competitor="addCompetitorRow" />
         <v-card class="mb-5 mt-2">
           <v-card-text>
             <div class="table-actions mb-4">
@@ -127,12 +170,14 @@
   import moment from 'moment';
   import ProductDialog from '~/components/ProductDialog.vue';
   import CompetitorInformationDialog from '~/components/CompetitorInformationDialog.vue';
+  import CoverplusDialog from '~/components/CoverplusDialog.vue';
 
   export default {
     name: "request-quotation",
     components: {
       ProductDialog,
-      CompetitorInformationDialog
+      CompetitorInformationDialog,
+      CoverplusDialog
     },
     data() {
       return {
@@ -142,10 +187,13 @@
         selectedProducts: {},
         product: { category: null, productId: null, quantity: null, budget: null, remarks: null, tenderDate: null, deliveryDate: null },
         products: [],
+        coverplus: { category: null, productId: null, quantity: null, budget: null },
+        coverpluses: [],
         competitor: { model: null, brand: null, price: null },
         competitors: [],
         productsToShow: [],
         competitorsToShow: [],
+        coverplusesToShow: [],
         options: {},
         priority: {
           value: 1,
@@ -165,6 +213,7 @@
         deadline: '',
         dialogProduct: false,
         dialogCompetitor: false,
+        dialogCoverplus: false,
         comments: ''
       };
     },
@@ -214,6 +263,21 @@
       showAddedCompetitors(newCompetitor) {
         this.competitorsToShow.push(newCompetitor);
       },
+      addCoverplusRow(coverplus) {
+        const newCoverplus = { ...coverplus };
+        this.coverpluses.push(newCoverplus);
+        this.showAddedCoverpluses(newCoverplus);
+        this.coverplus.brand = null;
+        this.coverplus.model = null;
+        this.coverplus.price = null;
+        this.dialogCoverplus = false;
+      },
+      removeCoverplusInformation(index) {
+        this.coverplusesToShow.splice(index, 1);
+      },
+      showAddedCoverpluses(newCoverplus) {
+        this.coverplusesToShow.push(newCoverplus);
+      },
       addProductRow(product) {
         const newProduct = { ...product };
         this.products.push(newProduct);
@@ -245,6 +309,7 @@
         for (const productModel of requestData.requestProductsModel) {
           const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
           if (categoryFound) {
+            console.log("prod", productModel);
             this.selectedCategories.push(categoryFound);
             await this.fetchProductsForCategory(categoryFound);
             const p = {
@@ -253,12 +318,16 @@
               quantity: productModel.quantity,
               budget: productModel.budget,
               productName: productModel.productName,
-              tenderDate: moment(productModel.tenderDate).format('MMMM Do YYYY'),
-              deliveryDate: moment(productModel.deliveryDate).format('MMMM Do YYYY'),
+              tenderDate: productModel.tenderDate === "0001-01-01T00:00:00" ? "N/A" : moment(productModel.tenderDate).format('MMMM Do YYYY'),
+              deliveryDate: productModel.deliveryDate === "0001-01-01T00:00:00" ? "N/A" : moment(productModel.deliveryDate).format('MMMM Do YYYY'),
               remarks: productModel.remarks,
               statusStr: productModel.statusStr
             };
-            this.productsToShow.push(p);
+            if (productModel.isCoverplus === true) {
+              this.coverplusesToShow.push(p);
+            } else {
+              this.productsToShow.push(p);
+            }
           }
         }
         for (const competitorModel of requestData.competitorInformationModel) {
@@ -372,7 +441,7 @@
           ApprovalState: 20,
           Priority: this.priority,
           requestProducts: [],
-          competitorInformations: []
+          competitorInformations: [],
         };
         for (const product in this.productsToShow) {
           const productToInsert = {
@@ -380,6 +449,7 @@
             quantity: this.productsToShow[product].quantity,
             budget: this.productsToShow[product].budget,
             tenderDate: this.productsToShow[product].tenderDate,
+            isCoverplus: false
           };
           quotationData.requestProducts.push(productToInsert);
         }
@@ -390,6 +460,15 @@
             price: this.competitorsToShow[competitor].price
           };
           quotationData.competitorInformations.push(competitorToInsert);
+        }
+        for (const coverplus in this.coverplusesToShow) {
+          const coverplusToInsert = {
+            productId: this.coverplusesToShow[coverplus].productId,
+            quantity: this.coverplusesToShow[coverplus].quantity,
+            budget: this.coverplusesToShow[coverplus].budget,
+            isCoverplus: true
+          };
+          quotationData.requestProducts.push(coverplusToInsert);
         }
         try {
           const vm = this;

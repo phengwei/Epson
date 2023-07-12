@@ -6,10 +6,13 @@ using System.Threading.Tasks;
 
 namespace Epson.Core.Domain.Enum
 {
-    public enum TeamEnum
+    public enum RoleEnum
     {
-        Govt = 10,
+        Sales = 10,
 
-        Enterprise = 20
+        Product = 20,
+
+        Coverplus = 30
+
     }
 }
