@@ -25,6 +25,7 @@ namespace Epson.Services.Services.Requests
         private readonly IRepository<Request> _RequestRepository;
         private readonly IRepository<RequestProduct> _RequestProductRepository;
         private readonly IRepository<CompetitorInformation> _CompetitorInformationRepository;
+        private readonly IRepository<RequestSubmissionDetail> _RequestSubmissionDetailRepository;
         private readonly IProductService _productService;
         private readonly IEmailService _emailService;
         private readonly ILogger _logger;
@@ -36,6 +37,7 @@ namespace Epson.Services.Services.Requests
             IRepository<Request> requestRepository,
             IRepository<RequestProduct> requestProductRepository,
             IRepository<CompetitorInformation> competitorInformationRepository,
+            IRepository<RequestSubmissionDetail> requestSubmissionDetailRepository,
             IProductService productService,
             IEmailService emailService,
             ILogger logger,
@@ -46,6 +48,7 @@ namespace Epson.Services.Services.Requests
             _RequestRepository = requestRepository;
             _RequestProductRepository = requestProductRepository;
             _CompetitorInformationRepository = competitorInformationRepository;
+            _RequestSubmissionDetailRepository = requestSubmissionDetailRepository;
             _productService = productService;
             _emailService = emailService;
             _logger = logger;
@@ -88,7 +91,8 @@ namespace Epson.Services.Services.Requests
                 TotalPrice = x.TotalPrice,
                 TimeToResolution = x.TimeToResolution,
                 Comments = x.Comments,
-                RequestProducts = _RequestProductRepository.Table.Where(y => y.RequestId == x.Id).ToList()
+                RequestProducts = _RequestProductRepository.Table.Where(y => y.RequestId == x.Id).ToList(),
+                RequestSubmissionDetail = _RequestSubmissionDetailRepository.Table.Where(d => d.RequestId == x.Id).First(),
             })
             .OrderBy(x => x.CreatedOnUTC)
             .ToList();
@@ -120,7 +124,8 @@ namespace Epson.Services.Services.Requests
                     RequestProducts = x.RequestProducts
                         .Where(rp => rp.HasFulfilled == false && (isCoverplus || !rp.IsCoverplus))
                         .ToList(),
-                    CompetitorInformations = x.CompetitorInformations.ToList()
+                    CompetitorInformations = x.CompetitorInformations.ToList(),
+                    RequestSubmissionDetail = x.RequestSubmissionDetail,
                 })
                 .Where(x => x.RequestProducts.Any())
                 .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
@@ -156,16 +161,20 @@ namespace Epson.Services.Services.Requests
             return requestProductDTOs;
         }
 
-        public bool InsertRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations)
+        public bool InsertRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations, RequestSubmissionDetail requestSubmissionDetail)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            try
+            if (requestSubmissionDetail == null)
+                throw new ArgumentNullException(nameof(requestSubmissionDetail));
+
+                try
             {
                 request.TotalBudget = GetTotalBudgetOfRequestProducts(requestProducts);
                 request.Id = _RequestRepository.Add(request);
-
+                requestSubmissionDetail.RequestId = request.Id;
+                
                 _logger.Information("Creating request {id}", request.Id);
 
                 foreach (var requestProduct in requestProducts)
@@ -182,9 +191,12 @@ namespace Epson.Services.Services.Requests
                     competitorInformation.RequestId = request.Id;
                     InsertCompetitorInformation(competitorInformation);
                 }
-
+                
                 var requestQueue = _emailService.CreateRequestEmailQueue(request, requestProducts);
                 _emailService.InsertEmailQueue(requestQueue);
+
+                _RequestSubmissionDetailRepository.Add(requestSubmissionDetail);
+                _logger.Information("Successfully created request {id}", request.Id);
 
                 return true;
             }
@@ -222,6 +234,7 @@ namespace Epson.Services.Services.Requests
                 return false;
             }
         }
+
 
         private bool InsertCompetitorInformation(CompetitorInformation competitorInformation)
         {
@@ -727,31 +740,5 @@ namespace Epson.Services.Services.Requests
             }
             return overlappingTime;
         }
-
-        //private RequestDTO MapToDTO(Request request)
-        //{
-        //    return new RequestDTO
-        //    {
-        //        Id = request.Id,
-        //        ApprovedBy = request.ApprovedBy,
-        //        ApprovedTime = request.ApprovedTime,
-        //        CompetitorInformations = request.CompetitorInformations,
-        //        CreatedById = request.CreatedById,
-        //        CreatedOnUTC = request.CreatedOnUTC,
-        //        CustomerName = request.CustomerName,
-        //        DealJustification = request.DealJustification,
-        //        UpdatedById = request.UpdatedById,
-        //        UpdatedOnUTC = request.UpdatedOnUTC,
-        //        Segment = request.Segment,
-        //        TotalBudget = request.TotalBudget,
-        //        ApprovalState = request.ApprovalState,
-        //        Priority = request.Priority,
-        //        Deadline = request.Deadline,
-        //        TotalPrice = request.TotalPrice,
-        //        TimeToResolution = request.TimeToResolution,
-        //        Comments = request.Comments,
-        //        RequestProducts = request.RequestProducts
-        //    };
-        //}
     }
 }

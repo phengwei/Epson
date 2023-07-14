@@ -53,9 +53,9 @@
           </v-card-text>
         </v-card>
         <CoverplusDialog :dialogCoverplus.sync="dialogCoverplus"
-                       :coverplus="coverplus"
-                       :isViewMode="isViewMode"
-                       @add-coverplus="addCoverplusRow" />
+                         :coverplus="coverplus"
+                         :isViewMode="isViewMode"
+                         @add-coverplus="addCoverplusRow" />
         <v-card class="mb-5 mt-2">
           <v-card-text>
             <div class="table-actions mb-4">
@@ -133,6 +133,59 @@
             </table>
           </v-card-text>
         </v-card>
+        <v-card class="mb-5 mt-2">
+          <v-card-text>
+            <table class="mb-5 mt-2">
+              <thead>
+                <tr class="header-row">
+                  <th colspan="4"><h2>SUBMISSION DETAILS</h2></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Prepared By (EMSB)</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="submissionDetail.preparedBy" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Request Date</td>
+                  <td>:</td>
+                  <td><input type="datetime-local" v-model="submissionDetail.requestDate" class="border-input" readonly></td>
+                </tr>
+                <tr>
+                  <td>Distributor Name</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="submissionDetail.distributorName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>BP / SI / Reseller Name</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="submissionDetail.resellerName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Contact Person Name</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="submissionDetail.contactPersonName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Telephone No</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="submissionDetail.telephoneNo" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Fax No</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="submissionDetail.faxNo" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Email</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="submissionDetail.email" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+              </tbody>
+            </table>
+          </v-card-text>
+        </v-card>
         <div class="form-group">
           <label>Customer Name</label>
           <input type="text" v-model="customerName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
@@ -194,6 +247,7 @@
         productsToShow: [],
         competitorsToShow: [],
         coverplusesToShow: [],
+        submissionDetail: { preparedBy: null, requestDate: null, distributorName: null, resellerName: null, contactPersonName: null, telephoneNo: null, faxNo: null, email: null },
         options: {},
         priority: {
           value: 1,
@@ -218,6 +272,7 @@
       };
     },
     async created() {
+      this.submissionDetail.requestDate = this.getToday();
       await this.fetchCategories();
       if (this.$route.query.view) {
         const request = JSON.parse(this.$route.query.request);
@@ -248,6 +303,21 @@
       }
     },
     methods: {
+      getToday() {
+        const date = new Date();
+        const year = date.getFullYear();
+        let month = date.getMonth() + 1;
+        let day = date.getDate();
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+
+        month = (month < 10) ? `0${month}` : month;
+        day = (day < 10) ? `0${day}` : day;
+        hours = (hours < 10) ? `0${hours}` : hours;
+        minutes = (minutes < 10) ? `0${minutes}` : minutes;
+
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+      },
       addCompetitorRow(competitor) {
         const newCompetitor = { ...competitor };
         this.competitors.push(newCompetitor);
@@ -470,6 +540,16 @@
           };
           quotationData.requestProducts.push(coverplusToInsert);
         }
+        quotationData.submissionDetail = {
+          preparedBy: this.submissionDetail.preparedBy,
+          requestDate: this.submissionDetail.requestDate,
+          distributorName: this.submissionDetail.distributorName,
+          resellerName: this.submissionDetail.resellerName,
+          contactPersonName: this.submissionDetail.contactPersonName,
+          telephoneNo: this.submissionDetail.telephoneNo,
+          faxNo: this.submissionDetail.faxNo,
+          email: this.submissionDetail.email
+        }
         try {
           const vm = this;
           await this.$axios.post(`${this.$config.restUrl}/api/request/createrequest`, {
@@ -482,6 +562,7 @@
               customerName: this.customerName,
               dealJustification: this.dealJustification,
               deadline: this.deadline,
+              requestSubmissionDetail: quotationData.submissionDetail,
               comments: '',
             }
           }).then(response => {
