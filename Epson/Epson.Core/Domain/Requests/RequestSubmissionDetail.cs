@@ -16,5 +16,7 @@ namespace Epson.Core.Domain.Requests
         public string? TelephoneNo { get; set; }
         public string? FaxNo { get; set; }
         public string? Email { get; set; }
+        public DateTime? CreatedOnUTC { get; set; }
+        public string? CreatedBy { get; set; }
     }
 }

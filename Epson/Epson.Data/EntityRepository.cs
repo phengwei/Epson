@@ -86,6 +86,17 @@ namespace Epson.Data
             using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
             return db.Execute($"DELETE FROM {typeof(T).Name} WHERE Id = @Id", new { Id = id });
         }
+
+        public int BulkInsert(IEnumerable<T> entities)
+        {
+            using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
+            var tableName = typeof(T).Name;
+            var props = typeof(T).GetProperties();
+            var columns = string.Join(", ", props.Select(p => p.Name));
+            var values = string.Join(", ", props.Select(p => $"@{p.Name}"));
+            var query = $"INSERT INTO {tableName} ({columns}) VALUES ({values})";
+            return db.Execute(query, entities);
+        }
     }
 
 

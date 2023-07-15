@@ -114,11 +114,10 @@ namespace Epson.Controllers.API
                 CustomerName = model.CustomerName, 
             };
 
-            return Ok();
-            //if (_requestService.InsertRequest(request, model.RequestProducts, model.CompetitorInformations, model.RequestSubmissionDetail))
-            //    return Ok();
-            //else
-            //    return BadRequest("Failed to create request");
+            if (_requestService.InsertRequest(request, model.RequestProducts, model.CompetitorInformations, model.RequestSubmissionDetail, model.ProjectInformationModel))
+                return Ok();
+            else
+                return BadRequest("Failed to create request");
         }
 
         [HttpPost("editrequest")]

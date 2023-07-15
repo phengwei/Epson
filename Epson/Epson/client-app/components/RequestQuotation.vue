@@ -150,7 +150,7 @@
                 <tr>
                   <td>Request Date</td>
                   <td>:</td>
-                  <td><input type="datetime-local" v-model="submissionDetail.requestDate" class="border-input" readonly></td>
+                  <td><input type="datetime-local" v-model="submissionDetail.createdOnUTC" class="border-input" readonly></td>
                 </tr>
                 <tr>
                   <td>Distributor Name</td>
@@ -246,7 +246,7 @@
                 <tr>
                   <td>Contact Person</td>
                   <td>:</td>
-                  <td><input type="text" v-model="projectInformation.contactPerson" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                  <td><input type="text" v-model="projectInformation.contactPersonName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
                 <tr>
                   <td>Telephone No</td>
@@ -360,9 +360,9 @@
         productsToShow: [],
         competitorsToShow: [],
         coverplusesToShow: [],
-        submissionDetail: { preparedBy: null, requestDate: null, distributorName: null, resellerName: null, contactPersonName: null, telephoneNo: null, faxNo: null, email: null },
+        submissionDetail: { preparedBy: null, createdOnUTC: null, distributorName: null, resellerName: null, contactPersonName: null, telephoneNo: null, faxNo: null, email: null },
         projectInformation: {
-          projectName: null, projectId: null, industry: null, type: null, closingDate: null, deliveryDate: null, companyAddress: null, contactPerson: null,
+          projectName: null, projectId: null, industry: null, type: null, closingDate: null, deliveryDate: null, companyAddress: null, contactPersonName: null,
           email: null, requirements: null, budget: null, staggeredDelivery: null, otherInformation: null,
           projectInformationReason: {
             id: null, projectInformationId: null, selectedReasons: null, additionalInfo: null
@@ -401,7 +401,7 @@
       };
     },
     async created() {
-      this.submissionDetail.requestDate = this.getToday();
+      this.submissionDetail.createdOnUTC = this.getToday();
       await this.fetchCategories();
       if (this.$route.query.view) {
         const request = JSON.parse(this.$route.query.request);
@@ -505,10 +505,10 @@
         return 'N/A';
       },
       async populateForm(requestData) {
+        console.log("requestdata", requestData);
         for (const productModel of requestData.requestProductsModel) {
           const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
           if (categoryFound) {
-            console.log("prod", productModel);
             this.selectedCategories.push(categoryFound);
             await this.fetchProductsForCategory(categoryFound);
             const p = {
@@ -537,6 +537,9 @@
           };
           this.competitorsToShow.push(c);
         }
+        this.submissionDetail = requestData.requestSubmissionDetailModel;
+        this.projectInformation = requestData.projectInformationModel;
+        this.projectInformation.projectInformationReasons = requestData.projectInformationModel.projectInformationReasons.map(reasonObject => reasonObject.selectedReason);
         this.priority.value = requestData.priority;
         this.customerName = requestData.customerName;
         this.dealJustification = requestData.dealJustification;
@@ -559,15 +562,13 @@
       },
       handleCheckboxChange(event, reason) {
         if (event.target.checked) {
-          console.log("checked", reason);
           this.projectInformationReasonsToInsert.push({
-            id: null,
-            projectInformationId: null,
+            id: 0,
+            projectInformationId: 0,
             selectedReason: reason,
             additionalInfo: null
           });
         } else {
-          console.log("unchecked", reason);
           const index = this.projectInformationReasonsToInsert.findIndex(r => r.selectedReason === reason);
           if (index !== -1) {
             this.projectInformationReasonsToInsert.splice(index, 1);
@@ -668,8 +669,7 @@
           quotationData.requestProducts.push(coverplusToInsert);
         }
         quotationData.submissionDetail = {
-          preparedBy: this.submissionDetail.preparedBy,
-          requestDate: this.submissionDetail.requestDate,
+          createdOnUTC: this.submissionDetail.createdOnUTC,
           distributorName: this.submissionDetail.distributorName,
           resellerName: this.submissionDetail.resellerName,
           contactPersonName: this.submissionDetail.contactPersonName,
@@ -693,7 +693,7 @@
           budget: this.projectInformation.budget,
           staggeredDelivery: this.projectInformation.staggeredDelivery,
           otherInformation: this.projectInformation.otherInformation,
-          projectInformationReasonsModel: this.projectInformationReasonsToInsert
+          projectInformationReasons: this.projectInformationReasonsToInsert
         }
         try {
           const vm = this;

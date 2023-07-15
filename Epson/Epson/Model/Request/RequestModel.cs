@@ -1,4 +1,5 @@
 ﻿using Epson.Core.Domain.Requests;
+using Epson.Services.DTO.Requests;
 
 namespace Epson.Model.Request
 {
@@ -27,10 +28,9 @@ namespace Epson.Model.Request
         public List<RequestProduct> RequestProducts { get; set; } = new List<RequestProduct>();
         public List<CompetitorInformation> CompetitorInformations { get; set; } = new List<CompetitorInformation>();
         public RequestSubmissionDetail RequestSubmissionDetail { get; set; } = new RequestSubmissionDetail();
-        public ProjectInformation ProjectInformation { get; set; } = new ProjectInformation();
         public List<RequestProductModel> RequestProductsModel { get; set; } = new List<RequestProductModel>();
         public List<CompetitorInformationModel> CompetitorInformationModel { get; set; } = new List<CompetitorInformationModel>();
         public RequestSubmissionDetailModel RequestSubmissionDetailModel { get; set; } = new RequestSubmissionDetailModel();
-        public ProjectInformationModel ProjectInformationModel { get; set; } = new ProjectInformationModel();
+        public ProjectInformationDTO ProjectInformationModel { get; set; } = new ProjectInformationDTO();
     }
 }

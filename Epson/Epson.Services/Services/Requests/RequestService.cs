@@ -27,6 +27,7 @@ namespace Epson.Services.Services.Requests
         private readonly IRepository<CompetitorInformation> _CompetitorInformationRepository;
         private readonly IRepository<RequestSubmissionDetail> _RequestSubmissionDetailRepository;
         private readonly IRepository<ProjectInformation> _ProjectInformationRepository;
+        private readonly IRepository<ProjectInformationReason> _ProjectInformationReasonRepository;
         private readonly IProductService _productService;
         private readonly IEmailService _emailService;
         private readonly ILogger _logger;
@@ -40,6 +41,7 @@ namespace Epson.Services.Services.Requests
             IRepository<CompetitorInformation> competitorInformationRepository,
             IRepository<RequestSubmissionDetail> requestSubmissionDetailRepository,
             IRepository<ProjectInformation> projectInformationRepository,
+            IRepository<ProjectInformationReason> projectInformationReasonRepository,
             IProductService productService,
             IEmailService emailService,
             ILogger logger,
@@ -52,6 +54,7 @@ namespace Epson.Services.Services.Requests
             _CompetitorInformationRepository = competitorInformationRepository;
             _RequestSubmissionDetailRepository = requestSubmissionDetailRepository;
             _ProjectInformationRepository = projectInformationRepository;
+            _ProjectInformationReasonRepository = projectInformationReasonRepository;
             _productService = productService;
             _emailService = emailService;
             _logger = logger;
@@ -74,29 +77,60 @@ namespace Epson.Services.Services.Requests
         public List<RequestDTO> GetRequests()
         {
             var requests = _RequestRepository.GetAll();
-            var requestDTOs = requests.Select(x => new RequestDTO
+            var requestDTOs = requests.Select(x =>
             {
-                Id = x.Id,
-                ApprovedBy = x.ApprovedBy,
-                ApprovedTime = x.ApprovedTime,
-                CompetitorInformations = _CompetitorInformationRepository.Table.Where(p => p.RequestId == x.Id).ToList(),
-                CreatedById = x.CreatedById,
-                CreatedOnUTC = x.CreatedOnUTC,
-                CustomerName = x.CustomerName,
-                DealJustification = x.DealJustification,
-                UpdatedById = x.UpdatedById,
-                UpdatedOnUTC = x.UpdatedOnUTC,
-                Segment = x.Segment,
-                TotalBudget = x.TotalBudget,
-                ApprovalState = x.ApprovalState,
-                Priority = x.Priority,
-                Deadline = x.Deadline,
-                TotalPrice = x.TotalPrice,
-                TimeToResolution = x.TimeToResolution,
-                Comments = x.Comments,
-                RequestProducts = _RequestProductRepository.Table.Where(y => y.RequestId == x.Id).ToList(),
-                RequestSubmissionDetail = _RequestSubmissionDetailRepository.Table.Where(d => d.RequestId == x.Id).First(),
-                ProjectInformation = _ProjectInformationRepository.Table.Where(a => a.RequestId == x.Id).First(),
+                var projectInformation = _ProjectInformationRepository
+                .Table
+                .Where(a => a.RequestId == x.Id)
+                .FirstOrDefault();
+
+                return new RequestDTO
+                {
+                    Id = x.Id,
+                    ApprovedBy = x.ApprovedBy,
+                    ApprovedTime = x.ApprovedTime,
+                    CompetitorInformations = _CompetitorInformationRepository.Table.Where(p => p.RequestId == x.Id).ToList(),
+                    CreatedById = x.CreatedById,
+                    CreatedOnUTC = x.CreatedOnUTC,
+                    CustomerName = x.CustomerName,
+                    DealJustification = x.DealJustification,
+                    UpdatedById = x.UpdatedById,
+                    UpdatedOnUTC = x.UpdatedOnUTC,
+                    Segment = x.Segment,
+                    TotalBudget = x.TotalBudget,
+                    ApprovalState = x.ApprovalState,
+                    Priority = x.Priority,
+                    Deadline = x.Deadline,
+                    TotalPrice = x.TotalPrice,
+                    TimeToResolution = x.TimeToResolution,
+                    Comments = x.Comments,
+                    RequestProducts = _RequestProductRepository.Table.Where(y => y.RequestId == x.Id).ToList(),
+                    RequestSubmissionDetail = _RequestSubmissionDetailRepository.Table.Where(d => d.RequestId == x.Id).FirstOrDefault(),
+                    ProjectInformation = new ProjectInformationDTO
+                    {
+                        Id = projectInformation.Id,
+                        RequestId = x.Id,
+                        ProjectName = projectInformation.ProjectName,
+                        ProjectId = projectInformation.ProjectId,
+                        Industry = projectInformation.Industry,
+                        Type = projectInformation.Type,
+                        ClosingDate = projectInformation.ClosingDate,
+                        DeliveryDate = projectInformation.DeliveryDate,
+                        CompanyAddress = projectInformation.CompanyAddress,
+                        ContactPersonName = projectInformation.ContactPersonName,
+                        TelephoneNo = projectInformation.TelephoneNo,
+                        Email = projectInformation.Email,
+                        Requirements = projectInformation.Requirements,
+                        CustomerApplications = projectInformation.CustomerApplications,
+                        Budget = projectInformation.Budget,
+                        StaggeredDelivery = projectInformation.StaggeredDelivery,
+                        OtherInformation = projectInformation.OtherInformation,
+                        ProjectInformationReasons = _ProjectInformationReasonRepository
+                                                    .Table
+                                                    .Where(r => r.ProjectInformationId == projectInformation.Id)
+                                                    .ToList(),
+                    }
+                };
             })
             .OrderBy(x => x.CreatedOnUTC)
             .ToList();
@@ -169,7 +203,7 @@ namespace Epson.Services.Services.Requests
             List<RequestProduct> requestProducts, 
             List<CompetitorInformation> competitorInformations, 
             RequestSubmissionDetail requestSubmissionDetail,
-            ProjectInformation projectInformation)
+            ProjectInformationDTO projectInformationDTO)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -177,11 +211,14 @@ namespace Epson.Services.Services.Requests
             if (requestSubmissionDetail == null)
                 throw new ArgumentNullException(nameof(requestSubmissionDetail));
 
+            var projectInformation = _mapper.Map<ProjectInformation>(projectInformationDTO);
+
                 try
             {
                 request.TotalBudget = GetTotalBudgetOfRequestProducts(requestProducts);
                 request.Id = _RequestRepository.Add(request);
                 requestSubmissionDetail.RequestId = request.Id;
+                projectInformation.RequestId = request.Id;
                 
                 _logger.Information("Creating request {id}", request.Id);
 
@@ -203,7 +240,15 @@ namespace Epson.Services.Services.Requests
                 var requestQueue = _emailService.CreateRequestEmailQueue(request, requestProducts);
                 _emailService.InsertEmailQueue(requestQueue);
 
-                _ProjectInformationRepository.Add(projectInformation);
+                var projectInformationId = _ProjectInformationRepository.Add(projectInformation);
+
+                foreach (var projectInformationReason in projectInformationDTO.ProjectInformationReasons)
+                {
+                    projectInformationReason.ProjectInformationId = projectInformationId;
+                    _ProjectInformationReasonRepository.Add(projectInformationReason);
+                }
+
+                requestSubmissionDetail.CreatedBy = request.CreatedById;
                 _RequestSubmissionDetailRepository.Add(requestSubmissionDetail);
                 _logger.Information("Successfully created request {id}", request.Id);
 

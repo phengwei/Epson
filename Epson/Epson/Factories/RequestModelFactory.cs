@@ -168,8 +168,21 @@ namespace Epson.Factories
                         Brand = x.Brand,
                         Price = x.Price
                     }).ToList(),
-                    RequestSubmissionDetail = request.RequestSubmissionDetail,
-                    ProjectInformation = request.ProjectInformation,
+                    RequestSubmissionDetailModel = new RequestSubmissionDetailModel
+                    {
+                        Id = request.RequestSubmissionDetail.Id,
+                        RequestId = request.Id,
+                        DistributorName = request.RequestSubmissionDetail.DistributorName,
+                        ResellerName = request.RequestSubmissionDetail.ResellerName,
+                        ContactPersonName = request.RequestSubmissionDetail.ContactPersonName,
+                        TelephoneNo = request.RequestSubmissionDetail.TelephoneNo,
+                        FaxNo = request.RequestSubmissionDetail.FaxNo,
+                        Email = request.RequestSubmissionDetail.Email,
+                        CreatedOnUTC = request.RequestSubmissionDetail.CreatedOnUTC,
+                        CreatedBy = request.RequestSubmissionDetail.CreatedBy,
+                        PreparedBy = _userManager.FindByIdAsync(request.RequestSubmissionDetail.CreatedBy).Result.UserName,
+                    },
+                    ProjectInformationModel = request.ProjectInformation,
                 };
                 requestModels.Add(requestModel);
             }
