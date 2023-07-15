@@ -169,6 +169,7 @@ namespace Epson.Factories
                         Price = x.Price
                     }).ToList(),
                     RequestSubmissionDetail = request.RequestSubmissionDetail,
+                    ProjectInformation = request.ProjectInformation,
                 };
                 requestModels.Add(requestModel);
             }

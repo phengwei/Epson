@@ -45,6 +45,10 @@ namespace Epson.Services.DTO
             CreateMap<RequestProduct, RequestProductDTO>();
             CreateMap<RequestSubmissionDetail, RequestSubmissionDetailDTO>();
             CreateMap<RequestSubmissionDetailDTO, RequestSubmissionDetail>();
+            CreateMap<ProjectInformation, ProjectInformationDTO>();
+            CreateMap<ProjectInformationDTO, ProjectInformation>();
+            CreateMap<ProjectInformationReason, ProjectInformationReasonDTO>();
+            CreateMap<ProjectInformationReasonDTO, ProjectInformationReason>();
             #endregion
 
             #region SLA

@@ -186,6 +186,119 @@
             </table>
           </v-card-text>
         </v-card>
+        <v-card class="mb-5 mt-2">
+          <v-card-text>
+            <table class="mb-5 mt-2">
+              <thead>
+                <tr class="header-row">
+                  <th colspan="6"><h2>END USER / PROJECT INFORMATION</h2></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Company / Project Name</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="projectInformation.projectName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Project ID</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="projectInformation.projectId" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Industry</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="projectInformation.industry" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Type</td>
+                  <td>:</td>
+                  <td>
+                    <div class="form-check">
+                      <input class="form-check-input custom-radio" type="radio" id="openTender" value="Open Tender" v-model="projectInformation.type" :disabled="isViewMode">
+                      <label class="form-check-label" for="openTender">Open Tender</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input custom-radio" type="radio" id="closeTender" value="Close Tender" v-model="projectInformation.type" :disabled="isViewMode">
+                      <label class="form-check-label" for="closeTender">Close Tender</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input custom-radio" type="radio" id="specialPricing" value="Special Pricing" v-model="projectInformation.type" :disabled="isViewMode">
+                      <label class="form-check-label" for="specialPricing">Special Pricing</label>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Closing Date</td>
+                  <td>:</td>
+                  <td><input type="datetime-local" v-model="projectInformation.closingDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Delivery Date</td>
+                  <td>:</td>
+                  <td><input type="datetime-local" v-model="projectInformation.deliveryDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Company Address</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="projectInformation.companyAddress" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Contact Person</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="projectInformation.contactPerson" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Telephone No</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="projectInformation.telephoneNo" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Email</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="projectInformation.email" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Reason</td>
+                  <td>:</td>
+                  <td>
+                    <div class="form-group" v-for="(reason, index) in reasons" :key="index">
+                      <div class="form-check">
+                        <input class="form-check-input custom-checkbox" type="checkbox" :id="reason.text" :value="reason.text" v-model="projectInformation.projectInformationReasons" :disabled="isViewMode" @change="handleCheckboxChange($event, reason.text)">
+                        <label class="form-check-label" :for="reason.text">{{ reason.text }}</label>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Key Customer Requirements</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="projectInformation.requirements" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Customer Applications</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="projectInformation.customerApplications" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Customer's Budget for this purchase'</td>
+                  <td>:</td>
+                  <td><input type="number" min="1" v-model="projectInformation.budget" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>If Staggered Delivery, please state deliver qty & timeline</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="projectInformation.staggeredDelivery" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Other Information</td>
+                  <td>:</td>
+                  <td><input type="text" v-model="projectInformation.otherInformation" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+              </tbody>
+            </table>
+          </v-card-text>
+        </v-card>
         <div class="form-group">
           <label>Customer Name</label>
           <input type="text" v-model="customerName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
@@ -248,6 +361,22 @@
         competitorsToShow: [],
         coverplusesToShow: [],
         submissionDetail: { preparedBy: null, requestDate: null, distributorName: null, resellerName: null, contactPersonName: null, telephoneNo: null, faxNo: null, email: null },
+        projectInformation: {
+          projectName: null, projectId: null, industry: null, type: null, closingDate: null, deliveryDate: null, companyAddress: null, contactPerson: null,
+          email: null, requirements: null, budget: null, staggeredDelivery: null, otherInformation: null,
+          projectInformationReason: {
+            id: null, projectInformationId: null, selectedReasons: null, additionalInfo: null
+          },
+          projectInformationReasons: []
+        },
+        projectInformationReasonsToInsert: [],
+        reasons: [
+          { text: "New Purchase", info: "" },
+          { text: "Additional Purchase", info: "Quotation No." },
+          { text: "Renewal of Quotation", info: "Quotation No." },
+          { text: "Revision (Price/Model/Qty/Other)", info: "Quotation No." },
+          { text: "Replacement of old machine", info: "" }
+        ],
         options: {},
         priority: {
           value: 1,
@@ -428,6 +557,23 @@
           console.error(error);
         }
       },
+      handleCheckboxChange(event, reason) {
+        if (event.target.checked) {
+          console.log("checked", reason);
+          this.projectInformationReasonsToInsert.push({
+            id: null,
+            projectInformationId: null,
+            selectedReason: reason,
+            additionalInfo: null
+          });
+        } else {
+          console.log("unchecked", reason);
+          const index = this.projectInformationReasonsToInsert.findIndex(r => r.selectedReason === reason);
+          if (index !== -1) {
+            this.projectInformationReasonsToInsert.splice(index, 1);
+          }
+        }
+      },
       async fetchProductsForCategory(category) {
         try {
           const response = await this.$axios.get(`${this.$config.restUrl}/api/product/getproductbycategory`, { params: { categoryId: category.id } });
@@ -464,25 +610,6 @@
         localStorage.setItem("savedItem-deadline", this.deadline);
         this.$swal('Request draft saved');
 
-      },
-      checkboxChanged(selectedCategory) {
-        if (selectedCategory) {
-          const categoryId = selectedCategory.id;
-
-          if (this.selectedCategories.includes(selectedCategory)) {
-            if (this.selectedProducts[categoryId] === undefined) {
-              this.selectedProducts[categoryId] = '';
-              this.quantity[categoryId] = null;
-              this.budget[categoryId] = null;
-            }
-            this.submitForm(selectedCategory);
-          } else {
-            this.$delete(this.selectedProducts, categoryId);
-            this.$delete(this.quantity, categoryId);
-            this.$delete(this.budget, categoryId);
-            this.$delete(this.options, categoryId);
-          }
-        }
       },
       async submitForm(selectedCategory) {
         if (selectedCategory.id != null) {
@@ -550,6 +677,24 @@
           faxNo: this.submissionDetail.faxNo,
           email: this.submissionDetail.email
         }
+        quotationData.projectInformation = {
+          projectName: this.projectInformation.projectName,
+          projectId: this.projectInformation.projectId,
+          industry: this.projectInformation.industry,
+          type: this.projectInformation.type,
+          closingDate: this.projectInformation.closingDate,
+          deliveryDate: this.projectInformation.deliveryDate,
+          companyAddress: this.projectInformation.companyAddress,
+          contactPersonName: this.projectInformation.contactPersonName,
+          telephoneNo: this.projectInformation.telephoneNo,
+          email: this.projectInformation.email,
+          requirements: this.projectInformation.requirements,
+          customerApplications: this.projectInformation.customerApplications,
+          budget: this.projectInformation.budget,
+          staggeredDelivery: this.projectInformation.staggeredDelivery,
+          otherInformation: this.projectInformation.otherInformation,
+          projectInformationReasonsModel: this.projectInformationReasonsToInsert
+        }
         try {
           const vm = this;
           await this.$axios.post(`${this.$config.restUrl}/api/request/createrequest`, {
@@ -563,6 +708,7 @@
               dealJustification: this.dealJustification,
               deadline: this.deadline,
               requestSubmissionDetail: quotationData.submissionDetail,
+              ProjectInformationModel: quotationData.projectInformation,
               comments: '',
             }
           }).then(response => {
@@ -585,6 +731,14 @@
   .products-title {
     font-size: 2em;
     text-align: center;
+  }
+
+  .custom-radio {
+    border: 1px solid #000;
+    margin: 2px;
+    width: 1.2em;
+    height: 1.2em;
+    border-radius: 50%;
   }
 
   .header-row {

@@ -26,6 +26,7 @@ namespace Epson.Services.Services.Requests
         private readonly IRepository<RequestProduct> _RequestProductRepository;
         private readonly IRepository<CompetitorInformation> _CompetitorInformationRepository;
         private readonly IRepository<RequestSubmissionDetail> _RequestSubmissionDetailRepository;
+        private readonly IRepository<ProjectInformation> _ProjectInformationRepository;
         private readonly IProductService _productService;
         private readonly IEmailService _emailService;
         private readonly ILogger _logger;
@@ -38,6 +39,7 @@ namespace Epson.Services.Services.Requests
             IRepository<RequestProduct> requestProductRepository,
             IRepository<CompetitorInformation> competitorInformationRepository,
             IRepository<RequestSubmissionDetail> requestSubmissionDetailRepository,
+            IRepository<ProjectInformation> projectInformationRepository,
             IProductService productService,
             IEmailService emailService,
             ILogger logger,
@@ -49,6 +51,7 @@ namespace Epson.Services.Services.Requests
             _RequestProductRepository = requestProductRepository;
             _CompetitorInformationRepository = competitorInformationRepository;
             _RequestSubmissionDetailRepository = requestSubmissionDetailRepository;
+            _ProjectInformationRepository = projectInformationRepository;
             _productService = productService;
             _emailService = emailService;
             _logger = logger;
@@ -93,6 +96,7 @@ namespace Epson.Services.Services.Requests
                 Comments = x.Comments,
                 RequestProducts = _RequestProductRepository.Table.Where(y => y.RequestId == x.Id).ToList(),
                 RequestSubmissionDetail = _RequestSubmissionDetailRepository.Table.Where(d => d.RequestId == x.Id).First(),
+                ProjectInformation = _ProjectInformationRepository.Table.Where(a => a.RequestId == x.Id).First(),
             })
             .OrderBy(x => x.CreatedOnUTC)
             .ToList();
@@ -161,7 +165,11 @@ namespace Epson.Services.Services.Requests
             return requestProductDTOs;
         }
 
-        public bool InsertRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations, RequestSubmissionDetail requestSubmissionDetail)
+        public bool InsertRequest(Request request,
+            List<RequestProduct> requestProducts, 
+            List<CompetitorInformation> competitorInformations, 
+            RequestSubmissionDetail requestSubmissionDetail,
+            ProjectInformation projectInformation)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -195,6 +203,7 @@ namespace Epson.Services.Services.Requests
                 var requestQueue = _emailService.CreateRequestEmailQueue(request, requestProducts);
                 _emailService.InsertEmailQueue(requestQueue);
 
+                _ProjectInformationRepository.Add(projectInformation);
                 _RequestSubmissionDetailRepository.Add(requestSubmissionDetail);
                 _logger.Information("Successfully created request {id}", request.Id);
 
