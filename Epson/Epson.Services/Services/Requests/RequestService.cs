@@ -582,9 +582,9 @@ namespace Epson.Services.Services.Requests
             if (reqProduct == null)
                 throw new Exception("Invalid request.");
 
-            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
-
+            
             var request = GetRequestById(requestProduct.RequestId);
+            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
 
             requestProduct.Status = (int)RequestProductStatusEnum.Rejected;
             requestProduct.Remarks = remarks;
