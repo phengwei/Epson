@@ -200,6 +200,7 @@
               v-if="item.approvalState === 40">
         mdi-pencil
       </v-icon>
+      <v-btn @click="viewRequest(item)">View</v-btn>
     </template>
   </v-data-table>
 
@@ -303,6 +304,12 @@
       },
     },
     methods: {
+      viewRequest(request) {
+        this.$router.push({
+          path: '/createquotation',
+          query: { view: true, request: JSON.stringify(request) }
+        });
+      },
       addCompetitorInformationRow() {
         if (this.competitor.brand && this.competitor.model && this.competitor.price) {
           const newCompetitor = { ...this.competitor };

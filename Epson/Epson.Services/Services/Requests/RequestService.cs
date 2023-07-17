@@ -412,7 +412,9 @@ namespace Epson.Services.Services.Requests
 
             if (request.ApprovalState != (int)ApprovalStateEnum.PendingRequesterAction)
                 return false;
-            
+
+            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
+
             request.ApprovalState = (int)ApprovalStateEnum.Approved;
             request.ApprovedBy = user.Id;
             request.ApprovedTime = DateTime.UtcNow;
@@ -421,7 +423,7 @@ namespace Epson.Services.Services.Requests
             request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
             request.Comments = comments;
 
-            if (DateTime.UtcNow > request.Deadline)
+            if (DateTime.UtcNow > projectInformation.ClosingDate)
                 request.Breached = true;
 
             try
@@ -452,6 +454,8 @@ namespace Epson.Services.Services.Requests
             if (requestProductToFulfill == null)
                 return false;
 
+            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
+
             requestProductToFulfill.FulfilledPrice = totalPrice;
             requestProductToFulfill.HasFulfilled = true;
             requestProductToFulfill.FulfillerId = user.Id;
@@ -461,7 +465,7 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate, requestProductToFulfill.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
             requestProductToFulfill.Remarks = remarks;
 
-            if (DateTime.UtcNow > request.Deadline)
+            if (DateTime.UtcNow > projectInformation.ClosingDate)
                 requestProductToFulfill.Breached = true;
 
             try
@@ -578,6 +582,8 @@ namespace Epson.Services.Services.Requests
             if (reqProduct == null)
                 throw new Exception("Invalid request.");
 
+            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
+
             var request = GetRequestById(requestProduct.RequestId);
 
             requestProduct.Status = (int)RequestProductStatusEnum.Rejected;
@@ -591,7 +597,7 @@ namespace Epson.Services.Services.Requests
             List<RequestProduct> requestProducts = _RequestProductRepository.Table.Where(x => x.RequestId == requestProduct.RequestId).ToList();
             bool allRejected = requestProducts.All(rp => rp.Status == (int)RequestProductStatusEnum.Rejected);
 
-            if (DateTime.UtcNow > request.Deadline)
+            if (DateTime.UtcNow > projectInformation.ClosingDate)
                 requestProduct.Breached = true;
 
             try
