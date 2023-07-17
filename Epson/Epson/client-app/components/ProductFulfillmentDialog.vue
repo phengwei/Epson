@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="localDialog" max-width="800px">
+  <v-dialog v-model="localDialogProductFulfillment" max-width="800px">
     <v-card>
       <v-card-title>
         <span class="text-h5">RESPONDENT - Product Managers</span>
@@ -80,22 +80,25 @@
   export default {
     name: 'DialogComponent',
     props: {
-      dialog: Boolean,
+      dialogProductFulfillment: {
+        type: Boolean,
+        default: false
+      },
       editedItem: Object,
       competitorsToShow: Array,
     },
     data() {
       return {
-        localDialog: this.dialog,
+        localDialogProductFulfillment: this.dialogProductFulfillment,
         localEditedItem: {},
       };
     },
     watch: {
-      dialog(newVal) {
-        this.localDialog = newVal;
+      dialogProductFulfillment(newVal) {
+        this.localDialogProductFulfillment = newVal;
       },
-      localDialog(newVal) {
-        this.$emit('update:dialog', newVal);
+      localDialogProductFulfillment(newVal) {
+        this.$emit('update:dialogProductFulfillment', newVal);
       },
       editedItem: {
         handler(newValue) {
@@ -161,7 +164,7 @@
         })
       },
       close() {
-        this.$emit('update:dialog', false);
+        this.$emit('update:dialogProductFulfillment', false);
       }
     }
   }

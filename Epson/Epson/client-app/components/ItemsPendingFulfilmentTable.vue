@@ -10,8 +10,7 @@
         <v-spacer></v-spacer>
 
         <ProductFulfillmentDialog :editedItem="editedItem"
-                                  :competitorsToShow="competitorsToShow"
-                                  :dialog.sync="dialog"
+                                  :dialogProductFulfillment="dialogProductFulfillment"
                                   @close="close"></ProductFulfillmentDialog>
       </v-toolbar>
     </template>
@@ -22,12 +21,12 @@
               @click="editItem(item)">
         mdi-pencil
       </v-icon>
+      <v-btn @click="viewRequest(item)">View</v-btn>
     </template>
   </v-data-table>
 </template>
 
 <script>
-  import Swal from 'sweetalert2';
   import ProductFulfillmentDialog from '~/components/ProductFulfillmentDialog.vue';
   export default {
     name: 'ItemsPendingFulfilmentTable',
@@ -36,7 +35,7 @@
     },
     data() {
       return {
-        dialog: false,
+        dialogProductFulfillment: false,
         headers: [
           {
             text: 'ID',
@@ -54,16 +53,7 @@
         productsToShow: [],
         competitorsToShow: [],
         loading: false,
-        editedItem: {
-          customerName: '',
-          productName: '',
-          budget: '',
-          fulfilledPrice: null,
-          dealJustification: '',
-          deliveryDate: '',
-          remarks: '',
-          tenderDate: ''
-        },
+        editedItem: {},
       }
     },
     watch: {
@@ -73,7 +63,7 @@
         },
         deep: true,
       },
-      dialog(val) {
+      dialogProductFulfillment(val) {
         val || this.close()
       }
     },
@@ -82,6 +72,12 @@
     },
 
     methods: {
+      viewRequest(request) {
+        this.$router.push({
+          path: '/createquotation',
+          query: { view: true, isFulfill: true, request: JSON.stringify(request) }
+        });
+      },
       today() {
         const date = new Date();
         const year = date.getFullYear();
@@ -129,77 +125,18 @@
         })
       },
       editItem(item) {
+        console.log("item", item);
         this.editedItem = { ...item, deliveryDate: this.today() };
         this.competitorsToShow = [...item.competitors]; 
-        this.dialog = true;
-      },
-      fulfillRequest() {
-        if (this.editedItem && this.editedItem.fulfilledPrice !== null && this.editedItem.fulfilledPrice > 0) {
-          Swal.fire({
-            title: 'Fulfill Request',
-            text: 'Are you sure you want to fulfill this request?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Fulfill',
-          }).then((result) => {
-            if (result.isConfirmed) {
-              this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?requestId=${this.editedItem.requestId}&productId=${this.editedItem.productId}&fulfilledPrice=${this.editedItem.fulfilledPrice}&deliveryDate=${this.editedItem.deliveryDate}&remarks=${this.editedItem.remarks}`)
-                .then(response => {
-                  this.closeDialog();
-                  Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success');
-                }).catch(error => {
-                  console.log('error', error);
-                  Swal.fire('Error', 'Failed to fulfill request', 'error');
-                });
-            }
-          });
-        }
-        else {
-          this.$swal('Error', 'Please fill in all fields!', 'error');
-        }
-      },
-      rejectRequest() {
-        Swal.fire({
-          title: 'Reject Request?',
-          showCancelButton: true,
-          confirmButtonText: 'Reject Request',
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.$axios.post(`${this.$config.restUrl}/api/request/rejectrequestproduct?requestProductId=${this.editedItem.id}&remarks=${this.editedItem.remarks}`)
-              .then(response => {
-                this.closeDialog();
-                Swal.fire('Rejected!', 'Request has been rejected.', 'success');
-              }).catch(error => {
-                console.log('error', error);
-                Swal.fire('Error', 'Failed to reject request', 'error');
-              });
-          }
-        })
+        this.dialogProductFulfillment = true;
       },
       close() {
-        this.dialog = false
+        this.dialogProductFulfillment = false
         this.$nextTick(() => {
           this.editedItem = Object.assign({}, this.defaultItem)
           this.editedIndex = -1
         })
       },
-      closeDialog() {
-        this.dialog = false;
-        this.editedItem = {
-          productName: '',
-          budget: '',
-          fulfilledPrice: ''
-        };
-      },
-      closeDelete() {
-        this.dialogDelete = false
-        this.$nextTick(() => {
-          this.editedItem = Object.assign({}, this.defaultItem)
-          this.editedIndex = -1
-        })
-      }
     },
   }
 </script>

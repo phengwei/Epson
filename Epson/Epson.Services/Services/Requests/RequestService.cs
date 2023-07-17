@@ -140,36 +140,21 @@ namespace Epson.Services.Services.Requests
 
         public List<RequestDTO> GetUnfulfilledRequests(bool isCoverplus)
         {
-            var requests = GetRequests()
-                .Select(x => new RequestDTO
+            var requests = GetRequests();
+
+            var unfulfilledRequests = requests
+                .Select(x =>
                 {
-                    Id = x.Id,
-                    ApprovedBy = x.ApprovedBy,
-                    ApprovedTime = x.ApprovedTime,
-                    CreatedById = x.CreatedById,
-                    CreatedOnUTC = x.CreatedOnUTC,
-                    CustomerName = x.CustomerName,
-                    DealJustification = x.DealJustification,
-                    UpdatedById = x.UpdatedById,
-                    UpdatedOnUTC = x.UpdatedOnUTC,
-                    Segment = x.Segment,
-                    TotalBudget = x.TotalBudget,
-                    ApprovalState = x.ApprovalState,
-                    Priority = x.Priority,
-                    Deadline = x.Deadline,
-                    TotalPrice = x.TotalPrice,
-                    TimeToResolution = x.TimeToResolution,
-                    RequestProducts = x.RequestProducts
+                    x.RequestProducts = x.RequestProducts
                         .Where(rp => rp.HasFulfilled == false && (isCoverplus || !rp.IsCoverplus))
-                        .ToList(),
-                    CompetitorInformations = x.CompetitorInformations.ToList(),
-                    RequestSubmissionDetail = x.RequestSubmissionDetail,
+                        .ToList();
+
+                    return x;
                 })
-                .Where(x => x.RequestProducts.Any())
-                .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
+                .Where(x => x.RequestProducts.Any() && x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
                 .ToList();
 
-            return requests;
+            return unfulfilledRequests;
         }
 
         public List<RequestProductDTO> GetRequestProducts()
