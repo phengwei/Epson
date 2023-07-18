@@ -16,11 +16,6 @@
     </template>
 
     <template v-slot:item.actions="{ item }">
-      <v-icon small
-              class="mr-2"
-              @click="editItem(item)">
-        mdi-pencil
-      </v-icon>
       <v-btn @click="viewRequest(item)">View</v-btn>
     </template>
   </v-data-table>
@@ -73,9 +68,17 @@
 
     methods: {
       viewRequest(request) {
+        let queryParameters = { view: true, request: JSON.stringify(request) };
+  
+        if (request.isCoverplus === true) {
+          queryParameters = { ...queryParameters, isFulfillCoverplus: true };
+        } else if (request.isCoverplus === false) {
+          queryParameters = { ...queryParameters, isFulfill: true };
+        }
+
         this.$router.push({
           path: '/createquotation',
-          query: { view: true, isFulfill: true, request: JSON.stringify(request) }
+          query: queryParameters
         });
       },
       today() {
@@ -121,12 +124,9 @@
               this.productsToShow.push(p);
             });
           });
-          this.loading = false
+          this.loading = false;
+          console.log("items pending fulfillment", this.itemsPendingFulfilment);
         })
-      },
-      editItem(item) {
-        this.editedItem = { ...item, deliveryDate: this.today() };
-        this.dialogProductFulfillment = true;
       },
       close() {
         this.dialogProductFulfillment = false

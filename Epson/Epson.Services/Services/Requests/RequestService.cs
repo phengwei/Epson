@@ -138,7 +138,7 @@ namespace Epson.Services.Services.Requests
             return requestDTOs;
         }
 
-        public List<RequestDTO> GetUnfulfilledRequests(bool isCoverplus)
+        public List<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplus)
         {
             var requests = GetRequests();
 
@@ -146,7 +146,7 @@ namespace Epson.Services.Services.Requests
                 .Select(x =>
                 {
                     x.RequestProducts = x.RequestProducts
-                        .Where(rp => rp.HasFulfilled == false && (isCoverplus || !rp.IsCoverplus))
+                        .Where(rp => rp.HasFulfilled == false && rp.FulfillerId == user.Id && (isCoverplus || !rp.IsCoverplus))
                         .ToList();
 
                     return x;
@@ -210,6 +210,7 @@ namespace Epson.Services.Services.Requests
                 foreach (var requestProduct in requestProducts)
                 {
                     var product = _productService.GetProductById(requestProduct.ProductId);
+                    requestProduct.FulfillerId = product.CreatedById;
                     requestProduct.CreatedOnUTC = request.CreatedOnUTC;
                     requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
                     requestProduct.RequestId = request.Id;
@@ -443,7 +444,6 @@ namespace Epson.Services.Services.Requests
 
             requestProductToFulfill.FulfilledPrice = totalPrice;
             requestProductToFulfill.HasFulfilled = true;
-            requestProductToFulfill.FulfillerId = user.Id;
             requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
             requestProductToFulfill.DeliveryDate = deliveryDate;
             requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;

@@ -14,12 +14,14 @@ namespace Epson.Core.Domain.Enum
 
         PendingRequesterAction = 30,
 
-        Approved = 40,
+        PendingSalesSectionHeadFinalAction = 40,
 
-        AmendQuotation = 50,
+        Approved = 50,
 
-        Rejected = 60,
+        AmendQuotation = 60,
+
+        Rejected = 70,
         
-        Cancelled = 70
+        Cancelled = 80
     }
 }

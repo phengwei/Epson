@@ -53,7 +53,6 @@
       getFulfilledRequestAsFulfiller() {
         this.$axios.get(`${this.$config.restUrl}/api/request/getfulfilledrequestasfulfiller`)
           .then(response => {
-            console.log("this.response", this.response);
             this.requests = response.data.data;
           })
           .catch(error => {

@@ -91,15 +91,6 @@ export default {
     isViewMode() {
       return this.$route.query.view === 'true';
     },
-    isFulfillMode() {
-      return this.$route.query.isFulfill === 'true';
-    },
-    isApproveMode() {
-      return this.$route.query.isApprove === 'true';
-    },
-    isFinalApproveMode() {
-      return this.$route.query.isFinalApprove === 'true';
-    },
     currentRequestApprovalState() {
       return this.currentRequest ? this.currentRequest.approvalState : null;
     },
@@ -120,6 +111,9 @@ export default {
     }
   },
   methods: {
+    isMode(mode) {
+      return this.$route.query[mode] === 'true';
+    },
     confirmApproveRequest() {
       Swal.fire({
         title: 'Confirmation',

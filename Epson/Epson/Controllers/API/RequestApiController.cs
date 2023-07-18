@@ -326,7 +326,7 @@ namespace Epson.Controllers.API
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
             var requestProducts = _requestService.GetRequestProducts()
-                                                .Where(x => x.FulfillerId == user.Id)
+                                                .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true)
                                                 .ToList();
 
             var requestModels = _requestModelFactory.PrepareRequestProductModel(requestProducts);
@@ -394,15 +394,10 @@ namespace Epson.Controllers.API
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-            var govtUsers = _userService.GetGovtUsersWithProductRole();
-
-            if (!govtUsers.Any(u => u.Id == user.Id))
-                return Unauthorized();
-
             var coverplusUsers = await _userManager.GetUsersInRoleAsync(RoleEnum.Coverplus.ToString());
             var isCoverplusUser = coverplusUsers.Any(x => x.Id == user.Id);
 
-            var requests = _requestService.GetUnfulfilledRequests(isCoverplusUser);
+            var requests = _requestService.GetUnfulfilledRequests(user, isCoverplusUser);
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests);
 
