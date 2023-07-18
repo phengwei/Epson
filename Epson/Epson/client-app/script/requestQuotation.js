@@ -135,14 +135,18 @@ export default {
           this.$axios.post(`${this.$config.restUrl}/api/request/approvefirstlevelrequest?requestId=${this.currentRequest.id}`)
             .then(response => {
               this.closeDialogProductFulfillment();
-              Swal.fire('Amended!', 'Request is in amend stage.', 'success');
+              Swal.fire('Amended!', 'Request is successfully approved.', 'success')
+                .then(() => {
+                  this.$router.push('/request');
+                });
             }).catch(error => {
               console.log('error', error);
-              Swal.fire('Error', 'Failed to amend request', 'error');
+              Swal.fire('Error', 'Failed to approve quotation', 'error');
             });
         }
       });
     },
+
     closeDialogProductFulfillment() {
       this.closeDialogProductFulfillment = false;
     },
