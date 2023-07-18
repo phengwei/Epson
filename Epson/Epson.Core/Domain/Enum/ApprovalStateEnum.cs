@@ -8,16 +8,18 @@ namespace Epson.Core.Domain.Enum
 {
     public enum ApprovalStateEnum
     {
-        PendingFulfillerAction = 10,
+        PendingSalesSectionHeadAction = 10,
 
-        PendingRequesterAction = 20,
+        PendingFulfillerAction = 20,
 
-        Approved = 30,
+        PendingRequesterAction = 30,
 
-        AmendQuotation = 40,
+        Approved = 40,
 
-        Rejected = 50,
+        AmendQuotation = 50,
+
+        Rejected = 60,
         
-        Cancelled = 60
+        Cancelled = 70
     }
 }

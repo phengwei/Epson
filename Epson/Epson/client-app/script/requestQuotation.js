@@ -4,6 +4,7 @@ import ProductDialog from '~/components/ProductDialog.vue';
 import CompetitorInformationDialog from '~/components/CompetitorInformationDialog.vue';
 import CoverplusDialog from '~/components/CoverplusDialog.vue';
 import ProductFulfillmentDialog from '~/components/ProductFulfillmentDialog.vue';
+import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
 
 export default {
   name: "request-quotation",
@@ -71,6 +72,7 @@ export default {
       coverplusRequestItem: {},
       itemsPendingFulfillment: [],
       currentRequest: {},
+      ApprovalStateEnum,
       editedItem: {},
     };
   },
@@ -97,6 +99,9 @@ export default {
     },
     isFinalApproveMode() {
       return this.$route.query.isFinalApprove === 'true';
+    },
+    currentRequestApprovalState() {
+      return this.currentRequest ? this.currentRequest.approvalState : null;
     },
     today() {
       const date = new Date();
@@ -127,12 +132,9 @@ export default {
         cancelButtonText: 'No'
       }).then((result) => {
         if (result.isConfirmed) {
-          this.$axios.post(`${this.$config.restUrl}/api/request/setrequesttoamendquotation?requestId=${this.currentRequest.id}`)
+          this.$axios.post(`${this.$config.restUrl}/api/request/approvefirstlevelrequest?requestId=${this.currentRequest.id}`)
             .then(response => {
-              this.closeDialog();
-              for (const requests in result.data.data) {
-                result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('MMMM Do YYYY');
-              }
+              this.closeDialogProductFulfillment();
               Swal.fire('Amended!', 'Request is in amend stage.', 'success');
             }).catch(error => {
               console.log('error', error);
@@ -140,6 +142,9 @@ export default {
             });
         }
       });
+    },
+    closeDialogProductFulfillment() {
+      this.closeDialogProductFulfillment = false;
     },
     fulfillNonCoverplusItem() {
       this.editedItem = { ...this.nonCoverplusRequestItem[0], deliveryDate: this.getToday() };
@@ -222,6 +227,7 @@ export default {
       return 'N/A';
     },
     async populateForm(requestData) {
+      console.log("re", requestData);
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProductsModel) {
         const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);

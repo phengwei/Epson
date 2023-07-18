@@ -20,7 +20,7 @@
                  @click="fulfillCoverplusItem()">
             Fulfill coverplus request
           </v-btn>
-          <v-btn v-if="isApproveMode"
+          <v-btn v-if="isApproveMode && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadAction"
                  class="mr-2"
                  color="primary"
                  @click="confirmApproveRequest()">

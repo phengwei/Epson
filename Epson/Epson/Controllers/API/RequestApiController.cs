@@ -107,7 +107,7 @@ namespace Epson.Controllers.API
                 CreatedById = user.Id,
                 UpdatedById = user.Id,
                 Segment = model.Segment,
-                ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction,
+                ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction,
                 Priority = model.Priority,
                 Deadline = model.Deadline,
                 DealJustification = model.DealJustification,
@@ -223,6 +223,29 @@ namespace Epson.Controllers.API
                 return Unauthorized("User not authorized to perform this operation");
 
             if (_requestService.SetRequestToAmendQuotation(_mapper.Map<Request>(request)))
+                return Ok("Request has been set to amend quotation");
+            else
+                return BadRequest("Failed to set amend quotation for request");
+        }
+
+        [HttpPost("approvefirstlevelrequest")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        public async Task<IActionResult> ApproveFirstLevelRequest(int requestId)
+        {
+            if (requestId == 0)
+                return NotFound("Resources not found!");
+
+            var request = _requestService.GetRequestById(requestId);
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (request == null)
+                return NotFound("Resources not found!");
+
+            if (user == null)
+                return Unauthorized("User not authorized to perform this operation");
+
+            if (_requestService.ApproveFirstLevelRequest(_mapper.Map<Request>(request)))
                 return Ok("Request has been set to amend quotation");
             else
                 return BadRequest("Failed to set amend quotation for request");

@@ -198,7 +198,7 @@ namespace Epson.Services.Services.Requests
 
             var projectInformation = _mapper.Map<ProjectInformation>(projectInformationDTO);
 
-                try
+            try
             {
                 request.TotalBudget = GetTotalBudgetOfRequestProducts(requestProducts);
                 request.Id = _RequestRepository.Add(request);
@@ -515,6 +515,31 @@ namespace Epson.Services.Services.Requests
             catch (Exception ex)
             {
                 _logger.Error(ex, "Error setting approval state to amend quotation for request {id}", request.Id);
+                return false;
+            }
+        }
+
+        public bool ApproveFirstLevelRequest(Request request)
+        {
+            var req = GetRequestById(request.Id);
+
+            if (req == null)
+                throw new Exception("Invalid request.");
+
+            request.ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction;
+
+            List<RequestProduct> requestProducts = _RequestProductRepository.Table.Where(x => x.RequestId == req.Id).ToList();
+
+            try
+            {
+                _RequestRepository.Update(request);
+                _logger.Information("Completing first level approval for request {id}", request.Id);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error completing first level approval for request {id}", request.Id);
                 return false;
             }
         }
