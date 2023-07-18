@@ -13,25 +13,6 @@
           <label>Customer</label>
           <input v-model="localEditedItem.customerName" class="border-input readonly-field" label="Customer" readonly></input>
         </div>
-        <div v-if="competitorsToShow && competitorsToShow.length > 0">
-          <label>Competitor Information</label>
-          <table class="mb-5 mt-2 mini-table">
-            <thead>
-              <tr>
-                <th>Model</th>
-                <th>Brand</th>
-                <th>Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(competitor, index) in competitorsToShow" :key="index">
-                <td>{{ competitor.model }}</td>
-                <td>{{ competitor.brand }}</td>
-                <td>{{ competitor.price }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
         <div class="form-group">
           <label>Product</label>
           <input v-model="localEditedItem.productName" class="border-input readonly-field" label="Product" readonly></input>
@@ -94,10 +75,10 @@
       };
     },
     watch: {
-      dialogProductFulfillment(newVal) {
+      dialogProductFulfillment(newVal, oldVal) {
         this.localDialogProductFulfillment = newVal;
       },
-      localDialogProductFulfillment(newVal) {
+      localDialogProductFulfillment(newVal, oldVal) {
         this.$emit('update:dialogProductFulfillment', newVal);
       },
       editedItem: {
@@ -164,8 +145,9 @@
         })
       },
       close() {
-        this.$emit('update:dialogProductFulfillment', false);
-      }
+        this.localDialogProductFulfillment = false;
+        this.$emit('closeDialog');
+      },
     }
   }
 </script>

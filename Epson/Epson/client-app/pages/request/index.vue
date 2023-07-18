@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex justify-content-center align-items-center vh-100" data-app="true" v-if="loggedInUser.roles.includes('Sales')">
+  <div class="d-flex justify-content-center align-items-center vh-100" data-app="true" v-if="loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head')">
     <v-card class="mx-auto" style="width: 90%">
       <v-card-title class="d-flex justify-content-between align-items-center">
         <span style="flex-grow: 1;">Request</span>
@@ -64,9 +64,15 @@
         this.$router.push('/createquotation');
       },
       viewRequest(request) {
+        let queryParameters = { view: true, request: JSON.stringify(request) };
+
+        if (this.loggedInUser.roles.includes('Sales Section Head')) {
+          queryParameters = { ...queryParameters, isApprove: true };
+        }
+
         this.$router.push({
           path: '/createquotation',
-          query: { view: true, request: JSON.stringify(request) }
+          query: queryParameters
         });
       },
     },

@@ -21,7 +21,7 @@
             <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Product')" to="/slaDashboard"
                        class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">SLA Overview</nuxt-link>
 
-            <nuxt-link v-if="loggedInUser.roles.includes('Sales')" to="/request"
+            <nuxt-link v-if="loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head')" to="/request"
                        class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Requests</nuxt-link>
 
             <nuxt-link v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Admin')" to="/product"

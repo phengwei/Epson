@@ -1,4 +1,5 @@
 import moment from 'moment';
+import Swal from 'sweetalert2';
 import ProductDialog from '~/components/ProductDialog.vue';
 import CompetitorInformationDialog from '~/components/CompetitorInformationDialog.vue';
 import CoverplusDialog from '~/components/CoverplusDialog.vue';
@@ -66,7 +67,10 @@ export default {
       dialogCoverplus: false,
       dialogProductFulfillment: false,
       comments: '',
-      requestItem: {},
+      nonCoverplusRequestItem: {},
+      coverplusRequestItem: {},
+      itemsPendingFulfillment: [],
+      currentRequest: {},
       editedItem: {},
     };
   },
@@ -88,6 +92,12 @@ export default {
     isFulfillMode() {
       return this.$route.query.isFulfill === 'true';
     },
+    isApproveMode() {
+      return this.$route.query.isApprove === 'true';
+    },
+    isFinalApproveMode() {
+      return this.$route.query.isFinalApprove === 'true';
+    },
     today() {
       const date = new Date();
       const year = date.getFullYear();
@@ -105,16 +115,38 @@ export default {
     }
   },
   methods: {
-    close() {
-      this.dialogProductFulfillment = false
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem)
-        this.editedIndex = -1
-      })
+    confirmApproveRequest() {
+      Swal.fire({
+        title: 'Confirmation',
+        text: 'Are you sure you want to approve the quotation?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'No'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.$axios.post(`${this.$config.restUrl}/api/request/setrequesttoamendquotation?requestId=${this.currentRequest.id}`)
+            .then(response => {
+              this.closeDialog();
+              for (const requests in result.data.data) {
+                result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('MMMM Do YYYY');
+              }
+              Swal.fire('Amended!', 'Request is in amend stage.', 'success');
+            }).catch(error => {
+              console.log('error', error);
+              Swal.fire('Error', 'Failed to amend request', 'error');
+            });
+        }
+      });
     },
-    fulfillItem() {
-      this.editedItem = { ...this.requestItem, deliveryDate: this.getToday() };
-      this.competitorsToShow = [...this.requestItem.competitors];
+    fulfillNonCoverplusItem() {
+      this.editedItem = { ...this.nonCoverplusRequestItem[0], deliveryDate: this.getToday() };
+      this.dialogProductFulfillment = true;
+    },
+    fulfillCoverplusItem() {
+      this.editedItem = { ...this.coverplusRequestItem[0], deliveryDate: this.getToday() };
       this.dialogProductFulfillment = true;
     },
     getToday() {
@@ -190,12 +222,25 @@ export default {
       return 'N/A';
     },
     async populateForm(requestData) {
-      this.requestItem = requestData;
+      this.currentRequest = requestData;
       for (const productModel of requestData.requestProductsModel) {
         const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
         if (categoryFound) {
           this.selectedCategories.push(categoryFound);
           await this.fetchProductsForCategory(categoryFound);
+          const newItem = {
+            ...requestData,
+            ...productModel,
+            productName: productModel.productName,
+            budget: productModel.budget,
+            quantity: productModel.quantity,
+            isCoverplus: productModel.isCoverplus,
+          };
+
+          this.itemsPendingFulfillment.push(newItem);
+          this.nonCoverplusRequestItem = this.itemsPendingFulfillment.filter(item => !item.isCoverplus);
+          this.coverplusRequestItem = this.itemsPendingFulfillment.filter(item => item.isCoverplus);
+
           const p = {
             category: categoryFound,
             productid: productModel.productId,

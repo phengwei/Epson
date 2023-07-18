@@ -6,14 +6,27 @@
       <v-card-text>
         <!-- Fulfiller Dialog -->
         <ProductFulfillmentDialog :editedItem="editedItem"
-                                  :dialogProductFulfillment="dialogProductFulfillment"
-                                  @close="close"></ProductFulfillmentDialog>
-        <v-icon v-if="isFulfillMode"
-                small
-                class="mr-2"
-                @click.stop="fulfillItem()">
-          mdi-pencil
-        </v-icon>
+                                  :dialogProductFulfillment.sync="dialogProductFulfillment" />
+        <div class="d-flex justify-end">
+          <v-btn v-if="isFulfillMode"
+                 class="mr-2"
+                 color="primary"
+                 @click="fulfillNonCoverplusItem()">
+            Fulfill request
+          </v-btn>
+          <v-btn v-if="isFulfillMode"
+                 class="mr-2"
+                 color="primary"
+                 @click="fulfillCoverplusItem()">
+            Fulfill coverplus request
+          </v-btn>
+          <v-btn v-if="isApproveMode"
+                 class="mr-2"
+                 color="primary"
+                 @click="confirmApproveRequest()">
+            Approve Quotation
+          </v-btn>
+        </div>
 
         <!-- Product Dialog -->
         <ProductDialog :dialogProduct.sync="dialogProduct"

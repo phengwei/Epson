@@ -125,9 +125,7 @@
         })
       },
       editItem(item) {
-        console.log("item", item);
         this.editedItem = { ...item, deliveryDate: this.today() };
-        this.competitorsToShow = [...item.competitors]; 
         this.dialogProductFulfillment = true;
       },
       close() {
