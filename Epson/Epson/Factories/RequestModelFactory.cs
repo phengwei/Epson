@@ -57,7 +57,7 @@ namespace Epson.Factories
                 requestModel.Deadline = request.Deadline;
                 requestModel.TotalPrice = request.TotalPrice;
                 requestModel.TimeToResolution = request.TimeToResolution;
-                requestModel.RequestProducts = request.RequestProducts;
+                requestModel.RequestProducts = _mapper.Map<List<RequestProduct>>(request.RequestProducts);
 
                 return requestModel;
             }
@@ -153,6 +153,7 @@ namespace Epson.Factories
                         Status = rp.Status,
                         StatusStr = ((RequestProductStatusEnum)rp.Status).ToString(),
                         Remarks = rp.Remarks,
+                        AuthorizedToFulfill = rp.AuthorizedToFulfill,
                         ProductCategory = _productService.GetProductCategoriesByProductId(rp.ProductId).Select(pc => new ProductCategoryModel
                         {
                             ProductId = pc.ProductId,

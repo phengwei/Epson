@@ -15,8 +15,18 @@
       </v-toolbar>
     </template>
 
-    <template v-slot:item.actions="{ item }">
-      <v-btn @click="viewRequest(item)">View</v-btn>
+    <template v-slot:item="{ item }">
+      <tr v-if="item.authorizedToFulfill">
+        <td>{{ item.id }}</td>
+        <td>{{ item.createdBy }}</td>
+        <td>{{ item.customerName }}</td>
+        <td>{{ item.productName }}</td>
+        <td>{{ item.budget }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>
+          <v-btn @click="viewRequest(item)">View</v-btn>
+        </td>
+      </tr>
     </template>
   </v-data-table>
 </template>
@@ -32,11 +42,7 @@
       return {
         dialogProductFulfillment: false,
         headers: [
-          {
-            text: 'ID',
-            align: ' d-none',
-            value: 'id',
-          },
+          { text: 'ID', value: 'id' },
           { text: 'Requested By', value: 'createdBy' },
           { text: 'Customer', value: 'customerName' },
           { text: 'Product', value: 'productName' },
@@ -68,6 +74,8 @@
 
     methods: {
       viewRequest(request) {
+        request.requestProductsModel = request.requestProductsModel.filter(product => product.productId === request.productId);
+
         let queryParameters = { view: true, request: JSON.stringify(request) };
   
         if (request.isCoverplus === true) {
@@ -103,6 +111,7 @@
                 productName: product.productName,
                 budget: product.budget,
                 quantity: product.quantity,
+                authorizedToFulfill: product.authorizedToFulfill,
                 competitors: [],
               };
               item.competitorInformationModel.forEach(comp => {
@@ -111,7 +120,7 @@
                   brand: comp.brand,
                   price: comp.price
                 }
-                newItem.competitors.push(c); 
+                newItem.competitors.push(c);
               });
               this.itemsPendingFulfilment.push(newItem);
               const p = {
@@ -125,9 +134,9 @@
             });
           });
           this.loading = false;
-          console.log("items pending fulfillment", this.itemsPendingFulfilment);
         })
       },
+
       close() {
         this.dialogProductFulfillment = false
         this.$nextTick(() => {

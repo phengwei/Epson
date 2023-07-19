@@ -11,7 +11,7 @@ using Epson.Services.DTO.Products;
 
 namespace Epson.Controllers.API
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin,Coverplus,Sales Section Head")]
     [Route("api/product")]
     public class ProductApiController : BaseApiController
     {

@@ -69,7 +69,7 @@ namespace Epson.Services.Services.Requests
 
             var requestDTO = _mapper.Map<RequestDTO>(_RequestRepository.GetById(id));
 
-            requestDTO.RequestProducts = _RequestProductRepository.GetAll().Where(x => x.RequestId == id).ToList();
+            requestDTO.RequestProducts = _mapper.Map<List<RequestProductDTO>>(_RequestProductRepository.GetAll().Where(x => x.RequestId == id).ToList());
 
             return requestDTO;
         }
@@ -104,7 +104,7 @@ namespace Epson.Services.Services.Requests
                     TotalPrice = x.TotalPrice,
                     TimeToResolution = x.TimeToResolution,
                     Comments = x.Comments,
-                    RequestProducts = _RequestProductRepository.Table.Where(y => y.RequestId == x.Id).ToList(),
+                    RequestProducts = _mapper.Map<List<RequestProductDTO>>(_RequestProductRepository.GetAll().Where(p => p.RequestId == x.Id).ToList()),
                     RequestSubmissionDetail = _RequestSubmissionDetailRepository.Table.Where(d => d.RequestId == x.Id).FirstOrDefault(),
                     ProjectInformation = new ProjectInformationDTO
                     {
@@ -145,24 +145,24 @@ namespace Epson.Services.Services.Requests
             var unfulfilledRequests = requests
                 .Select(x =>
                 {
-                    if (isCoverplusUser && isProductUser)
+                    x.RequestProducts.ForEach(rp =>
                     {
-                        x.RequestProducts = x.RequestProducts
-                            .Where(rp => rp.HasFulfilled == false && rp.IsCoverplus && rp.FulfillerId == user.Id)
-                            .ToList();
-                    }
-                    else if (isCoverplusUser)
-                    {
-                        x.RequestProducts = x.RequestProducts
-                            .Where(rp => rp.HasFulfilled == false && rp.IsCoverplus)
-                            .ToList();
-                    }
-                    else if (isProductUser)
-                    {
-                        x.RequestProducts = x.RequestProducts
-                            .Where(rp => rp.HasFulfilled == false && rp.FulfillerId == user.Id)
-                            .ToList();
-                    }
+                        rp.AuthorizedToFulfill = false;
+
+                        if (isCoverplusUser && rp.IsCoverplus)
+                        {
+                            rp.AuthorizedToFulfill = true;
+                        } 
+                        else if (isProductUser && rp.FulfillerId == user.Id && !rp.IsCoverplus)
+                        {
+                            rp.AuthorizedToFulfill = true;
+                        }
+                    });
+
+                    x.RequestProducts = x.RequestProducts
+                        .Where(rp => rp.HasFulfilled == false)
+                        .ToList();
+
                     return x;
                 })
                 .Where(x => x.RequestProducts.Any() && x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
@@ -170,6 +170,7 @@ namespace Epson.Services.Services.Requests
 
             return unfulfilledRequests;
         }
+
 
         public List<RequestProductDTO> GetRequestProducts()
         {
