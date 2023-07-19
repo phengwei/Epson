@@ -138,17 +138,31 @@ namespace Epson.Services.Services.Requests
             return requestDTOs;
         }
 
-        public List<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplus)
+        public List<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser)
         {
             var requests = GetRequests();
 
             var unfulfilledRequests = requests
                 .Select(x =>
                 {
-                    x.RequestProducts = x.RequestProducts
-                        .Where(rp => rp.HasFulfilled == false && rp.FulfillerId == user.Id && (isCoverplus || !rp.IsCoverplus))
-                        .ToList();
-
+                    if (isCoverplusUser && isProductUser)
+                    {
+                        x.RequestProducts = x.RequestProducts
+                            .Where(rp => rp.HasFulfilled == false && rp.IsCoverplus && rp.FulfillerId == user.Id)
+                            .ToList();
+                    }
+                    else if (isCoverplusUser)
+                    {
+                        x.RequestProducts = x.RequestProducts
+                            .Where(rp => rp.HasFulfilled == false && rp.IsCoverplus)
+                            .ToList();
+                    }
+                    else if (isProductUser)
+                    {
+                        x.RequestProducts = x.RequestProducts
+                            .Where(rp => rp.HasFulfilled == false && rp.FulfillerId == user.Id)
+                            .ToList();
+                    }
                     return x;
                 })
                 .Where(x => x.RequestProducts.Any() && x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
@@ -443,6 +457,7 @@ namespace Epson.Services.Services.Requests
             var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
 
             requestProductToFulfill.FulfilledPrice = totalPrice;
+            requestProductToFulfill.FulfillerId = user.Id;
             requestProductToFulfill.HasFulfilled = true;
             requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
             requestProductToFulfill.DeliveryDate = deliveryDate;

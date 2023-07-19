@@ -11,8 +11,10 @@ export default function ({ store, redirect }) {
       return redirect('/userManagement');
     } else if (userRoles.includes('Product')) {
       return redirect('/productDashboard'); 
-    } else if (userRoles.includes('Sales')) {
+    } else if (userRoles.includes('Sales') || userRoles.includes('Coverplus')) {
       return redirect('/salesDashboard');
+    } else if (userRoles.includes('Sales Section Head')) {
+      return redirect('/request');
     } else {
       console.log('Unknown user role');
     }

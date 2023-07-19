@@ -102,6 +102,10 @@
               this.$router.push('/productDashboard');
             } else if (userRoles.includes('Sales')) {
               this.$router.push('/salesDashboard');
+            } else if (userRoles.includes('Coverplus')) {
+              this.$router.push('/productDashboard');
+            } else if (userRoles.includes('Sales Section Head')) {
+              this.$router.push('/request');
             } else {
               Swal.fire({
                 title: 'Error!',

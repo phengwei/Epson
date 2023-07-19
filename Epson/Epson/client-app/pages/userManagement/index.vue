@@ -93,7 +93,7 @@
           { text: 'Team', value: 'teams' },
           { text: 'Actions', value: 'actions', sortable: false },
         ],
-        tabItems: ['Sales', 'Product', 'Admin'],
+        tabItems: ['Sales', 'Product', 'Admin', 'Coverplus', 'Sales Section Head'],
         tab: null,
         users: [],
         teams: [],

@@ -318,7 +318,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getfulfilledrequestasfulfiller")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus")]
         public async Task<IActionResult> GetFulfilledRequestAsFulfiller()
         {
             var response = new GenericResponseModel<List<RequestProductModel>>();
@@ -372,7 +372,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getfulfillmentsummary")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus")]
         public async Task<IActionResult> GetFulfillmentSummary(DateTime startDate, DateTime endDate, string granularity)
         {
             var response = new GenericResponseModel<List<FulfillmentSummary>>();
@@ -387,7 +387,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getpendingfulfilleritem")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus")]
         public async Task<IActionResult> GetPendingFulfillerItem()
         {
             var response = new GenericResponseModel<List<RequestModel>>();
@@ -397,7 +397,10 @@ namespace Epson.Controllers.API
             var coverplusUsers = await _userManager.GetUsersInRoleAsync(RoleEnum.Coverplus.ToString());
             var isCoverplusUser = coverplusUsers.Any(x => x.Id == user.Id);
 
-            var requests = _requestService.GetUnfulfilledRequests(user, isCoverplusUser);
+            var productUsers = await _userManager.GetUsersInRoleAsync(RoleEnum.Product.ToString());
+            var isProductUser = productUsers.Any(x => x.Id == user.Id);
+
+            var requests = _requestService.GetUnfulfilledRequests(user, isCoverplusUser, isProductUser);
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests);
 
