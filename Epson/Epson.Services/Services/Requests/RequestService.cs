@@ -165,7 +165,9 @@ namespace Epson.Services.Services.Requests
 
                     return x;
                 })
-                .Where(x => x.RequestProducts.Any() && x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
+                .Where(x => x.RequestProducts.Any() 
+                        && x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction
+                        && x.RequestProducts.Any(rp => rp.AuthorizedToFulfill))
                 .ToList();
 
             return unfulfilledRequests;
