@@ -12,7 +12,9 @@ namespace Epson.Model.Request
         public int ProductId { get; set; }
         public string? ProductName { get; set; }
         public int Quantity { get; set; }
-        public decimal Budget { get; set; }
+        public decimal DistyPrice { get; set; }
+        public decimal DealerPrice { get; set; }
+        public decimal EndUserPrice { get; set; }
         public string FulfillerId { get; set; }
         public string FulfillerName { get; set; }
         public decimal FulfilledPrice { get; set; }

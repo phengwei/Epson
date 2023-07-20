@@ -16,8 +16,12 @@
           </select>
           <label>Quantity</label>
           <input v-model="localCoverplus.quantity" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-          <label>Budget</label>
-          <input v-model="localCoverplus.budget" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <label>Disty Price</label>
+          <input v-model="localCoverplus.distyPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <label>Dealer Price</label>
+          <input v-model="localCoverplus.dealerPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <label>End User Price</label>
+          <input v-model="localCoverplus.endUserPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
         </div>
       </v-card-text>
       <v-card-actions>
@@ -86,13 +90,15 @@
         }
       },
       onAddCoverplus() {
-        if (this.localCoverplus.category && this.localCoverplus.productId && this.localCoverplus.quantity && this.localCoverplus.budget) {
+        if (this.localCoverplus.category && this.localCoverplus.productId && this.localCoverplus.quantity && this.localCoverplus.dealerPrice && this.localCoverplus.endUserPrice) {
           this.$emit('add-coverplus', this.localCoverplus);
           this.localCoverplus = {
             category: null,
             productId: null,
             quantity: null,
-            budget: null,
+            distyPrice: null,
+            dealerPrice: null,
+            endUserPrice: null,
           };
           this.localDialogCoverplus = false;
         } else {

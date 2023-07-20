@@ -21,7 +21,7 @@
         <td>{{ item.createdBy }}</td>
         <td>{{ item.customerName }}</td>
         <td>{{ item.productName }}</td>
-        <td>{{ item.budget }}</td>
+        <td>{{ item.endUserPrice }}</td>
         <td>{{ item.quantity }}</td>
         <td>
           <v-btn @click="viewRequest(item)">View</v-btn>
@@ -109,7 +109,9 @@
                 ...item,
                 ...product,
                 productName: product.productName,
-                budget: product.budget,
+                distyPrice: product.distyPrice,
+                dealerPrice: product.dealerPrice,
+                endUserPrice: product.endUserPrice,
                 quantity: product.quantity,
                 authorizedToFulfill: product.authorizedToFulfill,
                 competitors: [],
@@ -125,7 +127,9 @@
               this.itemsPendingFulfilment.push(newItem);
               const p = {
                 quantity: product.quantity,
-                budget: product.budget,
+                distyPrice: product.distyPrice,
+                dealerPrice: product.dealerPrice,
+                endUserPrice: product.endUserPrice,
                 productName: product.productName,
                 tenderDate: product.tenderDate,
                 remarks: product.remarks

@@ -182,7 +182,9 @@ namespace Epson.Services.Services.Requests
                 RequestId = x.RequestId,
                 ProductId = x.ProductId,
                 Quantity = x.Quantity,
-                Budget = x.Budget,
+                DistyPrice = x.DistyPrice,
+                DealerPrice = x.DealerPrice,
+                EndUserPrice = x.EndUserPrice,
                 FulfillerId = x.FulfillerId,
                 FulfilledPrice = x.FulfilledPrice,
                 FulfilledDate = x.FulfilledDate,
@@ -215,7 +217,7 @@ namespace Epson.Services.Services.Requests
 
             try
             {
-                request.TotalBudget = GetTotalBudgetOfRequestProducts(requestProducts);
+                request.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => rp.EndUserPrice);
                 request.Id = _RequestRepository.Add(request);
                 requestSubmissionDetail.RequestId = request.Id;
                 projectInformation.RequestId = request.Id;
@@ -263,15 +265,16 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        private decimal GetTotalBudgetOfRequestProducts(List<RequestProduct> requestProducts)
+        private decimal GetTotalPriceOfRequestProducts(List<RequestProduct> requestProducts, Func<RequestProduct, decimal> selector)
         {
-            decimal totalBudget = 0;
+            decimal totalPrice = 0;
 
             foreach (var requestProduct in requestProducts)
-                totalBudget += requestProduct.Budget;
+                totalPrice += selector(requestProduct);
 
-            return totalBudget;
+            return totalPrice;
         }
+
         private bool InsertRequestProduct(RequestProduct requestProduct)
         {
             if (requestProduct == null)
@@ -318,7 +321,7 @@ namespace Epson.Services.Services.Requests
                 throw new ArgumentNullException(nameof(request));
             try
             {
-                request.TotalBudget = GetTotalBudgetOfRequestProducts(requestProducts);
+                request.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => rp.EndUserPrice);
                 _RequestRepository.Update(request);
                 _logger.Information("Updating request {id}", request.Id);
 

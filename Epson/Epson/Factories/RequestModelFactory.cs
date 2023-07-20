@@ -81,7 +81,9 @@ namespace Epson.Factories
                     ProductName = _productService.GetProductById(requestProduct.ProductId).Name,
                     RequestId = requestProduct.RequestId,
                     Quantity = requestProduct.Quantity,
-                    Budget = requestProduct.Budget,
+                    DistyPrice = requestProduct.DistyPrice,
+                    DealerPrice = requestProduct.DealerPrice,
+                    EndUserPrice = requestProduct.EndUserPrice,
                     FulfillerId = requestProduct.FulfillerId,
                     FulfillerName = requestProduct.FulfillerId != null ? _userManager.FindByIdAsync(requestProduct.FulfillerId).Result.UserName : null,
                     FulfilledPrice = requestProduct.FulfilledPrice,
@@ -136,7 +138,9 @@ namespace Epson.Factories
                     RequestProductsModel = request.RequestProducts.Select(rp => new RequestProductModel
                     {
                         Id = rp.Id,
-                        Budget = rp.Budget,
+                        DistyPrice = rp.DistyPrice,
+                        DealerPrice = rp.DealerPrice,
+                        EndUserPrice = rp.EndUserPrice,
                         RequestId = rp.RequestId,
                         ProductId = rp.ProductId,
                         Quantity = rp.Quantity,

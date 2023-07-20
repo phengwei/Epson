@@ -61,7 +61,7 @@
           });
       },
       redirectToCreateQuotation() {
-        this.$router.push('/createquotation');
+        this.$router.push('/createquotation?create=true');
       },
       viewRequest(request) {
         let queryParameters = { view: true, request: JSON.stringify(request) };

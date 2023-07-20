@@ -20,9 +20,9 @@ export default {
       selectedCategories: [],
       isChecked: [],
       selectedProducts: {},
-      product: { category: null, productId: null, quantity: null, budget: null, remarks: null, tenderDate: null, deliveryDate: null },
+      product: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null, remarks: null },
       products: [],
-      coverplus: { category: null, productId: null, quantity: null, budget: null },
+      coverplus: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
       coverpluses: [],
       competitor: { model: null, brand: null, price: null },
       competitors: [],
@@ -79,7 +79,8 @@ export default {
   async created() {
     this.submissionDetail.createdOnUTC = this.getToday();
     await this.fetchCategories();
-    if (this.$route.query.view) {
+    if (this.$route.query.view || this.$route.query.editable) {
+      console.log("populate");
       const request = JSON.parse(this.$route.query.request);
       this.populateForm(request);
     }
@@ -186,9 +187,13 @@ export default {
       const newCoverplus = { ...coverplus };
       this.coverpluses.push(newCoverplus);
       this.showAddedCoverpluses(newCoverplus);
-      this.coverplus.brand = null;
-      this.coverplus.model = null;
-      this.coverplus.price = null;
+      this.product.category = null;
+      this.product.productId = null;
+      this.product.quantity = null;
+      this.product.distyPrice = null;
+      this.product.dealerPrice = null;
+      this.product.endUserPrice = null;
+      this.product.tenderDate = null;
       this.dialogCoverplus = false;
     },
     removeCoverplusInformation(index) {
@@ -204,7 +209,9 @@ export default {
       this.product.category = null;
       this.product.productId = null;
       this.product.quantity = null;
-      this.product.budget = null;
+      this.product.distyPrice = null;
+      this.product.dealerPrice = null;
+      this.product.endUserPrice = null;
       this.product.tenderDate = null;
       this.dialogProduct = false;
     },
@@ -225,7 +232,6 @@ export default {
       return 'N/A';
     },
     async populateForm(requestData) {
-      console.log("re", requestData);
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProductsModel) {
         const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
@@ -236,7 +242,9 @@ export default {
             ...requestData,
             ...productModel,
             productName: productModel.productName,
-            budget: productModel.budget,
+            distyPrice: productModel.distyPrice,
+            dealerPrice: productModel.dealerPrice,
+            endUserPrice: productModel.endUserPrice,
             quantity: productModel.quantity,
             isCoverplus: productModel.isCoverplus,
           };
@@ -249,7 +257,9 @@ export default {
             category: categoryFound,
             productid: productModel.productId,
             quantity: productModel.quantity,
-            budget: productModel.budget,
+            distyPrice: productModel.distyPrice,
+            dealerPrice: productModel.dealerPrice,
+            endUserPrice: productModel.endUserPrice,
             productName: productModel.productName,
             tenderDate: productModel.tenderDate === "0001-01-01T00:00:00" ? "N/A" : moment(productModel.tenderDate).format('MMMM Do YYYY'),
             deliveryDate: productModel.deliveryDate === "0001-01-01T00:00:00" ? "N/A" : moment(productModel.deliveryDate).format('MMMM Do YYYY'),
@@ -379,7 +389,9 @@ export default {
         const productToInsert = {
           productId: this.productsToShow[product].productId,
           quantity: this.productsToShow[product].quantity,
-          budget: this.productsToShow[product].budget,
+          distyPrice: this.productsToShow[product].distyPrice,
+          dealerPrice: this.productsToShow[product].dealerPrice,
+          endUserPrice: this.productsToShow[product].endUserPrice,
           tenderDate: this.productsToShow[product].tenderDate,
           isCoverplus: false
         };
@@ -397,7 +409,9 @@ export default {
         const coverplusToInsert = {
           productId: this.coverplusesToShow[coverplus].productId,
           quantity: this.coverplusesToShow[coverplus].quantity,
-          budget: this.coverplusesToShow[coverplus].budget,
+          distyPrice: this.coverplusesToShow[coverplus].distyPrice,
+          dealerPrice: this.coverplusesToShow[coverplus].dealerPrice,
+          endUserPrice: this.coverplusesToShow[coverplus].endUserPrice,
           isCoverplus: true
         };
         quotationData.requestProducts.push(coverplusToInsert);

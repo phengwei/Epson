@@ -18,8 +18,12 @@
           <input v-model="localEditedItem.productName" class="border-input readonly-field" label="Product" readonly></input>
         </div>
         <div class="form-group">
-          <label>Project End User Price</label>
-          <input v-model="localEditedItem.budget" class="border-input readonly-field" label="Budget" readonly></input>
+          <label>Dealer Price</label>
+          <input v-model="localEditedItem.dealerPrice" class="border-input readonly-field" label="Dealer Price" readonly></input>
+        </div>
+        <div class="form-group">
+          <label>End User Price</label>
+          <input v-model="localEditedItem.endUserPrice" class="border-input readonly-field" label="End User Price" readonly></input>
         </div>
         <div class="form-group">
           <label>Quantity</label>

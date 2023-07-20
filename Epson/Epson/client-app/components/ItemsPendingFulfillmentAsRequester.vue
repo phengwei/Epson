@@ -187,7 +187,7 @@
     <template v-slot:item.actions="{ item }">
       <v-icon small
               class="mr-2"
-              v-if="item.approvalState !== 40"
+              v-if="item.approvalState !== ApprovalStateEnum.AmendQuotation"
               @click="confirmAmmendQuotation(item)">
         mdi-check
       </v-icon>
@@ -197,7 +197,7 @@
       </v-icon>
       <v-icon small
               @click="dialogQuotation(item)"
-              v-if="item.approvalState === 40">
+              v-if="item.approvalState === ApprovalStateEnum.AmendQuotation">
         mdi-pencil
       </v-icon>
       <v-btn @click="viewRequest(item)">View</v-btn>
@@ -209,6 +209,7 @@
 <script>
   import moment from 'moment';
   import Swal from 'sweetalert2';
+  import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
 
   export default {
     name: 'ItemsPendingRequesterAction',
@@ -276,6 +277,7 @@
         customerName: '',
         dealJustification: '',
         deadline: '',
+        ApprovalStateEnum
       }
     },
     created() {
@@ -305,9 +307,17 @@
     },
     methods: {
       viewRequest(request) {
+        let queryParameters = { request: JSON.stringify(request) };
+
+        if (request.approvalState === ApprovalStateEnum.AmendQuotation) {
+          queryParameters = { ...queryParameters, editable: true };
+        } else if (request.approvalState === ApprovalStateEnum.PendingFulfillerAction) {
+          queryParameters = { ...queryParameters, view: true };
+        }
+
         this.$router.push({
           path: '/createquotation',
-          query: { view: true, request: JSON.stringify(request) }
+          query: queryParameters
         });
       },
       addCompetitorInformationRow() {
@@ -415,10 +425,6 @@
           if (result.isConfirmed) {
             this.$axios.post(`${this.$config.restUrl}/api/request/setrequesttoamendquotation?requestId=${item.id}`)
             .then(response => {
-              this.closeDialog();
-              for (const requests in result.data.data) {
-                result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('MMMM Do YYYY');
-              }
               Swal.fire('Amended!', 'Request is in amend stage.', 'success');
             }).catch(error => {
               console.log('error', error);
@@ -438,10 +444,6 @@
           if (result.isConfirmed) {
             this.$axios.post(`${this.$config.restUrl}/api/request/cancelrequest?requestId=${item.id}&remarks=${result.value}`)
             .then(response => {
-                this.closeDialog();
-                for (const requests in result.data.data) {
-                  result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('MMMM Do YYYY');
-                }
               Swal.fire('Cancelled!', 'Request has been cancelled.', 'success');
             }).catch(error => {
               console.log('error', error);
@@ -462,7 +464,9 @@
               category: categoryFound,
               productId: productModel.productId,
               quantity: productModel.quantity,
-              budget: productModel.budget,
+              distyPrice: productModel.distyPrice,
+              dealerPrice: productModel.dealerPrice,
+              endUserPrice: productModel.endUserPrice,
               productName: productModel.productName,
               tenderDate: productModel.tenderDate,
               remarks: productModel.remarks
@@ -513,7 +517,9 @@
           const productToInsert = {
             productId: this.productsToShow[product].productId,
             quantity: this.productsToShow[product].quantity,
-            budget: this.productsToShow[product].budget,
+            distyPrice: this.productsToShow[product].distyPrice,
+            dealerPrice: this.productsToShow[product].dealerPrice,
+            endUserPrice: this.productsToShow[product].endUserPrice,
             tenderDate: this.productsToShow[product].tenderDate,
             remarks: this.productsToShow[product].remarks,
           };

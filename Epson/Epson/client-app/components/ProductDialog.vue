@@ -16,10 +16,12 @@
           </select>
           <label>Quantity</label>
           <input v-model="localProduct.quantity" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-          <label>Budget</label>
-          <input v-model="localProduct.budget" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-          <label>Tender Date</label>
-          <input type="datetime-local" v-model="localProduct.tenderDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <label>Disty Price</label>
+          <input v-model="localProduct.distyPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <label>Dealer Price</label>
+          <input v-model="localProduct.dealerPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <label>End User Price</label>
+          <input v-model="localProduct.endUserPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
         </div>
       </v-card-text>
       <v-card-actions>
@@ -88,13 +90,15 @@
         }
       },
       onAddProduct() {
-        if (this.localProduct.category && this.localProduct.productId && this.localProduct.quantity && this.localProduct.budget) {
+        if (this.localProduct.category && this.localProduct.productId && this.localProduct.quantity && this.localProduct.dealerPrice && this.localProduct.endUserPrice) {
           this.$emit('add-product', this.localProduct);
           this.localProduct = {
             category: null,
             productId: null,
             quantity: null,
-            budget: null,
+            distyPrice: null,
+            dealerPrice: null,
+            endUserPrice: null,
             tenderDate: null,
           };
           this.localDialogProduct = false;

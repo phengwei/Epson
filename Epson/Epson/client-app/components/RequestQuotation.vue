@@ -44,15 +44,16 @@
               <thead>
                 <tr class="header-row">
                   <th colspan="3"><h2>PROPOSED MODEL</h2></th>
-                  <th colspan="5"><h2>PRICE EXPECTATION (RM)</h2></th>
+                  <th colspan="11"><h2>PRICE EXPECTATION (RM)</h2></th>
                 </tr>
                 <tr>
                   <th>Category</th>
                   <th>Product</th>
                   <th>Quantity</th>
-                  <th>Budget</th>
+                  <th>Disty Price</th>
+                  <th>Dealer Price</th>
+                  <th>End User Price</th>
                   <th v-if="isViewMode">Remarks</th>
-                  <th>Tender Date</th>
                   <th v-if="isViewMode">Delivery Date</th>
                   <th v-if="isViewMode">Status</th>
                   <th v-if="!isViewMode">Action</th>
@@ -63,9 +64,10 @@
                   <td>{{ product.category ? product.category.name : 'N/A' }}</td>
                   <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
                   <td>{{ product.quantity || 'N/A' }}</td>
-                  <td>{{ product.budget || 'N/A' }}</td>
+                  <td>{{ product.distyPrice || 'N/A' }}</td>
+                  <td>{{ product.dealerPrice || 'N/A' }}</td>
+                  <td>{{ product.endUserPrice || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ product.remarks || 'N/A' }}</td>
-                  <td>{{ product.tenderDate || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ product.deliveryDate || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ product.statusStr || 'N/A' }}</td>
                   <td v-if="!isViewMode">
@@ -94,13 +96,15 @@
               <thead>
                 <tr class="header-row">
                   <th colspan="3"><h2>PROPOSED COVERPLUS</h2></th>
-                  <th colspan="2"><h2>PRICE EXPECTATION (RM)</h2></th>
+                  <th colspan="7"><h2>PRICE EXPECTATION (RM)</h2></th>
                 </tr>
                 <tr>
                   <th>Category</th>
                   <th>Product</th>
                   <th>Quantity</th>
-                  <th>Budget</th>
+                  <th>Disty Price</th>
+                  <th>Dealer Price</th>
+                  <th>End User Price</th>
                   <th v-if="isViewMode">Status</th>
                   <th v-if="!isViewMode">Action</th>
                 </tr>
@@ -110,7 +114,9 @@
                   <td>{{ coverplus.category ? coverplus.category.name : 'N/A' }}</td>
                   <td>{{ coverplus.productId ? findProductName(coverplus.productId) : coverplus.productName }}</td>
                   <td>{{ coverplus.quantity || 'N/A' }}</td>
-                  <td>{{ coverplus.budget || 'N/A' }}</td>
+                  <td>{{ coverplus.distyPrice || 'N/A' }}</td>
+                  <td>{{ coverplus.dealerPrice || 'N/A' }}</td>
+                  <td>{{ coverplus.endUserPrice || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ coverplus.statusStr || 'N/A' }}</td>
                   <td v-if="!isViewMode">
                     <v-btn small color="error" @click="removeCoverplus(index)">
@@ -351,8 +357,9 @@
           <label>Comments</label>
           <textarea v-model="comments" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></textarea>
         </div>
-        <button type="submit" @click="submitQuotation" v-if="!isViewMode">Submit</button>
-        <button type="submit" @click="saveDraft" v-if="!isViewMode">Save Draft</button>
+        <button type="submit" @click="submitQuotation" v-if="isMode('create')">Submit</button>
+        <button type="submit" @click="saveDraft" v-if="isMode('create')">Save Draft</button>
+        <button type="submit" @click="redirectToRequest" v-if="isMode('editable')">Amend Request</button>
         <button type="submit" @click="redirectToRequest">Return to Request</button>
       </v-card-text>
     </v-card>
