@@ -10,8 +10,12 @@
           <input type="text" v-model="localCompetitor.model" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
           <label>Brand</label>
           <input type="text" v-model="localCompetitor.brand" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-          <label>Price</label>
-          <input v-model="localCompetitor.price" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <label>Disty Price</label>
+          <input v-model="localCompetitor.distyPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <label>Dealer Price</label>
+          <input v-model="localCompetitor.dealerPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <label>End User Price</label>
+          <input v-model="localCompetitor.endUserPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
         </div>
       </v-card-text>
       <v-card-actions>
@@ -52,12 +56,14 @@
     },
     methods: {
       onAddCompetitor() {
-        if (this.localCompetitor.brand && this.localCompetitor.model && this.localCompetitor.price) {
+        if (this.localCompetitor.brand && this.localCompetitor.model && this.localCompetitor.endUserPrice) {
           this.$emit('add-competitor', this.localCompetitor);
           this.localCompetitor = {
             model: null,
             brand: null,
-            price: null,
+            distyPrice: null,
+            dealerPrice: null,
+            endUserPrice: null,
           };
           this.localDialogCompetitor = false;
           

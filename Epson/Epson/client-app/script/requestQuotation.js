@@ -24,7 +24,7 @@ export default {
       products: [],
       coverplus: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
       coverpluses: [],
-      competitor: { model: null, brand: null, price: null },
+      competitor: { model: null, brand: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
       competitors: [],
       productsToShow: [],
       competitorsToShow: [],
@@ -174,7 +174,9 @@ export default {
       this.showAddedCompetitors(newCompetitor);
       this.competitor.brand = null;
       this.competitor.model = null;
-      this.competitor.price = null;
+      this.competitor.distyPrice = null;
+      this.competitor.dealerPrice = null;
+      this.competitor.endUserPrice = null;
       this.dialogCompetitor = false;
     },
     removeCompetitorInformation(index) {

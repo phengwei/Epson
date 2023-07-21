@@ -156,7 +156,9 @@
                 <tr v-for="(competitor, index) in competitorsToShow" :key="index">
                   <td>{{ competitor.model }}</td>
                   <td>{{ competitor.brand }}</td>
-                  <td>{{ competitor.price }}</td>
+                  <td>{{ competitor.distyPrice }}</td>
+                  <td>{{ competitor.dealerPrice }}</td>
+                  <td>{{ competitor.endUserPrice }}</td>
                   <td v-if="!isViewMode">
                     <v-btn small color="error" @click="removeCompetitorInformation(index)">
                       <v-icon>mdi-delete</v-icon>

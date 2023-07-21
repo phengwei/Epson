@@ -171,7 +171,9 @@ namespace Epson.Factories
                         RequestId = x.RequestId,
                         Model = x.Model,
                         Brand = x.Brand,
-                        Price = x.Price
+                        DistyPrice = x.DistyPrice,
+                        DealerPrice = x.DealerPrice,
+                        EndUserPrice = x.EndUserPrice,
                     }).ToList(),
                     RequestSubmissionDetailModel = new RequestSubmissionDetailModel
                     {
