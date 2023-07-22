@@ -4,6 +4,7 @@ using Epson.Core.Domain.Products;
 using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.Users;
 using Epson.Data;
+using Epson.Infrastructure;
 using Epson.Model.Categories;
 using Epson.Model.Request;
 using Epson.Services.DTO.Products;
@@ -89,7 +90,7 @@ namespace Epson.Factories
                     IsCoverplus = requestProduct.IsCoverplus,
                     TimeToResolution = requestProduct.TimeToResolution,
                     Status = requestProduct.Status,
-                    StatusStr = ((RequestProductStatusEnum)requestProduct.Status).ToString(),
+                    StatusStr = ((RequestProductStatusEnum)requestProduct.Status).GetDescription(),
                     Remarks = requestProduct.Remarks,
                 };
 
@@ -121,7 +122,7 @@ namespace Epson.Factories
                     Segment = request.Segment,
                     TotalBudget = request.TotalBudget,
                     ApprovalState = request.ApprovalState,
-                    ApprovalStateStr = ((ApprovalStateEnum)request.ApprovalState).ToString(),
+                    ApprovalStateStr = ((ApprovalStateEnum)request.ApprovalState).GetDescription(),
                     TotalPrice = request.TotalPrice,
                     TimeToResolution = request.TimeToResolution,
                     Comments = request.Comments,
@@ -143,7 +144,7 @@ namespace Epson.Factories
                         IsCoverplus = rp.IsCoverplus,
                         TimeToResolution = rp.TimeToResolution,
                         Status = rp.Status,
-                        StatusStr = ((RequestProductStatusEnum)rp.Status).ToString(),
+                        StatusStr = ((RequestProductStatusEnum)rp.Status).GetDescription(),
                         Remarks = rp.Remarks,
                         AuthorizedToFulfill = rp.AuthorizedToFulfill,
                         ProductCategory = _productService.GetProductCategoriesByProductId(rp.ProductId).Select(pc => new ProductCategoryModel
