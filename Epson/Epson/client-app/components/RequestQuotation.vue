@@ -191,7 +191,13 @@
                 <tr>
                   <td>Distributor Name</td>
                   <td>:</td>
-                  <td><input type="text" v-model="submissionDetail.distributorName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                  <td>
+                    <select v-model="submissionDetail.distributorName" class="border-input" :class="{'readonly-field': isViewMode}" :disabled="isViewMode">
+                      <option v-for="distributor in distributors" :key="distributor" :value="distributor">
+                        {{ distributor }}
+                      </option>
+                    </select>
+                  </td>
                 </tr>
                 <tr>
                   <td>BP / SI / Reseller Name</td>
