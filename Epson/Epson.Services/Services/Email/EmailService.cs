@@ -102,13 +102,11 @@ namespace Epson.Services.Services.Email
 
             var body = $"New request is created with the following details:\n" +
                        $"Requester: {requester.Result.UserName}\n" +
-                       $"Priority: {request.Priority}\n" +
                        $"Total Budget: {request.TotalBudget}\n" +
                        $"Products: {string.Join(", ", productNames)}";
 
             var emailQueue = new EmailQueue
             {
-                Priority = request.Priority,
                 FromEmail = emailAccount.Username,
                 ToEmail = requester.Result.Email,
                 Subject = subject,
@@ -143,7 +141,6 @@ namespace Epson.Services.Services.Email
 
             var emailQueue = new EmailQueue
             {
-                Priority = request.Priority,
                 FromEmail = emailAccount.Username,
                 ToEmail = requester.Result.Email,
                 Subject = subject,
@@ -175,7 +172,6 @@ namespace Epson.Services.Services.Email
 
             var emailQueue = new EmailQueue
             {
-                Priority = request.Priority,
                 FromEmail = emailAccount.Username,
                 ToEmail = requester.Result.Email,
                 Subject = subject,
@@ -207,7 +203,6 @@ namespace Epson.Services.Services.Email
 
             var emailQueue = new EmailQueue
             {
-                Priority = request.Priority,
                 FromEmail = emailAccount.Username,
                 ToEmail = requester.Result.Email,
                 Subject = subject,

@@ -38,14 +38,6 @@
           <input v-model="localEditedItem.remarks" class="border-input" label="Remarks"></input>
         </div>
         <div class="form-group">
-          <label>Tender Date</label>
-          <input type="datetime-local" v-model="localEditedItem.tenderDate" class="border-input" :min="today()" label="Tender Date" readonly></input>
-        </div>
-        <div class="form-group">
-          <label>Delivery Date</label>
-          <input type="datetime-local" v-model="localEditedItem.deliveryDate" class="border-input" :min="today()" label="Delivery Date"></input>
-        </div>
-        <div class="form-group">
           <label>Dealer Price</label>
           <input v-model="localEditedItem.fulfilledPrice" type="number" class="border-input" label="Approved Price" required></input>
         </div>
@@ -115,7 +107,7 @@
             confirmButtonText: 'Fulfill',
           }).then((result) => {
             if (result.isConfirmed) {
-              this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?requestId=${this.localEditedItem.requestId}&productId=${this.localEditedItem.productId}&fulfilledPrice=${this.localEditedItem.fulfilledPrice}&deliveryDate=${this.localEditedItem.deliveryDate}&remarks=${this.localEditedItem.remarks}`)
+              this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?requestId=${this.localEditedItem.requestId}&productId=${this.localEditedItem.productId}&fulfilledPrice=${this.localEditedItem.fulfilledPrice}&remarks=${this.localEditedItem.remarks}`)
                 .then(response => {
                   this.close(); 
                   Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success');

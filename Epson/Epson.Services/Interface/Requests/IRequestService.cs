@@ -14,11 +14,11 @@ namespace Epson.Services.Interface.Requests
         public List<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser);
         public List<RequestProductDTO> GetRequestProducts();
         public bool InsertRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations, RequestSubmissionDetail requestSubmissionDetail, ProjectInformationDTO projectInformationDTO);
-        public bool UpdateRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations);
+        public bool UpdateRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations, RequestSubmissionDetail requestSubmissionDetail, ProjectInformationDTO projectInformationDTO);
         public bool ApproveRequest(ApplicationUser user, Request request, string comments);
         public bool SetRequestToAmendQuotation(Request request);
         public bool ApproveFirstLevelRequest(Request request);
-        public bool FulfillRequest(ApplicationUser user, Request request, Product product, decimal totalPrice, DateTime deliveryDate, string remarks);
+        public bool FulfillRequest(ApplicationUser user, Request request, Product product, decimal totalPrice, string remarks);
         public List<FulfillmentSummary> GetFulfillmentSummary(DateTime startDate, DateTime endDate, string granularity, string userId);
         public List<SalesSummary> GetRequestSummary(DateTime startDate, DateTime endDate, string granularity, string userId);
         public TimeSpan CalculateResolutionTime(DateTime approvedTime, DateTime ticketCreateTime, List<SLAStaffLeaveDTO> staffLeaves, List<SLAHolidayDTO> holidays);

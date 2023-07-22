@@ -92,15 +92,11 @@ namespace Epson.Services.Services.Requests
                     CompetitorInformations = _CompetitorInformationRepository.Table.Where(p => p.RequestId == x.Id).ToList(),
                     CreatedById = x.CreatedById,
                     CreatedOnUTC = x.CreatedOnUTC,
-                    CustomerName = x.CustomerName,
-                    DealJustification = x.DealJustification,
                     UpdatedById = x.UpdatedById,
                     UpdatedOnUTC = x.UpdatedOnUTC,
                     Segment = x.Segment,
                     TotalBudget = x.TotalBudget,
                     ApprovalState = x.ApprovalState,
-                    Priority = x.Priority,
-                    Deadline = x.Deadline,
                     TotalPrice = x.TotalPrice,
                     TimeToResolution = x.TimeToResolution,
                     Comments = x.Comments,
@@ -191,8 +187,6 @@ namespace Epson.Services.Services.Requests
                 FulfilledPrice = x.FulfilledPrice,
                 FulfilledDate = x.FulfilledDate,
                 HasFulfilled = x.HasFulfilled,
-                TenderDate = x.TenderDate,
-                DeliveryDate = x.DeliveryDate,
                 TimeToResolution = x.TimeToResolution,
                 Status = x.Status,
                 Remarks = x.Remarks,
@@ -219,7 +213,7 @@ namespace Epson.Services.Services.Requests
 
             try
             {
-                request.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => rp.EndUserPrice);
+                request.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => (decimal)rp.EndUserPrice);
                 request.Id = _RequestRepository.Add(request);
                 requestSubmissionDetail.RequestId = request.Id;
                 projectInformation.RequestId = request.Id;
@@ -262,6 +256,73 @@ namespace Epson.Services.Services.Requests
             catch (Exception ex)
             {
                 _logger.Error(ex, "Error creating request {id}", request.Id);
+
+                return false;
+            }
+        }
+
+        public bool UpdateRequest(Request request,
+           List<RequestProduct> requestProducts,
+           List<CompetitorInformation> competitorInformations,
+           RequestSubmissionDetail requestSubmissionDetail,
+           ProjectInformationDTO projectInformationDTO)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (GetRequestById(request.Id) == null)
+                throw new ArgumentNullException(nameof(request));
+
+            var projectInformation = _mapper.Map<ProjectInformation>(projectInformationDTO);
+
+            try
+            {
+                request.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => (decimal)rp.EndUserPrice);
+                _RequestRepository.Update(request);
+                _logger.Information("Updating request {id}", request.Id);
+
+                DeleteRequestProductOfRequest(request.Id);
+
+                foreach (var requestProduct in requestProducts)
+                {
+                    var product = _productService.GetProductById(requestProduct.ProductId);
+
+                    requestProduct.FulfillerId = product.CreatedById;
+                    requestProduct.RequestId = request.Id;
+                    requestProduct.CreatedOnUTC = request.CreatedOnUTC;
+                    requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
+
+                    InsertRequestProduct(requestProduct);
+                }
+
+                DeleteCompetitorInformationOfRequest(request.Id);
+
+                foreach (var competitorInformation in competitorInformations)
+                {
+                    competitorInformation.RequestId = request.Id;
+
+                    InsertCompetitorInformation(competitorInformation);
+                }
+
+                var projectInformationId = _ProjectInformationRepository.Table.Where(x => x.RequestId == request.Id).FirstOrDefault().Id;
+                _ProjectInformationRepository.Update(projectInformation);
+
+                DeleteProjectInformationReasons(projectInformationId);
+
+                foreach (var projectInformationReason in projectInformationDTO.ProjectInformationReasons)
+                {
+                    projectInformationReason.ProjectInformationId = projectInformationId;
+                    _ProjectInformationReasonRepository.Add(projectInformationReason);
+                }
+
+                _RequestSubmissionDetailRepository.Update(requestSubmissionDetail);
+                _logger.Information("Successfully created request {id}", request.Id);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error updating request {id}", request.Id);
 
                 return false;
             }
@@ -314,52 +375,6 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool UpdateRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations)
-        {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
-            if (GetRequestById(request.Id) == null)
-                throw new ArgumentNullException(nameof(request));
-            try
-            {
-                request.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => rp.EndUserPrice);
-                _RequestRepository.Update(request);
-                _logger.Information("Updating request {id}", request.Id);
-
-                DeleteRequestProductOfRequest(request.Id);
-
-                foreach (var requestProduct in requestProducts)
-                {
-                    var product = _productService.GetProductById(requestProduct.ProductId);
-
-                    requestProduct.FulfillerId = null;
-                    requestProduct.RequestId = request.Id;
-                    requestProduct.CreatedOnUTC = request.CreatedOnUTC;
-                    requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
-
-                    InsertRequestProduct(requestProduct);
-                }
-
-                DeleteCompetitorInformationOfRequest(request.Id);
-
-                foreach (var competitorInformation in competitorInformations)
-                {
-                    competitorInformation.RequestId = request.Id;
-
-                    InsertCompetitorInformation(competitorInformation);
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Error updating request {id}", request.Id);
-
-                return false;
-            }
-        }
-
         private bool DeleteRequestProductOfRequest(int requestId)
         {
             if (requestId == 0 || requestId == null)
@@ -379,6 +394,27 @@ namespace Epson.Services.Services.Requests
             catch (Exception ex)
             {
                 _logger.Error(ex, "Error deleting request products of request {requestid}", requestId);
+
+                return false;
+            }
+        }
+
+        private bool DeleteProjectInformationReasons(int projectInformationId)
+        {
+            if (projectInformationId == 0 || projectInformationId == null)
+                return false;
+
+            var projectInformationReasons = _ProjectInformationReasonRepository.Table.Where(x => x.ProjectInformationId == projectInformationId).ToList();
+            try
+            {
+                foreach (var projectInformationReason in projectInformationReasons)
+                    _ProjectInformationReasonRepository.Delete(projectInformationReason.Id);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error deleting project information reason of project information {projectinformationId}", projectInformationId);
 
                 return false;
             }
@@ -446,7 +482,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool FulfillRequest(ApplicationUser user, Request request, Product product, decimal totalPrice, DateTime deliveryDate, string remarks)
+        public bool FulfillRequest(ApplicationUser user, Request request, Product product, decimal totalPrice, string remarks)
         {
             var existingRequest = GetRequestById(request.Id);
             var existingProduct = _productService.GetProductById(product.Id);
@@ -466,7 +502,6 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.FulfillerId = user.Id;
             requestProductToFulfill.HasFulfilled = true;
             requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
-            requestProductToFulfill.DeliveryDate = deliveryDate;
             requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;
             requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate, requestProductToFulfill.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
             requestProductToFulfill.Remarks = remarks;

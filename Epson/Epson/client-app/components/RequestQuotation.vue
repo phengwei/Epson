@@ -54,7 +54,6 @@
                   <th>Dealer Price</th>
                   <th>End User Price</th>
                   <th v-if="isViewMode">Remarks</th>
-                  <th v-if="isViewMode">Delivery Date</th>
                   <th v-if="isViewMode">Status</th>
                   <th v-if="!isViewMode">Action</th>
                 </tr>
@@ -68,7 +67,6 @@
                   <td>{{ product.dealerPrice || 'N/A' }}</td>
                   <td>{{ product.endUserPrice || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ product.remarks || 'N/A' }}</td>
-                  <td v-if="isViewMode">{{ product.deliveryDate || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ product.statusStr || 'N/A' }}</td>
                   <td v-if="!isViewMode">
                     <v-btn small color="error" @click="removeProduct(index)">
@@ -143,12 +141,14 @@
             <table class="mb-5 mt-2">
               <thead>
                 <tr class="header-row">
-                  <th colspan="4"><h2>COMPETITOR'S INFORMATION</h2></th>
+                  <th colspan="6"><h2>COMPETITOR'S INFORMATION</h2></th>
                 </tr>
                 <tr>
                   <th>Model</th>
                   <th>Brand</th>
-                  <th>Price</th>
+                  <th>Disty Price</th>
+                  <th>Dealer Price</th>
+                  <th>End User Price</th>
                   <th v-if="!isViewMode">Action</th>
                 </tr>
               </thead>
@@ -156,9 +156,9 @@
                 <tr v-for="(competitor, index) in competitorsToShow" :key="index">
                   <td>{{ competitor.model }}</td>
                   <td>{{ competitor.brand }}</td>
-                  <td>{{ competitor.distyPrice }}</td>
-                  <td>{{ competitor.dealerPrice }}</td>
-                  <td>{{ competitor.endUserPrice }}</td>
+                  <td>{{ competitor.distyPrice || 'N/A' }}</td>
+                  <td>{{ competitor.dealerPrice  || 'N/A' }}</td>
+                  <td>{{ competitor.endUserPrice || 'N/A' }}</td>
                   <td v-if="!isViewMode">
                     <v-btn small color="error" @click="removeCompetitorInformation(index)">
                       <v-icon>mdi-delete</v-icon>
@@ -306,13 +306,15 @@
                   <td>
                     <div class="form-group" v-for="(reason, index) in reasons" :key="index">
                       <div class="form-check">
-                        <input class="form-check-input custom-checkbox" type="checkbox" :id="reason.text" :value="reason.text" v-model="projectInformation.projectInformationReasons" :disabled="isViewMode" @change="handleCheckboxChange($event, reason.text)">
+                        <input class="form-check-input custom-checkbox" type="checkbox" :id="reason.text" :value="reason.text" v-model="reason.isChecked" :disabled="isViewMode" @change="handleCheckboxChange(reason)">
                         <label class="form-check-label" :for="reason.text">{{ reason.text }}</label>
+                      </div>
+                      <div v-if="reason.isChecked && (reason.text === 'Additional Purchase' || reason.text === 'Renewal of Quotation' || reason.text === 'Revision (Price/Model/Qty/Other)')">
+                        <input type="text" v-model="reason.additionalText" placeholder="Enter Quotation No." class="border-input mt-2" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
                       </div>
                     </div>
                   </td>
                 </tr>
-                <tr>
                   <td>Key Customer Requirements</td>
                   <td>:</td>
                   <td><input type="text" v-model="projectInformation.requirements" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
@@ -341,33 +343,13 @@
             </table>
           </v-card-text>
         </v-card>
-        <div class="form-group">
-          <label>Customer Name</label>
-          <input type="text" v-model="customerName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-        </div>
-        <div class="form-group">
-          <label>Priority</label>
-          <select v-model="priority.value" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-            <option v-for="option in priority.options" :value="option.value" :key="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Requirements</label>
-          <textarea v-model="dealJustification" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Deadline</label>
-          <input type="datetime-local" v-model="deadline" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-        </div>
         <div class="form-group" v-if="comments != ''">
           <label>Comments</label>
           <textarea v-model="comments" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></textarea>
         </div>
         <button type="submit" @click="submitQuotation" v-if="isMode('create')">Submit</button>
         <button type="submit" @click="saveDraft" v-if="isMode('create')">Save Draft</button>
-        <button type="submit" @click="redirectToRequest" v-if="isMode('editable')">Amend Request</button>
+        <button type="submit" @click="submitQuotation" v-if="isMode('editable')">Amend Request</button>
         <button type="submit" @click="redirectToRequest">Return to Request</button>
       </v-card-text>
     </v-card>

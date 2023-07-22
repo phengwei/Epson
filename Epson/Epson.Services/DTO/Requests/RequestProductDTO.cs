@@ -12,15 +12,13 @@ namespace Epson.Services.DTO.Requests
         public int RequestId { get; set; }
         public int ProductId { get; set; }
         public int Quantity { get; set; }
-        public decimal DistyPrice { get; set; }
-        public decimal DealerPrice { get; set; }
-        public decimal EndUserPrice { get; set; }
+        public decimal? DistyPrice { get; set; }
+        public decimal? DealerPrice { get; set; }
+        public decimal? EndUserPrice { get; set; }
         public string FulfillerId { get; set; }
         public decimal FulfilledPrice { get; set; }
         public bool HasFulfilled { get; set; }
         public DateTime FulfilledDate { get; set; }
-        public DateTime TenderDate { get; set; }
-        public DateTime DeliveryDate { get; set; }
         public TimeSpan TimeToResolution { get; set; }
         public int Status { get; set; }
         public string? Remarks { get; set; }

@@ -108,10 +108,6 @@ namespace Epson.Controllers.API
                 UpdatedById = user.Id,
                 Segment = model.Segment,
                 ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction,
-                Priority = model.Priority,
-                Deadline = model.Deadline,
-                DealJustification = model.DealJustification,
-                CustomerName = model.CustomerName, 
             };
 
             if (_requestService.InsertRequest(request, model.RequestProducts, model.CompetitorInformations, model.RequestSubmissionDetail, model.ProjectInformationModel))
@@ -144,19 +140,15 @@ namespace Epson.Controllers.API
             var updatedRequest = new Request
             {
                 Id = request.Id,
-                CustomerName = model.CustomerName,
                 CreatedOnUTC = request.CreatedOnUTC,
                 UpdatedOnUTC = DateTime.UtcNow,
-                DealJustification = model.DealJustification,
-                Deadline = model.Deadline,
                 CreatedById = user.Id,
                 UpdatedById = user.Id,
                 Segment = request.Segment,
                 ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction,
-                Priority = model.Priority
             };
 
-            if (_requestService.UpdateRequest(updatedRequest, model.RequestProducts, model.CompetitorInformations))
+            if (_requestService.UpdateRequest(updatedRequest, model.RequestProducts, model.CompetitorInformations, model.RequestSubmissionDetail, model.ProjectInformationModel))
                 return Ok();
             else
                 return BadRequest("Failed to update request");
@@ -183,7 +175,7 @@ namespace Epson.Controllers.API
 
         [HttpPost("fulfillrequest")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product")]
-        public async Task<IActionResult> FulfillRequest(int requestId, int productId, decimal fulfilledPrice, DateTime deliveryDate, string remarks)
+        public async Task<IActionResult> FulfillRequest(int requestId, int productId, decimal fulfilledPrice, string remarks)
         {
             if (requestId == 0 || productId == 0)
                 return NotFound("Resources not found!");
@@ -199,7 +191,7 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (_requestService.FulfillRequest(user, _mapper.Map<Request>(request), _mapper.Map<Product>(product), fulfilledPrice, deliveryDate, remarks))
+            if (_requestService.FulfillRequest(user, _mapper.Map<Request>(request), _mapper.Map<Product>(product), fulfilledPrice, remarks))
                 return Ok("Request has been fulfilled");
             else
                 return BadRequest("Failed to fulfill request");

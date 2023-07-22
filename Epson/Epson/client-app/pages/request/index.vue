@@ -64,6 +64,7 @@
         this.$router.push('/createquotation?create=true');
       },
       viewRequest(request) {
+        console.log(request);
         let queryParameters = { view: true, request: JSON.stringify(request) };
 
         if (this.loggedInUser.roles.includes('Sales Section Head')) {

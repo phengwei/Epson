@@ -1,4 +1,3 @@
-import moment from 'moment';
 import Swal from 'sweetalert2';
 import ProductDialog from '~/components/ProductDialog.vue';
 import CompetitorInformationDialog from '~/components/CompetitorInformationDialog.vue';
@@ -14,17 +13,32 @@ export default {
     CoverplusDialog,
     ProductFulfillmentDialog
   },
+  watch: {
+    reasons: {
+      handler(newVal) {
+        newVal.forEach(reason => {
+          if (reason.isChecked && (reason.text === 'Additional Purchase' || reason.text === 'Renewal of Quotation' || reason.text === 'Revision (Price/Model/Qty/Other)')) {
+            const reasonToInsert = this.projectInformationReasonsToInsert.find(r => r.selectedReason === reason.text);
+            if (reasonToInsert) {
+              reasonToInsert.additionalInfo = reason.additionalText;
+            }
+          }
+        });
+      },
+      deep: true
+    }
+  },
   data() {
     return {
       categories: [],
       selectedCategories: [],
       isChecked: [],
       selectedProducts: {},
-      product: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null, remarks: null },
+      product: { category: null, productId: null, quantity: null, distyPrice: 0, dealerPrice: 0, endUserPrice: 0, remarks: null },
       products: [],
-      coverplus: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
+      coverplus: { category: null, productId: null, quantity: null, distyPrice: 0, dealerPrice: 0, endUserPrice: 0 },
       coverpluses: [],
-      competitor: { model: null, brand: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
+      competitor: { model: null, brand: null, distyPrice: 0, dealerPrice: 0, endUserPrice: 0 },
       competitors: [],
       productsToShow: [],
       competitorsToShow: [],
@@ -40,11 +54,11 @@ export default {
       },
       projectInformationReasonsToInsert: [],
       reasons: [
-        { text: "New Purchase", info: "" },
-        { text: "Additional Purchase", info: "Quotation No." },
-        { text: "Renewal of Quotation", info: "Quotation No." },
-        { text: "Revision (Price/Model/Qty/Other)", info: "Quotation No." },
-        { text: "Replacement of old machine", info: "" }
+        { text: "New Purchase", info: "", isChecked: false, additionalText: "" },
+        { text: "Additional Purchase", info: "Quotation No.", isChecked: false, additionalText: "" },
+        { text: "Renewal of Quotation", info: "Quotation No.", isChecked: false, additionalText: "" },
+        { text: "Revision (Price/Model/Qty/Other)", info: "Quotation No.", isChecked: false, additionalText: "" },
+        { text: "Replacement of old machine", info: "", isChecked: false, additionalText: "" }
       ],
       options: {},
       priority: {
@@ -81,7 +95,6 @@ export default {
     this.submissionDetail.createdOnUTC = this.getToday();
     await this.fetchCategories();
     if (this.$route.query.view || this.$route.query.editable) {
-      console.log("populate");
       const request = JSON.parse(this.$route.query.request);
       this.populateForm(request);
     }
@@ -131,7 +144,7 @@ export default {
           this.$axios.post(`${this.$config.restUrl}/api/request/approvefirstlevelrequest?requestId=${this.currentRequest.id}`)
             .then(response => {
               this.closeDialogProductFulfillment();
-              Swal.fire('Amended!', 'Request is successfully approved.', 'success')
+              Swal.fire('Approved!', 'Request is successfully approved.', 'success')
                 .then(() => {
                   this.$router.push('/request');
                 });
@@ -147,11 +160,11 @@ export default {
       this.closeDialogProductFulfillment = false;
     },
     fulfillNonCoverplusItem() {
-      this.editedItem = { ...this.nonCoverplusRequestItem[0], deliveryDate: this.getToday() };
+      this.editedItem = { ...this.nonCoverplusRequestItem[0] };
       this.dialogProductFulfillment = true;
     },
     fulfillCoverplusItem() {
-      this.editedItem = { ...this.coverplusRequestItem[0], deliveryDate: this.getToday() };
+      this.editedItem = { ...this.coverplusRequestItem[0] };
       this.dialogProductFulfillment = true;
     },
     getToday() {
@@ -175,9 +188,9 @@ export default {
       this.showAddedCompetitors(newCompetitor);
       this.competitor.brand = null;
       this.competitor.model = null;
-      this.competitor.distyPrice = null;
-      this.competitor.dealerPrice = null;
-      this.competitor.endUserPrice = null;
+      this.competitor.distyPrice = 0;
+      this.competitor.dealerPrice = 0;
+      this.competitor.endUserPrice = 0;
       this.dialogCompetitor = false;
     },
     removeCompetitorInformation(index) {
@@ -193,10 +206,9 @@ export default {
       this.product.category = null;
       this.product.productId = null;
       this.product.quantity = null;
-      this.product.distyPrice = null;
-      this.product.dealerPrice = null;
-      this.product.endUserPrice = null;
-      this.product.tenderDate = null;
+      this.product.distyPrice = 0;
+      this.product.dealerPrice = 0;
+      this.product.endUserPrice = 0;
       this.dialogCoverplus = false;
     },
     removeCoverplusInformation(index) {
@@ -212,10 +224,9 @@ export default {
       this.product.category = null;
       this.product.productId = null;
       this.product.quantity = null;
-      this.product.distyPrice = null;
-      this.product.dealerPrice = null;
-      this.product.endUserPrice = null;
-      this.product.tenderDate = null;
+      this.product.distyPrice = 0;
+      this.product.dealerPrice = 0;
+      this.product.endUserPrice = 0;
       this.dialogProduct = false;
     },
     removeProduct(index) {
@@ -235,6 +246,7 @@ export default {
       return 'N/A';
     },
     async populateForm(requestData) {
+      console.log(requestData);
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProductsModel) {
         const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
@@ -264,8 +276,6 @@ export default {
             dealerPrice: productModel.dealerPrice,
             endUserPrice: productModel.endUserPrice,
             productName: productModel.productName,
-            tenderDate: productModel.tenderDate === "0001-01-01T00:00:00" ? "N/A" : moment(productModel.tenderDate).format('MMMM Do YYYY'),
-            deliveryDate: productModel.deliveryDate === "0001-01-01T00:00:00" ? "N/A" : moment(productModel.deliveryDate).format('MMMM Do YYYY'),
             remarks: productModel.remarks,
             statusStr: productModel.statusStr
           };
@@ -280,21 +290,32 @@ export default {
         const c = {
           model: competitorModel.model,
           brand: competitorModel.brand,
-          price: competitorModel.price
+          distyPrice: competitorModel.distyPrice,
+          dealerPrice: competitorModel.dealerPrice,
+          endUserPrice: competitorModel.endUserPrice,
         };
         this.competitorsToShow.push(c);
       }
       this.submissionDetail = requestData.requestSubmissionDetailModel;
       this.projectInformation = requestData.projectInformationModel;
-      this.projectInformation.projectInformationReasons = requestData.projectInformationModel.projectInformationReasons.map(reasonObject => reasonObject.selectedReason);
-      this.priority.value = requestData.priority;
-      this.customerName = requestData.customerName;
-      this.dealJustification = requestData.dealJustification;
-      this.deadline = requestData.deadline;
       this.approvalStateStr = requestData.approvalStateStr;
-      this.deliveryDate = requestData.deliveryDate;
-      this.tenderDate = requestData.tenderDate;
       this.comments = requestData.comments;
+
+      requestData.projectInformationModel.projectInformationReasons.forEach((populatedReason) => {
+        console.log(populatedReason);
+        const reasonInData = this.reasons.find((reason) => reason.text === populatedReason.selectedReason);
+        if (reasonInData) {
+          reasonInData.isChecked = true;
+          reasonInData.additionalText = populatedReason.additionalInfo;
+        }
+
+        this.projectInformationReasonsToInsert.push({
+          id: populatedReason.Id,
+          projectInformationId: populatedReason.projectInformationId,
+          selectedReason: populatedReason.selectedReason,
+          additionalInfo: populatedReason.additionalText || null
+        });
+      });
     },
     async fetchCategories() {
       try {
@@ -307,20 +328,22 @@ export default {
         console.error(error);
       }
     },
-    handleCheckboxChange(event, reason) {
-      if (event.target.checked) {
-        this.projectInformationReasonsToInsert.push({
-          id: 0,
-          projectInformationId: 0,
-          selectedReason: reason,
-          additionalInfo: null
-        });
-      } else {
-        const index = this.projectInformationReasonsToInsert.findIndex(r => r.selectedReason === reason);
-        if (index !== -1) {
-          this.projectInformationReasonsToInsert.splice(index, 1);
+    handleCheckboxChange(reason) {
+      this.$nextTick(() => {
+        if (reason.isChecked) {
+          this.projectInformationReasonsToInsert.push({
+            id: 0,
+            projectInformationId: 0,
+            selectedReason: reason.text,
+            additionalInfo: reason.additionalText || null
+          });
+        } else {
+          const index = this.projectInformationReasonsToInsert.findIndex(r => r.selectedReason === reason.text);
+          if (index !== -1) {
+            this.projectInformationReasonsToInsert.splice(index, 1);
+          }
         }
-      }
+      });
     },
     async fetchProductsForCategory(category) {
       try {
@@ -378,16 +401,19 @@ export default {
       this.$router.push('/request');
     },
     async submitQuotation() {
-      if (this.deadline < this.today) {
-        this.$swal('Error', 'Deadline should be later than today', 'error');
-        return;
-      }
+      const apiEndpoint = this.isMode('editable') ? `${this.$config.restUrl}/api/request/editrequest` : `${this.$config.restUrl}/api/request/createrequest`;
+      console.log("current request", this.currentRequest);
       const quotationData = {
         ApprovalState: 20,
         Priority: this.priority,
         requestProducts: [],
         competitorInformations: [],
       };
+
+      if (this.isMode('editable')) {
+        quotationData.id = this.currentRequest.id;
+      }
+
       for (const product in this.productsToShow) {
         const productToInsert = {
           productId: this.productsToShow[product].productId,
@@ -395,7 +421,6 @@ export default {
           distyPrice: this.productsToShow[product].distyPrice,
           dealerPrice: this.productsToShow[product].dealerPrice,
           endUserPrice: this.productsToShow[product].endUserPrice,
-          tenderDate: this.productsToShow[product].tenderDate,
           isCoverplus: false
         };
         quotationData.requestProducts.push(productToInsert);
@@ -404,7 +429,9 @@ export default {
         const competitorToInsert = {
           model: this.competitorsToShow[competitor].model,
           brand: this.competitorsToShow[competitor].brand,
-          price: this.competitorsToShow[competitor].price
+          distyPrice: this.competitorsToShow[competitor].distyPrice,
+          dealerPrice: this.competitorsToShow[competitor].dealerPrice,
+          endUserPrice: this.competitorsToShow[competitor].endUserPrice
         };
         quotationData.competitorInformations.push(competitorToInsert);
       }
@@ -448,18 +475,15 @@ export default {
       }
       try {
         const vm = this;
-        await this.$axios.post(`${this.$config.restUrl}/api/request/createrequest`, {
+        await this.$axios.post(apiEndpoint, {
           data: {
             segment: "string",
             approvalState: 10,
-            priority: this.priority.value,
             RequestProducts: quotationData.requestProducts,
             CompetitorInformations: quotationData.competitorInformations,
-            customerName: this.customerName,
-            dealJustification: this.dealJustification,
-            deadline: this.deadline,
             requestSubmissionDetail: quotationData.submissionDetail,
             ProjectInformationModel: quotationData.projectInformation,
+            Id: quotationData.id,
             comments: '',
           }
         }).then(response => {

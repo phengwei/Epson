@@ -44,17 +44,13 @@ namespace Epson.Factories
                 requestModel.Id = request.Id;
                 requestModel.ApprovedBy = request.ApprovedBy;
                 requestModel.ApprovedTime = request.ApprovedTime;
-                requestModel.CustomerName = request.CustomerName;
                 requestModel.CreatedById = request.CreatedById;
                 requestModel.CreatedOnUTC = request.CreatedOnUTC;
-                requestModel.DealJustification = request.DealJustification;
                 requestModel.UpdatedById = request.UpdatedById;
                 requestModel.UpdatedOnUTC = request.UpdatedOnUTC;
                 requestModel.Segment = request.Segment;
                 requestModel.TotalBudget = request.TotalBudget;
                 requestModel.ApprovalState = request.ApprovalState;
-                requestModel.Priority = request.Priority;
-                requestModel.Deadline = request.Deadline;
                 requestModel.TotalPrice = request.TotalPrice;
                 requestModel.TimeToResolution = request.TimeToResolution;
                 requestModel.RequestProducts = _mapper.Map<List<RequestProduct>>(request.RequestProducts);
@@ -89,8 +85,6 @@ namespace Epson.Factories
                     FulfilledPrice = requestProduct.FulfilledPrice,
                     FulfilledDate = requestProduct.FulfilledDate,
                     HasFulfilled = requestProduct.HasFulfilled,
-                    TenderDate = requestProduct.TenderDate,
-                    DeliveryDate = requestProduct.DeliveryDate,
                     Breached = requestProduct.Breached,
                     IsCoverplus = requestProduct.IsCoverplus,
                     TimeToResolution = requestProduct.TimeToResolution,
@@ -119,19 +113,15 @@ namespace Epson.Factories
                     Id = request.Id,
                     ApprovedBy = request.ApprovedBy,
                     ApprovedTime = request.ApprovedTime,
-                    CustomerName = request.CustomerName,
                     CreatedBy = _userManager.FindByIdAsync(request.CreatedById).Result.UserName,
                     CreatedById = request.CreatedById,
                     CreatedOnUTC = request.CreatedOnUTC,
-                    DealJustification = request.DealJustification,
                     UpdatedById = request.UpdatedById,
                     UpdatedOnUTC = request.UpdatedOnUTC,
                     Segment = request.Segment,
                     TotalBudget = request.TotalBudget,
                     ApprovalState = request.ApprovalState,
                     ApprovalStateStr = ((ApprovalStateEnum)request.ApprovalState).ToString(),
-                    Priority = request.Priority,
-                    Deadline = request.Deadline,
                     TotalPrice = request.TotalPrice,
                     TimeToResolution = request.TimeToResolution,
                     Comments = request.Comments,
@@ -150,9 +140,7 @@ namespace Epson.Factories
                         FulfillerId = rp.FulfillerId,
                         FulfillerName = rp.FulfillerId != null ? _userManager.FindByIdAsync(rp.FulfillerId).Result.UserName : null,
                         FulfilledPrice = rp.FulfilledPrice,
-                        TenderDate = rp.TenderDate,
                         IsCoverplus = rp.IsCoverplus,
-                        DeliveryDate = rp.DeliveryDate,
                         TimeToResolution = rp.TimeToResolution,
                         Status = rp.Status,
                         StatusStr = ((RequestProductStatusEnum)rp.Status).ToString(),

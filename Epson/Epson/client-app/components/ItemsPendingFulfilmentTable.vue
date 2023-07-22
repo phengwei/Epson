@@ -131,7 +131,6 @@
                 dealerPrice: product.dealerPrice,
                 endUserPrice: product.endUserPrice,
                 productName: product.productName,
-                tenderDate: product.tenderDate,
                 remarks: product.remarks
               };
               this.productsToShow.push(p);

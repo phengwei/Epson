@@ -13,8 +13,8 @@ namespace Epson.Services.DTO.Requests
         public string Model { get; set; }
         public string Brand { get; set; }
         public Decimal Price { get; set; }
-        public decimal DistyPrice { get; set; }
-        public decimal DealerPrice { get; set; }
-        public decimal EndUserPrice { get; set; }
+        public decimal? DistyPrice { get; set; }
+        public decimal? DealerPrice { get; set; }
+        public decimal? EndUserPrice { get; set; }
     }
 }

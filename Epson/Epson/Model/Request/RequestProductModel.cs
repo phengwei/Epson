@@ -12,9 +12,9 @@ namespace Epson.Model.Request
         public int ProductId { get; set; }
         public string? ProductName { get; set; }
         public int Quantity { get; set; }
-        public decimal DistyPrice { get; set; }
-        public decimal DealerPrice { get; set; }
-        public decimal EndUserPrice { get; set; }
+        public decimal? DistyPrice { get; set; }
+        public decimal? DealerPrice { get; set; }
+        public decimal? EndUserPrice { get; set; }
         public string FulfillerId { get; set; }
         public string FulfillerName { get; set; }
         public decimal FulfilledPrice { get; set; }
@@ -25,8 +25,6 @@ namespace Epson.Model.Request
         public int Status { get; set; }
         public string? StatusStr { get; set; }
         public ProductCategoryModel ProductCategory { get; set; } = new ProductCategoryModel();
-        public DateTime TenderDate { get; set; }
-        public DateTime DeliveryDate { get; set; }
         public string? Remarks { get; set; }
         public DateTime CreatedOnUTC { get; set; }
         public DateTime UpdatedOnUTC { get; set; }

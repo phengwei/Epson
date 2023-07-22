@@ -10,8 +10,6 @@ namespace Epson.Services.DTO.Requests
         public string Segment { get; set; }
         public decimal TotalBudget { get; set; }
         public int ApprovalState { get; set; }
-        public int Priority { get; set; }
-        public DateTime Deadline { get; set; }
         public Decimal TotalPrice { get; set; }
         public TimeSpan TimeToResolution { get; set; }
         public bool Breached { get; set; }
@@ -19,8 +17,6 @@ namespace Epson.Services.DTO.Requests
         public DateTime? UpdatedOnUTC { get; set; }
         public string CreatedById { get; set; }
         public string UpdatedById { get; set; }
-        public string DealJustification { get; set; }
-        public string CustomerName { get; set; }
         public string Comments { get; set; }
         public List<RequestProductDTO> RequestProducts { get; set; } = new List<RequestProductDTO>();
         public List<CompetitorInformation> CompetitorInformations { get; set; } = new List<CompetitorInformation>();
