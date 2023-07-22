@@ -10,10 +10,6 @@
           <input v-model="localEditedItem.createdBy" class="border-input readonly-field" label="Requested By" readonly></input>
         </div>
         <div class="form-group">
-          <label>Customer</label>
-          <input v-model="localEditedItem.customerName" class="border-input readonly-field" label="Customer" readonly></input>
-        </div>
-        <div class="form-group">
           <label>Product</label>
           <input v-model="localEditedItem.productName" class="border-input readonly-field" label="Product" readonly></input>
         </div>
@@ -28,10 +24,6 @@
         <div class="form-group">
           <label>Quantity</label>
           <input v-model="localEditedItem.quantity" class="border-input readonly-field" label="Quantity" readonly></input>
-        </div>
-        <div class="form-group">
-          <label>Requirements</label>
-          <input v-model="localEditedItem.dealJustification" class="border-input readonly-field" label="Requirements" readonly></input>
         </div>
         <div class="form-group">
           <label>Remarks</label>

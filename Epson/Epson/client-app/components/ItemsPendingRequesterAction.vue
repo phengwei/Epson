@@ -15,9 +15,7 @@
           </v-toolbar>
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-icon small class="mr-2" @click="editItem(item)">
-            mdi-pencil
-          </v-icon>
+          <v-btn @click="viewRequest(item)">Action</v-btn>
         </template>
       </v-data-table>
 
@@ -84,11 +82,6 @@
             value: 'id',
           },
           {
-            text: 'Customer',
-            align: 'start',
-            value: 'customerName',
-          },
-          {
             text: 'Created Time',
             align: 'start',
             value: 'createdOnUTC',
@@ -141,6 +134,14 @@
       },
     },
     methods: {
+      viewRequest(request) {
+        const queryParameters = { view: true, dealable: true, request: JSON.stringify(request) };
+
+        this.$router.push({
+          path: '/createquotation',
+          query: queryParameters
+        });
+      },
       getPendingRequesterItem() {
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingrequesteritem`).then(result => {

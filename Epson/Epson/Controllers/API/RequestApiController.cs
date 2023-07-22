@@ -154,9 +154,9 @@ namespace Epson.Controllers.API
                 return BadRequest("Failed to update request");
         }
            
-        [HttpPost("approverequest")]
+        [HttpPost("closedeal")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
-        public async Task<IActionResult> ApproveRequest(int id, string comments)
+        public async Task<IActionResult> CloseDeal(int id, string comments, bool isAccept)
         {
             var request = _requestService.GetRequestById(id);
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
@@ -167,14 +167,21 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (_requestService.ApproveRequest(user, _mapper.Map<Request>(request), comments))
-                return Ok("Request has been approved");
+            bool isSuccess = false;
+
+            if (isAccept)
+                isSuccess = _requestService.AcceptDeal(user, _mapper.Map<Request>(request), comments);
             else
-                return BadRequest("Failed to approve request");
+                isSuccess = _requestService.RejectDeal(user, _mapper.Map<Request>(request), comments);
+
+            if (isSuccess)
+                return Ok("Deal has been closed");
+            else
+                return BadRequest("Failed to close deal");
         }
 
         [HttpPost("fulfillrequest")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Coverplus")]
         public async Task<IActionResult> FulfillRequest(int requestId, int productId, decimal fulfilledPrice, string remarks)
         {
             if (requestId == 0 || productId == 0)

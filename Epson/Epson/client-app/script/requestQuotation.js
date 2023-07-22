@@ -103,6 +103,9 @@ export default {
     }
   },
   computed: {
+    isCommentEditable() {
+      return this.isViewMode && !this.isMode('dealable');
+    },
     isViewMode() {
       return this.$route.query.view === 'true';
     },
@@ -160,6 +163,7 @@ export default {
       this.closeDialogProductFulfillment = false;
     },
     fulfillNonCoverplusItem() {
+      console.log("awd", this.nonCoverplusRequestItem);
       this.editedItem = { ...this.nonCoverplusRequestItem[0] };
       this.dialogProductFulfillment = true;
     },
@@ -246,7 +250,7 @@ export default {
       return 'N/A';
     },
     async populateForm(requestData) {
-      console.log(requestData);
+      console.log("re", requestData);
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProductsModel) {
         const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
@@ -400,9 +404,43 @@ export default {
     redirectToRequest() {
       this.$router.push('/request');
     },
+    acceptDeal() {
+      this.closeDeal(true);
+    },
+    rejectDeal() {
+      this.closeDeal(false);
+    },
+    closeDeal(isAccept) {
+      try {
+        Swal.fire({
+          title: 'Are you sure you want to close this deal?',
+          showDenyButton: true,
+          confirmButtonText: `Proceed`,
+          denyButtonText: `Cancel`,
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            const response = await this.$axios.post(`${this.$config.restUrl}/api/request/closedeal?id=${this.currentRequest.id}&isAccept=${isAccept}`);
+            if (response.status === 200) {
+              Swal.fire('Closed!', '', 'success')
+                .then(() => {
+                  this.$router.push('/request');
+                });
+            }
+          } else if (result.isDenied) {
+            Swal.fire('Deal not closed', '', 'info')
+          }
+        })
+      } catch (err) {
+        console.log(err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: err.response ? err.response.data.message : "Failed to close deal!"
+        });
+      }
+    },
     async submitQuotation() {
       const apiEndpoint = this.isMode('editable') ? `${this.$config.restUrl}/api/request/editrequest` : `${this.$config.restUrl}/api/request/createrequest`;
-      console.log("current request", this.currentRequest);
       const quotationData = {
         ApprovalState: 20,
         Priority: this.priority,

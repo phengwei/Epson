@@ -12,6 +12,8 @@ namespace Epson.Core.Domain.Enum
 
         Cancelled = 10,
 
-        Rejected = 20
+        Rejected = 20,
+
+        Approved = 30,
     }
 }

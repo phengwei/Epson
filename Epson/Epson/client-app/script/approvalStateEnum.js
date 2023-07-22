@@ -5,6 +5,7 @@ export const ApprovalStateEnum = {
   PendingSalesSectionHeadFinalAction: 40,
   Approved: 50,
   AmendQuotation: 60,
-  Rejected: 70,
-  Cancelled: 80
+  RejectedByFulfiller: 70,
+  RejectedByRequester: 80,
+  Cancelled: 90
 };

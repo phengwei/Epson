@@ -15,7 +15,8 @@ namespace Epson.Services.Interface.Requests
         public List<RequestProductDTO> GetRequestProducts();
         public bool InsertRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations, RequestSubmissionDetail requestSubmissionDetail, ProjectInformationDTO projectInformationDTO);
         public bool UpdateRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations, RequestSubmissionDetail requestSubmissionDetail, ProjectInformationDTO projectInformationDTO);
-        public bool ApproveRequest(ApplicationUser user, Request request, string comments);
+        public bool AcceptDeal(ApplicationUser user, Request request, string comments);
+        public bool RejectDeal(ApplicationUser user, Request request, string comments);
         public bool SetRequestToAmendQuotation(Request request);
         public bool ApproveFirstLevelRequest(Request request);
         public bool FulfillRequest(ApplicationUser user, Request request, Product product, decimal totalPrice, string remarks);

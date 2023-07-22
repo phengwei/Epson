@@ -20,8 +20,10 @@ namespace Epson.Core.Domain.Enum
 
         AmendQuotation = 60,
 
-        Rejected = 70,
+        RejectedByFulfiller = 70,
         
-        Cancelled = 80
+        RejectedByRequester = 80,
+
+        Cancelled = 90
     }
 }

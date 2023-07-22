@@ -444,7 +444,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool ApproveRequest(ApplicationUser user, Request request, string comments)
+        public bool AcceptDeal(ApplicationUser user, Request request, string comments)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -457,7 +457,7 @@ namespace Epson.Services.Services.Requests
 
             var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
 
-            request.ApprovalState = (int)ApprovalStateEnum.Approved;
+            request.ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadFinalAction;
             request.ApprovedBy = user.Id;
             request.ApprovedTime = DateTime.UtcNow;
             request.UpdatedOnUTC = DateTime.UtcNow;
@@ -471,13 +471,51 @@ namespace Epson.Services.Services.Requests
             try
             {
                 _RequestRepository.Update(request);
-                _logger.Information("Approving request {id}", request.Id);
+                _logger.Information("Accepting deal of request {id}", request.Id);
 
                 return true;
             }
             catch(Exception ex)
             {
-                _logger.Error(ex, "Error approving request {requestid}", request.Id);
+                _logger.Error(ex, "Error accepting deal of request {requestid}", request.Id);
+                return false;
+            }
+        }
+
+        public bool RejectDeal(ApplicationUser user, Request request, string comments)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (GetRequestById(request.Id) == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.ApprovalState != (int)ApprovalStateEnum.PendingRequesterAction)
+                return false;
+
+            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
+
+            request.ApprovalState = (int)ApprovalStateEnum.RejectedByRequester;
+            request.ApprovedBy = user.Id;
+            request.ApprovedTime = DateTime.UtcNow;
+            request.UpdatedOnUTC = DateTime.UtcNow;
+            request.UpdatedById = user.Id;
+            request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
+            request.Comments = comments;
+
+            if (DateTime.UtcNow > projectInformation.ClosingDate)
+                request.Breached = true;
+
+            try
+            {
+                _RequestRepository.Update(request);
+                _logger.Information("Rejecting deal of request {id}", request.Id);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error rejecting deal of request {requestid}", request.Id);
                 return false;
             }
         }
@@ -505,6 +543,7 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;
             requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate, requestProductToFulfill.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
             requestProductToFulfill.Remarks = remarks;
+            requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
 
             if (DateTime.UtcNow > projectInformation.ClosingDate)
                 requestProductToFulfill.Breached = true;
@@ -674,7 +713,7 @@ namespace Epson.Services.Services.Requests
                 //if all products in a request is rejected, set status of request to reject
                 if (allRejected)
                 {
-                    request.ApprovalState = (int)ApprovalStateEnum.Rejected;
+                    request.ApprovalState = (int)ApprovalStateEnum.RejectedByFulfiller;
                     _RequestRepository.Update(_mapper.Map<Request>(request));
                 }
 
