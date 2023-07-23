@@ -1,3 +1,4 @@
+import { mapGetters } from 'vuex';
 import Swal from 'sweetalert2';
 import ProductDialog from '~/components/ProductDialog.vue';
 import CompetitorInformationDialog from '~/components/CompetitorInformationDialog.vue';
@@ -103,6 +104,7 @@ export default {
     }
   },
   computed: {
+    ...mapGetters(['isAuthenticated', 'loggedInUser']),
     isCommentEditable() {
       return this.isViewMode && !this.isMode('dealable');
     },
@@ -132,7 +134,7 @@ export default {
     isMode(mode) {
       return this.$route.query[mode] === 'true';
     },
-    confirmApproveRequest() {
+    approveQuotation() {
       Swal.fire({
         title: 'Confirmation',
         text: 'Are you sure you want to approve the quotation?',
@@ -147,6 +149,32 @@ export default {
           this.$axios.post(`${this.$config.restUrl}/api/request/approvefirstlevelrequest?requestId=${this.currentRequest.id}`)
             .then(response => {
               this.closeDialogProductFulfillment();
+              Swal.fire('Approved!', 'Quotation is successfully approved.', 'success')
+                .then(() => {
+                  this.$router.push('/request');
+                });
+            }).catch(error => {
+              console.log('error', error);
+              Swal.fire('Error', 'Failed to approve quotation', 'error');
+            });
+        }
+      });
+    },
+    approveRequest() {
+      Swal.fire({
+        title: 'Confirmation',
+        text: 'Are you sure you want to approve the request?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'No'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.$axios.post(`${this.$config.restUrl}/api/request/approvefinalrequest?requestId=${this.currentRequest.id}`)
+            .then(response => {
+              this.closeDialogProductFulfillment();
               Swal.fire('Approved!', 'Request is successfully approved.', 'success')
                 .then(() => {
                   this.$router.push('/request');
@@ -158,7 +186,6 @@ export default {
         }
       });
     },
-
     closeDialogProductFulfillment() {
       this.closeDialogProductFulfillment = false;
     },
@@ -250,7 +277,7 @@ export default {
       return 'N/A';
     },
     async populateForm(requestData) {
-      console.log("re", requestData);
+      console.log("roles", this.loggedInUser);
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProductsModel) {
         const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);

@@ -23,8 +23,14 @@
           <v-btn v-if="isMode('isApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadAction"
                  class="mr-2"
                  color="primary"
-                 @click="confirmApproveRequest()">
+                 @click="approveQuotation()">
             Approve Quotation
+          </v-btn>
+          <v-btn v-if="isMode('isFinalApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadFinalAction"
+                 class="mr-2"
+                 color="primary"
+                 @click="approveRequest()">
+            Approve Request
           </v-btn>
         </div>
 
@@ -103,6 +109,7 @@
                   <th>Disty Price</th>
                   <th>Dealer Price</th>
                   <th>End User Price</th>
+                  <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
                   <th v-if="!isViewMode">Action</th>
                 </tr>
@@ -115,6 +122,7 @@
                   <td>{{ coverplus.distyPrice || 'N/A' }}</td>
                   <td>{{ coverplus.dealerPrice || 'N/A' }}</td>
                   <td>{{ coverplus.endUserPrice || 'N/A' }}</td>
+                  <td v-if="isViewMode">{{ coverplus.remarks || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ coverplus.statusStr || 'N/A' }}</td>
                   <td v-if="!isViewMode">
                     <v-btn small color="error" @click="removeCoverplus(index)">
@@ -350,7 +358,9 @@
         <button type="submit" @click="submitQuotation" v-if="isMode('create')">Submit</button>
         <button type="submit" @click="saveDraft" v-if="isMode('create')">Save Draft</button>
         <button type="submit" @click="submitQuotation" v-if="isMode('editable')">Amend Request</button>
-        <button type="submit" @click="redirectToRequest">Return to Request</button>
+        <button type="submit" @click="redirectToRequest" v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head')">
+          Return to Request
+        </button>
         <button type="submit" @click="acceptDeal" v-if="isMode('dealable')">Accept Deal</button>
         <button type="submit" @click="rejectDeal" v-if="isMode('dealable')">Reject Deal</button>
       </v-card-text>

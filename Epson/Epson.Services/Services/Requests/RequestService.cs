@@ -623,7 +623,28 @@ namespace Epson.Services.Services.Requests
 
             request.ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction;
 
-            List<RequestProduct> requestProducts = _RequestProductRepository.Table.Where(x => x.RequestId == req.Id).ToList();
+            try
+            {
+                _RequestRepository.Update(request);
+                _logger.Information("Completing first level approval for request {id}", request.Id);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error completing first level approval for request {id}", request.Id);
+                return false;
+            }
+        }
+
+        public bool ApproveFinalLevelRequest(Request request)
+        {
+            var req = GetRequestById(request.Id);
+
+            if (req == null)
+                throw new Exception("Invalid request.");
+
+            request.ApprovalState = (int)ApprovalStateEnum.Approved;
 
             try
             {

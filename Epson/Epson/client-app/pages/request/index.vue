@@ -24,6 +24,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import moment from 'moment';
+  import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
 
   export default {
     name: 'RequestOverview',
@@ -42,6 +43,7 @@
         requests: [],
         options: {},
         loading: true,
+        ApprovalStateEnum,
       };
     },
     created() {
@@ -64,17 +66,23 @@
         this.$router.push('/createquotation?create=true');
       },
       viewRequest(request) {
-        console.log(request);
         let queryParameters = { view: true, request: JSON.stringify(request) };
 
-        if (this.loggedInUser.roles.includes('Sales Section Head')) {
+        if (this.loggedInUser.roles.includes('Sales Section Head')
+          && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadAction) {
           queryParameters = { ...queryParameters, isApprove: true };
+        } else if (this.loggedInUser.roles.includes('Sales Section Head')
+          && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadFinalAction) {
+          queryParameters = { ...queryParameters, isFinalApprove: true };
         }
 
         this.$router.push({
           path: '/createquotation',
           query: queryParameters
         });
+
+
+
       },
     },
   };

@@ -228,7 +228,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("approvefirstlevelrequest")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head")]
         public async Task<IActionResult> ApproveFirstLevelRequest(int requestId)
         {
             if (requestId == 0)
@@ -245,9 +245,32 @@ namespace Epson.Controllers.API
                 return Unauthorized("User not authorized to perform this operation");
 
             if (_requestService.ApproveFirstLevelRequest(_mapper.Map<Request>(request)))
-                return Ok("Request has been set to amend quotation");
+                return Ok("Request has complete first level approval");
             else
-                return BadRequest("Failed to set amend quotation for request");
+                return BadRequest("Failed to set complete first level approval for request");
+        }
+
+        [HttpPost("approvefinalrequest")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head")]
+        public async Task<IActionResult> ApproveFinalRequest(int requestId)
+        {
+            if (requestId == 0)
+                return NotFound("Resources not found!");
+
+            var request = _requestService.GetRequestById(requestId);
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (request == null)
+                return NotFound("Resources not found!");
+
+            if (user == null)
+                return Unauthorized("User not authorized to perform this operation");
+
+            if (_requestService.ApproveFinalLevelRequest(_mapper.Map<Request>(request)))
+                return Ok("Request has been approved");
+            else
+                return BadRequest("Failed to set approved request");
         }
 
         [HttpPost("cancelrequest")]
