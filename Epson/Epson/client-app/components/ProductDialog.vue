@@ -95,10 +95,10 @@
           this.localProduct = {
             category: null,
             productId: null,
-            quantity: 0,
-            distyPrice: 0,
-            dealerPrice: 0,
-            endUserPrice: 0,
+            quantity: null,
+            distyPrice: null,
+            dealerPrice: null,
+            endUserPrice: null,
           };
           this.localDialogProduct = false;
         } else {

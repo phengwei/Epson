@@ -520,21 +520,21 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool FulfillRequest(ApplicationUser user, Request request, Product product, decimal totalPrice, string remarks)
+        public bool FulfillRequest(ApplicationUser user, RequestProduct requestProduct, Product product, decimal totalPrice, string remarks)
         {
-            var existingRequest = GetRequestById(request.Id);
+            var existingRequest = GetRequestById(requestProduct.RequestId);
             var existingProduct = _productService.GetProductById(product.Id);
 
-            if (existingRequest == null || existingProduct == null || request.ApprovalState != (int)ApprovalStateEnum.PendingFulfillerAction)
+            if (existingRequest == null || existingProduct == null || existingRequest.ApprovalState != (int)ApprovalStateEnum.PendingFulfillerAction)
                 return false;
 
-            var requestProducts = _RequestProductRepository.GetAll().Where(x => x.RequestId == request.Id).ToList();
-            var requestProductToFulfill = requestProducts.FirstOrDefault(x => x.ProductId == product.Id);
+            var requestProducts = _RequestProductRepository.GetAll().Where(x => x.RequestId == existingRequest.Id).ToList();
+            var requestProductToFulfill = requestProducts.FirstOrDefault(x => x.Id == requestProduct.Id);
 
             if (requestProductToFulfill == null)
                 return false;
 
-            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
+            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == existingRequest.Id).FirstOrDefault();
 
             requestProductToFulfill.FulfilledPrice = totalPrice;
             requestProductToFulfill.FulfillerId = user.Id;
@@ -555,17 +555,17 @@ namespace Epson.Services.Services.Requests
 
                 //calculates total price for all requested products
                 decimal totalUpdatedPrice = requestProducts.Sum(x => x.FulfilledPrice);
-                request.TotalPrice = totalUpdatedPrice;
+                existingRequest.TotalPrice = totalUpdatedPrice;
 
                 //checks for all hasfulfilled field 
                 bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled == true);
 
                 if (allProductsFulfilled)
-                    request.ApprovalState = (int)ApprovalStateEnum.PendingRequesterAction;
+                    existingRequest.ApprovalState = (int)ApprovalStateEnum.PendingRequesterAction;
 
-                _RequestRepository.Update(request);
+                _RequestRepository.Update(_mapper.Map<Request>(existingRequest));
 
-                var updatedRequest = _mapper.Map<Request>(GetRequestById(request.Id));
+                var updatedRequest = _mapper.Map<Request>(GetRequestById(existingRequest.Id));
                 var fulfillRequestQueue = _emailService.CreateFulfillEmailQueue(updatedRequest, requestProductToFulfill, allProductsFulfilled);
                 _emailService.InsertEmailQueue(fulfillRequestQueue);
 

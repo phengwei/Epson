@@ -182,23 +182,23 @@ namespace Epson.Controllers.API
 
         [HttpPost("fulfillrequest")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Coverplus")]
-        public async Task<IActionResult> FulfillRequest(int requestId, int productId, decimal fulfilledPrice, string remarks)
+        public async Task<IActionResult> FulfillRequest(int id, int productId, decimal fulfilledPrice, string remarks)
         {
-            if (requestId == 0 || productId == 0)
+            if (id == 0 || productId == 0)
                 return NotFound("Resources not found!");
 
-            var request = _requestService.GetRequestById(requestId);
+            var requestProduct = _requestService.GetRequestProducts().Where(x => x.Id == id).FirstOrDefault();
             var product = _productService.GetProductById(productId);
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-            if (request == null || product == null)
+            if (requestProduct == null || product == null)
                 return NotFound("Resources not found!");
 
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (_requestService.FulfillRequest(user, _mapper.Map<Request>(request), _mapper.Map<Product>(product), fulfilledPrice, remarks))
+            if (_requestService.FulfillRequest(user, _mapper.Map<RequestProduct>(requestProduct), _mapper.Map<Product>(product), fulfilledPrice, remarks))
                 return Ok("Request has been fulfilled");
             else
                 return BadRequest("Failed to fulfill request");

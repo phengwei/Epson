@@ -99,7 +99,7 @@
             confirmButtonText: 'Fulfill',
           }).then((result) => {
             if (result.isConfirmed) {
-              this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?requestId=${this.localEditedItem.requestId}&productId=${this.localEditedItem.productId}&fulfilledPrice=${this.localEditedItem.fulfilledPrice}&remarks=${this.localEditedItem.remarks}`)
+              this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?id=${this.localEditedItem.id}&productId=${this.localEditedItem.productId}&fulfilledPrice=${this.localEditedItem.fulfilledPrice}&remarks=${this.localEditedItem.remarks}`)
                 .then(response => {
                   this.close(); 
                   Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success');

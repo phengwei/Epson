@@ -323,30 +323,30 @@
                     </div>
                   </td>
                 </tr>
-                  <td>Key Customer Requirements</td>
-                  <td>:</td>
-                  <td><input type="text" v-model="projectInformation.requirements" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
-                </tr>
-                <tr>
-                  <td>Customer Applications</td>
-                  <td>:</td>
-                  <td><input type="text" v-model="projectInformation.customerApplications" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
-                </tr>
-                <tr>
-                  <td>Customer's Budget for this purchase'</td>
-                  <td>:</td>
-                  <td><input type="number" min="1" v-model="projectInformation.budget" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
-                </tr>
-                <tr>
-                  <td>If Staggered Delivery, please state deliver qty & timeline</td>
-                  <td>:</td>
-                  <td><input type="text" v-model="projectInformation.staggeredDelivery" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
-                </tr>
-                <tr>
-                  <td>Other Information</td>
-                  <td>:</td>
-                  <td><input type="text" v-model="projectInformation.otherInformation" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
-                </tr>
+              <td>Key Customer Requirements</td>
+              <td>:</td>
+              <td><input type="text" v-model="projectInformation.requirements" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+              </tr>
+              <tr>
+                <td>Customer Applications</td>
+                <td>:</td>
+                <td><input type="text" v-model="projectInformation.customerApplications" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+              </tr>
+              <tr>
+                <td>Customer's Budget for this purchase'</td>
+                <td>:</td>
+                <td><input type="number" min="1" v-model="projectInformation.budget" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+              </tr>
+              <tr>
+                <td>If Staggered Delivery, please state deliver qty & timeline</td>
+                <td>:</td>
+                <td><input type="text" v-model="projectInformation.staggeredDelivery" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+              </tr>
+              <tr>
+                <td>Other Information</td>
+                <td>:</td>
+                <td><input type="text" v-model="projectInformation.otherInformation" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+              </tr>
               </tbody>
             </table>
           </v-card-text>
@@ -358,11 +358,11 @@
         <button type="submit" @click="submitQuotation" v-if="isMode('create')">Submit</button>
         <button type="submit" @click="saveDraft" v-if="isMode('create')">Save Draft</button>
         <button type="submit" @click="submitQuotation" v-if="isMode('editable')">Amend Request</button>
+        <button type="submit" @click="acceptDeal" v-if="isMode('dealable')">Accept Deal</button>
+        <button type="submit" @click="rejectDeal" v-if="isMode('dealable')">Reject Deal</button>
         <button type="submit" @click="redirectToRequest" v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head')">
           Return to Request
         </button>
-        <button type="submit" @click="acceptDeal" v-if="isMode('dealable')">Accept Deal</button>
-        <button type="submit" @click="rejectDeal" v-if="isMode('dealable')">Reject Deal</button>
       </v-card-text>
     </v-card>
 

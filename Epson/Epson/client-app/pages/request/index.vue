@@ -66,6 +66,8 @@
         this.$router.push('/createquotation?create=true');
       },
       viewRequest(request) {
+        console.log("req", request);
+        console.log("loggedinuser", this.loggedInUser);
         let queryParameters = { view: true, request: JSON.stringify(request) };
 
         if (this.loggedInUser.roles.includes('Sales Section Head')
@@ -74,6 +76,8 @@
         } else if (this.loggedInUser.roles.includes('Sales Section Head')
           && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadFinalAction) {
           queryParameters = { ...queryParameters, isFinalApprove: true };
+        } else if (this.loggedInUser.id === request.createdById && this.ApprovalStateEnum.PendingRequesterAction) {
+          queryParameters = { ...queryParameters, dealable: true };
         }
 
         this.$router.push({

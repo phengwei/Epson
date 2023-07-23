@@ -35,12 +35,13 @@
     },
     computed: {
       flattenedRequests() {
+        console.log("prod", this.requests);
         return this.requests.map(product => ({
           id: product.requestId,
           requestedBy: product.requestedBy,
           productName: product.productName,
           quantity: product.quantity,
-          budget: product.budget,
+          budget: product.endUserPrice,
           fulfilledPrice: product.fulfilledPrice,
           fulfilledDate: moment(product.fulfilledDate).format('MMMM Do YYYY')
         }));

@@ -35,11 +35,11 @@ export default {
       selectedCategories: [],
       isChecked: [],
       selectedProducts: {},
-      product: { category: null, productId: null, quantity: null, distyPrice: 0, dealerPrice: 0, endUserPrice: 0, remarks: null },
+      product: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null, remarks: null },
       products: [],
-      coverplus: { category: null, productId: null, quantity: null, distyPrice: 0, dealerPrice: 0, endUserPrice: 0 },
+      coverplus: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
       coverpluses: [],
-      competitor: { model: null, brand: null, distyPrice: 0, dealerPrice: 0, endUserPrice: 0 },
+      competitor: { model: null, brand: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
       competitors: [],
       productsToShow: [],
       competitorsToShow: [],
@@ -190,11 +190,11 @@ export default {
       this.closeDialogProductFulfillment = false;
     },
     fulfillNonCoverplusItem() {
-      console.log("awd", this.nonCoverplusRequestItem);
       this.editedItem = { ...this.nonCoverplusRequestItem[0] };
       this.dialogProductFulfillment = true;
     },
     fulfillCoverplusItem() {
+      console.log("this", this.coverplusRequestItem);
       this.editedItem = { ...this.coverplusRequestItem[0] };
       this.dialogProductFulfillment = true;
     },
@@ -215,13 +215,16 @@ export default {
     },
     addCompetitorRow(competitor) {
       const newCompetitor = { ...competitor };
+      newCompetitor.distyPrice = newCompetitor.distyPrice || 0;
+      newCompetitor.dealerPrice = newCompetitor.dealerPrice || 0;
+      newCompetitor.endUserPrice = newCompetitor.endUserPrice || 0;
       this.competitors.push(newCompetitor);
       this.showAddedCompetitors(newCompetitor);
       this.competitor.brand = null;
       this.competitor.model = null;
-      this.competitor.distyPrice = 0;
-      this.competitor.dealerPrice = 0;
-      this.competitor.endUserPrice = 0;
+      this.competitor.distyPrice = null;
+      this.competitor.dealerPrice = null;
+      this.competitor.endUserPrice = null;
       this.dialogCompetitor = false;
     },
     removeCompetitorInformation(index) {
@@ -232,14 +235,17 @@ export default {
     },
     addCoverplusRow(coverplus) {
       const newCoverplus = { ...coverplus };
+      newCoverplus.distyPrice = newCoverplus.distyPrice || 0;
+      newCoverplus.dealerPrice = newCoverplus.dealerPrice || 0;
+      newCoverplus.endUserPrice = newCoverplus.endUserPrice || 0;
       this.coverpluses.push(newCoverplus);
       this.showAddedCoverpluses(newCoverplus);
       this.product.category = null;
       this.product.productId = null;
       this.product.quantity = null;
-      this.product.distyPrice = 0;
-      this.product.dealerPrice = 0;
-      this.product.endUserPrice = 0;
+      this.product.distyPrice = null;
+      this.product.dealerPrice = null;
+      this.product.endUserPrice = null;
       this.dialogCoverplus = false;
     },
     removeCoverplusInformation(index) {
@@ -250,14 +256,17 @@ export default {
     },
     addProductRow(product) {
       const newProduct = { ...product };
+      newProduct.distyPrice = newProduct.distyPrice || 0;
+      newProduct.dealerPrice = newProduct.dealerPrice || 0;
+      newProduct.endUserPrice = newProduct.endUserPrice || 0;
       this.products.push(newProduct);
       this.showAddedProducts(newProduct);
       this.product.category = null;
       this.product.productId = null;
       this.product.quantity = null;
-      this.product.distyPrice = 0;
-      this.product.dealerPrice = 0;
-      this.product.endUserPrice = 0;
+      this.product.distyPrice = null;
+      this.product.dealerPrice = null;
+      this.product.endUserPrice = null;
       this.dialogProduct = false;
     },
     removeProduct(index) {
@@ -552,9 +561,13 @@ export default {
             comments: '',
           }
         }).then(response => {
-          this.$swal('Request created');
-          this.$router.push('/request');
-          localStorage.clear();
+          this.$swal('Request created')
+            .then((confirm) => {
+              if (confirm) {
+                this.$router.push('/request');
+                localStorage.clear();
+              }
+            });
         }).catch(err => {
           console.log(err);
           vm.$swal('Failed to submit request', err.response.data.message, 'error');
