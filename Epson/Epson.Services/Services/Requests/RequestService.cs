@@ -155,9 +155,9 @@ namespace Epson.Services.Services.Requests
                         }
                     });
 
-                    x.RequestProducts = x.RequestProducts
-                        .Where(rp => rp.HasFulfilled == false)
-                        .ToList();
+                    //x.RequestProducts = x.RequestProducts
+                    //    .Where(rp => rp.HasFulfilled == false)
+                    //    .ToList();
 
                     return x;
                 })
@@ -520,6 +520,44 @@ namespace Epson.Services.Services.Requests
             }
         }
 
+        public bool ExitDeal(ApplicationUser user, Request request, string comments)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (GetRequestById(request.Id) == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.ApprovalState != (int)ApprovalStateEnum.PendingFulfillerAction)
+                return false;
+
+            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
+
+            request.ApprovalState = (int)ApprovalStateEnum.DealExited;
+            request.ApprovedBy = user.Id;
+            request.ApprovedTime = DateTime.UtcNow;
+            request.UpdatedOnUTC = DateTime.UtcNow;
+            request.UpdatedById = user.Id;
+            request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
+            request.Comments = comments;
+
+            if (DateTime.UtcNow > projectInformation.ClosingDate)
+                request.Breached = true;
+
+            try
+            {
+                _RequestRepository.Update(request);
+                _logger.Information("Rejecting deal of request {id}", request.Id);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error rejecting deal of request {requestid}", request.Id);
+                return false;
+            }
+        }
+
         public bool FulfillRequest(ApplicationUser user, RequestProduct requestProduct, Product product, decimal totalPrice, string remarks)
         {
             var existingRequest = GetRequestById(requestProduct.RequestId);
@@ -637,14 +675,17 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool ApproveFinalLevelRequest(Request request)
+        public bool ApproveFinalLevelRequest(Request request, bool isApprove)
         {
             var req = GetRequestById(request.Id);
 
             if (req == null)
                 throw new Exception("Invalid request.");
 
-            request.ApprovalState = (int)ApprovalStateEnum.Approved;
+            if (isApprove)
+                request.ApprovalState = (int)ApprovalStateEnum.Approved;
+            else
+                request.ApprovalState = (int)ApprovalStateEnum.RejectedBySalesSectionHead;
 
             try
             {

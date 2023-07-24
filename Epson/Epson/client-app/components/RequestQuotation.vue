@@ -32,6 +32,12 @@
                  @click="approveRequest()">
             Approve Request
           </v-btn>
+          <v-btn v-if="isMode('amendable')"
+                 class="mr-2"
+                 color="primary"
+                 @click="confirmAmmendQuotation()">
+            Set Request to Amend
+          </v-btn>
         </div>
 
         <!-- Product Dialog -->
@@ -59,6 +65,7 @@
                   <th>Disty Price</th>
                   <th>Dealer Price</th>
                   <th>End User Price</th>
+                  <th v-if="isViewMode">Fulfilled Price</th>
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
                   <th v-if="!isViewMode">Action</th>
@@ -72,6 +79,7 @@
                   <td>{{ product.distyPrice || 'N/A' }}</td>
                   <td>{{ product.dealerPrice || 'N/A' }}</td>
                   <td>{{ product.endUserPrice || 'N/A' }}</td>
+                  <td v-if="isViewMode">{{ product.fulfilledPrice || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ product.remarks || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ product.statusStr || 'N/A' }}</td>
                   <td v-if="!isViewMode">
@@ -109,6 +117,7 @@
                   <th>Disty Price</th>
                   <th>Dealer Price</th>
                   <th>End User Price</th>
+                  <th v-if="isViewMode">Fulfilled Price</th>
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
                   <th v-if="!isViewMode">Action</th>
@@ -122,6 +131,7 @@
                   <td>{{ coverplus.distyPrice || 'N/A' }}</td>
                   <td>{{ coverplus.dealerPrice || 'N/A' }}</td>
                   <td>{{ coverplus.endUserPrice || 'N/A' }}</td>
+                  <td v-if="isViewMode">{{ coverplus.fulfilledPrice || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ coverplus.remarks || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ coverplus.statusStr || 'N/A' }}</td>
                   <td v-if="!isViewMode">
@@ -360,6 +370,7 @@
         <button type="submit" @click="submitQuotation" v-if="isMode('editable')">Amend Request</button>
         <button type="submit" @click="acceptDeal" v-if="isMode('dealable')">Accept Deal</button>
         <button type="submit" @click="rejectDeal" v-if="isMode('dealable')">Reject Deal</button>
+        <button type="submit" @click="exitDeal" v-if="isMode('amendable')">Close Deal</button>
         <button type="submit" @click="redirectToRequest" v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head')">
           Return to Request
         </button>

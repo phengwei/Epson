@@ -134,6 +134,31 @@ export default {
     isMode(mode) {
       return this.$route.query[mode] === 'true';
     },
+    confirmAmmendQuotation() {
+      Swal.fire({
+        title: 'Confirmation',
+        text: 'Are you sure you want to amend the quotation?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'No'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.$axios.post(`${this.$config.restUrl}/api/request/setrequesttoamendquotation?requestId=${this.currentRequest.id}`)
+            .then(response => {
+              Swal.fire('Amended!', 'Request is in amend stage.', 'success')
+                .then(() => {
+                  this.$router.push('/request');
+                });
+            }).catch(error => {
+              console.log('error', error);
+              Swal.fire('Error', 'Failed to set request to amend stage', 'error');
+            });
+        }
+      });
+    },
     approveQuotation() {
       Swal.fire({
         title: 'Confirmation',
@@ -163,27 +188,29 @@ export default {
     approveRequest() {
       Swal.fire({
         title: 'Confirmation',
-        text: 'Are you sure you want to approve the request?',
+        text: 'Do you want to approve the request?',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'No'
+        confirmButtonText: 'Approve',
+        cancelButtonText: 'Reject'
       }).then((result) => {
-        if (result.isConfirmed) {
-          this.$axios.post(`${this.$config.restUrl}/api/request/approvefinalrequest?requestId=${this.currentRequest.id}`)
-            .then(response => {
-              this.closeDialogProductFulfillment();
-              Swal.fire('Approved!', 'Request is successfully approved.', 'success')
-                .then(() => {
-                  this.$router.push('/request');
-                });
-            }).catch(error => {
-              console.log('error', error);
-              Swal.fire('Error', 'Failed to approve quotation', 'error');
-            });
-        }
+        const requestUrl = `${this.$config.restUrl}/api/request/approvefinalrequest?requestId=${this.currentRequest.id}`;
+        const isAccept = result.isConfirmed ? 'true' : 'false';
+
+        this.$axios.post(`${requestUrl}&isAccept=${isAccept}`)
+          .then(response => {
+            const message = result.isConfirmed ? 'Request is successfully approved.' : 'Request is successfull rejected.';
+
+            Swal.fire('Done!', message, 'success')
+              .then(() => {
+                this.$router.push('/request');
+              });
+          }).catch(error => {
+            console.log('error', error);
+            Swal.fire('Error', 'Failed to process the request', 'error');
+          });
       });
     },
     closeDialogProductFulfillment() {
@@ -194,7 +221,6 @@ export default {
       this.dialogProductFulfillment = true;
     },
     fulfillCoverplusItem() {
-      console.log("this", this.coverplusRequestItem);
       this.editedItem = { ...this.coverplusRequestItem[0] };
       this.dialogProductFulfillment = true;
     },
@@ -248,7 +274,7 @@ export default {
       this.product.endUserPrice = null;
       this.dialogCoverplus = false;
     },
-    removeCoverplusInformation(index) {
+    removeCoverplus(index) {
       this.coverplusesToShow.splice(index, 1);
     },
     showAddedCoverpluses(newCoverplus) {
@@ -286,7 +312,6 @@ export default {
       return 'N/A';
     },
     async populateForm(requestData) {
-      console.log("roles", this.loggedInUser);
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProductsModel) {
         const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
@@ -317,7 +342,8 @@ export default {
             endUserPrice: productModel.endUserPrice,
             productName: productModel.productName,
             remarks: productModel.remarks,
-            statusStr: productModel.statusStr
+            statusStr: productModel.statusStr,
+            fulfilledPrice: productModel.fulfilledPrice
           };
           if (productModel.isCoverplus === true) {
             this.coverplusesToShow.push(p);
@@ -342,7 +368,6 @@ export default {
       this.comments = requestData.comments;
 
       requestData.projectInformationModel.projectInformationReasons.forEach((populatedReason) => {
-        console.log(populatedReason);
         const reasonInData = this.reasons.find((reason) => reason.text === populatedReason.selectedReason);
         if (reasonInData) {
           reasonInData.isChecked = true;
@@ -445,6 +470,35 @@ export default {
     },
     rejectDeal() {
       this.closeDeal(false);
+    },
+    exitDeal() {
+      try {
+        Swal.fire({
+          title: 'Are you sure you want to close this deal?',
+          showDenyButton: true,
+          confirmButtonText: `Proceed`,
+          denyButtonText: `Cancel`,
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            const response = await this.$axios.post(`${this.$config.restUrl}/api/request/exitdeal?id=${this.currentRequest.id}`);
+            if (response.status === 200) {
+              Swal.fire('Closed deal!', '', 'success')
+                .then(() => {
+                  this.$router.push('/request');
+                });
+            }
+          } else if (result.isDenied) {
+            Swal.fire('Deal not closed', '', 'info')
+          }
+        })
+      } catch (err) {
+        console.log(err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: err.response ? err.response.data.message : "Failed to close deal!"
+        });
+      }
     },
     closeDeal(isAccept) {
       try {
@@ -561,7 +615,11 @@ export default {
             comments: '',
           }
         }).then(response => {
-          this.$swal('Request created')
+          const successMessage = apiEndpoint.endsWith('/editrequest')
+            ? 'Request successfully amended'
+            : 'Request successfully created';
+
+          this.$swal(successMessage)
             .then((confirm) => {
               if (confirm) {
                 this.$router.push('/request');

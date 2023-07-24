@@ -156,7 +156,6 @@
       getUsers() {
         this.$axios.get(`${this.$config.restUrl}/api/customer/getallusers`)
           .then(response => {
-            console.log('Users:', response.data.data);
             this.users = response.data.data;
           })
           .catch(error => {
@@ -167,7 +166,6 @@
         this.$axios.get(`${this.$config.restUrl}/api/customer/getavailableteams`)
           .then(response => {
             this.teams = response.data.data;
-            console.log("teams", this.teams);
           })
           .catch(error => {
             console.error('Error fetching teams:', error);

@@ -121,7 +121,7 @@
           confirmButtonText: 'Reject Request',
         }).then((result) => {
           if (result.isConfirmed) {
-            this.$axios.post(`${this.$config.restUrl}/api/request/rejectrequestproduct?requestProductId=${this.editedItem.id}&remarks=${this.editedItem.remarks}`)
+            this.$axios.post(`${this.$config.restUrl}/api/request/rejectrequestproduct?requestProductId=${this.localEditedItem.id}&remarks=${this.localEditedItem.remarks}`)
               .then(response => {
                 this.close();
                 Swal.fire('Rejected!', 'Request has been rejected.', 'success');

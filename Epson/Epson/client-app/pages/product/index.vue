@@ -167,7 +167,6 @@
         this.$axios.get(`${this.$config.restUrl}/api/product/getproducts`).then(result => {
           this.products = result.data.data
           this.loading = false
-          console.log("products", this.products);
         })
       },
       async getCategoryFromApi() {
@@ -191,11 +190,6 @@
         this.editedIndex = this.products.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialogDelete = true
-      },
-      checkboxChanged(selectedCategory) {
-
-        console.log(this.selectedCategories);
-
       },
       async deleteItemConfirm() {
         const vm = this;

@@ -16,7 +16,7 @@
     </template>
 
     <template v-slot:item="{ item }">
-      <tr v-if="item.authorizedToFulfill">
+      <tr v-if="item.authorizedToFulfill && item.status === RequestProductStatusEnum.Pending">
         <td>{{ item.id }}</td>
         <td>{{ item.createdBy }}</td>
         <td>{{ item.customerName }}</td>
@@ -33,6 +33,7 @@
 
 <script>
   import ProductFulfillmentDialog from '~/components/ProductFulfillmentDialog.vue';
+  import { RequestProductStatusEnum } from '~/script/requestProductStatusEnum.js';
   export default {
     name: 'ItemsPendingFulfilmentTable',
     components: {
@@ -55,6 +56,7 @@
         competitorsToShow: [],
         loading: false,
         editedItem: {},
+        RequestProductStatusEnum
       }
     },
     watch: {
@@ -77,7 +79,7 @@
         request.requestProductsModel = request.requestProductsModel.filter(product => product.productId === request.productId);
 
         let queryParameters = { view: true, request: JSON.stringify(request) };
-  
+
         if (request.isCoverplus === true) {
           queryParameters = { ...queryParameters, isFulfillCoverplus: true };
         } else if (request.isCoverplus === false) {
@@ -104,6 +106,7 @@
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`).then(result => {
           this.itemsPendingFulfilment = [];
           result.data.data.forEach(item => {
+            console.log("item", item);
             item.requestProductsModel.forEach(product => {
               const newItem = {
                 ...item,
@@ -115,6 +118,7 @@
                 quantity: product.quantity,
                 authorizedToFulfill: product.authorizedToFulfill,
                 competitors: [],
+                status: product.status,
               };
               item.competitorInformationModel.forEach(comp => {
                 const c = {

@@ -179,6 +179,28 @@ namespace Epson.Controllers.API
             else
                 return BadRequest("Failed to close deal");
         }
+        [HttpPost("exitdeal")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
+        public async Task<IActionResult> ExitDeal(int id, string comments)
+        {
+            var request = _requestService.GetRequestById(id);
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (request == null)
+                return NotFound("Request not found!");
+
+            if (user == null)
+                return Unauthorized("User not authorized to perform this operation");
+
+            bool isSuccess = false;
+
+            isSuccess = _requestService.ExitDeal(user, _mapper.Map<Request>(request), comments);
+
+            if (isSuccess)
+                return Ok("Deal has been exited");
+            else
+                return BadRequest("Failed to exit deal");
+        }
 
         [HttpPost("fulfillrequest")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Coverplus")]
@@ -252,7 +274,7 @@ namespace Epson.Controllers.API
 
         [HttpPost("approvefinalrequest")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head")]
-        public async Task<IActionResult> ApproveFinalRequest(int requestId)
+        public async Task<IActionResult> ApproveFinalRequest(int requestId, bool isAccept)
         {
             if (requestId == 0)
                 return NotFound("Resources not found!");
@@ -267,7 +289,7 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (_requestService.ApproveFinalLevelRequest(_mapper.Map<Request>(request)))
+            if (_requestService.ApproveFinalLevelRequest(_mapper.Map<Request>(request), isAccept))
                 return Ok("Request has been approved");
             else
                 return BadRequest("Failed to set approved request");
@@ -297,7 +319,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("rejectrequestproduct")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus")]
         public async Task<IActionResult> RejectRequest(int requestProductId, string remarks)
         {
             if (requestProductId == 0)

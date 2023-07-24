@@ -59,7 +59,6 @@
     },
     mounted() {
       this.getSLAMetrics();
-      console.log(this.loggedInUser)
     }
   };
 </script>

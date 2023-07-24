@@ -29,7 +29,13 @@ namespace Epson.Core.Domain.Enum
         [Description("Rejected By Requester")]
         RejectedByRequester = 80,
 
+        [Description("Rejected By Sales Section Head")]
+        RejectedBySalesSectionHead = 90,
+
         [Description("Cancelled")]
-        Cancelled = 90
+        Cancelled = 100,
+
+        [Description("Deal Exited")]
+        DealExited = 110,
     }
 }

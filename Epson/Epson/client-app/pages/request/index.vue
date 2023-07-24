@@ -25,6 +25,7 @@
   import { mapGetters } from 'vuex';
   import moment from 'moment';
   import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
+  import { RequestProductStatusEnum } from '~/script/requestProductStatusEnum.js';
 
   export default {
     name: 'RequestOverview',
@@ -44,6 +45,7 @@
         options: {},
         loading: true,
         ApprovalStateEnum,
+        RequestProductStatusEnum,
       };
     },
     created() {
@@ -66,27 +68,35 @@
         this.$router.push('/createquotation?create=true');
       },
       viewRequest(request) {
-        console.log("req", request);
-        console.log("loggedinuser", this.loggedInUser);
-        let queryParameters = { view: true, request: JSON.stringify(request) };
+        const anyProductRejected = request.requestProductsModel.some(product =>
+          product.status === this.RequestProductStatusEnum.Rejected
+        );
+        let queryParameters = { request: JSON.stringify(request) };
 
         if (this.loggedInUser.roles.includes('Sales Section Head')
           && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadAction) {
-          queryParameters = { ...queryParameters, isApprove: true };
+          queryParameters = { ...queryParameters, isApprove: true, view: true };
         } else if (this.loggedInUser.roles.includes('Sales Section Head')
           && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadFinalAction) {
-          queryParameters = { ...queryParameters, isFinalApprove: true };
-        } else if (this.loggedInUser.id === request.createdById && this.ApprovalStateEnum.PendingRequesterAction) {
-          queryParameters = { ...queryParameters, dealable: true };
+          queryParameters = { ...queryParameters, isFinalApprove: true, view: true };
+        } else if (this.loggedInUser.id === request.createdById
+          && request.approvalState === this.ApprovalStateEnum.PendingRequesterAction) {
+          queryParameters = { ...queryParameters, dealable: true, view: true };
+        } else if (this.loggedInUser.id === request.createdById
+          && request.approvalState === this.ApprovalStateEnum.PendingFulfillerAction
+          && anyProductRejected) {
+          queryParameters = { ...queryParameters, amendable: true, view: true };
+        } else if (this.loggedInUser.id === request.createdById
+          && request.approvalState === this.ApprovalStateEnum.AmendQuotation) {
+          queryParameters = { ...queryParameters, editable: true };
+        } else {
+          queryParameters = { ...queryParameters, view: true };
         }
 
         this.$router.push({
           path: '/createquotation',
           query: queryParameters
         });
-
-
-
       },
     },
   };
