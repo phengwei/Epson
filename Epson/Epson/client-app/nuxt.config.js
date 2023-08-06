@@ -203,7 +203,8 @@ export default {
   
   publicRuntimeConfig: {
     // restUrl: process.env.BUILD_REST_URL ||  process.env.PUBLIC_REST_URL,
-    restUrl: 'https://localhost:7223',
+    //restUrl: 'https://localhost:7223',
+    restUrl: 'http://stagingepsonums.elasticbeanstalk.com',
     baseURL: process.env.BASE_URL || "http://localhost:3000",
     tattest: process.env.NODE_ENV === "production"? "is production":"not production",
     tattest2: process.env.NODE_ENV,
@@ -219,7 +220,8 @@ export default {
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
     // Workaround to avoid enforcing hard-coded localhost:3000: https://github.com/nuxt-community/axios-module/issues/308
-    baseURL: 'https://localhost:7223',
+    //baseURL: 'https://localhost:7223',
+    baseURL: 'http://stagingepsonums.elasticbeanstalk.com',
     https: true,
   },
   // PWA module configuration: https://go.nuxtjs.dev/pwa

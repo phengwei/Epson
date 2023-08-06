@@ -1,0 +1,20 @@
+
+{
+    "region" : "ap-southeast-1",
+    "configuration" : "Release",
+    "framework"     : "net6.0",
+    "self-contained" : false,
+    "application"    : "Epson",
+    "environment"    : "stagingepsonums",
+    "enable-xray"    : false,
+    "enhanced-health-type" : "basic",
+    "additional-options"   : "\"aws:autoscaling:launchconfiguration,SecurityGroups\"=\"sg-cea5e987,sg-0ce6a2de85bd69653\";\"aws:ec2:vpc,Subnets\"=\"subnet-2bcb5872\"",
+    "solution-stack"       : "64bit Amazon Linux 2 v2.5.6 running .NET Core",
+    "environment-type"     : "SingleInstance",
+    "cname"                : "stagingepsonums",
+    "instance-type"        : "t3a.medium",
+    "key-pair"             : "staging-epson",
+    "instance-profile"     : "aws-elasticbeanstalk-ec2-role",
+    "service-role"         : "aws-elasticbeanstalk-service-role",
+    "proxy-server"         : "nginx"
+}
