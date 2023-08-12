@@ -10,11 +10,7 @@
     "generate": "nuxt generate",
     "lint:js": "eslint --ext \".js,.vue\" --ignore-path .gitignore .",
     "lint": "npm run lint:js",
-    "test": "jest",
-    "build:staging": "NODE_ENV=staging nuxt build",
-    "start:staging": "NODE_ENV=staging nuxt start",
-    "build:prod": "NODE_ENV=production nuxt build",
-    "start:prod": "NODE_ENV=production nuxt start"
+    "test": "jest"
   },
   "dependencies": {
     "@chenfengyuan/vue-countdown": "^1.1.5",

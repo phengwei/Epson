@@ -1,9 +1,8 @@
 import webpack from 'webpack'
 import i18n from './config/i18n'
 
-require('dotenv').config()
 var path = require('path');
-
+require('dotenv').config()
 // import redirectSSL from 'redirect-ssl'; 
 
 
