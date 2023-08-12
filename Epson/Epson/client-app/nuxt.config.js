@@ -1,6 +1,7 @@
 import webpack from 'webpack'
 import i18n from './config/i18n'
 
+require('dotenv').config()
 var path = require('path');
 
 // import redirectSSL from 'redirect-ssl'; 
@@ -202,10 +203,9 @@ export default {
 
   
   publicRuntimeConfig: {
-    // restUrl: process.env.BUILD_REST_URL ||  process.env.PUBLIC_REST_URL,
-    restUrl: 'https://epson-asia.azurewebsites.net',
+    restUrl: process.env.REST_URL || 'https://localhost:7223',
     baseURL: process.env.BASE_URL || "http://localhost:3000",
-    tattest: process.env.NODE_ENV === "production"? "is production":"not production",
+    tattest: process.env.NODE_ENV === "production" ? "is production" : "not production",
     tattest2: process.env.NODE_ENV,
   },
   privateRuntimeConfig: {
@@ -218,8 +218,7 @@ export default {
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    // Workaround to avoid enforcing hard-coded localhost:3000: https://github.com/nuxt-community/axios-module/issues/308
-    baseURL: 'https://epson-asia.azurewebsites.net',
+    baseURL: process.env.REST_URL || 'https://localhost:7223',
     https: true,
   },
   // PWA module configuration: https://go.nuxtjs.dev/pwa
