@@ -202,10 +202,8 @@ export default {
 
   
   publicRuntimeConfig: {
-    restUrl: process.env.REST_URL || 'https://localhost:7223',
-    baseURL: process.env.BASE_URL || "http://localhost:3000",
-    tattest: process.env.NODE_ENV === "production" ? "is production" : "not production",
-    tattest2: process.env.NODE_ENV,
+    restUrl: process.env.REST_URL,
+    baseURL: process.env.BASE_URL,
   },
   privateRuntimeConfig: {
     myPrivateToken: process.env.PRIVATE_TOKEN,
@@ -217,7 +215,7 @@ export default {
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    baseURL: process.env.REST_URL || 'https://localhost:7223',
+    baseURL: process.env.REST_URL,
     https: true,
   },
   // PWA module configuration: https://go.nuxtjs.dev/pwa
