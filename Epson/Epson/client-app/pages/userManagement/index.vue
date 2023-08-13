@@ -193,10 +193,9 @@
         }).then(response => {
           this.users.push(response.data);
           this.dialog = false;
-          this.newUser = {
-            userName: '',
-            email: '',
-          };
+          this.$swal('Success', 'User added successfully.', 'success').then(() => {
+            location.reload();
+          });
         }).catch(error => {
           console.error('Error adding user:', error);
           this.$swal('Failed to add user', error.response.data.message, 'error');
@@ -228,14 +227,11 @@
               teamId: this.newUser.teamId,
             }
           }).then(response => {
-            Object.assign(this.users[this.editedIndex], response.data)
+            Object.assign(this.users[this.editedIndex], response.data);
             this.dialog = false;
-            this.newUser = {
-              userName: '',
-              email: '',
-              phone: '',
-              selectedRoles: []
-            };
+            this.$swal('Success', 'User data saved successfully.', 'success').then(() => {
+              location.reload();
+            });
           }).catch(error => {
             console.error('Error editing user:', error);
             this.$swal('Failed to edit user', error.response.data.message, 'error');
@@ -247,12 +243,14 @@
       deleteUser(index) {
         this.$axios.delete(`${this.$config.restUrl}/api/customer/deleteuser?userId=${this.users[index].id}`)
           .then(response => {
-          this.users.splice(index, 1);
-          this.$swal('User deleted', 'The user has been successfully deleted.', 'success');
-        }).catch(error => {
-          console.error('Error deleting user:', error);
-          this.$swal('Failed to delete user', error.response.data.message, 'error');
-        });
+            this.users.splice(index, 1);
+            this.$swal('Success', 'User deleted successfully.', 'success').then(() => {
+              location.reload();
+            });
+          }).catch(error => {
+            console.error('Error deleting user:', error);
+            this.$swal('Failed to delete user', error.response.data.message, 'error');
+          });
       },
       deleteUserConfirmation(item) {
         this.$swal({

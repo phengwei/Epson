@@ -39,7 +39,7 @@
                       <style>
                       </style>
                       <div class="blue-checkbox">
-                        <input type="checkbox" v-model="selectedCategories" :value="category" @change="checkboxChanged(category)">
+                        <input type="checkbox" v-model="selectedCategories" :value="category">
                         <label class="category-name">{{ category.name }}</label>
                       </div>
                     </div>
@@ -80,7 +80,7 @@
               mdi-pencil
             </v-icon>
             <v-icon small
-                    @click="deleteItem(item)">
+                    @click="deleteItemConfirm(item)">
               mdi-delete
             </v-icon>
           </template>
@@ -93,7 +93,8 @@
 
 <script>
   import { mapGetters } from 'vuex';
-  import Swal from 'sweetalert2'
+  import Swal from 'sweetalert2';
+  import moment from 'moment';
 
   export default {
     name: 'ProductTable',
@@ -124,6 +125,7 @@
             value: 'name',
           },
           { text: 'Price', value: 'price' },
+          { text: 'Created On', value: 'createdOnUTC' },
           { text: 'Actions', value: 'actions', sortable: false },
         ],
         options: {},
@@ -163,11 +165,18 @@
     },
     methods: {
       getProducts() {
-        this.loading = true
+        this.loading = true;
         this.$axios.get(`${this.$config.restUrl}/api/product/getproducts`).then(result => {
-          this.products = result.data.data
-          this.loading = false
-        })
+
+          this.products = result.data.data.map(product => {
+            return {
+              ...product,
+              createdOnUTC: moment(product.createdOnUTC).format('MMMM Do YYYY')
+            };
+          }).sort((a, b) => moment(b.createdOnUTC, 'MMMM Do YYYY').valueOf() - moment(a.createdOnUTC, 'MMMM Do YYYY').valueOf());
+
+          this.loading = false;
+        });
       },
       async getCategoryFromApi() {
         this.loading = true
@@ -185,17 +194,10 @@
         )
         this.dialog = true
       },
-
-      deleteItem(item) {
-        this.editedIndex = this.products.indexOf(item)
-        this.editedItem = Object.assign({}, item)
-        this.dialogDelete = true
-      },
-      async deleteItemConfirm() {
+      async deleteItem(item) {
         const vm = this;
         try {
-          await this.$axios.post(`${this.$config.restUrl}/api/product/deleteproduct?id=${this.editedItem.id}`).then(response => {
-            console.log('res', response);
+          await this.$axios.post(`${this.$config.restUrl}/api/product/deleteproduct?id=${item.id}`).then(response => {
             this.getProducts();
           }).catch(function (error) {
             console.log('vm error', error.response);
@@ -204,22 +206,38 @@
         } catch (err) {
           console.log('try', err);
         }
-        this.closeDelete()
       },
-
+      deleteItemConfirm(item) {
+        console.log("item", item);
+        this.$swal({
+          title: 'Are you sure?',
+          text: "You won't be able to revert this!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.deleteItem(item);
+          }
+        })
+      },
       close() {
         this.dialog = false
         this.$nextTick(() => {
-          this.editedItem = Object.assign({}, this.defaultItem)
-          this.editedIndex = -1
+          this.editedItem = Object.assign({}, this.defaultItem);
+          this.selectedCategories = [];
+          this.editedIndex = -1;
         })
       },
 
       closeDelete() {
         this.dialogDelete = false
         this.$nextTick(() => {
-          this.editedItem = Object.assign({}, this.defaultItem)
-          this.editedIndex = -1
+          this.editedItem = Object.assign({}, this.defaultItem);
+          this.selectedCategories = [];
+          this.editedIndex = -1;
         })
       },
       async save() {
@@ -260,9 +278,8 @@
 
         if (result.isConfirmed) {
           try {
-            let response;
             if (this.editedIndex > -1) {
-              response = await this.$axios.post(`${this.$config.restUrl}/api/product/editproduct`, {
+              await this.$axios.post(`${this.$config.restUrl}/api/product/editproduct`, {
                 data: {
                   id: this.editedItem.id,
                   name: this.editedItem.name,
@@ -273,8 +290,6 @@
                   }))
                 }
               });
-
-              console.log('res', response);
               this.getProducts();
               Swal.fire(
                 'Saved!',
@@ -282,7 +297,7 @@
                 'success'
               );
             } else {
-              response = await this.$axios.post(`${this.$config.restUrl}/api/product/addproduct`, {
+              await this.$axios.post(`${this.$config.restUrl}/api/product/addproduct`, {
                 data: {
                   name: this.editedItem.name,
                   price: this.editedItem.price,
