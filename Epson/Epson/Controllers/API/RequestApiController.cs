@@ -107,7 +107,7 @@ namespace Epson.Controllers.API
                 CreatedById = user.Id,
                 UpdatedById = user.Id,
                 Segment = model.Segment,
-                ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction,
+                ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction,
             };
 
             if (_requestService.InsertRequest(request, model.RequestProducts, model.CompetitorInformations, model.RequestSubmissionDetail, model.ProjectInformationModel))

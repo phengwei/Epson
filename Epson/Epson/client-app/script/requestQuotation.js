@@ -335,7 +335,7 @@ export default {
 
           const p = {
             category: categoryFound,
-            productid: productModel.productId,
+            productId: productModel.productId,
             quantity: productModel.quantity,
             distyPrice: productModel.distyPrice,
             dealerPrice: productModel.dealerPrice,
