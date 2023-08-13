@@ -5,6 +5,8 @@ var path = require('path');
 require('dotenv').config()
 // import redirectSSL from 'redirect-ssl'; 
 
+console.log('REST_URL:', process.env.REST_URL);
+console.log('env:', process.env);
 
 
 export default {
@@ -202,7 +204,7 @@ export default {
 
   
   publicRuntimeConfig: {
-    restUrl: process.env.REST_URL,
+    restUrl: process.env.REST_URL || 'https://epson-asia.azurewebsites.net',
     baseURL: process.env.BASE_URL,
   },
   privateRuntimeConfig: {
@@ -215,7 +217,7 @@ export default {
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    baseURL: process.env.REST_URL,
+    baseURL: process.env.REST_URL || 'https://epson-asia.azurewebsites.net',
     https: true,
   },
   // PWA module configuration: https://go.nuxtjs.dev/pwa
