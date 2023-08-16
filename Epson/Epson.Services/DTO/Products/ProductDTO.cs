@@ -20,6 +20,7 @@ namespace Epson.Services.DTO.Products
         public string UpdatedById { get; set; }
         public DateTime CreatedOnUTC { get; set; }
         public DateTime? UpdatedOnUTC { get; set; }
+        public bool IsActive { get; set; }
         public List<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
     }
 }

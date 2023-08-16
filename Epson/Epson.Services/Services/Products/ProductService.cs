@@ -55,6 +55,7 @@ namespace Epson.Services.Services.Products
                 Id = x.Id,
                 Name = x.Name,
                 Price = x.Price,
+                IsActive = x.IsActive,
                 CreatedById = x.CreatedById,
                 CreatedOnUTC = x.CreatedOnUTC, 
                 UpdatedById = x.UpdatedById,
@@ -76,12 +77,13 @@ namespace Epson.Services.Services.Products
                 Id = x.Id,
                 Name = x.Name,
                 Price = x.Price,
+                IsActive = x.IsActive,
                 CreatedById = x.CreatedById,
                 CreatedOnUTC = x.CreatedOnUTC,
                 UpdatedById = x.UpdatedById,
                 UpdatedOnUTC = x.UpdatedOnUTC
             })
-           .Where(p => productCategories.Any(pc => pc.ProductId == p.Id))
+           .Where(p => productCategories.Any(pc => pc.ProductId == p.Id) && p.IsActive)
             .OrderBy(x => x.Name)
             .ToList();
 
@@ -211,7 +213,7 @@ namespace Epson.Services.Services.Products
             }
         }
 
-        public bool DeleteProduct(Product product, string userId)
+        public bool DeactivateProduct(Product product, string userId)
         {
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
@@ -221,20 +223,49 @@ namespace Epson.Services.Services.Products
 
             try
             {
-                _ProductRepository.Delete(product.Id);
-                _logger.Information("Deleting product {ProductName}", product.Name);
+                //_ProductRepository.Delete(product.Id);
+                product.IsActive = false;
+                _ProductRepository.Update(product);
+                _logger.Information("Deactivating product {ProductName}", product.Name);
 
-                DeleteProductCategoriesOfProduct(product.Id);
-
-                var actionDetails = $"Deleted the product {product.Id} ({product.Name})";
-                _auditTrailService.CreateAuditTrail(product.Id, Entity, DateTime.UtcNow, userId, actionDetails, "Delete");
+                var actionDetails = $"Deactivated the product {product.Id} ({product.Name})";
+                _auditTrailService.CreateAuditTrail(product.Id, Entity, DateTime.UtcNow, userId, actionDetails, "Deactivate");
 
 
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error deleting product {ProductName}", product.Name);
+                _logger.Error(ex, "Error deactivating product {ProductName}", product.Name);
+
+                return false;
+            }
+        }
+
+        public bool ReactivateProduct(Product product, string userId)
+        {
+            if (product == null)
+                throw new ArgumentNullException(nameof(product));
+
+            if (GetProductById(product.Id) == null)
+                throw new ArgumentNullException(nameof(product));
+
+            try
+            {
+                //_ProductRepository.Delete(product.Id);
+                product.IsActive = true;
+                _ProductRepository.Update(product);
+                _logger.Information("Reactivating product {ProductName}", product.Name);
+
+                var actionDetails = $"Reactivated the product {product.Id} ({product.Name})";
+                _auditTrailService.CreateAuditTrail(product.Id, Entity, DateTime.UtcNow, userId, actionDetails, "Reactivate");
+
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error reactivating product {ProductName}", product.Name);
 
                 return false;
             }

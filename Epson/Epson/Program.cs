@@ -86,7 +86,7 @@ builder.Services.AddOptions<JwtSettings>().Bind(builder.Configuration.GetSection
 builder.Services.AddRazorPages();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v3", new OpenApiInfo { Title = "Epson APIs", Version = "v3" });
+    c.SwaggerDoc("v2", new OpenApiInfo { Title = "Epson APIs", Version = "v2" });
 });
 
 #region DbContext
@@ -153,7 +153,7 @@ if (!app.Environment.IsDevelopment())
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v3/swagger.json", "My API v1");
+    c.SwaggerEndpoint("/swagger/v2/swagger.json", "My API v2");
 });
 
 app.UseHttpsRedirection();

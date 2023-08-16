@@ -15,6 +15,8 @@ namespace Epson.Model.Products
         public string? UpdatedById { get; set; }
         public DateTime? CreatedOnUTC { get; set; }
         public DateTime? UpdatedOnUTC { get; set; }
+        public bool IsActive { get; set; }
+        public string? Status { get; set; }
         public List<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
         public List<ProductCategoryModel> ProductCategoriess { get; set; } = new List<ProductCategoryModel>();
     }

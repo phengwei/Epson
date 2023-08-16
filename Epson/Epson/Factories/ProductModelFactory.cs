@@ -62,6 +62,8 @@ namespace Epson.Factories
                     Id = product.Id,
                     Name = product.Name,
                     Price = product.Price,
+                    IsActive = product.IsActive,
+                    Status = product.IsActive ? "Active" : "Inactive",
                     UpdatedById = product.UpdatedById,
                     CreatedById = product.CreatedById,
                     CreatedOnUTC = product.CreatedOnUTC,

@@ -60,17 +60,6 @@
                   </v-card-text>
                 </v-card>
               </v-dialog>
-              <v-dialog v-model="dialogDelete" max-width="500px">
-                <v-card>
-                  <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
-                  <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
-                    <v-btn color="blue darken-1" text @click="deleteItemConfirm">OK</v-btn>
-                    <v-spacer></v-spacer>
-                  </v-card-actions>
-                </v-card>
-              </v-dialog>
             </v-toolbar>
           </template>
           <template v-slot:item.actions="{ item }">
@@ -79,9 +68,13 @@
                     @click="editItem(item)">
               mdi-pencil
             </v-icon>
-            <v-icon small
-                    @click="deleteItemConfirm(item)">
-              mdi-delete
+            <v-icon small v-if="item.isActive"
+                    @click="deactivateItemConfirm(item)">
+              mdi-eye-off
+            </v-icon>
+            <v-icon small v-if="!item.isActive"
+                    @click="reactivateItemConfirm(item)">
+              mdi-eye
             </v-icon>
           </template>
         </v-data-table>
@@ -126,6 +119,7 @@
           },
           { text: 'Price', value: 'price' },
           { text: 'Created On', value: 'createdOnUTC' },
+          { text: 'Status', value: 'status' },
           { text: 'Actions', value: 'actions', sortable: false },
         ],
         options: {},
@@ -167,7 +161,7 @@
       getProducts() {
         this.loading = true;
         this.$axios.get(`${this.$config.restUrl}/api/product/getproducts`).then(result => {
-
+          console.log("res", result);
           this.products = result.data.data.map(product => {
             return {
               ...product,
@@ -194,10 +188,10 @@
         )
         this.dialog = true
       },
-      async deleteItem(item) {
+      async deactivateItem(item) {
         const vm = this;
         try {
-          await this.$axios.post(`${this.$config.restUrl}/api/product/deleteproduct?id=${item.id}`).then(response => {
+          await this.$axios.post(`${this.$config.restUrl}/api/product/deactivateproduct?id=${item.id}`).then(response => {
             this.getProducts();
           }).catch(function (error) {
             console.log('vm error', error.response);
@@ -207,19 +201,45 @@
           console.log('try', err);
         }
       },
-      deleteItemConfirm(item) {
+      deactivateItemConfirm(item) {
         console.log("item", item);
         this.$swal({
-          title: 'Are you sure?',
-          text: "You won't be able to revert this!",
+          title: 'Are you sure to deactivate the product?',
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#3085d6',
           cancelButtonColor: '#d33',
-          confirmButtonText: 'Yes, delete it!'
+          confirmButtonText: 'Yes, deactivate it!'
         }).then((result) => {
           if (result.isConfirmed) {
-            this.deleteItem(item);
+            this.deactivateItem(item);
+          }
+        })
+      },
+      async reactivateItem(item) {
+        const vm = this;
+        try {
+          await this.$axios.post(`${this.$config.restUrl}/api/product/reactivateProduct?id=${item.id}`).then(response => {
+            this.getProducts();
+          }).catch(function (error) {
+            console.log('vm error', error.response);
+            vm.$swal('Failed to delete', error.response.data.errorList[0], 'error');
+          })
+        } catch (err) {
+          console.log('try', err);
+        }
+      },
+      reactivateItemConfirm(item) {
+        this.$swal({
+          title: 'Are you sure to reactivate the product?',
+          icon: 'primary',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, reactivate it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.reactivateItem(item);
           }
         })
       },

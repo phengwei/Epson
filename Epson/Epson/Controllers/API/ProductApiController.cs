@@ -148,19 +148,34 @@ namespace Epson.Controllers.API
                 return BadRequest("Failed to update product");
         }
 
-        [HttpPost("deleteproduct")]
-        public async Task<IActionResult> DeleteProduct(int id)
+        [HttpPost("deactivateproduct")]
+        public async Task<IActionResult> DeactivateProduct(int id)
         {
             var product = _productService.GetProductById(id);
 
-            var productToDelete = _mapper.Map<Product>(product);
+            var productToDeactivate = _mapper.Map<Product>(product);
 
             var user = _workContext.CurrentUser;
 
-            if (_productService.DeleteProduct(productToDelete, user.Id))
+            if (_productService.DeactivateProduct(productToDeactivate, user.Id))
                 return Ok();
             else
-                return BadRequest("Failed to delete product");
+                return BadRequest("Failed to deactivate product");
+        }
+
+        [HttpPost("reactivateproduct")]
+        public async Task<IActionResult> ReactivateProduct(int id)
+        {
+            var product = _productService.GetProductById(id);
+
+            var productToReactivate = _mapper.Map<Product>(product);
+
+            var user = _workContext.CurrentUser;
+
+            if (_productService.ReactivateProduct(productToReactivate, user.Id))
+                return Ok();
+            else
+                return BadRequest("Failed to reactivate product");
         }
     }
 }

@@ -3,15 +3,10 @@ import i18n from './config/i18n'
 
 var path = require('path');
 require('dotenv').config()
-// import redirectSSL from 'redirect-ssl'; 
 
-console.log('REST_URL:', process.env.REST_URL);
-console.log('env:', process.env);
 
 
 export default {
-  // serverMiddleware: [redirectSSL.create({enabled: process.env.NODE_ENV === 'production'})],
-  // serverMiddleware: ["redirect-ssl"],
   server: {
     port: 3001 // default: 3000
   },
@@ -145,19 +140,7 @@ export default {
      '@nuxtjs/proxy'
    
   ],
-/**
-  auth: {
-    strategies: {
-      local: {
-        endpoints: {
-          login: { url: '/api/users/authenticate', method: 'post', propertyName: 'data.jwtToken' },
-          user: { url: '/api/users/user-profile', method: 'get', propertyName: 'data' },
-          logout: false
-        }
-      }
-    }
-  },
-   */
+
   auth: {
     strategies: {
       local: {
@@ -171,28 +154,6 @@ export default {
           logout: { url: 'api/customer/logout', method: 'post' },
         }
       }
-      /* customStrategy: {
-        scheme: '~/schemes/customScheme',
-        
-        token: {
-          property: 'jwtToken',
-          tokenType: false,
-          maxAge: 1800,
-          // global: true,
-          // type: 'Bearer'
-        },
-        refreshToken: {
-          property: 'refreshToken',
-          data: '',
-          maxAge: 60 * 60 * 24 * 30
-        },
-        endpoints: {
-          login: { url: 'api/customer/login', method: 'post'},
-          user: { url: 'api/customer/testadmin', method: 'get' },
-        },
-        logout:false,
-        // autoLogout: false
-      } */
     },
     redirect: {
       login: '/login',
@@ -226,33 +187,8 @@ export default {
       lang: 'en',
     },
   },
-
-/** 
-  build: {
-    postcss: {
-      plugins: {
-        'postcss-import': {}
-        tailwindcss: path.resolve(__dirname, './tailwind.config.js'),
-        'postcss-nested': {}
-      }
-    },
-    preset: {
-      stage: 1 // see https://tailwindcss.com/docs/using-with-preprocessors#future-css-featuress
-    }
-},
-*/
-
-  // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
     extractCSS: true,
-    /** 
-    postcss: {
-      plugins: {
-        tailwindcss: {},
-        autoprefixer: {},
-        'postcss-easy-import': { prefix: '_', extensions: ['.css', '.scss'] },
-      },
-    }, **/
     postcss: {
       plugins: { 
         'postcss-import': {},
@@ -266,10 +202,8 @@ export default {
     },
     plugins: [
       new webpack.ProvidePlugin({
-        // global modules
         $: 'jquery',
         jQuery: 'jquery',
-        // _: 'lodash'
       })
     ]
   },

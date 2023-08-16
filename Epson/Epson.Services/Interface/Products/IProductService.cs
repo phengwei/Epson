@@ -17,6 +17,7 @@ namespace Epson.Services.Interface.Products
         public List<ProductCategory> GetProductCategoriesByProductId(int productId);
         public bool InsertProduct(Product product, List<ProductCategory> productCategories, string userId);
         public bool UpdateProduct(Product product, List<ProductCategory> productCategories, string userId);
-        public bool DeleteProduct(Product product, string userId);
+        public bool DeactivateProduct(Product product, string userId);
+        public bool ReactivateProduct(Product product, string userId);
     }
 }
