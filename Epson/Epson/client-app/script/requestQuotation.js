@@ -35,6 +35,7 @@ export default {
       selectedCategories: [],
       isChecked: [],
       selectedProducts: {},
+      months: ['None', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
       product: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null, remarks: null },
       products: [],
       coverplus: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
@@ -597,7 +598,8 @@ export default {
         requirements: this.projectInformation.requirements,
         customerApplications: this.projectInformation.customerApplications,
         budget: this.projectInformation.budget,
-        staggeredDelivery: this.projectInformation.staggeredDelivery,
+        staggeredMonth: this.projectInformation.staggeredMonth === 'None' ? '' : this.projectInformation.staggeredMonth,
+        staggeredComments: this.projectInformation.staggeredComments,
         otherInformation: this.projectInformation.otherInformation,
         projectInformationReasons: this.projectInformationReasonsToInsert
       }
@@ -612,7 +614,7 @@ export default {
             requestSubmissionDetail: quotationData.submissionDetail,
             ProjectInformationModel: quotationData.projectInformation,
             Id: quotationData.id,
-            comments: '',
+            comments: ''
           }
         }).then(response => {
           const successMessage = apiEndpoint.endsWith('/editrequest')

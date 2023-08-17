@@ -119,7 +119,8 @@ namespace Epson.Services.Services.Requests
                         Requirements = projectInformation.Requirements,
                         CustomerApplications = projectInformation.CustomerApplications,
                         Budget = projectInformation.Budget,
-                        StaggeredDelivery = projectInformation.StaggeredDelivery,
+                        StaggeredComments = projectInformation.StaggeredComments,
+                        StaggeredMonth = projectInformation.StaggeredMonth,
                         OtherInformation = projectInformation.OtherInformation,
                         ProjectInformationReasons = _ProjectInformationReasonRepository
                                                     .Table
@@ -574,7 +575,7 @@ namespace Epson.Services.Services.Requests
 
             var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == existingRequest.Id).FirstOrDefault();
 
-            requestProductToFulfill.FulfilledPrice = totalPrice;
+            requestProductToFulfill.DealerPrice = totalPrice;
             requestProductToFulfill.FulfillerId = user.Id;
             requestProductToFulfill.HasFulfilled = true;
             requestProductToFulfill.FulfilledDate = DateTime.UtcNow;

@@ -23,7 +23,8 @@ namespace Epson.Core.Domain.Requests
         public string Requirements { get; set; }
         public string CustomerApplications { get; set; }
         public decimal Budget { get; set; }
-        public string StaggeredDelivery { get; set; }
+        public string StaggeredComments { get; set; }
+        public string StaggeredMonth { get; set; }
         public string OtherInformation { get; set; }
 
     }

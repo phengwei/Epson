@@ -65,7 +65,6 @@
                   <th>Disty Price</th>
                   <th>Dealer Price</th>
                   <th>End User Price</th>
-                  <th v-if="isViewMode">Fulfilled Price</th>
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
                   <th v-if="!isViewMode">Action</th>
@@ -79,7 +78,6 @@
                   <td>{{ product.distyPrice || 'N/A' }}</td>
                   <td>{{ product.dealerPrice || 'N/A' }}</td>
                   <td>{{ product.endUserPrice || 'N/A' }}</td>
-                  <td v-if="isViewMode">{{ product.fulfilledPrice || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ product.remarks || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ product.statusStr || 'N/A' }}</td>
                   <td v-if="!isViewMode">
@@ -117,7 +115,6 @@
                   <th>Disty Price</th>
                   <th>Dealer Price</th>
                   <th>End User Price</th>
-                  <th v-if="isViewMode">Fulfilled Price</th>
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
                   <th v-if="!isViewMode">Action</th>
@@ -131,7 +128,6 @@
                   <td>{{ coverplus.distyPrice || 'N/A' }}</td>
                   <td>{{ coverplus.dealerPrice || 'N/A' }}</td>
                   <td>{{ coverplus.endUserPrice || 'N/A' }}</td>
-                  <td v-if="isViewMode">{{ coverplus.fulfilledPrice || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ coverplus.remarks || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ coverplus.statusStr || 'N/A' }}</td>
                   <td v-if="!isViewMode">
@@ -348,9 +344,16 @@
                 <td><input type="number" min="1" v-model="projectInformation.budget" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
               </tr>
               <tr>
-                <td>If Staggered Delivery, please state deliver qty & timeline</td>
+                <td>If Staggered Delivery, please select the month</td>
                 <td>:</td>
-                <td><input type="text" v-model="projectInformation.staggeredDelivery" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                <td>
+                    <select v-model="projectInformation.staggeredMonth" class="border-input" :class="{'readonly-field': isViewMode}" :disabled="isViewMode">
+                      <option v-for="month in months" :key="month" class="form-check-label" :value="month">{{ month }}</option>
+                    </select>
+                    <div class="mt-2" v-if="projectInformation.staggeredMonth && projectInformation.staggeredMonth != 'None'">
+                      <input type="text" v-model="projectInformation.staggeredComments" placeholder="Enter Reason" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+                    </div>
+                </td>
               </tr>
               <tr>
                 <td>Other Information</td>
