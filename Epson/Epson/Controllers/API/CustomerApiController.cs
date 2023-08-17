@@ -50,6 +50,21 @@ namespace Epson.Controllers.API
             _logger = logger;
             _mapper = mapper;
         }
+        /// <summary>
+        /// Login to generate jwt token
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///{
+        ///  "data": {
+        ///    "userName": "salesuser",
+        ///    "password": "Abcde123."
+        ///  }
+        ///}
+        /// </remarks>
+        /// <param name="login">User login.</param>
+
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] BaseQueryModel<LoginModel> queryModel)

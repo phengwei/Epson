@@ -33,6 +33,7 @@ using Epson.Core.Domain.SLA;
 using Epson.Services.Interface.Report;
 using Epson.Services.Interface.Users;
 using Epson.Services.Services.Users;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,6 +88,9 @@ builder.Services.AddRazorPages();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v2", new OpenApiInfo { Title = "Epson APIs", Version = "v2" });
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
 });
 
 #region DbContext
