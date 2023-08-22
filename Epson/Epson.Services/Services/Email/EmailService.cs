@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity;
 using Epson.Core.Domain.Users;
 using Epson.Services.Interface.Products;
 using Epson.Services.Interface.Requests;
+using Epson.Core.Domain.Products;
 
 namespace Epson.Services.Services.Email
 {
@@ -101,10 +102,46 @@ namespace Epson.Services.Services.Email
 
             var subject = "New Request";
 
-            var body = $"New request is created with the following details:\n" +
-                       $"Requester: {requester.Result.UserName}\n" +
-                       $"Total Budget: {request.TotalBudget}\n" +
-                       $"Products: {string.Join(", ", productNames)}";
+            var body = $@"
+            <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                        }}
+                        table {{
+                            border-collapse: collapse;
+                            width: 100%;
+                        }}
+                        th, td {{
+                            border: 1px solid #dddddd;
+                            padding: 8px;
+                            text-align: left;
+                        }}
+                        th {{
+                            background-color: #f2f2f2;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <h2>New Request</h2>
+                    <p>New request is created with the following details:</p>
+                    <table>
+                        <tr>
+                            <th>Requester</th>
+                            <td>{requester.Result.UserName}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Budget</th>
+                            <td>{request.TotalBudget}</td>
+                        </tr>
+                        <tr>
+                            <th>Products</th>
+                            <td>{string.Join(", ", productNames)}</td>
+                        </tr>
+                    </table>
+                </body>
+            </html>";
 
             var emailQueue = new EmailQueue
             {
@@ -134,10 +171,46 @@ namespace Epson.Services.Services.Email
 
             var subject = "New Request";
 
-            var body = $"New request is created with the following details:\n" +
-                       $"Requester: {requester.Result.UserName}\n" +
-                       $"Total Budget: {request.TotalBudget}\n" +
-                       $"Products: {string.Join(", ", productNames)}";
+            var body = $@"
+            <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                        }}
+                        table {{
+                            border-collapse: collapse;
+                            width: 100%;
+                        }}
+                        th, td {{
+                            border: 1px solid #dddddd;
+                            padding: 8px;
+                            text-align: left;
+                        }}
+                        th {{
+                            background-color: #f2f2f2;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <h2>New Request</h2>
+                    <p>New request is created with the following details:</p>
+                    <table>
+                        <tr>
+                            <th>Requester</th>
+                            <td>{requester.Result.UserName}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Budget</th>
+                            <td>{request.TotalBudget}</td>
+                        </tr>
+                        <tr>
+                            <th>Products</th>
+                            <td>{string.Join(", ", productNames)}</td>
+                        </tr>
+                    </table>
+                </body>
+            </html>";
 
             var emailQueues = new List<EmailQueue>();
 
@@ -165,15 +238,54 @@ namespace Epson.Services.Services.Email
         {
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
             var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
-            var productName = _productService.GetProductById(requestProduct.ProductId);
+            var product = _productService.GetProductById(requestProduct.ProductId);
 
             var subject = $"Request {requestProduct.Id} due soon!";
 
-            var body = $"Request {requestProduct.Id} is due soon with the following details:\n" +
-                       $"Product: {productName}\n" +
-                       $"Quantity: {requestProduct.Quantity}\n" +
-                       $"End User price: {requestProduct.EndUserPrice}\n" +
-                       $"Request Created On: {requestProduct.CreatedOnUTC}";
+            var body = $@"
+            <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                        }}
+                        table {{
+                            border-collapse: collapse;
+                            width: 100%;
+                        }}
+                        th, td {{
+                            border: 1px solid #dddddd;
+                            padding: 8px;
+                            text-align: left;
+                        }}
+                        th {{
+                            background-color: #f2f2f2;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <h2>Reminder</h2>
+                    <p>Request {requestProduct.Id} is due soon with the following details:</p>
+                    <table>
+                        <tr>
+                            <th>Product</th>
+                            <td>{product.Name}</td>
+                        </tr>
+                        <tr>
+                            <th>Quantity</th>
+                            <td>{requestProduct.Quantity}</td>
+                        </tr>
+                        <tr>
+                            <th>End User Price</th>
+                            <td>{requestProduct.EndUserPrice}</td>
+                        </tr>
+                        <tr>
+                            <th>Request Created On</th>
+                            <td>{requestProduct.CreatedOnUTC}</td>
+                        </tr>
+                    </table>
+                </body>
+            </html>";
 
             List<EmailQueue> emailQueues = new List<EmailQueue>();
 
@@ -214,18 +326,18 @@ namespace Epson.Services.Services.Email
                     emailQueues.Add(emailQueue);
                 }
             }
-            
 
             return emailQueues;
         }
-        
+
+
         public EmailQueue CreateFulfillEmailQueue(Request request, RequestProduct requestProduct, bool hasFulfillmentComplete)
         {
             //todo: configure to capture from user / request
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
             var requester = _userManager.FindByIdAsync(request.CreatedById);
             var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
-            var productName = _productService.GetProductById(requestProduct.ProductId);
+            var product = _productService.GetProductById(requestProduct.ProductId);
 
             var subject = "";
             if (hasFulfillmentComplete)
@@ -233,10 +345,46 @@ namespace Epson.Services.Services.Email
             else
                 subject = $"Request {request.Id} partially fulfillment";
 
-            var body = $"Request is fulfilled by {fulfiller.Result.UserName} with the following details:\n" +
-                       $"Product: {productName}\n" +
-                       $"Quantity: {requestProduct.Quantity}\n" +
-                       $"Price fulfilled: {requestProduct.FulfilledPrice}";
+            var body = $@"
+            <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                        }}
+                        table {{
+                            border-collapse: collapse;
+                            width: 100%;
+                        }}
+                        th, td {{
+                            border: 1px solid #dddddd;
+                            padding: 8px;
+                            text-align: left;
+                        }}
+                        th {{
+                            background-color: #f2f2f2;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <h2>Request Fulfillment</h2>
+                    <p>Request is fulfilled by {fulfiller.Result.UserName} with the following details:</p>
+                    <table>
+                        <tr>
+                            <th>Product</th>
+                            <td>{product.Name}</td>
+                        </tr>
+                        <tr>
+                            <th>Quantity</th>
+                            <td>{requestProduct.Quantity}</td>
+                        </tr>
+                        <tr>
+                            <th>Price Fulfilled</th>
+                            <td>{requestProduct.FulfilledPrice}</td>
+                        </tr>
+                    </table>
+                </body>
+            </html>";
 
             var emailQueue = new EmailQueue
             {
@@ -259,15 +407,51 @@ namespace Epson.Services.Services.Email
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
             var requester = _userManager.FindByIdAsync(request.CreatedById);
             var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
-            var productName = _productService.GetProductById(requestProduct.ProductId);
+            var product = _productService.GetProductById(requestProduct.ProductId);
 
             var subject = "";
             subject = $"Request {request.Id} amended by {requester.Result.UserName} ";
 
-            var body = $"Request is in amend state by {fulfiller.Result.UserName} with these being the old fulfilled details:\n" +
-                       $"Product: {productName}\n" +
-                       $"Quantity: {requestProduct.Quantity}\n" +
-                       $"Price fulfilled: {requestProduct.FulfilledPrice}";
+            var body = $@"
+            <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                        }}
+                        table {{
+                            border-collapse: collapse;
+                            width: 100%;
+                        }}
+                        th, td {{
+                            border: 1px solid #dddddd;
+                            padding: 8px;
+                            text-align: left;
+                        }}
+                        th {{
+                            background-color: #f2f2f2;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <h2>Request Amendment</h2>
+                    <p>Request is in amend state by {fulfiller.Result.UserName} with these being the old fulfilled details:</p>
+                    <table>
+                        <tr>
+                            <th>Product</th>
+                            <td>{product.Name}</td>
+                        </tr>
+                        <tr>
+                            <th>Quantity</th>
+                            <td>{requestProduct.Quantity}</td>
+                        </tr>
+                        <tr>
+                            <th>Price Fulfilled</th>
+                            <td>{requestProduct.FulfilledPrice}</td>
+                        </tr>
+                    </table>
+                </body>
+            </html>";
 
             var emailQueue = new EmailQueue
             {
@@ -290,15 +474,51 @@ namespace Epson.Services.Services.Email
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
             var requester = _userManager.FindByIdAsync(request.CreatedById);
             var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
-            var productName = _productService.GetProductById(requestProduct.ProductId);
+            var product = _productService.GetProductById(requestProduct.ProductId);
 
             var subject = "";
             subject = $"Request {request.Id} amended by {requester.Result.UserName} ";
 
-            var body = $"Request is cancelled by {fulfiller.Result.UserName} with these being the fulfilled details:\n" +
-                       $"Product: {productName}\n" +
-                       $"Quantity: {requestProduct.Quantity}\n" +
-                       $"Price fulfilled: {requestProduct.FulfilledPrice}";
+            var body = $@"
+            <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                        }}
+                        table {{
+                            border-collapse: collapse;
+                            width: 100%;
+                        }}
+                        th, td {{
+                            border: 1px solid #dddddd;
+                            padding: 8px;
+                            text-align: left;
+                        }}
+                        th {{
+                            background-color: #f2f2f2;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <h2>Request Cancellation</h2>
+                    <p>Request is cancelled by {fulfiller.Result.UserName} with these being the fulfilled details</p>
+                    <table>
+                        <tr>
+                            <th>Product</th>
+                            <td>{product.Name}</td>
+                        </tr>
+                        <tr>
+                            <th>Quantity</th>
+                            <td>{requestProduct.Quantity}</td>
+                        </tr>
+                        <tr>
+                            <th>Price Fulfilled</th>
+                            <td>{requestProduct.FulfilledPrice}</td>
+                        </tr>
+                    </table>
+                </body>
+            </html>";
 
             var emailQueue = new EmailQueue
             {
@@ -324,6 +544,7 @@ namespace Epson.Services.Services.Email
 
                 MailMessage message = new MailMessage(emailQueue.FromEmail, emailQueue.ToEmail, emailQueue.Subject, emailQueue.Body);
 
+                message.IsBodyHtml = true;
                 SmtpClient client = new SmtpClient(emailAccount.OutgoingServer, int.Parse(emailAccount.OutgoingPort));
 
                 client.UseDefaultCredentials = false;
