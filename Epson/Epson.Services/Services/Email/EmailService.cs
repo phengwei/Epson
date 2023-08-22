@@ -96,7 +96,7 @@ namespace Epson.Services.Services.Email
             var requester = _userManager.FindByIdAsync(request.CreatedById);
             var productNames = requestProducts.Select(rp =>
             {
-                var product = _productService.GetProductById(rp.Id);
+                var product = _productService.GetProductById(rp.ProductId);
                 return product != null ? product.Name : "Unknown Product";
             });
 
@@ -165,7 +165,7 @@ namespace Epson.Services.Services.Email
             var salesSectionHeadUsers = _userManager.GetUsersInRoleAsync("Sales Section Head").Result.ToList();
             var productNames = requestProducts.Select(rp =>
             {
-                var product = _productService.GetProductById(rp.Id);
+                var product = _productService.GetProductById(rp.ProductId);
                 return product != null ? product.Name : "Unknown Product";
             });
 

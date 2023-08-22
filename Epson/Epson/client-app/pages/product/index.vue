@@ -223,7 +223,7 @@
             this.getProducts();
           }).catch(function (error) {
             console.log('vm error', error.response);
-            vm.$swal('Failed to delete', error.response.data.errorList[0], 'error');
+            vm.$swal('Failed to reactivate', error.response.data.errorList[0], 'error');
           })
         } catch (err) {
           console.log('try', err);
