@@ -23,7 +23,7 @@ public class EmailBackgroundService : IHostedService, IDisposable
         _logger.Information("[{0}] Begin executing process.", "SendEmailBackgroundProcess");
         //_timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
         _logger.Information("[{0}] Finished executing process.", "SendEmailBackgroundProcess");
-        return Task.CompletedTask;
+        return Task.CompletedTask;  
     }
 
     private void DoWork(object state)

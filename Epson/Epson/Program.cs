@@ -133,6 +133,7 @@ builder.Services.AddSingleton<IOptionsMonitor<SLASetting>, OptionsMonitor<SLASet
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EntityRepository<>));
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddHostedService<EmailBackgroundService>();
+builder.Services.AddHostedService<DeadlineReminderService>();
 #endregion
 
 #region Factories

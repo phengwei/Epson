@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Epson.Core.Domain.Email;
 using Epson.Core.Domain.Enum;
 using Epson.Core.Domain.Products;
 using Epson.Core.Domain.Requests;
@@ -236,9 +237,15 @@ namespace Epson.Services.Services.Requests
                     competitorInformation.RequestId = request.Id;
                     InsertCompetitorInformation(competitorInformation);
                 }
-                
-                var requestQueue = _emailService.CreateRequestEmailQueue(request, requestProducts);
-                _emailService.InsertEmailQueue(requestQueue);
+
+                List<EmailQueue> emailQueues = _emailService.NotifySalesSectionHeadUsers(request, requestProducts);
+
+                emailQueues.Add(_emailService.CreateRequestEmailQueue(request, requestProducts));
+
+                foreach (var emailQueue in emailQueues)
+                {
+                    _emailService.InsertEmailQueue(emailQueue);
+                }
 
                 var projectInformationId = _ProjectInformationRepository.Add(projectInformation);
 

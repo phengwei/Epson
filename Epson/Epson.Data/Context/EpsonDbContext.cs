@@ -27,6 +27,10 @@ namespace Epson.Data.Context
         public DbSet<Product> Product { get; set; }
         public DbSet<Request> Request { get; set; }
         public DbSet<RequestProduct> RequestProduct { get; set; }
+        public DbSet<ProjectInformation> ProjectInformation { get; set; }
+        public DbSet<RequestSubmissionDetail> RequestSubmissionDetail { get; set; }
+        public DbSet<ProjectInformationReason> ProjectInformationReason { get; set; }
+        public DbSet<CompetitorInformation> CompetitorInformation { get; set; }
         public DbSet<SLAHoliday> SLAHoliday { get; set; }
         public DbSet<SLAStaffLeave> SLAStaffLeave { get; set; }
         public DbSet<Team> Team { get; set; }

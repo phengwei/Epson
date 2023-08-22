@@ -17,6 +17,7 @@ using Epson.Core.Domain.Requests;
 using Microsoft.AspNetCore.Identity;
 using Epson.Core.Domain.Users;
 using Epson.Services.Interface.Products;
+using Epson.Services.Interface.Requests;
 
 namespace Epson.Services.Services.Email
 {
@@ -120,6 +121,104 @@ namespace Epson.Services.Services.Email
             return emailQueue;
         }
 
+        public List<EmailQueue> NotifySalesSectionHeadUsers(Request request, List<RequestProduct> requestProducts)
+        {
+            var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
+            var requester = _userManager.FindByIdAsync(request.CreatedById);
+            var salesSectionHeadUsers = _userManager.GetUsersInRoleAsync("Sales Section Head").Result.ToList();
+            var productNames = requestProducts.Select(rp =>
+            {
+                var product = _productService.GetProductById(rp.Id);
+                return product != null ? product.Name : "Unknown Product";
+            });
+
+            var subject = "New Request";
+
+            var body = $"New request is created with the following details:\n" +
+                       $"Requester: {requester.Result.UserName}\n" +
+                       $"Total Budget: {request.TotalBudget}\n" +
+                       $"Products: {string.Join(", ", productNames)}";
+
+            var emailQueues = new List<EmailQueue>();
+
+            foreach (var salesUser in salesSectionHeadUsers)
+            {
+                var emailQueue = new EmailQueue
+                {
+                    FromEmail = emailAccount.Username,
+                    ToEmail = salesUser.Email,
+                    Subject = subject,
+                    Body = body,
+                    ScheduleTime = DateTime.UtcNow,
+                    SendAttempts = 0,
+                    SentTime = null,
+                    EmailAccountId = emailAccount.Id
+                };
+                emailQueues.Add(emailQueue);
+            }
+
+
+            return emailQueues;
+        }
+
+        public List<EmailQueue> CreateReminderEmailQueue(RequestProduct requestProduct)
+        {
+            var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
+            var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
+            var productName = _productService.GetProductById(requestProduct.ProductId);
+
+            var subject = $"Request {requestProduct.Id} due soon!";
+
+            var body = $"Request {requestProduct.Id} is due soon with the following details:\n" +
+                       $"Product: {productName}\n" +
+                       $"Quantity: {requestProduct.Quantity}\n" +
+                       $"End User price: {requestProduct.EndUserPrice}\n" +
+                       $"Request Created On: {requestProduct.CreatedOnUTC}";
+
+            List<EmailQueue> emailQueues = new List<EmailQueue>();
+
+            if (requestProduct.IsCoverplus == false)
+            {
+                var emailQueue = new EmailQueue
+                {
+                    FromEmail = emailAccount.Username,
+                    ToEmail = fulfiller.Result.Email,
+                    Subject = subject,
+                    Body = body,
+                    ScheduleTime = DateTime.UtcNow,
+                    SendAttempts = 0,
+                    SentTime = null,
+                    EmailAccountId = emailAccount.Id
+                };
+
+                emailQueues.Add(emailQueue);
+            }
+            else
+            {
+                var coverplusFulfillers = _userManager.GetUsersInRoleAsync("Coverplus").Result.ToList();
+
+                foreach (var coverplusFulfiller in coverplusFulfillers)
+                {
+                    var emailQueue = new EmailQueue
+                    {
+                        FromEmail = emailAccount.Username,
+                        ToEmail = coverplusFulfiller.Email,
+                        Subject = subject,
+                        Body = body,
+                        ScheduleTime = DateTime.UtcNow,
+                        SendAttempts = 0,
+                        SentTime = null,
+                        EmailAccountId = emailAccount.Id
+                    };
+
+                    emailQueues.Add(emailQueue);
+                }
+            }
+            
+
+            return emailQueues;
+        }
+        
         public EmailQueue CreateFulfillEmailQueue(Request request, RequestProduct requestProduct, bool hasFulfillmentComplete)
         {
             //todo: configure to capture from user / request
