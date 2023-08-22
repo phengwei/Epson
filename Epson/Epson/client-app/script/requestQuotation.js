@@ -95,6 +95,7 @@ export default {
   },
   async created() {
     this.submissionDetail.createdOnUTC = this.getToday();
+    this.submissionDetail.preparedBy = this.loggedInUser.userName;
     await this.fetchCategories();
     if (this.$route.query.view || this.$route.query.editable) {
       const request = JSON.parse(this.$route.query.request);
@@ -530,7 +531,35 @@ export default {
         });
       }
     },
+    returnErr() {
+      const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+
+      const phoneRegex = /^[\d-]{8,12}$/;
+
+      if (this.projectInformation.budget == null || this.projectInformation.budget === "0" || this.projectInformation.budget === "") {
+        return "Customer's budget must not be empty!";
+      } else if (this.projectInformation.requirements == null) {
+        return "Customer's requirements must not be empty!";
+      } else if (this.productsToShow.length > 0 && this.competitorsToShow.length === 0) {
+        return "At least one competitor is required!";
+      } else if (!emailRegex.test(this.submissionDetail.email) || !emailRegex.test(this.projectInformation.email)) {
+        return "Invalid email format!";
+      } else if (!phoneRegex.test(this.submissionDetail.telephoneNo) || !phoneRegex.test(this.projectInformation.telephoneNo) || !phoneRegex.test(this.submissionDetail.faxNo)) {
+        return "Invalid phone / fax no. format!";
+      } else {
+        return "";
+      }
+    },
+
     async submitQuotation() {
+      let clientErr = "";
+      clientErr = this.returnErr();
+
+      if (clientErr) {
+        this.$swal(clientErr); 
+        return; 
+      }
+
       const apiEndpoint = this.isMode('editable') ? `${this.$config.restUrl}/api/request/editrequest` : `${this.$config.restUrl}/api/request/createrequest`;
       const quotationData = {
         ApprovalState: 20,
@@ -630,7 +659,10 @@ export default {
             });
         }).catch(err => {
           console.log(err);
-          vm.$swal('Failed to submit request', err.response.data.message, 'error');
+          const errorMessage = err.response && err.response.data && err.response.data.message
+            ? err.response.data.message
+            : 'An unknown error occurred'; 
+          vm.$swal('Failed to submit request', errorMessage, 'error');
         })
       } catch (error) {
         console.log(error);

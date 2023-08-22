@@ -195,7 +195,7 @@
                 <tr>
                   <td>Prepared By (EMSB)</td>
                   <td>:</td>
-                  <td><input type="text" v-model="submissionDetail.preparedBy" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                  <td><input type="text" v-model="submissionDetail.preparedBy" class="border-input" readonly></td>
                 </tr>
                 <tr>
                   <td>Request Date</td>
