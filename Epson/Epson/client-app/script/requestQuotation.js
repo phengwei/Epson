@@ -91,6 +91,7 @@ export default {
       currentRequest: {},
       ApprovalStateEnum,
       editedItem: {},
+      submitting: false,
     };
   },
   async created() {
@@ -546,21 +547,29 @@ export default {
         return "Invalid email format!";
       } else if (!phoneRegex.test(this.submissionDetail.telephoneNo) || !phoneRegex.test(this.projectInformation.telephoneNo) || !phoneRegex.test(this.submissionDetail.faxNo)) {
         return "Invalid phone / fax no. format!";
+      } else if (this.projectInformation.closingDate == null) {
+          return "Closing Date must not be empty!";
+      } else if (this.projectInformation.deliveryDate == null) {
+          return "Delivery Date must not be empty!";
       } else {
         return "";
       }
     },
-
-    async submitQuotation() {
-      let clientErr = "";
-      clientErr = this.returnErr();
-
-      if (clientErr) {
-        this.$swal(clientErr); 
-        return; 
-      }
-
-      const apiEndpoint = this.isMode('editable') ? `${this.$config.restUrl}/api/request/editrequest` : `${this.$config.restUrl}/api/request/createrequest`;
+    exportToExcel() {
+      this.$axios.post('/api/export/toExcel', this.localEditedItem, { responseType: 'blob' })
+        .then(response => {
+          const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'product.xlsx';
+          link.click();
+          URL.revokeObjectURL(link.href);
+        })
+        .catch(error => {
+          console.error('Error exporting to Excel:', error);
+        });
+    },
+    processQuotation() {
       const quotationData = {
         ApprovalState: 20,
         Priority: this.priority,
@@ -624,7 +633,7 @@ export default {
         contactPersonName: this.projectInformation.contactPersonName,
         telephoneNo: this.projectInformation.telephoneNo,
         email: this.projectInformation.email,
-        requirements: this.projectInformation.requirements,
+        requirements: this.projectInformation.requirements, 
         customerApplications: this.projectInformation.customerApplications,
         budget: this.projectInformation.budget,
         staggeredMonth: this.projectInformation.staggeredMonth === 'None' ? '' : this.projectInformation.staggeredMonth,
@@ -632,6 +641,27 @@ export default {
         otherInformation: this.projectInformation.otherInformation,
         projectInformationReasons: this.projectInformationReasonsToInsert
       }
+
+      return quotationData;
+    },
+    async submitQuotation() {
+      let clientErr = "";
+      clientErr = this.returnErr();
+
+      if (clientErr) {
+          this.$swal(clientErr);
+          return;
+      }
+      if (this.submitting) {
+          return;
+      }
+      this.submitting = true;
+
+
+
+      const apiEndpoint = this.isMode('editable') ? `${this.$config.restUrl}/api/request/editrequest` : `${this.$config.restUrl}/api/request/createrequest`;
+      const quotationData = this.processQuotation();
+
       try {
         const vm = this;
         await this.$axios.post(apiEndpoint, {
@@ -666,6 +696,8 @@ export default {
         })
       } catch (error) {
         console.log(error);
+      } finally {
+          this.submitting = false;
       }
     }
   }

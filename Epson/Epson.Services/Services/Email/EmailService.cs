@@ -161,8 +161,14 @@ namespace Epson.Services.Services.Email
         public List<EmailQueue> NotifySalesSectionHeadUsers(Request request, List<RequestProduct> requestProducts)
         {
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
-            var requester = _userManager.FindByIdAsync(request.CreatedById);
-            var salesSectionHeadUsers = _userManager.GetUsersInRoleAsync("Sales Section Head").Result.ToList();
+            var requesterTask = _userManager.FindByIdAsync(request.CreatedById);
+            requesterTask.Wait(); 
+            var requester = requesterTask;
+
+            var salesSectionHeadUsersTask = _userManager.GetUsersInRoleAsync("Sales Section Head");
+            salesSectionHeadUsersTask.Wait();
+            var salesSectionHeadUsers = salesSectionHeadUsersTask.Result.ToList();
+
             var productNames = requestProducts.Select(rp =>
             {
                 var product = _productService.GetProductById(rp.ProductId);

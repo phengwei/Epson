@@ -2,6 +2,8 @@
   <div class="create-quotation-container">
     <h1>Pricing Request</h1>
 
+    <!--<v-btn color="green" text @click="exportToExcel">Export to Excel</v-btn>-->
+
     <v-card class="mx-auto" width="800">
       <v-card-text>
         <!-- Fulfiller Dialog -->
@@ -254,17 +256,17 @@
                 <tr>
                   <td>Company / Project Name</td>
                   <td>:</td>
-                  <td><input type="text" v-model="projectInformation.projectName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                  <td><input type="text" v-model="projectInformation.projectName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode" required></td>
                 </tr>
                 <tr>
                   <td>Project ID</td>
                   <td>:</td>
-                  <td><input type="text" v-model="projectInformation.projectId" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                  <td><input type="text" v-model="projectInformation.projectId" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode" required></td>
                 </tr>
                 <tr>
                   <td>Industry</td>
                   <td>:</td>
-                  <td><input type="text" v-model="projectInformation.industry" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                  <td><input type="text" v-model="projectInformation.industry" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode" required></td>
                 </tr>
                 <tr>
                   <td>Type</td>
@@ -347,12 +349,12 @@
                 <td>If Staggered Delivery, please select the month</td>
                 <td>:</td>
                 <td>
-                    <select v-model="projectInformation.staggeredMonth" class="border-input" :class="{'readonly-field': isViewMode}" :disabled="isViewMode">
-                      <option v-for="month in months" :key="month" class="form-check-label" :value="month">{{ month }}</option>
-                    </select>
-                    <div class="mt-2" v-if="projectInformation.staggeredMonth && projectInformation.staggeredMonth != 'None'">
-                      <input type="text" v-model="projectInformation.staggeredComments" placeholder="Enter Reason" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-                    </div>
+                  <select v-model="projectInformation.staggeredMonth" class="border-input" :class="{'readonly-field': isViewMode}" :disabled="isViewMode">
+                    <option v-for="month in months" :key="month" class="form-check-label" :value="month">{{ month }}</option>
+                  </select>
+                  <div class="mt-2" v-if="projectInformation.staggeredMonth && projectInformation.staggeredMonth != 'None'">
+                    <input type="text" v-model="projectInformation.staggeredComments" placeholder="Enter Reason" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+                  </div>
                 </td>
               </tr>
               <tr>
