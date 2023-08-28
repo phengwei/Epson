@@ -139,7 +139,8 @@ namespace Epson.Controllers.API
                 CreatedOnUTC = product.CreatedOnUTC,
                 UpdatedOnUTC = DateTime.UtcNow,
                 CreatedById = user.Id,
-                UpdatedById = user.Id
+                UpdatedById = user.Id,
+                IsActive = product.IsActive
             };
 
             if (_productService.UpdateProduct(updatedProduct, model.ProductCategories, user.Id))
