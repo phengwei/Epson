@@ -65,7 +65,6 @@
             createdOnUTC: moment(item.createdOnUTC).format('MMMM Do YYYY')
           }));
 
-          console.log("re", requests);
           const request = requests.find(req => req.id === requestId);
           return request;
 
