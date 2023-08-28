@@ -19,7 +19,6 @@
       <tr v-if="item.authorizedToFulfill && item.status === RequestProductStatusEnum.Pending">
         <td>{{ item.id }}</td>
         <td>{{ item.createdBy }}</td>
-        <td>{{ item.customerName }}</td>
         <td>{{ item.productName }}</td>
         <td>{{ item.endUserPrice }}</td>
         <td>{{ item.quantity }}</td>
@@ -45,7 +44,6 @@
         headers: [
           { text: 'ID', value: 'id' },
           { text: 'Requested By', value: 'createdBy' },
-          { text: 'Customer', value: 'customerName' },
           { text: 'Product', value: 'productName' },
           { text: 'Budget', value: 'budget' },
           { text: 'Quantity', value: 'quantity' },
@@ -106,7 +104,6 @@
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`).then(result => {
           this.itemsPendingFulfilment = [];
           result.data.data.forEach(item => {
-            console.log("item", item);
             item.requestProductsModel.forEach(product => {
               const newItem = {
                 ...item,

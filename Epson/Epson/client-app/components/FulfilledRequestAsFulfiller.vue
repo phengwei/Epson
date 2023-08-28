@@ -10,6 +10,10 @@
         <v-spacer></v-spacer>
       </v-toolbar>
     </template>
+
+    <template v-slot:item.action="{ item }">
+      <v-btn @click="viewRequest(item)">View</v-btn>
+    </template>
   </v-data-table>
 </template>
 
@@ -28,7 +32,8 @@
           { text: 'Quantity', value: 'quantity' },
           { text: 'Budget', value: 'budget' },
           { text: 'Fulfilled Price', value: 'fulfilledPrice' },
-          { text: 'Fulfilled Date', value: 'fulfilledDate' }
+          { text: 'Fulfilled Date', value: 'fulfilledDate' },
+          { text: 'Actions', value: 'action', sortable: false }
         ],
         requests: [],
       };
@@ -38,10 +43,11 @@
         return this.requests.map(product => ({
           id: product.requestId,
           requestedBy: product.requestedBy,
+          productId: product.productId,
           productName: product.productName,
           quantity: product.quantity,
           budget: product.endUserPrice,
-          fulfilledPrice: product.fulfilledPrice,
+          fulfilledPrice: product.dealerPrice,
           fulfilledDate: moment(product.fulfilledDate).format('MMMM Do YYYY')
         }));
       }
@@ -50,6 +56,39 @@
       this.getFulfilledRequestAsFulfiller();
     },
     methods: {
+      async getRequest(requestId) {
+        try {
+          const response = await this.$axios.get(`${this.$config.restUrl}/api/request/getrequests`);
+
+          const requests = response.data.data.map(item => ({
+            ...item,
+            createdOnUTC: moment(item.createdOnUTC).format('MMMM Do YYYY')
+          }));
+
+          console.log("re", requests);
+          const request = requests.find(req => req.id === requestId);
+          return request;
+
+        } catch (error) {
+          console.error('Error fetching requests:', error);
+        }
+      },
+
+
+      async viewRequest(req) {
+        console.log("req", req);
+        const request = await this.getRequest(req.id);
+        console.log("requestProduct", request);
+
+        const queryParameters = { view: true, request: JSON.stringify(request) };
+
+        this.$router.push({
+          path: '/createquotation',
+          query: queryParameters
+        });
+      },
+
+
       getFulfilledRequestAsFulfiller() {
         this.$axios.get(`${this.$config.restUrl}/api/request/getfulfilledrequestasfulfiller`)
           .then(response => {

@@ -77,7 +77,7 @@ namespace Epson.Controllers.API
 
             List<RequestDTO> requests = new List<RequestDTO>();
 
-            if (currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Sales Section Head"))
+            if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Sales Section Head"))
                 requests = _requestService.GetRequests();
             else
                 requests = _requestService.GetRequests().Where(x => x.CreatedById == currentUser.Id).ToList();
