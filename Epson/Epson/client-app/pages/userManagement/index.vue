@@ -118,6 +118,12 @@
       }
     },
     methods: {
+      getUserNameValidationError() {
+        if (this.newUser.userName.includes(' ')) {
+          return 'Username should not contain spaces.';
+        }
+        return null;
+      },
       saveUserConfirmation() {
         this.$swal({
           title: 'Are you sure?',
@@ -181,6 +187,11 @@
           });
       },
       addNewUser() {
+        const errorMessage = this.getUserNameValidationError();
+        if (errorMessage) {
+          this.$swal('Validation Error', errorMessage, 'error');
+          return;  
+        }
         this.$axios.post(`${this.$config.restUrl}/api/customer/addnewuser`, {
           data: {
             userName: this.newUser.userName,

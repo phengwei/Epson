@@ -125,7 +125,7 @@
         options: {},
         products: [],
         categories: [],
-        loading: true,
+        loading: false,
         selectedCategories: [],
         totalProducts: 0,
         editedIndex: -1,

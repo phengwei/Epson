@@ -104,28 +104,34 @@ namespace Epson.Controllers.API
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (result.Succeeded)
+            try
             {
-                foreach (var roleName in model.Roles)
+                if (result.Succeeded)
                 {
-                    if (await _roleManager.RoleExistsAsync(roleName))
+                    foreach (var roleName in model.Roles)
                     {
-                        await _userManager.AddToRoleAsync(user, roleName);
+                        if (await _roleManager.RoleExistsAsync(roleName))
+                        {
+                            await _userManager.AddToRoleAsync(user, roleName);
+                        }
                     }
+
+                    var token = await _jwtService.GenerateToken(user);
+
+                    return Ok(new { token });
                 }
 
-                var token = await _jwtService.GenerateToken(user);
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
 
-                return Ok(new { token });
-            }
-
-            foreach (var error in result.Errors)
+            }catch(Exception ex)
             {
-                ModelState.AddModelError("", error.Description);
+                _logger.Error(ex.Message, ex);
             }
 
-            return BadRequest(ModelState);
+            return BadRequest();
         }
 
         [HttpPost("edituser")]

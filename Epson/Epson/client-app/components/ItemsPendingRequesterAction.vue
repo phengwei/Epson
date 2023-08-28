@@ -106,7 +106,7 @@
         ],
         options: {},
         requests: [],
-        loading: true,
+        loading: false,
         editedIndex: -1,
         editedItem: {
           id: 0,

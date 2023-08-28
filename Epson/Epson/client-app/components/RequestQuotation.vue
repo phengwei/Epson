@@ -368,10 +368,10 @@
         </v-card>
         <div class="form-group" v-if="comments != ''">
           <label>Comments</label>
-          <textarea v-model="comments" class="border-input" :readonly="isCommentEditable"></textarea>
+          <textarea v-model="comments" class="border-input"></textarea>
         </div>
         <button type="submit" @click="submitQuotation" v-if="isMode('create')">Submit</button>
-        <button type="submit" @click="saveDraft" v-if="isMode('create')">Save Draft</button>
+        <!--<button type="submit" @click="saveDraft" v-if="isMode('create')">Save Draft</button>-->
         <button type="submit" @click="submitQuotation" v-if="isMode('editable')">Amend Request</button>
         <button type="submit" @click="acceptDeal" v-if="isMode('dealable')">Accept Deal</button>
         <button type="submit" @click="rejectDeal" v-if="isMode('dealable')">Reject Deal</button>

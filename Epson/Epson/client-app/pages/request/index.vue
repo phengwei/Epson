@@ -43,7 +43,7 @@
         ],
         requests: [],
         options: {},
-        loading: true,
+        loading: false,
         ApprovalStateEnum,
         RequestProductStatusEnum,
       };
