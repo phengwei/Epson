@@ -89,6 +89,9 @@
         } else if (this.loggedInUser.id === request.createdById
           && request.approvalState === this.ApprovalStateEnum.AmendQuotation) {
           queryParameters = { ...queryParameters, editable: true };
+        } else if (this.loggedInUser.id === request.createdById
+          && request.approvalState === this.ApprovalStateEnum.RejectedByFulfiller) {
+          queryParameters = { ...queryParameters, amendable: true, view: true };
         } else {
           queryParameters = { ...queryParameters, view: true };
         }

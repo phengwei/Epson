@@ -240,7 +240,7 @@ namespace Epson.Services.Services.Email
             return emailQueues;
         }
 
-        public List<EmailQueue> CreateReminderEmailQueue(RequestProduct requestProduct)
+        public async Task<List<EmailQueue>> CreateReminderEmailQueue(RequestProduct requestProduct)
         {
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
             var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
@@ -313,7 +313,7 @@ namespace Epson.Services.Services.Email
             }
             else
             {
-                var coverplusFulfillers = _userManager.GetUsersInRoleAsync("Coverplus").Result.ToList();
+                var coverplusFulfillers = await _userManager.GetUsersInRoleAsync("Coverplus");
 
                 foreach (var coverplusFulfiller in coverplusFulfillers)
                 {

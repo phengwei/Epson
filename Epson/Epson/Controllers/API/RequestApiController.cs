@@ -146,6 +146,7 @@ namespace Epson.Controllers.API
                 UpdatedById = user.Id,
                 Segment = request.Segment,
                 ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction,
+                Comments = request.Comments,
             };
 
             if (_requestService.UpdateRequest(updatedRequest, model.RequestProducts, model.CompetitorInformations, model.RequestSubmissionDetail, model.ProjectInformationModel))
@@ -351,7 +352,8 @@ namespace Epson.Controllers.API
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
             var requests = _requestService.GetRequests().Where(x => x.CreatedById == user.Id 
-                                                                && x.ApprovalState == (int)ApprovalStateEnum.PendingRequesterAction)
+                                                                && x.ApprovalState == (int)ApprovalStateEnum.PendingRequesterAction
+                                                                || x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller)
                                                                     .ToList();
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests);

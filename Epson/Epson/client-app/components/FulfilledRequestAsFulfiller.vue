@@ -76,9 +76,7 @@
 
 
       async viewRequest(req) {
-        console.log("req", req);
         const request = await this.getRequest(req.id);
-        console.log("requestProduct", request);
 
         const queryParameters = { view: true, request: JSON.stringify(request) };
 

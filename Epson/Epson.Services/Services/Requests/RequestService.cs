@@ -312,18 +312,24 @@ namespace Epson.Services.Services.Requests
                     InsertCompetitorInformation(competitorInformation);
                 }
 
-                var projectInformationId = _ProjectInformationRepository.Table.Where(x => x.RequestId == request.Id).FirstOrDefault().Id;
+                projectInformation.Id = _ProjectInformationRepository.Table.Where(x => x.RequestId == request.Id).FirstOrDefault().Id;
+                projectInformation.RequestId = request.Id;
                 _ProjectInformationRepository.Update(projectInformation);
 
-                DeleteProjectInformationReasons(projectInformationId);
+                DeleteProjectInformationReasons(projectInformation.Id);
 
                 foreach (var projectInformationReason in projectInformationDTO.ProjectInformationReasons)
                 {
-                    projectInformationReason.ProjectInformationId = projectInformationId;
+                    projectInformationReason.ProjectInformationId = projectInformation.Id;
                     _ProjectInformationReasonRepository.Add(projectInformationReason);
                 }
 
+                requestSubmissionDetail.RequestId = request.Id;
+                var capturedRequestSubmissionDetail = _RequestSubmissionDetailRepository.Table.Where(x => x.RequestId == request.Id).FirstOrDefault();
+                requestSubmissionDetail.Id = capturedRequestSubmissionDetail.Id;
+                requestSubmissionDetail.CreatedBy = capturedRequestSubmissionDetail.CreatedBy;
                 _RequestSubmissionDetailRepository.Update(requestSubmissionDetail);
+
                 _logger.Information("Successfully created request {id}", request.Id);
 
                 return true;
@@ -536,7 +542,8 @@ namespace Epson.Services.Services.Requests
             if (GetRequestById(request.Id) == null)
                 throw new ArgumentNullException(nameof(request));
 
-            if (request.ApprovalState != (int)ApprovalStateEnum.PendingFulfillerAction)
+            if (request.ApprovalState != (int)ApprovalStateEnum.PendingFulfillerAction &&
+                request.ApprovalState != (int)ApprovalStateEnum.RejectedByFulfiller)
                 return false;
 
             var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
@@ -769,17 +776,17 @@ namespace Epson.Services.Services.Requests
             requestProduct.UpdatedOnUTC = DateTime.UtcNow;
             requestProduct.TimeToResolution = CalculateResolutionTime(requestProduct.FulfilledDate, requestProduct.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
 
-            List<RequestProduct> requestProducts = _RequestProductRepository.Table.Where(x => x.RequestId == requestProduct.RequestId).ToList();
-            bool allRejected = requestProducts.All(rp => rp.Status == (int)RequestProductStatusEnum.Rejected);
-
-            if (DateTime.UtcNow > projectInformation.ClosingDate)
-                requestProduct.Breached = true;
-
             try
             {
                 _RequestProductRepository.Update(requestProduct);
                 _logger.Information("Rejected request product {id}", reqProduct.Id);
-    
+
+                List<RequestProduct> requestProducts = _RequestProductRepository.Table.Where(x => x.RequestId == requestProduct.RequestId).ToList();
+                bool allRejected = requestProducts.All(rp => rp.Status == (int)RequestProductStatusEnum.Rejected);
+
+                if (DateTime.UtcNow > projectInformation.ClosingDate)
+                    requestProduct.Breached = true;
+
                 //if all products in a request is rejected, set status of request to reject
                 if (allRejected)
                 {

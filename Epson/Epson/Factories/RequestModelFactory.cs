@@ -106,81 +106,90 @@ namespace Epson.Factories
             if (requests?.Count == 0 || requests == null)
                 return new List<RequestModel>();
 
+            
             List<RequestModel> requestModels = new List<RequestModel>();
-            foreach (var request in requests)
+
+            try
             {
-                var requestModel = new RequestModel
+
+                foreach (var request in requests)
                 {
-                    Id = request.Id,
-                    ApprovedBy = request.ApprovedBy,
-                    ApprovedTime = request.ApprovedTime,
-                    CreatedBy = _userManager.FindByIdAsync(request.CreatedById).Result.UserName,
-                    CreatedById = request.CreatedById,
-                    CreatedOnUTC = request.CreatedOnUTC,
-                    UpdatedById = request.UpdatedById,
-                    UpdatedOnUTC = request.UpdatedOnUTC,
-                    Segment = request.Segment,
-                    TotalBudget = request.TotalBudget,
-                    ApprovalState = request.ApprovalState,
-                    ApprovalStateStr = ((ApprovalStateEnum)request.ApprovalState).GetDescription(),
-                    TotalPrice = request.TotalPrice,
-                    TimeToResolution = request.TimeToResolution,
-                    Comments = request.Comments,
-                    RequestProductsModel = request.RequestProducts.Select(rp => new RequestProductModel
+                    var requestModel = new RequestModel
                     {
-                        Id = rp.Id,
-                        DistyPrice = rp.DistyPrice,
-                        DealerPrice = rp.DealerPrice,
-                        EndUserPrice = rp.EndUserPrice,
-                        RequestId = rp.RequestId,
-                        ProductId = rp.ProductId,
-                        Quantity = rp.Quantity,
-                        ProductName = _productService.GetProductById(rp.ProductId).Name,
-                        HasFulfilled = rp.HasFulfilled,
-                        FulfilledDate = rp.FulfilledDate,
-                        FulfillerId = rp.FulfillerId,
-                        FulfillerName = rp.FulfillerId != null ? _userManager.FindByIdAsync(rp.FulfillerId).Result.UserName : null,
-                        FulfilledPrice = rp.FulfilledPrice,
-                        IsCoverplus = rp.IsCoverplus,
-                        TimeToResolution = rp.TimeToResolution,
-                        Status = rp.Status,
-                        StatusStr = ((RequestProductStatusEnum)rp.Status).GetDescription(),
-                        Remarks = rp.Remarks,
-                        AuthorizedToFulfill = rp.AuthorizedToFulfill,
-                        ProductCategory = _productService.GetProductCategoriesByProductId(rp.ProductId).Select(pc => new ProductCategoryModel
+                        Id = request.Id,
+                        ApprovedBy = request.ApprovedBy,
+                        ApprovedTime = request.ApprovedTime,
+                        CreatedBy = _userManager.FindByIdAsync(request.CreatedById).Result.UserName,
+                        CreatedById = request.CreatedById,
+                        CreatedOnUTC = request.CreatedOnUTC,
+                        UpdatedById = request.UpdatedById,
+                        UpdatedOnUTC = request.UpdatedOnUTC,
+                        Segment = request.Segment,
+                        TotalBudget = request.TotalBudget,
+                        ApprovalState = request.ApprovalState,
+                        ApprovalStateStr = ((ApprovalStateEnum)request.ApprovalState).GetDescription(),
+                        TotalPrice = request.TotalPrice,
+                        TimeToResolution = request.TimeToResolution,
+                        Comments = request.Comments,
+                        RequestProductsModel = request.RequestProducts.Select(rp => new RequestProductModel
                         {
-                            ProductId = pc.ProductId,
-                            CategoryId = pc.CategoryId,
-                            CategoryName = _categoryService.GetCategoryById(pc.CategoryId).Name
-                        }).FirstOrDefault()
-                    }).ToList(),
-                    CompetitorInformationModel = request.CompetitorInformations.Select(x => new CompetitorInformationModel
-                    {
-                        Id = x.Id,
-                        RequestId = x.RequestId,
-                        Model = x.Model,
-                        Brand = x.Brand,
-                        DistyPrice = x.DistyPrice,
-                        DealerPrice = x.DealerPrice,
-                        EndUserPrice = x.EndUserPrice,
-                    }).ToList(),
-                    RequestSubmissionDetailModel = new RequestSubmissionDetailModel
-                    {
-                        Id = request.RequestSubmissionDetail.Id,
-                        RequestId = request.Id,
-                        DistributorName = request.RequestSubmissionDetail.DistributorName,
-                        ResellerName = request.RequestSubmissionDetail.ResellerName,
-                        ContactPersonName = request.RequestSubmissionDetail.ContactPersonName,
-                        TelephoneNo = request.RequestSubmissionDetail.TelephoneNo,
-                        FaxNo = request.RequestSubmissionDetail.FaxNo,
-                        Email = request.RequestSubmissionDetail.Email,
-                        CreatedOnUTC = request.RequestSubmissionDetail.CreatedOnUTC,
-                        CreatedBy = request.RequestSubmissionDetail.CreatedBy,
-                        PreparedBy = _userManager.FindByIdAsync(request.RequestSubmissionDetail.CreatedBy).Result.UserName,
-                    },
-                    ProjectInformationModel = request.ProjectInformation,
-                };
-                requestModels.Add(requestModel);
+                            Id = rp.Id,
+                            DistyPrice = rp.DistyPrice,
+                            DealerPrice = rp.DealerPrice,
+                            EndUserPrice = rp.EndUserPrice,
+                            RequestId = rp.RequestId,
+                            ProductId = rp.ProductId,
+                            Quantity = rp.Quantity,
+                            ProductName = _productService.GetProductById(rp.ProductId).Name,
+                            HasFulfilled = rp.HasFulfilled,
+                            FulfilledDate = rp.FulfilledDate,
+                            FulfillerId = rp.FulfillerId,
+                            FulfillerName = rp.FulfillerId != null ? _userManager.FindByIdAsync(rp.FulfillerId).Result.UserName : null,
+                            FulfilledPrice = rp.FulfilledPrice,
+                            IsCoverplus = rp.IsCoverplus,
+                            TimeToResolution = rp.TimeToResolution,
+                            Status = rp.Status,
+                            StatusStr = ((RequestProductStatusEnum)rp.Status).GetDescription(),
+                            Remarks = rp.Remarks,
+                            AuthorizedToFulfill = rp.AuthorizedToFulfill,
+                            ProductCategory = _productService.GetProductCategoriesByProductId(rp.ProductId).Select(pc => new ProductCategoryModel
+                            {
+                                ProductId = pc.ProductId,
+                                CategoryId = pc.CategoryId,
+                                CategoryName = _categoryService.GetCategoryById(pc.CategoryId).Name
+                            }).FirstOrDefault()
+                        }).ToList(),
+                        CompetitorInformationModel = request.CompetitorInformations.Select(x => new CompetitorInformationModel
+                        {
+                            Id = x.Id,
+                            RequestId = x.RequestId,
+                            Model = x.Model,
+                            Brand = x.Brand,
+                            DistyPrice = x.DistyPrice,
+                            DealerPrice = x.DealerPrice,
+                            EndUserPrice = x.EndUserPrice,
+                        }).ToList(),
+                        RequestSubmissionDetailModel = new RequestSubmissionDetailModel
+                        {
+                            Id = request.RequestSubmissionDetail.Id,
+                            RequestId = request.Id,
+                            DistributorName = request.RequestSubmissionDetail.DistributorName,
+                            ResellerName = request.RequestSubmissionDetail.ResellerName,
+                            ContactPersonName = request.RequestSubmissionDetail.ContactPersonName,
+                            TelephoneNo = request.RequestSubmissionDetail.TelephoneNo,
+                            FaxNo = request.RequestSubmissionDetail.FaxNo,
+                            Email = request.RequestSubmissionDetail.Email,
+                            CreatedOnUTC = request.RequestSubmissionDetail.CreatedOnUTC,
+                            CreatedBy = request.RequestSubmissionDetail.CreatedBy,
+                            PreparedBy = _userManager.FindByIdAsync(request.RequestSubmissionDetail.CreatedBy).Result.UserName,
+                        },
+                        ProjectInformationModel = request.ProjectInformation,
+                    };
+                    requestModels.Add(requestModel);
+                }
+            }catch(Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
             }
 
             return requestModels;

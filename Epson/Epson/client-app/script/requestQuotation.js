@@ -344,7 +344,7 @@ export default {
             dealerPrice: productModel.dealerPrice,
             endUserPrice: productModel.endUserPrice,
             productName: productModel.productName,
-            remarks: productModel.remarks,
+            remarks: productModel.remarks || 'n/a',
             statusStr: productModel.statusStr,
             fulfilledPrice: productModel.fulfilledPrice
           };
@@ -532,13 +532,15 @@ export default {
         });
       }
     },
-    returnErr() {
+    validateForm() {
       const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
 
       const phoneRegex = /^[\d-]{8,12}$/;
 
       if (this.projectInformation.budget == null || this.projectInformation.budget === "0" || this.projectInformation.budget === "") {
         return "Customer's budget must not be empty!";
+      } else if (this.projectInformation.type == null) {
+        return "Type must not be empty!";
       } else if (this.projectInformation.requirements == null) {
         return "Customer's requirements must not be empty!";
       } else if (this.productsToShow.length > 0 && this.competitorsToShow.length === 0) {
@@ -575,6 +577,7 @@ export default {
         Priority: this.priority,
         requestProducts: [],
         competitorInformations: [],
+        comments: this.comments
       };
 
       if (this.isMode('editable')) {
@@ -646,7 +649,7 @@ export default {
     },
     async submitQuotation() {
       let clientErr = "";
-      clientErr = this.returnErr();
+      clientErr = this.validateForm();
 
       if (clientErr) {
           this.$swal(clientErr);
@@ -673,7 +676,7 @@ export default {
             requestSubmissionDetail: quotationData.submissionDetail,
             ProjectInformationModel: quotationData.projectInformation,
             Id: quotationData.id,
-            comments: ''
+            comments: quotationData.comments
           }
         }).then(response => {
           const successMessage = apiEndpoint.endsWith('/editrequest')

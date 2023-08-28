@@ -49,7 +49,7 @@ public class DeadlineReminderService : IHostedService, IDisposable
 
         foreach (var requestProduct in requestProductsToNotify)
         {
-            var queues = emailService.CreateReminderEmailQueue(requestProduct);
+            var queues = await emailService.CreateReminderEmailQueue(requestProduct);
             emailQueues.AddRange(queues);
         }
 

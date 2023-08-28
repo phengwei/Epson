@@ -102,7 +102,10 @@
               this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?id=${this.localEditedItem.id}&productId=${this.localEditedItem.productId}&fulfilledPrice=${this.localEditedItem.fulfilledPrice}&remarks=${this.localEditedItem.remarks}`)
                 .then(response => {
                   this.close(); 
-                  Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success');
+                  Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success')
+                    .then(() => {
+                      this.$router.push('/productDashboard');
+                    });
                 }).catch(error => {
                   console.log('error', error);
                   Swal.fire('Error', 'Failed to fulfill request', 'error');
@@ -115,22 +118,29 @@
         }
       },
       rejectRequest() {
-        Swal.fire({
-          title: 'Reject Request?',
-          showCancelButton: true,
-          confirmButtonText: 'Reject Request',
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.$axios.post(`${this.$config.restUrl}/api/request/rejectrequestproduct?requestProductId=${this.localEditedItem.id}&remarks=${this.localEditedItem.remarks}`)
-              .then(response => {
-                this.close();
-                Swal.fire('Rejected!', 'Request has been rejected.', 'success');
-              }).catch(error => {
-                console.log('error', error);
-                Swal.fire('Error', 'Failed to reject request', 'error');
-              });
-          }
-        })
+        if (this.localEditedItem.remarks !== "" && this.localEditedItem.remarks !== null) {
+          Swal.fire({
+            title: 'Reject Request?',
+            showCancelButton: true,
+            confirmButtonText: 'Reject Request',
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.$axios.post(`${this.$config.restUrl}/api/request/rejectrequestproduct?requestProductId=${this.localEditedItem.id}&remarks=${this.localEditedItem.remarks}`)
+                .then(response => {
+                  this.close();
+                  Swal.fire('Rejected!', 'Request has been rejected.', 'success')
+                    .then(() => {
+                      this.$router.push('/productDashboard');
+                    });
+                }).catch(error => {
+                  console.log('error', error);
+                  Swal.fire('Error', 'Failed to reject request', 'error');
+                });
+            }
+          })
+        } else {
+          this.$swal('Error', 'Remarks must not be empty!', 'error');
+        }
       },
       close() {
         this.localDialogProductFulfillment = false;

@@ -67,6 +67,7 @@
 <script>
   import Swal from 'sweetalert2'
   import moment from 'moment';
+  import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
 
   export default {
     name: 'ItemsPendingRequesterAction',
@@ -77,19 +78,14 @@
         dialogDelete: false,
         headers: [
           {
-            text: 'ID',
-            align: ' d-none',
+            text: 'Request #',
+            align: 'start',
             value: 'id',
           },
           {
             text: 'Created Time',
             align: 'start',
             value: 'createdOnUTC',
-          },
-          {
-            text: 'Total Price',
-            align: 'start',
-            value: 'totalPrice',
           },
           {
             text: 'Total Budget',
@@ -118,6 +114,7 @@
           price: 0,
           comments: ''
         },
+        ApprovalStateEnum
       }
     },
     computed: {
@@ -135,7 +132,14 @@
     },
     methods: {
       viewRequest(request) {
-        const queryParameters = { view: true, dealable: true, request: JSON.stringify(request) };
+        console.log("req", request);
+        let queryParameters = { view: true, request: JSON.stringify(request) };
+
+        if (request.approvalState === ApprovalStateEnum.PendingRequesterAction) {
+          queryParameters = { ...queryParameters, dealable: true };
+        } else if (request.approvalState === ApprovalStateEnum.RejectedByFulfiller) {
+          queryParameters = { ...queryParameters, amendable: true };
+        }
 
         this.$router.push({
           path: '/createquotation',
