@@ -197,25 +197,40 @@ export default {
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
         confirmButtonText: 'Approve',
-        cancelButtonText: 'Reject'
+        cancelButtonText: 'Reject',
+        allowOutsideClick: true 
       }).then((result) => {
-        const requestUrl = `${this.$config.restUrl}/api/request/approvefinalrequest?requestId=${this.currentRequest.id}`;
-        const isAccept = result.isConfirmed ? 'true' : 'false';
+        if (result.isConfirmed) {
+          const requestUrl = `${this.$config.restUrl}/api/request/approvefinalrequest?requestId=${this.currentRequest.id}&isAccept=true`;
 
-        this.$axios.post(`${requestUrl}&isAccept=${isAccept}`)
-          .then(response => {
-            const message = result.isConfirmed ? 'Request is successfully approved.' : 'Request is successfull rejected.';
+          this.$axios.post(requestUrl)
+            .then(response => {
+              Swal.fire('Done!', 'Request is successfully approved.', 'success')
+                .then(() => {
+                  this.$router.push('/request');
+                });
+            }).catch(error => {
+              console.log('error', error);
+              Swal.fire('Error', 'Failed to process the request', 'error');
+            });
+            
+        } else if (result.isDismissed && result.dismiss === 'cancel') {
+          const requestUrl = `${this.$config.restUrl}/api/request/approvefinalrequest?requestId=${this.currentRequest.id}&isAccept=false`;
 
-            Swal.fire('Done!', message, 'success')
-              .then(() => {
-                this.$router.push('/request');
-              });
-          }).catch(error => {
-            console.log('error', error);
-            Swal.fire('Error', 'Failed to process the request', 'error');
-          });
+          this.$axios.post(requestUrl)
+            .then(response => {
+              Swal.fire('Done!', 'Request is successfully rejected.', 'success')
+                .then(() => {
+                  this.$router.push('/request');
+                });
+            }).catch(error => {
+              console.log('error', error);
+              Swal.fire('Error', 'Failed to process the request', 'error');
+            });
+        }
       });
     },
+
     closeDialogProductFulfillment() {
       this.closeDialogProductFulfillment = false;
     },

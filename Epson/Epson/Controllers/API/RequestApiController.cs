@@ -357,7 +357,7 @@ namespace Epson.Controllers.API
                                                 || x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller)
                                                 .ToList();
 
-            var requestModels = _requestModelFactory.PrepareRequestModels(requests);
+            var requestModels = _requestModelFactory.PrepareRequestModels(pendingRequests);
 
             response.Data = requestModels;
 
