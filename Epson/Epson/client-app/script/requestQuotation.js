@@ -573,19 +573,29 @@ export default {
       }
     },
     exportToExcel() {
-      this.$axios.post('/api/export/toExcel', this.localEditedItem, { responseType: 'blob' })
+      this.$axios.get('/api/export/toExcel', {
+        params: { requestId: this.projectInformation.requestId },
+        responseType: 'blob'
+      })
         .then(response => {
           const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = 'product.xlsx';
-          link.click();
-          URL.revokeObjectURL(link.href);
+          const url = URL.createObjectURL(blob);
+
+          Swal.fire({
+            title: 'Exported!',
+            html: `<a href="${url}" download="request.xlsx">Click here to download</a>`,
+            confirmButtonText: 'Close',
+            onClose: () => {
+              URL.revokeObjectURL(url);
+            }
+          });
         })
         .catch(error => {
           console.error('Error exporting to Excel:', error);
+          Swal.fire('Error', 'Failed to generate Excel file', 'error');
         });
     },
+
     processQuotation() {
       const quotationData = {
         ApprovalState: 20,

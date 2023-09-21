@@ -2,8 +2,6 @@
   <div class="create-quotation-container">
     <h1>Pricing Request</h1>
 
-    <!--<v-btn color="green" text @click="exportToExcel">Export to Excel</v-btn>-->
-
     <v-card class="mx-auto" width="800">
       <v-card-text>
         <!-- Fulfiller Dialog -->
@@ -28,6 +26,9 @@
                  @click="approveQuotation()">
             Approve Quotation
           </v-btn>
+          <v-btn v-if="isMode('view')"
+                 class="mr-2"
+                 color="primary" @click="exportToExcel">Export to Excel</v-btn>
           <v-btn v-if="isMode('isFinalApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadFinalAction"
                  class="mr-2"
                  color="primary"
