@@ -71,7 +71,10 @@ namespace Epson.Services.Services.Requests
             var requestDTO = _mapper.Map<RequestDTO>(_RequestRepository.GetById(id));
 
             requestDTO.RequestProducts = _mapper.Map<List<RequestProductDTO>>(_RequestProductRepository.GetAll().Where(x => x.RequestId == id).ToList());
-
+            requestDTO.CompetitorInformations = _CompetitorInformationRepository.GetAll().Where(x => x.RequestId == id).ToList();
+            requestDTO.RequestSubmissionDetail = _RequestSubmissionDetailRepository.GetAll().Where(x => x.RequestId == id).FirstOrDefault();
+            requestDTO.ProjectInformation = _mapper.Map<List<ProjectInformationDTO>>(_ProjectInformationRepository.GetAll().Where(x => x.RequestId == id)).FirstOrDefault();
+            
             return requestDTO;
         }
 
