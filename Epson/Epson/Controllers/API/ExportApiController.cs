@@ -62,7 +62,7 @@ namespace Epson.Controllers.API
             ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
             using var package = new ExcelPackage();
 
-            PopulateRequestWorksheet(package.Workbook.Worksheets.Add("Request"), request);
+            await PopulateRequestWorksheet(package.Workbook.Worksheets.Add("Request"), request);
             PopulateRequestProductWorksheet(package.Workbook.Worksheets.Add("Request Products"), request.RequestProducts);
             PopulateCompetitorInformationWorksheet(package.Workbook.Worksheets.Add("Competitor Informations"), request.CompetitorInformations);
             PopulateRequestSubmissionDetailWorksheet(package.Workbook.Worksheets.Add("Request Submission Detail"), request.RequestSubmissionDetail);
@@ -77,22 +77,37 @@ namespace Epson.Controllers.API
             return File(stream, fileType, fileName);
         }
 
-        private void PopulateRequestWorksheet(ExcelWorksheet ws, RequestDTO request)
+        private async Task PopulateRequestWorksheet(ExcelWorksheet ws, RequestDTO request)
         {
-            setBorder(ws.Cells[1, 1, 1, 10]);
-            setTitleStyle(ws.Cells[1, 1, 1, 10]);
+            setBorder(ws.Cells[1, 1, 1, 9]);
+            setTitleStyle(ws.Cells[1, 1, 1, 9]);
 
-            ws.Cells[1, 1, 1, 10].Merge = true;
+            ws.Cells[1, 1, 1, 9].Merge = true;
             ws.Cells[1, 1].Value = $"Request Data for Request ID {request.Id}";
             ws.Row(3).Height = 50;
 
             ws.Cells[3, 1].Value = "Id";
-            ws.Cells[3, 2].Value = "ApprovedTime";
+            ws.Cells[3, 2].Value = "Approved Time";
+            ws.Cells[3, 3].Value = "Approved By";
+            ws.Cells[3, 4].Value = "Total Budget";
+            ws.Cells[3, 5].Value = "Approval State";
+            ws.Cells[3, 6].Value = "Time To Resolution";
+            ws.Cells[3, 7].Value = "Breached";
+            ws.Cells[3, 8].Value = "Created On";
+            ws.Cells[3, 9].Value = "Comments";
 
-            setBorder(ws.Cells[3, 1, 3, 10]); 
+            setBorder(ws.Cells[3, 1, 3, 9]); 
 
             ws.Cells[4, 1].Value = request.Id;
             ws.Cells[4, 2].Value = request.ApprovedTime.ToString("yyyy-MM-dd HH:mm:ss");
+            ws.Cells[4, 3].Value = request.ApprovedBy;
+            ws.Cells[4, 3].Value = await _userManager.FindByIdAsync(request.ApprovedBy);
+            ws.Cells[4, 4].Value = request.TotalBudget;
+            ws.Cells[4, 5].Value = ((ApprovalStateEnum)request.ApprovalState).GetDescription();
+            ws.Cells[4, 6].Value = $"{request.TimeToResolution.Hours}h {request.TimeToResolution.Minutes}m {request.TimeToResolution.Seconds}s";
+            ws.Cells[4, 7].Value = request.Breached ? "Breached" : "Not Breached";
+            ws.Cells[4, 8].Value = request.CreatedOnUTC.ToString("yyyy-MM-dd HH:mm:ss"); ;
+            ws.Cells[4, 9].Value = request.Comments;
 
             ws.Cells.AutoFitColumns(0);
         }
