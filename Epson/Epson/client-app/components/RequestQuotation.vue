@@ -270,34 +270,6 @@
                   <td><input type="text" v-model="projectInformation.industry" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode" required></td>
                 </tr>
                 <tr>
-                  <td>Type</td>
-                  <td>:</td>
-                  <td>
-                    <div class="form-check">
-                      <input class="form-check-input custom-radio" type="radio" id="openTender" value="Open Tender" v-model="projectInformation.type" :disabled="isViewMode">
-                      <label class="form-check-label" for="openTender">Open Tender</label>
-                    </div>
-                    <div class="form-check">
-                      <input class="form-check-input custom-radio" type="radio" id="closeTender" value="Close Tender" v-model="projectInformation.type" :disabled="isViewMode">
-                      <label class="form-check-label" for="closeTender">Close Tender</label>
-                    </div>
-                    <div class="form-check">
-                      <input class="form-check-input custom-radio" type="radio" id="specialPricing" value="Special Pricing" v-model="projectInformation.type" :disabled="isViewMode">
-                      <label class="form-check-label" for="specialPricing">Special Pricing</label>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Closing Date</td>
-                  <td>:</td>
-                  <td><input type="datetime-local" v-model="projectInformation.closingDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
-                </tr>
-                <tr>
-                  <td>Delivery Date</td>
-                  <td>:</td>
-                  <td><input type="datetime-local" v-model="projectInformation.deliveryDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
-                </tr>
-                <tr>
                   <td>Company Address</td>
                   <td>:</td>
                   <td><input type="text" v-model="projectInformation.companyAddress" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
@@ -318,6 +290,24 @@
                   <td><input type="text" v-model="projectInformation.email" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
                 <tr>
+                  <td>Type</td>
+                  <td>:</td>
+                  <td>
+                    <div class="form-check">
+                      <input class="form-check-input custom-radio" type="radio" id="openTender" value="Open Tender" v-model="projectInformation.type" :disabled="isViewMode">
+                      <label class="form-check-label" for="openTender">Open Tender</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input custom-radio" type="radio" id="closeTender" value="Close Tender" v-model="projectInformation.type" :disabled="isViewMode">
+                      <label class="form-check-label" for="closeTender">Close Tender</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input custom-radio" type="radio" id="specialPricing" value="Special Pricing" v-model="projectInformation.type" :disabled="isViewMode">
+                      <label class="form-check-label" for="specialPricing">Special Pricing</label>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
                   <td>Reason</td>
                   <td>:</td>
                   <td>
@@ -331,6 +321,16 @@
                       </div>
                     </div>
                   </td>
+                </tr>
+                <tr>
+                  <td>Closing Date</td>
+                  <td>:</td>
+                  <td><input type="datetime-local" v-model="projectInformation.closingDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td>Delivery Date</td>
+                  <td>:</td>
+                  <td><input type="datetime-local" v-model="projectInformation.deliveryDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
               <td>Key Customer Requirements</td>
               <td>:</td>
