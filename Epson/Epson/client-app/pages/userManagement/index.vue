@@ -51,10 +51,31 @@
         </v-card>
       </v-dialog>
 
+      <v-dialog v-model="dialogPassword" max-width="500px">
+        <v-card>
+          <v-card-title>
+            <span class="headline">{{ formTitle }}</span>
+          </v-card-title>
+          <v-card-text>
+            <v-col cols="12">
+              <div class="form-group">
+                <label>Password</label>
+                <input v-model="password" class="border-input" required></input>
+              </div>
+            </v-col>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="blue darken-1" text @click="dialog = false">Cancel</v-btn>
+            <v-btn color="blue darken-1" text @click="changePasswordConfirmation">Save</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <v-tabs v-model="tab" background-color="white">
         <v-tab v-for="(item, index) in tabItems" :key="index">{{ item }}</v-tab>
       </v-tabs>
-        
+
       <v-card-text>
         <v-tabs-items v-model="tab">
           <v-tab-item v-for="(item, index) in tabItems" :key="index">
@@ -62,6 +83,7 @@
               <template v-slot:item.actions="{ item }">
                 <v-icon small class="mr-2" @click="editUser(item)">mdi-pencil</v-icon>
                 <v-icon small class="mr-2" @click="deleteUserConfirmation(item)">mdi-delete</v-icon>
+                <v-icon small class="mr-2" @click="changePassword(item)">mdi-lock-reset</v-icon>
               </template>
             </v-data-table>
           </v-tab-item>
@@ -78,6 +100,7 @@
     data() {
       return {
         dialog: false,
+        dialogPassword: false,
         editedIndex: -1,
         newUser: {
           userName: '',
@@ -86,6 +109,7 @@
           password: '',
           selectedRoles: []
         },
+        password: '',
         roles: [],
         headers: [
           { text: 'User Name', value: 'userName' },
@@ -136,6 +160,26 @@
         }).then((result) => {
           if (result.isConfirmed) {
             this.saveUser();
+          }
+        })
+      },
+      changePasswordConfirmation() {
+        if (!this.validatePassword(this.password)) {
+          this.$swal('Invalid Password', 'Password must have at least one uppercase letter, one lowercase letter, one digit, and one non-numeric character.', 'error');
+          return;
+        }
+        this.$swal({
+          title: 'Are you sure?',
+          text: "You are about to change the user password!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, change it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            console.log("saveee");
+            this.saveUserPassword();
           }
         })
       },
@@ -250,6 +294,40 @@
         } else {
           this.addNewUser();
         }
+      },
+      changePassword(item) {
+        this.isEditing = true;
+        this.editedIndex = this.users.indexOf(item)
+        this.newUser = Object.assign({}, item)
+        this.newUser.selectedRoles = item.roles.map(roleName => {
+          return this.roles.find(role => role.name === roleName)
+        })
+        this.newUser.teamId = item.teamId;
+        this.dialogPassword = true
+      },
+      saveUserPassword() {
+        console.log("entered");
+        if (this.editedIndex > -1) {
+          this.$axios.post(`${this.$config.restUrl}/api/customer/adminchangepassword?newPassword=${this.password}`
+          ).then(response => {
+            Object.assign(this.users[this.editedIndex], response.data);
+            this.dialogPassword = false;
+            this.$swal('Success', 'User password changed successfully.', 'success').then(() => {
+              location.reload();
+            });
+          }).catch(error => {
+            console.error('Error changing user password:', error);
+            this.$swal('Failed to change user password', error.response.data.message, 'error');
+          });
+        } 
+      },
+      validatePassword(password) {
+        const hasUppercase = /[A-Z]/.test(password);
+        const hasLowercase = /[a-z]/.test(password);
+        const hasNumeric = /\d/.test(password);
+        const hasNonNumeric = /\W|_/.test(password);
+
+        return hasUppercase && hasLowercase && hasNumeric && hasNonNumeric;
       },
       deleteUser(index) {
         this.$axios.delete(`${this.$config.restUrl}/api/customer/deleteuser?userId=${this.users[index].id}`)

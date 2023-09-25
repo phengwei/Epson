@@ -270,6 +270,33 @@ namespace Epson.Controllers.API
             return Ok();
         }
 
+
+        [HttpPost("adminchangepassword")]
+        [AllowAnonymous]
+        public async Task<IActionResult> AdminChangePassword(string newPassword)
+        {
+            var currentUser = _workContext.CurrentUser;
+            var user = await _userManager.FindByIdAsync(currentUser.Id);
+            if (user == null)
+                return NotFound();
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            try
+            {
+                var changeResult = await _userManager.ResetPasswordAsync(user, token, newPassword);
+                if (!changeResult.Succeeded)
+                    return BadRequest(changeResult.Errors);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+
+
+            return Ok();
+        }
+
+
         [HttpPost("addroletouser")]
         [AllowAnonymous]
         public async Task<IActionResult> AddRoleToUser(string userId, string roleName)
