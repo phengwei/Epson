@@ -71,18 +71,53 @@ namespace Epson.Controllers.API
         {
             var model = queryModel.Data;
             var user = await _userManager.FindByNameAsync(model.UserName);
-            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
+
+            if (user == null)
             {
+                return Unauthorized(new { error = "Invalid username or password" });
+            }
+
+            if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.Now)
+            {
+                if (DateTime.Now >= user.LockoutEnd.Value.AddDays(1))
+                {
+                    user.LockoutEnd = null;
+                    user.AccessFailedCount = 0; 
+                    await _userManager.UpdateAsync(user);
+                }
+                else
+                {
+                    return Unauthorized(new { error = "Account locked. Please try again later." });
+
+                }
+            }
+
+            if (await _userManager.CheckPasswordAsync(user, model.Password))
+            {
+                user.AccessFailedCount = 0; 
+                await _userManager.UpdateAsync(user);
+
                 var generatedToken = await _jwtService.GenerateToken(user);
-                
                 return Ok(new
                 {
                     token = generatedToken
                 });
             }
+            else
+            {
+                user.AccessFailedCount++;
 
-            return Unauthorized("User unauthorized");
+                if (user.AccessFailedCount >= 12)
+                {
+                    user.LockoutEnd = DateTime.Now.AddHours(24); 
+                }
+
+                await _userManager.UpdateAsync(user);
+
+                return Unauthorized(new { error = "Invalid username or password" });
+            }
         }
+
 
         [HttpPost("addnewuser")]
         [AllowAnonymous]
@@ -272,7 +307,7 @@ namespace Epson.Controllers.API
 
 
         [HttpPost("adminchangepassword")]
-        [AllowAnonymous]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> AdminChangePassword(string newPassword)
         {
             var currentUser = _workContext.CurrentUser;
@@ -393,7 +428,8 @@ namespace Epson.Controllers.API
                     Email = user.Email,
                     Roles = roles.ToList(),
                     TeamId = user.TeamId,
-                    Teams = _mapper.Map<Team>(_userService.GetTeamById(user.TeamId)).Name
+                    Teams = _mapper.Map<Team>(_userService.GetTeamById(user.TeamId)).Name,
+                    LockoutEnd = user.LockoutEnd
                 };
 
                 userModels.Add(userModel);
@@ -402,6 +438,29 @@ namespace Epson.Controllers.API
             response.Data = userModels;
 
             return Ok(response);
+        }
+
+        [HttpPost("unlockAccount")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        public async Task<IActionResult> UnlockUser(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            user.LockoutEnd = null; 
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                return Ok("User account unlocked successfully");
+            }
+            else
+            {
+                return BadRequest("Failed to unlock user account");
+            }
         }
 
         [HttpGet("getallroles")]

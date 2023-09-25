@@ -84,6 +84,7 @@
                 <v-icon small class="mr-2" @click="editUser(item)">mdi-pencil</v-icon>
                 <v-icon small class="mr-2" @click="deleteUserConfirmation(item)">mdi-delete</v-icon>
                 <v-icon small class="mr-2" @click="changePassword(item)">mdi-lock-reset</v-icon>
+                <v-icon small v-if="item.lockoutEnd != null" class="mr-2" @click="reactivateAccountConfirmation(item)">mdi-account-reactivate</v-icon>
               </template>
             </v-data-table>
           </v-tab-item>
@@ -326,8 +327,9 @@
         const hasLowercase = /[a-z]/.test(password);
         const hasNumeric = /\d/.test(password);
         const hasNonNumeric = /\W|_/.test(password);
+        const hasMinimumLength = password.length >= 8;
 
-        return hasUppercase && hasLowercase && hasNumeric && hasNonNumeric;
+        return hasUppercase && hasLowercase && hasNumeric && hasNonNumeric && hasMinimumLength;
       },
       deleteUser(index) {
         this.$axios.delete(`${this.$config.restUrl}/api/customer/deleteuser?userId=${this.users[index].id}`)
@@ -355,6 +357,34 @@
             this.deleteUser(this.users.indexOf(item));
           }
         })
+      },
+      reactivateAccountConfirmation(item) {
+        console.log("item", item);
+        this.$swal({
+          title: 'Are you sure?',
+          text: "Unlock account!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, unlock it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.unlockAccount(this.users.indexOf(item));
+          }
+        })
+      },
+      unlockAccount(index) {
+        this.$axios.post(`${this.$config.restUrl}/api/customer/unlockAccount?userId=${this.users[index].id}`)
+          .then(response => {
+            this.users.splice(index, 1);
+            this.$swal('Success', 'User account unlocked successfully.', 'success').then(() => {
+              location.reload();
+            });
+          }).catch(error => {
+            console.error('Error unlocking account:', error);
+            this.$swal('Failed to unlock account', error.response.data.message, 'error');
+          });
       }
     },
   };

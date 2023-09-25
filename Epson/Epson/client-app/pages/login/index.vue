@@ -32,7 +32,8 @@
                                                                     v-model="password" />
                 </div>
                 <div class="text-center mt-6">
-                  <button class="bg-gray-900 text-white active:bg-gray-700 text-sm font-bold uppercase px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 w-full"
+                  <button :disabled="loginDisabled"
+                          class="bg-gray-900 text-white active:bg-gray-700 text-sm font-bold uppercase px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 w-full"
                           type="submit"
                           style="transition: all 0.15s ease 0s;">
                     Sign In
@@ -65,6 +66,7 @@
         userName: '',
         password: '',
         error: null,
+        loginDisabled: false, 
       }
     },
     head() {
@@ -86,6 +88,7 @@
 
       async login() {
         try {
+          this.loginDisabled = true;
           await this.$auth.loginWith('local', {
             data: {
               data: {
@@ -114,17 +117,23 @@
                 confirmButtonText: 'OK'
               });
             }
-          }).catch(function (error) {
-            console.log(error)
+          }).catch(error => {
+            setTimeout(() => {
+              this.loginDisabled = false; 
+            }, 5000);
+
+            const errorMessage = error.response.data.error;
             Swal.fire({
               title: 'Error!',
-              text: 'Login failed',
+              text: errorMessage,
               icon: 'error',
               confirmButtonText: 'OK'
             });
           });
         } catch (err) {
           console.log(err);
+        } finally {
+          this.loginDisabled = false; 
         }
       }
 
