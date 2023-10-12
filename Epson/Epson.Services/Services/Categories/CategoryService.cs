@@ -44,7 +44,9 @@ namespace Epson.Services.Services.Categories
             var categoryDTOs = categories.Select(x => new CategoryDTO
             {
                 Id = x.Id,
-                Name = x.Name
+                Name = x.Name,
+                BackupFulfiller1 = x.BackupFulfiller1,
+                BackupFulfiller2 = x.BackupFulfiller2
             })
             .OrderBy(x => x.Name)
             .ToList();

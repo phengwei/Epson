@@ -7,6 +7,7 @@ using AutoMapper;
 using Epson.Services.Interface.Categories;
 using Epson.Model.Categories;
 using Epson.Core.Domain.Categories;
+using Epson.Services.Interface.Products;
 
 namespace Epson.Controllers.API
 {
@@ -15,6 +16,7 @@ namespace Epson.Controllers.API
     public class CategoryApiController : BaseApiController
     {
         private readonly ICategoryService _categoryService;
+        private readonly IProductService _productService;
         private readonly ICategoryModelFactory _categoryModelFactory;
         private readonly IWorkContext _workContext;
         private readonly IMapper _mapper;
@@ -22,11 +24,13 @@ namespace Epson.Controllers.API
 
         public CategoryApiController(
             ICategoryService categoryService,
+            IProductService productService,
             ICategoryModelFactory categoryModelFactory,
             IWorkContext workContext,
             IMapper mapper)
         {
             _categoryService = categoryService;
+            _productService = productService;
             _categoryModelFactory = categoryModelFactory;
             _workContext = workContext;
             _mapper = mapper;
@@ -61,9 +65,28 @@ namespace Epson.Controllers.API
 
             return Ok(response);
         }
-        
 
-        [HttpPost("adcategory")]
+        [HttpGet("getvalidcategories")]
+        public async Task<IActionResult> GetValidCategories()
+        {
+            var response = new GenericResponseModel<List<CategoryModel>>();
+
+            var categories = _categoryService.GetCategories();
+
+            var categoryModels = _categoryModelFactory.PrepareCategoryModels(categories);
+
+            categoryModels = categoryModels
+                .Where(cm => _productService.GetProductsByCategory(cm.Id).Any())
+                .ToList();
+
+            response.Data = categoryModels;
+
+            return Ok(response);
+        }
+
+
+
+        [HttpPost("addcategory")]
         public async Task<IActionResult> AddCategory([FromBody] BaseQueryModel<CategoryModel> queryModel)
         {
             if (!ModelState.IsValid)
@@ -75,7 +98,9 @@ namespace Epson.Controllers.API
 
             var category = new Category
             {
-                Name = model.Name
+                Name = model.Name,
+                BackupFulfiller1 = model.BackupFulfiller1,
+                BackupFulfiller2 = model.BackupFulfiller2
             };
 
             if (_categoryService.InsertCategory(category, user.Id))
@@ -105,7 +130,9 @@ namespace Epson.Controllers.API
             var updatedCategory = new Category
             {
                 Id = category.Id,
-                Name = model.Name
+                Name = model.Name,
+                BackupFulfiller1 = model.BackupFulfiller1,
+                BackupFulfiller2 = model.BackupFulfiller2
             };
 
             if (_categoryService.UpdateCategory(updatedCategory, user.Id))
@@ -114,7 +141,7 @@ namespace Epson.Controllers.API
                 return BadRequest("Failed to update category");
         }
 
-        [HttpPost("deletecategory")]
+        [HttpDelete("deletecategory")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
             var category = _categoryService.GetCategoryById(id);

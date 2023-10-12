@@ -10,5 +10,7 @@ namespace Epson.Services.DTO.Categories
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public string BackupFulfiller1 { get; set; }
+        public string BackupFulfiller2 { get; set; }
     }
 }

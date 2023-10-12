@@ -33,6 +33,8 @@
               <div class="absolute left-0 mt-1 w-48 rounded-md shadow-lg py-1 bg-white text-black z-50" :class="{ 'hidden': !showDropdown }">
                 <nuxt-link to="/userManagement"
                            class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Manage Users</nuxt-link>
+                <nuxt-link to="/categoryManagement"
+                           class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Manage Product Categories</nuxt-link>
                 <nuxt-link to="/sla"
                            class="block px-4 py-2 hover:bg-[#003399] hover:text-white">SLA Configuration</nuxt-link>
                 <nuxt-link to="/productAuditTrail"

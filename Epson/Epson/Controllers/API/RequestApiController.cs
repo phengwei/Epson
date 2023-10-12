@@ -204,7 +204,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("fulfillrequest")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Coverplus")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Coverplus,Sales Section Head")]
         public async Task<IActionResult> FulfillRequest(int id, int productId, decimal fulfilledPrice, string remarks)
         {
             if (id == 0 || productId == 0)

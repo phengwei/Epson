@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Epson.Core.Domain.Categories;
 using Epson.Core.Domain.Email;
 using Epson.Core.Domain.Enum;
 using Epson.Core.Domain.Products;
@@ -29,6 +30,8 @@ namespace Epson.Services.Services.Requests
         private readonly IRepository<RequestSubmissionDetail> _RequestSubmissionDetailRepository;
         private readonly IRepository<ProjectInformation> _ProjectInformationRepository;
         private readonly IRepository<ProjectInformationReason> _ProjectInformationReasonRepository;
+        private readonly IRepository<ProductCategory> _ProductCategoryRepository;
+        private readonly IRepository<Category> _CategoryRepository;
         private readonly IProductService _productService;
         private readonly IEmailService _emailService;
         private readonly ILogger _logger;
@@ -43,6 +46,8 @@ namespace Epson.Services.Services.Requests
             IRepository<RequestSubmissionDetail> requestSubmissionDetailRepository,
             IRepository<ProjectInformation> projectInformationRepository,
             IRepository<ProjectInformationReason> projectInformationReasonRepository,
+            IRepository<ProductCategory> productCategoryRepository,
+            IRepository<Category> categoryRepository,
             IProductService productService,
             IEmailService emailService,
             ILogger logger,
@@ -56,6 +61,8 @@ namespace Epson.Services.Services.Requests
             _RequestSubmissionDetailRepository = requestSubmissionDetailRepository;
             _ProjectInformationRepository = projectInformationRepository;
             _ProjectInformationReasonRepository = projectInformationReasonRepository;
+            _ProductCategoryRepository = productCategoryRepository;
+            _CategoryRepository = categoryRepository;
             _productService = productService;
             _emailService = emailService;
             _logger = logger;
@@ -153,17 +160,28 @@ namespace Epson.Services.Services.Requests
                         if (isCoverplusUser && rp.IsCoverplus)
                         {
                             rp.AuthorizedToFulfill = true;
-                        } 
+                        }
                         else if (isProductUser && rp.FulfillerId == user.Id && !rp.IsCoverplus)
                         {
                             rp.AuthorizedToFulfill = true;
                         }
+
+                        var relatedCategoryIds = _ProductCategoryRepository
+                                                    .Table
+                                                    .Where(pc => pc.ProductId == rp.ProductId)
+                                                    .Select(pc => pc.CategoryId)
+                                                    .ToList();
+
+                        var isBackupFulfiller = _CategoryRepository
+                                        .Table
+                                        .Any(c => relatedCategoryIds.Contains(c.Id) && (c.BackupFulfiller1 == user.Id || c.BackupFulfiller2 == user.Id));
+
+
+                        if (isBackupFulfiller)
+                        {
+                            rp.AuthorizedToFulfill = true;
+                        }
                     });
-
-                    //x.RequestProducts = x.RequestProducts
-                    //    .Where(rp => rp.HasFulfilled == false)
-                    //    .ToList();
-
                     return x;
                 })
                 .Where(x => x.RequestProducts.Any() 

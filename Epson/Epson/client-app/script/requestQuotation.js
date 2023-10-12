@@ -402,7 +402,7 @@ export default {
     },
     async fetchCategories() {
       try {
-        const response = await this.$axios.get(`${this.$config.restUrl}/api/category/getcategories`);
+        const response = await this.$axios.get(`${this.$config.restUrl}/api/category/getvalidcategories`);
         this.categories = response.data.data;
         for (const category of this.categories) {
           await this.fetchProductsForCategory(category);

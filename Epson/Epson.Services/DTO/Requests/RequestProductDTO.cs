@@ -11,6 +11,7 @@ namespace Epson.Services.DTO.Requests
         public int Id { get; set; }
         public int RequestId { get; set; }
         public int ProductId { get; set; }
+        public int CategoryId { get; set; }
         public int Quantity { get; set; }
         public decimal? DistyPrice { get; set; }
         public decimal? DealerPrice { get; set; }

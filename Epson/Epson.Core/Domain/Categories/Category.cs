@@ -7,8 +7,11 @@ using System.Threading.Tasks;
 
 namespace Epson.Core.Domain.Categories
 {
-    public class Category : BaseEntityExtension
+    public class Category
     {
+        public int Id { get; set; }
         public string Name { get; set; }
+        public string BackupFulfiller1 { get; set; }
+        public string BackupFulfiller2 { get; set; }
     }
 }

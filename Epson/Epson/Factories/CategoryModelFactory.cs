@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using Epson.Core.Domain.Categories;
 using Epson.Core.Domain.Products;
+using Epson.Core.Domain.Users;
 using Epson.Data;
 using Epson.Model.Categories;
 using Epson.Services.DTO.Categories;
 using Epson.Services.Interface.Products;
+using Microsoft.AspNetCore.Identity;
 
 namespace Epson.Factories
 {
@@ -46,7 +48,9 @@ namespace Epson.Factories
                 {
                     Id = category.Id,
                     Name = category.Name,
-                    Products = _mapper.Map<List<Product>>(_productService.GetProductsByCategory(category.Id).ToList())
+                    Products = _mapper.Map<List<Product>>(_productService.GetProductsByCategory(category.Id).ToList()),
+                    BackupFulfiller1 = category.BackupFulfiller1,
+                    BackupFulfiller2 = category.BackupFulfiller2
                 };
                 categoryModels.Add(categoryModel);
             }
