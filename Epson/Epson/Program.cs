@@ -34,6 +34,7 @@ using Epson.Services.Interface.Report;
 using Epson.Services.Interface.Users;
 using Epson.Services.Services.Users;
 using System.Reflection;
+using Epson.Services.Services.Report;
 
 var builder = WebApplication.CreateBuilder(args);
 

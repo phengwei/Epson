@@ -100,6 +100,9 @@ namespace Epson.Services.Services.Email
                 return product != null ? product.Name : "Unknown Product";
             });
 
+            if (emailAccount == null)
+                return new EmailQueue();
+
             var subject = "New Request";
 
             var body = $@"
@@ -218,6 +221,9 @@ namespace Epson.Services.Services.Email
                 </body>
             </html>";
 
+            if (emailAccount == null)
+                return new List<EmailQueue>();
+
             var emailQueues = new List<EmailQueue>();
 
             foreach (var salesUser in salesSectionHeadUsers)
@@ -293,6 +299,9 @@ namespace Epson.Services.Services.Email
                 </body>
             </html>";
 
+            if (emailAccount == null)
+                return new List<EmailQueue>();
+
             List<EmailQueue> emailQueues = new List<EmailQueue>();
 
             if (requestProduct.IsCoverplus == false)
@@ -341,6 +350,8 @@ namespace Epson.Services.Services.Email
         {
             //todo: configure to capture from user / request
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
+            if (emailAccount == null)
+                return new EmailQueue();
             var requester = _userManager.FindByIdAsync(request.CreatedById);
             var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
             var product = _productService.GetProductById(requestProduct.ProductId);
@@ -411,6 +422,9 @@ namespace Epson.Services.Services.Email
         {
             //todo: configure to capture from user / request
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
+            if (emailAccount == null)
+                return new EmailQueue();
+
             var requester = _userManager.FindByIdAsync(request.CreatedById);
             var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
             var product = _productService.GetProductById(requestProduct.ProductId);
@@ -478,6 +492,9 @@ namespace Epson.Services.Services.Email
         {
             //todo: configure to capture from user / request
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
+            if (emailAccount == null)
+                return new EmailQueue();
+
             var requester = _userManager.FindByIdAsync(request.CreatedById);
             var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
             var product = _productService.GetProductById(requestProduct.ProductId);
