@@ -182,6 +182,27 @@ app.UseStaticFiles();
 
 
 app.UseRouting();
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add(
+        "Content-Security-Policy",
+        "default-src 'self'; " +
+        "script-src 'self'; " +
+        "style-src 'self'; " +
+        "img-src 'self'; " +
+        "connect-src 'self'; " +
+        "font-src 'self'; " +
+        "frame-src 'self'; " +
+        "object-src 'none'; " +
+        "form-action 'self'; " +
+        "frame-ancestors 'self'; "
+    );
+
+    context.Response.Headers.Remove("X-Powered-By");
+    await next.Invoke();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -190,31 +211,6 @@ app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
 });
-
-app.Use(async (context, next) =>
-{
-    context.Response.Headers.Add(
-        "Content-Security-Policy",
-        "default-src 'self'; " +
-        "script-src 'self'; " + 
-        "style-src 'self'; " +
-        "img-src 'self'; " + 
-        "connect-src 'self'; " + 
-        "font-src 'self'; " + 
-        "frame-src 'self'; " + 
-        "object-src 'none'; " + 
-        "form-action 'self'; " + 
-        "frame-ancestors 'self'; " 
-    );
-    context.Response.OnStarting(() =>
-    {
-        context.Response.Headers.Remove("X-Powered-By");
-        return Task.CompletedTask;
-    });
-
-    await next.Invoke();
-});
-
 
 // app.MapRazorPages();
 app.MapControllers();
