@@ -193,18 +193,17 @@ app.UseEndpoints(endpoints =>
 
 app.Use(async (context, next) =>
 {
-    context.Response.Headers.Add("X-Frame-Options", "SAMEORIGIN");
     context.Response.Headers.Add(
         "Content-Security-Policy",
         "default-src 'self'; " +
-        "script-src 'self' https:; " + 
-        "style-src 'self' 'unsafe-inline' https:; " + 
-        "img-src 'self' https: data:; " + 
-        "font-src 'self' https: data:; " + 
+        "script-src 'self'; " + 
+        "style-src 'self'; " +
+        "img-src 'self'; " + 
+        "connect-src 'self'; " + 
+        "font-src 'self'; " + 
         "frame-src 'self'; " + 
-        "connect-src 'self' https:; " + 
         "object-src 'none'; " + 
-        "form-action 'self'; " +
+        "form-action 'self'; " + 
         "frame-ancestors 'self'; " 
     );
     context.Response.OnStarting(() =>
@@ -212,6 +211,7 @@ app.Use(async (context, next) =>
         context.Response.Headers.Remove("X-Powered-By");
         return Task.CompletedTask;
     });
+
     await next.Invoke();
 });
 
