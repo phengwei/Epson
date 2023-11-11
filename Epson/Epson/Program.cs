@@ -35,6 +35,7 @@ using Epson.Services.Interface.Users;
 using Epson.Services.Services.Users;
 using System.Reflection;
 using Epson.Services.Services.Report;
+using Microsoft.AspNetCore.CookiePolicy;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,20 @@ using var log = new LoggerConfiguration()
         "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
     .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
+
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.MinimumSameSitePolicy = SameSiteMode.Strict;
+    options.HttpOnly = HttpOnlyPolicy.Always;
+    options.Secure = CookieSecurePolicy.Always;
+});
 
 builder.Services.AddSingleton<Serilog.ILogger>(log);
 builder.Host.UseSerilog();
@@ -175,6 +190,19 @@ app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
 });
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("X-Frame-Options", "SAMEORIGIN");
+    context.Response.Headers.Add("Content-Security-Policy", "frame-ancestors 'self';");
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers.Remove("X-Powered-By");
+        return Task.CompletedTask;
+    });
+    await next.Invoke();
+});
+
 
 // app.MapRazorPages();
 app.MapControllers();

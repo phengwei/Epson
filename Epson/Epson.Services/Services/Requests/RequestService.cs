@@ -333,7 +333,10 @@ namespace Epson.Services.Services.Requests
                     InsertCompetitorInformation(competitorInformation);
                 }
 
-                projectInformation.Id = _ProjectInformationRepository.Table.Where(x => x.RequestId == request.Id).FirstOrDefault().Id;
+                var projectInfo = _ProjectInformationRepository.Table.FirstOrDefault(x => x.RequestId == request.Id);
+                if (projectInfo != null)
+                    projectInformation.Id = projectInfo.Id;
+
                 projectInformation.RequestId = request.Id;
                 _ProjectInformationRepository.Update(projectInformation);
 
@@ -347,8 +350,11 @@ namespace Epson.Services.Services.Requests
 
                 requestSubmissionDetail.RequestId = request.Id;
                 var capturedRequestSubmissionDetail = _RequestSubmissionDetailRepository.Table.Where(x => x.RequestId == request.Id).FirstOrDefault();
-                requestSubmissionDetail.Id = capturedRequestSubmissionDetail.Id;
-                requestSubmissionDetail.CreatedBy = capturedRequestSubmissionDetail.CreatedBy;
+                if (capturedRequestSubmissionDetail != null)
+                {
+                    requestSubmissionDetail.Id = capturedRequestSubmissionDetail.Id;
+                    requestSubmissionDetail.CreatedBy = capturedRequestSubmissionDetail.CreatedBy;
+                }
                 _RequestSubmissionDetailRepository.Update(requestSubmissionDetail);
 
                 _logger.Information("Successfully created request {id}", request.Id);
@@ -490,7 +496,11 @@ namespace Epson.Services.Services.Requests
             if (request.ApprovalState != (int)ApprovalStateEnum.PendingRequesterAction)
                 return false;
 
-            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
+            var projectInformation = _ProjectInformationRepository.GetAll()
+                .FirstOrDefault(x => x.RequestId == request.Id) ?? new ProjectInformation { ClosingDate = DateTime.MinValue };
+
+            if (DateTime.UtcNow > projectInformation.ClosingDate)
+                request.Breached = true;
 
             request.ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadFinalAction;
             request.ApprovedBy = user.Id;
@@ -499,9 +509,6 @@ namespace Epson.Services.Services.Requests
             request.UpdatedById = user.Id;
             request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
             request.Comments = comments;
-
-            if (DateTime.UtcNow > projectInformation.ClosingDate)
-                request.Breached = true;
 
             try
             {
@@ -528,7 +535,8 @@ namespace Epson.Services.Services.Requests
             if (request.ApprovalState != (int)ApprovalStateEnum.PendingRequesterAction)
                 return false;
 
-            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
+            var projectInformation = _ProjectInformationRepository.GetAll()
+                 .FirstOrDefault(x => x.RequestId == request.Id) ?? new ProjectInformation { ClosingDate = DateTime.MinValue };
 
             request.ApprovalState = (int)ApprovalStateEnum.RejectedByRequester;
             request.ApprovedBy = user.Id;
@@ -567,7 +575,8 @@ namespace Epson.Services.Services.Requests
                 request.ApprovalState != (int)ApprovalStateEnum.RejectedByFulfiller)
                 return false;
 
-            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
+            var projectInformation = _ProjectInformationRepository.GetAll()
+                 .FirstOrDefault(x => x.RequestId == request.Id) ?? new ProjectInformation { ClosingDate = DateTime.MinValue };
 
             request.ApprovalState = (int)ApprovalStateEnum.DealExited;
             request.ApprovedBy = user.Id;
@@ -608,7 +617,8 @@ namespace Epson.Services.Services.Requests
             if (requestProductToFulfill == null)
                 return false;
 
-            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == existingRequest.Id).FirstOrDefault();
+            var projectInformation = _ProjectInformationRepository.GetAll()
+                 .FirstOrDefault(x => x.RequestId == existingRequest.Id) ?? new ProjectInformation { ClosingDate = DateTime.MinValue };
 
             requestProductToFulfill.DealerPrice = totalPrice;
             requestProductToFulfill.FulfillerId = user.Id;
@@ -787,7 +797,8 @@ namespace Epson.Services.Services.Requests
 
             
             var request = GetRequestById(requestProduct.RequestId);
-            var projectInformation = _ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault();
+            var projectInformation = _ProjectInformationRepository.GetAll()
+                .FirstOrDefault(x => x.RequestId == request.Id) ?? new ProjectInformation { ClosingDate = DateTime.MinValue };
 
             requestProduct.Status = (int)RequestProductStatusEnum.Rejected;
             requestProduct.Remarks = remarks;

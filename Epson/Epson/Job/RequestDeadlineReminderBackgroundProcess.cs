@@ -10,63 +10,66 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-public class DeadlineReminderService : IHostedService, IDisposable
+namespace Epson.Job
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly Serilog.ILogger _logger;
-    private Timer _timer;
-
-    public DeadlineReminderService(IServiceProvider serviceProvider, Serilog.ILogger logger)
+    public class DeadlineReminderService : IHostedService, IDisposable
     {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
+        private readonly IServiceProvider _serviceProvider;
+        private readonly Serilog.ILogger _logger;
+        private Timer _timer;
 
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        _logger.Information("[{0}] Begin executing process.", "RequestDeadlineReminderBackgroundProcess");
-        _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromHours(24));
-        _logger.Information("[{0}] Finished executing process.", "RequestDeadlineReminderBackgroundProcess");
-        return Task.CompletedTask;
-    }
-
-    private async void DoWork(object state)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<EpsonDbContext>();
-        var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
-        var targetDate = DateTime.UtcNow.Date.AddDays(3);
-
-        var requestProductsToNotify = await dbContext.RequestProduct
-            .Where(rp => !rp.HasFulfilled
-                        && dbContext.Request.Any(r => r.Id == rp.RequestId
-                            && dbContext.ProjectInformation.Any(p => p.RequestId == r.Id && p.ClosingDate.Date < targetDate)))
-            .ToListAsync();
-
-
-
-        List<EmailQueue> emailQueues = new List<EmailQueue>();
-
-        foreach (var requestProduct in requestProductsToNotify)
+        public DeadlineReminderService(IServiceProvider serviceProvider, Serilog.ILogger logger)
         {
-            var queues = await emailService.CreateReminderEmailQueue(requestProduct);
-            emailQueues.AddRange(queues);
+            _serviceProvider = serviceProvider;
+            _logger = logger;
         }
 
-        foreach (var emailQueue in emailQueues)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
-            emailService.InsertEmailQueue(emailQueue);
+            _logger.Information("[{0}] Begin executing process.", "RequestDeadlineReminderBackgroundProcess");
+            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromHours(24));
+            _logger.Information("[{0}] Finished executing process.", "RequestDeadlineReminderBackgroundProcess");
+            return Task.CompletedTask;
         }
-    }
 
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        _timer?.Change(Timeout.Infinite, 0);
-        return Task.CompletedTask;
-    }
+        private async void DoWork(object state)
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<EpsonDbContext>();
+            var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+            var targetDate = DateTime.UtcNow.Date.AddDays(3);
 
-    public void Dispose()
-    {
-        _timer?.Dispose();
+            var requestProductsToNotify = await dbContext.RequestProduct
+                .Where(rp => !rp.HasFulfilled
+                            && dbContext.Request.Any(r => r.Id == rp.RequestId
+                                && dbContext.ProjectInformation.Any(p => p.RequestId == r.Id && p.ClosingDate.Date < targetDate)))
+                .ToListAsync();
+
+
+
+            List<EmailQueue> emailQueues = new List<EmailQueue>();
+
+            foreach (var requestProduct in requestProductsToNotify)
+            {
+                var queues = await emailService.CreateReminderEmailQueue(requestProduct);
+                emailQueues.AddRange(queues);
+            }
+
+            foreach (var emailQueue in emailQueues)
+            {
+                emailService.InsertEmailQueue(emailQueue);
+            }
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            _timer?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
+        }
+
+        public void Dispose()
+        {
+            _timer?.Dispose();
+        }
     }
 }
