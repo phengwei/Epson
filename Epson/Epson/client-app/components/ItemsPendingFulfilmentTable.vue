@@ -17,7 +17,7 @@
 
     <template v-slot:item="{ item }">
       <tr v-if="item.authorizedToFulfill && item.status === RequestProductStatusEnum.Pending">
-        <td>{{ item.id }}</td>
+        <td>{{ item.requestId }}</td>
         <td>{{ item.createdBy }}</td>
         <td>{{ item.productName }}</td>
         <td>{{ item.endUserPrice }}</td>

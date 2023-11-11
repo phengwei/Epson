@@ -195,11 +195,6 @@
               @click="cancelRequest(item)">
         mdi-cancel
       </v-icon>
-      <v-icon small
-              @click="dialogQuotation(item)"
-              v-if="item.approvalState === ApprovalStateEnum.AmendQuotation">
-        mdi-pencil
-      </v-icon>
       <v-btn @click="viewRequest(item)">View</v-btn>
     </template>
   </v-data-table>
@@ -425,7 +420,10 @@
           if (result.isConfirmed) {
             this.$axios.post(`${this.$config.restUrl}/api/request/setrequesttoamendquotation?requestId=${item.id}`)
             .then(response => {
-              Swal.fire('Amended!', 'Request is in amend stage.', 'success');
+              Swal.fire('Amended!', 'Request is in amend stage.', 'success')
+                .then(() => {
+                this.$router.push('/salesDashboard');
+              });
             }).catch(error => {
               console.log('error', error);
               Swal.fire('Error', 'Failed to amend request', 'error');
@@ -444,7 +442,10 @@
           if (result.isConfirmed) {
             this.$axios.post(`${this.$config.restUrl}/api/request/cancelrequest?requestId=${item.id}&remarks=${result.value}`)
             .then(response => {
-              Swal.fire('Cancelled!', 'Request has been cancelled.', 'success');
+              Swal.fire('Cancelled!', 'Request has been cancelled.', 'success')
+                .then(() => {
+                  this.$router.push('/salesDashboard');
+                });
             }).catch(error => {
               console.log('error', error);
               Swal.fire('Error', 'Failed to cancel request', 'error');

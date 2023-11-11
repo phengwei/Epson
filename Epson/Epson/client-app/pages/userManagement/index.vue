@@ -54,7 +54,7 @@
       <v-dialog v-model="dialogPassword" max-width="500px">
         <v-card>
           <v-card-title>
-            <span class="headline">{{ formTitle }}</span>
+            <span class="headline">Reset Password</span>
           </v-card-title>
           <v-card-text>
             <v-col cols="12">
@@ -66,7 +66,7 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="dialog = false">Cancel</v-btn>
+            <v-btn color="blue darken-1" text @click="dialogPassword = false">Cancel</v-btn>
             <v-btn color="blue darken-1" text @click="changePasswordConfirmation">Save</v-btn>
           </v-card-actions>
         </v-card>
