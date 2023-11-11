@@ -71,7 +71,7 @@
     methods: {
       async updateCategories() {
         try {
-          const response = await this.$axios.get(`${this.$config.restUrl}/api/category/getcategories`);
+          const response = await this.$axios.get(`${this.$config.restUrl}/api/category/getvalidcategories`);
           this.categories = response.data.data;
         } catch (error) {
           console.error(error);

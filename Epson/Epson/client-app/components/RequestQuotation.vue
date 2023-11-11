@@ -28,7 +28,7 @@
           </v-btn>
           <v-btn v-if="isMode('view')"
                  class="mr-2"
-                 color="primary" @click="exportToExcel">Export to Excel</v-btn>
+                 color="primary" @click="exportToExcel">Export</v-btn>
           <v-btn v-if="isMode('isFinalApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadFinalAction"
                  class="mr-2"
                  color="primary"
