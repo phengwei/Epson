@@ -186,6 +186,8 @@ app.UseRouting();
 app.Use(async (context, next) =>
 {
     context.Response.Headers.Remove("X-Powered-By");
+    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+
     await next.Invoke();
 });
 
