@@ -27,15 +27,20 @@ using Epson.Services.Interface.AuditTrails;
 using Epson.Services.Services.AuditTrails;
 using Epson.Services.Interface.Categories;
 using Epson.Services.Services.Categories;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-using Epson.Core.Domain.SLA;
 using Epson.Services.Interface.Report;
 using Epson.Services.Interface.Users;
 using Epson.Services.Services.Users;
 using System.Reflection;
 using Epson.Services.Services.Report;
 using Microsoft.AspNetCore.CookiePolicy;
+using ITfoxtec.Identity.Saml2;
+using ITfoxtec.Identity.Saml2.MvcCore;
+using ITfoxtec.Identity.Saml2.Schemas;
+using ITfoxtec.Identity.Saml2.Util;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using ITfoxtec.Identity.Saml2.MvcCore.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,6 +92,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
         };
     });
+
+
+builder.Services.AddSaml2(options =>
+{
+    options.Licensee = "YourLicensee";
+    options.LicenseKey = "YourLicenseKey";
+    options.AllowedAudienceUris.Add(options.Issuer);
+
+    options.Issuer = "https://epson-asia.azurewebsites.net/saml";
+});
 
 builder.Services.AddAuthorization(options =>
 {
@@ -193,6 +208,13 @@ app.Use(async (context, next) =>
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapGet("/saml2/metadata", async context =>
+{
+    var metadata = new Saml2Metadata(app.Services.GetService<Saml2Configuration>());
+    context.Response.ContentType = "application/samlmetadata+xml";
+    await context.Response.WriteAsync(metadata.CreateMetadata().ToXml());
+});
 
 app.UseSession();
 app.UseEndpoints(endpoints =>
