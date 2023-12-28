@@ -34,13 +34,14 @@ using Epson.Services.Services.Users;
 using System.Reflection;
 using Epson.Services.Services.Report;
 using Microsoft.AspNetCore.CookiePolicy;
-using ITfoxtec.Identity.Saml2;
 using ITfoxtec.Identity.Saml2.MvcCore;
-using ITfoxtec.Identity.Saml2.Schemas;
 using ITfoxtec.Identity.Saml2.Util;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
+using ITfoxtec.Identity.Saml2;
+using ITfoxtec.Identity.Saml2.Schemas.Metadata;
+using System.Security.Cryptography.X509Certificates;
 using ITfoxtec.Identity.Saml2.MvcCore.Configuration;
+using Autofac.Core;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -93,15 +94,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
-builder.Services.AddSaml2(options =>
+builder.Services.Configure<Saml2Configuration>(builder.Configuration.GetSection("Saml2"));
+builder.Services.AddSingleton<Saml2Configuration>(sp =>
 {
-    options.Licensee = "YourLicensee";
-    options.LicenseKey = "YourLicenseKey";
-    options.AllowedAudienceUris.Add(options.Issuer);
+    var saml2Config = new Saml2Configuration
+    {
 
-    options.Issuer = "https://epson-asia.azurewebsites.net/saml";
+        SigningCertificate = new X509Certificate2(builder.Configuration["Saml2:SigningCertificateFile"], 
+        builder.Configuration["Saml2:SigningCertificatePassword"]),
+        Issuer = builder.Configuration["Saml2:Issuer"]
+    };
+
+    return saml2Config;
 });
+
+builder.Services.AddSaml2();
+
 
 builder.Services.AddAuthorization(options =>
 {
@@ -208,13 +216,7 @@ app.Use(async (context, next) =>
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.MapGet("/saml2/metadata", async context =>
-{
-    var metadata = new Saml2Metadata(app.Services.GetService<Saml2Configuration>());
-    context.Response.ContentType = "application/samlmetadata+xml";
-    await context.Response.WriteAsync(metadata.CreateMetadata().ToXml());
-});
+app.UseSaml2();
 
 app.UseSession();
 app.UseEndpoints(endpoints =>

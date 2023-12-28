@@ -12,7 +12,7 @@ namespace Epson.Controllers.API
 {
     [AllowAnonymous]
     [Route("api/metadata")]
-    public class MetadataApiController
+    public class MetadataApiController : ControllerBase
     {
         private readonly Saml2Configuration config;
 
@@ -21,7 +21,8 @@ namespace Epson.Controllers.API
             this.config = config;
         }
 
-        public async Task<IActionResult> Index()
+        [Route("GetMetadata")]
+        public async Task<IActionResult> GetMetadata()
         {
             //var defaultSite = new Uri($"{Request.Scheme}://{Request.Host.ToUriComponent()}/");
             var defaultSite = "https://epson-asia.azurewebsites.net/";
@@ -39,17 +40,18 @@ namespace Epson.Controllers.API
 
                 SingleLogoutServices = new SingleLogoutService[]
                 {
-                    new SingleLogoutService { Binding = ProtocolBindings.HttpPost, Location = new Uri(defaultSite + "Auth/SingleLogout"), ResponseLocation = new Uri(defaultSite, "Auth/LoggedOut") }
+                    new SingleLogoutService { Binding = ProtocolBindings.HttpPost, Location = new Uri(defaultSite + "Auth/SingleLogout"), ResponseLocation = new Uri(defaultSite + "Auth/LoggedOut") }
                 },
                 NameIDFormats = new Uri[] { NameIdentifierFormats.X509SubjectName },
                 AssertionConsumerServices = new AssertionConsumerService[]
                 {
-                    new AssertionConsumerService { Binding = ProtocolBindings.HttpPost, Location = new Uri(defaultSite, "Auth/AssertionConsumerService") },
+                    new AssertionConsumerService { Binding = ProtocolBindings.HttpPost, Location = new Uri(defaultSite + "Auth/AssertionConsumerService") },
                 },
                 AttributeConsumingServices = new AttributeConsumingService[]
                 {
-                    new AttributeConsumingService { ServiceName = new ServiceName("Some SP", "en"), RequestedAttributes = CreateRequestedAttributes() }
+                    new AttributeConsumingService { ServiceName = new ServiceName("Some SP", "en"), RequestedAttributes = CreateRequestedAttributes().ToList() }
                 },
+
             };
             entityDescriptor.ContactPersons = new[] {
                 new ContactPerson(ContactTypes.Administrative)
@@ -69,7 +71,11 @@ namespace Epson.Controllers.API
                     TelephoneNumber = "22222222",
                 }
             };
-            return new Saml2Metadata(entityDescriptor).CreateMetadata().ToActionResult();
+
+            var saml2Metadata = new Saml2Metadata(entityDescriptor);
+            var metadataXml = saml2Metadata.CreateMetadata().ToXml();
+
+            return Content(metadataXml, "application/xml");
         }
 
         private IEnumerable<RequestedAttribute> CreateRequestedAttributes()
@@ -81,4 +87,4 @@ namespace Epson.Controllers.API
         }
     }
 }
-}
+
