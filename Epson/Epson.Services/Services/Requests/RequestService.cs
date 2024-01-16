@@ -146,50 +146,45 @@ namespace Epson.Services.Services.Requests
             return requestDTOs;
         }
 
-        public List<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser)
+        public List<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
         {
             var requests = GetRequests();
 
-            var unfulfilledRequests = requests
+            return requests
                 .Select(x =>
                 {
-                    x.RequestProducts.ForEach(rp =>
+                    foreach (var rp in x.RequestProducts)
                     {
-                        rp.AuthorizedToFulfill = false;
+                        rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isCoverplusUser, isProductUser, isAdminUser);
+                    }
 
-                        if (isCoverplusUser && rp.IsCoverplus)
-                        {
-                            rp.AuthorizedToFulfill = true;
-                        }
-                        else if (isProductUser && rp.FulfillerId == user.Id && !rp.IsCoverplus)
-                        {
-                            rp.AuthorizedToFulfill = true;
-                        }
-
-                        var relatedCategoryIds = _ProductCategoryRepository
-                                                    .Table
-                                                    .Where(pc => pc.ProductId == rp.ProductId)
-                                                    .Select(pc => pc.CategoryId)
-                                                    .ToList();
-
-                        var isBackupFulfiller = _CategoryRepository
-                                        .Table
-                                        .Any(c => relatedCategoryIds.Contains(c.Id) && (c.BackupFulfiller1 == user.Id || c.BackupFulfiller2 == user.Id));
-
-
-                        if (isBackupFulfiller)
-                        {
-                            rp.AuthorizedToFulfill = true;
-                        }
-                    });
                     return x;
                 })
-                .Where(x => x.RequestProducts.Any() 
-                        && x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction
-                        && x.RequestProducts.Any(rp => rp.AuthorizedToFulfill))
+                .Where(x => x.RequestProducts.Any(rp => rp.AuthorizedToFulfill) && x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
                 .ToList();
+        }
 
-            return unfulfilledRequests;
+        private bool DetermineAuthorization(RequestProductDTO rp, ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
+        {
+            if (isAdminUser)
+            {
+                return true;
+            }
+
+            bool isBackupFulfiller = _CategoryRepository.Table
+                .Any(c => _ProductCategoryRepository.Table
+                    .Where(pc => pc.ProductId == rp.ProductId)
+                    .Select(pc => pc.CategoryId)
+                    .Contains(c.Id) && (c.BackupFulfiller1 == user.Id || c.BackupFulfiller2 == user.Id));
+
+            if (rp.IsCoverplus && !isCoverplusUser)
+            {
+                return isBackupFulfiller && !rp.IsCoverplus;
+            }
+
+            return (isCoverplusUser && rp.IsCoverplus) ||
+                   (isProductUser && rp.FulfillerId == user.Id && !rp.IsCoverplus) ||
+                   (isBackupFulfiller && (!rp.IsCoverplus || !isCoverplusUser));
         }
 
 
