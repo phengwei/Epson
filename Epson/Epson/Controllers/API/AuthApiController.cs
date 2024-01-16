@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Authentication;
+using Epson.Infrastructure;
 
 namespace Epson.Controllers.API
 {
@@ -23,28 +24,13 @@ namespace Epson.Controllers.API
             this.config = config;
         }
 
-        [Route("AuthLogin")]
-        public IActionResult Login(string returnUrl = null)
+        [Route("ssoLogin")]
+        public IActionResult ssoLogin(string returnUrl = null)
         {
             var binding = new Saml2RedirectBinding();
             binding.SetRelayStateQuery(new Dictionary<string, string> { { relayStateReturnUrl, returnUrl ?? Url.Content("~/") } });
 
-            return binding.Bind(new Saml2AuthnRequest(config)
-            {
-                //AssertionConsumerServiceIndex = 0,
-                //AttributeConsumingServiceIndex = 0,
-                //AssertionConsumerServiceUrl = new Uri("https://test.com"),
-
-                //ForceAuthn = true,
-                Subject = new Subject { NameID = new NameID { ID = "abcd" } },
-                NameIdPolicy = new NameIdPolicy { AllowCreate = true, Format = "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent" },
-                //Extensions = new AppExtensions(),
-                //RequestedAuthnContext = new RequestedAuthnContext
-                //{
-                //    Comparison = AuthnContextComparisonTypes.Exact,
-                //    AuthnContextClassRef = new string[] { AuthnContextClassTypes.PasswordProtectedTransport.OriginalString },
-                //},
-            }).ToActionResult();
+            return binding.Bind(new Saml2AuthnRequest(config)).ToActionResult();
         }
 
         [Route("AssertionConsumerService")]
@@ -59,7 +45,8 @@ namespace Epson.Controllers.API
                 throw new AuthenticationException($"SAML Response status: {saml2AuthnResponse.Status}");
             }
             httpRequest.Binding.Unbind(httpRequest, saml2AuthnResponse);
-            //await saml2AuthnResponse.CreateSession(HttpContext, claimsTransform: (claimsPrincipal) => ClaimsTransform.Transform(claimsPrincipal));
+            await saml2AuthnResponse.CreateSession(HttpContext,
+                claimsTransform: (claimsPrincipal) => ClaimsTransform.Transform(claimsPrincipal));
 
             var relayStateQuery = httpRequest.Binding.GetRelayStateQuery();
             var returnUrl = relayStateQuery.ContainsKey(relayStateReturnUrl) ? relayStateQuery[relayStateReturnUrl] : Url.Content("~/");
@@ -80,7 +67,7 @@ namespace Epson.Controllers.API
             return binding.Bind(saml2LogoutRequest).ToActionResult();
         }
 
-        [Route("LoggedOut")]
+        [HttpGet("authLoggedout")]
         public IActionResult LoggedOut()
         {
             var httpRequest = Request.ToGenericHttpRequest(validate: true);
@@ -89,7 +76,7 @@ namespace Epson.Controllers.API
             return Redirect(Url.Content("~/"));
         }
 
-        [Route("SingleLogout")]
+        [HttpPost("singleLogout")]
         public async Task<IActionResult> SingleLogout()
         {
             Saml2StatusCodes status;

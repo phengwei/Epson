@@ -12,7 +12,9 @@ namespace Epson.Core.Domain.Enum
 
         Product = 20,
 
-        Coverplus = 30
+        Coverplus = 30,
+
+        Admin = 40
 
     }
 }

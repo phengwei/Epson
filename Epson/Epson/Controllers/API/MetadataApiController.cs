@@ -21,7 +21,7 @@ namespace Epson.Controllers.API
             this.config = config;
         }
 
-        [Route("GetMetadata")]
+        [HttpGet("GetMetadata")]
         public async Task<IActionResult> GetMetadata()
         {
             //var defaultSite = new Uri($"{Request.Scheme}://{Request.Host.ToUriComponent()}/");
@@ -45,30 +45,22 @@ namespace Epson.Controllers.API
                 NameIDFormats = new Uri[] { NameIdentifierFormats.X509SubjectName },
                 AssertionConsumerServices = new AssertionConsumerService[]
                 {
-                    new AssertionConsumerService { Binding = ProtocolBindings.HttpPost, Location = new Uri(defaultSite + "Auth/AssertionConsumerService") },
+                    new AssertionConsumerService { Binding = ProtocolBindings.HttpPost, Location = new Uri(defaultSite + "Auth/acs") },
                 },
                 AttributeConsumingServices = new AttributeConsumingService[]
                 {
-                    new AttributeConsumingService { ServiceName = new ServiceName("Some SP", "en"), RequestedAttributes = CreateRequestedAttributes().ToList() }
+                    new AttributeConsumingService { ServiceName = new ServiceName("Unity Management System", "en"), RequestedAttributes = CreateRequestedAttributes().ToList() }
                 },
 
             };
             entityDescriptor.ContactPersons = new[] {
                 new ContactPerson(ContactTypes.Administrative)
                 {
-                    Company = "Some Company",
-                    GivenName = "Some Given Name",
-                    SurName = "Some Sur Name",
-                    EmailAddress = "some@some-domain.com",
-                    TelephoneNumber = "11111111",
-                },
-                new ContactPerson(ContactTypes.Technical)
-                {
-                    Company = "Some Company",
-                    GivenName = "Some tech Given Name",
-                    SurName = "Some tech Sur Name",
-                    EmailAddress = "sometech@some-domain.com",
-                    TelephoneNumber = "22222222",
+                    Company = "Lavish",
+                    GivenName = "Richard",
+                    SurName = "Ng",
+                    EmailAddress = "richardng@lavishteam.com",
+                    TelephoneNumber = "011-11000508",
                 }
             };
 
