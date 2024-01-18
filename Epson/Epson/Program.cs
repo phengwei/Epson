@@ -42,6 +42,9 @@ using System.Security.Cryptography.X509Certificates;
 using ITfoxtec.Identity.Saml2.MvcCore.Configuration;
 using Autofac.Core;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using Org.BouncyCastle.Asn1.Cmp;
+using Org.BouncyCastle.Asn1.X509;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -97,6 +100,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 //builder.Services.Configure<Saml2Configuration>(builder.Configuration.GetSection("Saml2"));
 builder.Services.Configure<Saml2Configuration>(saml2Configuration =>
 {
+    saml2Configuration.Issuer = builder.Configuration["Saml2:Issuer"];
     saml2Configuration.AllowedAudienceUris.Add(saml2Configuration.Issuer);
 
     var entityDescriptor = new EntityDescriptor();
@@ -110,16 +114,26 @@ builder.Services.Configure<Saml2Configuration>(saml2Configuration =>
     {
         throw new Exception("IdPSsoDescriptor not loaded from metadata.");
     }
+    saml2Configuration.SigningCertificate = new X509Certificate2(
+    builder.Configuration["Saml2:SigningCertificateFile"],
+    builder.Configuration["Saml2:SigningCertificatePassword"]);
+
 });
 builder.Services.AddSingleton<Saml2Configuration>(sp =>
 {
     var saml2Config = new Saml2Configuration
     {
-        SigningCertificate = new X509Certificate2(builder.Configuration["Saml2:SigningCertificateFile"], 
+        SigningCertificate = new X509Certificate2(builder.Configuration["Saml2:SigningCertificateFile"],
         builder.Configuration["Saml2:SigningCertificatePassword"]),
+        //.cert format
+        //SigningCertificate = new X509Certificate2(builder.Configuration["Saml2:SigningCertificateFile"]),
         Issuer = builder.Configuration["Saml2:Issuer"]
     };
-
+    saml2Config.AllowedAudienceUris.Add(saml2Config.Issuer);
+    X509Certificate2 idpCertificate = new X509Certificate2(builder.Configuration["Saml2:SigningCertificateFile"],
+        builder.Configuration["Saml2:SigningCertificatePassword"]);
+    saml2Config.SignatureValidationCertificates.Add(idpCertificate);
+    saml2Config.CertificateValidationMode = System.ServiceModel.Security.X509CertificateValidationMode.None;
     return saml2Config;
 });
 
