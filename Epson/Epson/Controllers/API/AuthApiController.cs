@@ -24,7 +24,7 @@ namespace Epson.Controllers.API
             this.config = config;
         }
 
-        [Route("ssoLogin")]
+        [HttpGet("ssoLogin")]
         public IActionResult ssoLogin(string returnUrl = null)
         {
             var binding = new Saml2RedirectBinding();
@@ -33,22 +33,21 @@ namespace Epson.Controllers.API
             return binding.Bind(new Saml2AuthnRequest(config)).ToActionResult();
         }
 
-        [Route("AssertionConsumerService")]
+        [HttpGet("AssertionConsumerService")]
         public async Task<IActionResult> AssertionConsumerService()
         {
-            var httpRequest = Request.ToGenericHttpRequest(validate: true);
+            var binding = new Saml2PostBinding();
             var saml2AuthnResponse = new Saml2AuthnResponse(config);
 
-            httpRequest.Binding.ReadSamlResponse(httpRequest, saml2AuthnResponse);
+            binding.ReadSamlResponse(Request.ToGenericHttpRequest(), saml2AuthnResponse);
             if (saml2AuthnResponse.Status != Saml2StatusCodes.Success)
             {
                 throw new AuthenticationException($"SAML Response status: {saml2AuthnResponse.Status}");
             }
-            httpRequest.Binding.Unbind(httpRequest, saml2AuthnResponse);
-            await saml2AuthnResponse.CreateSession(HttpContext,
-                claimsTransform: (claimsPrincipal) => ClaimsTransform.Transform(claimsPrincipal));
+            binding.Unbind(Request.ToGenericHttpRequest(), saml2AuthnResponse);
+            await saml2AuthnResponse.CreateSession(HttpContext, claimsTransform: (claimsPrincipal) => ClaimsTransform.Transform(claimsPrincipal));
 
-            var relayStateQuery = httpRequest.Binding.GetRelayStateQuery();
+            var relayStateQuery = binding.GetRelayStateQuery();
             var returnUrl = relayStateQuery.ContainsKey(relayStateReturnUrl) ? relayStateQuery[relayStateReturnUrl] : Url.Content("~/");
             return Redirect(returnUrl);
         }

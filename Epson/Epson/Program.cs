@@ -94,12 +94,27 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.Configure<Saml2Configuration>(builder.Configuration.GetSection("Saml2"));
+//builder.Services.Configure<Saml2Configuration>(builder.Configuration.GetSection("Saml2"));
+builder.Services.Configure<Saml2Configuration>(saml2Configuration =>
+{
+    saml2Configuration.AllowedAudienceUris.Add(saml2Configuration.Issuer);
+
+    var entityDescriptor = new EntityDescriptor();
+    entityDescriptor.ReadIdPSsoDescriptorFromUrl(new Uri(builder.Configuration["Saml2:IdPMetadata"]));
+    if (entityDescriptor.IdPSsoDescriptor != null)
+    {
+        saml2Configuration.SingleSignOnDestination = entityDescriptor.IdPSsoDescriptor.SingleSignOnServices.First().Location;
+        saml2Configuration.SignatureValidationCertificates.AddRange(entityDescriptor.IdPSsoDescriptor.SigningCertificates);
+    }
+    else
+    {
+        throw new Exception("IdPSsoDescriptor not loaded from metadata.");
+    }
+});
 builder.Services.AddSingleton<Saml2Configuration>(sp =>
 {
     var saml2Config = new Saml2Configuration
     {
-
         SigningCertificate = new X509Certificate2(builder.Configuration["Saml2:SigningCertificateFile"], 
         builder.Configuration["Saml2:SigningCertificatePassword"]),
         Issuer = builder.Configuration["Saml2:Issuer"]
