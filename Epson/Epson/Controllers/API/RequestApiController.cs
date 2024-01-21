@@ -107,7 +107,7 @@ namespace Epson.Controllers.API
                 CreatedById = user.Id,
                 UpdatedById = user.Id,
                 Segment = model.Segment,
-                ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction,
+                ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction,
             };
 
             if (_requestService.InsertRequest(request, model.RequestProducts, model.CompetitorInformations, model.RequestSubmissionDetail, model.ProjectInformationModel))
@@ -268,7 +268,7 @@ namespace Epson.Controllers.API
                 return Unauthorized("User not authorized to perform this operation");
 
             if (_requestService.ApproveFirstLevelRequest(_mapper.Map<Request>(request)))
-                return Ok("Request has complete first level approval");
+                return Ok("Request has been approved to proceed");
             else
                 return BadRequest("Failed to set complete first level approval for request");
         }

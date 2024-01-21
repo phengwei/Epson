@@ -44,14 +44,15 @@
         </div>
 
         <!-- Product Dialog -->
-        <ProductDialog :dialogProduct.sync="dialogProduct"
+        <ProductDialog ref="productDialog" :dialogProduct.sync="dialogProduct"
                        :product="product"
                        :isViewMode="isViewMode"
-                       @add-product="addProductRow" />
+                       @add-product="addProductRow"
+                       @edit-product="editProductRow"/>
         <v-card class="mb-5 mt-2">
           <v-card-text>
             <div class="table-actions mb-4">
-              <v-btn v-if="!isViewMode" color="primary" @click="dialogProduct = true">
+              <v-btn v-if="!isViewMode" color="primary" @click="openAddProductDialog">
                 Add New
               </v-btn>
             </div>
@@ -66,7 +67,7 @@
                   <th>Product</th>
                   <th>Quantity</th>
                   <th>Disty Price</th>
-                  <th>Dealer Price</th>
+                  <th>Dealer Price</th> 
                   <th>End User Price</th>
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
@@ -84,6 +85,9 @@
                   <td v-if="isViewMode">{{ product.remarks || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ product.statusStr || 'N/A' }}</td>
                   <td v-if="!isViewMode">
+                    <v-btn small color="primary" @click="openEditProductDialog(product)">
+                      <v-icon>mdi-pencil</v-icon>
+                    </v-btn>
                     <v-btn small color="error" @click="removeProduct(index)">
                       <v-icon>mdi-delete</v-icon>
                     </v-btn>
@@ -94,14 +98,15 @@
           </v-card-text>
         </v-card>
         <!-- Coverplus Dialog -->
-        <CoverplusDialog :dialogCoverplus.sync="dialogCoverplus"
+        <CoverplusDialog ref="coverplusDialog" :dialogCoverplus.sync="dialogCoverplus"
                          :coverplus="coverplus"
                          :isViewMode="isViewMode"
-                         @add-coverplus="addCoverplusRow" />
+                         @add-coverplus="addCoverplusRow"
+                         @edit-coverplus="editCoverplusRow"/>
         <v-card class="mb-5 mt-2">
           <v-card-text>
             <div class="table-actions mb-4">
-              <v-btn v-if="!isViewMode" color="primary" @click="dialogCoverplus = true">
+              <v-btn v-if="!isViewMode" color="primary" @click="openAddCoverplusDialog">
                 Add New
               </v-btn>
             </div>
@@ -134,6 +139,9 @@
                   <td v-if="isViewMode">{{ coverplus.remarks || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ coverplus.statusStr || 'N/A' }}</td>
                   <td v-if="!isViewMode">
+                    <v-btn small color="primary" @click="openEditCoverplusDialog(coverplus)">
+                      <v-icon>mdi-pencil</v-icon>
+                    </v-btn>
                     <v-btn small color="error" @click="removeCoverplus(index)">
                       <v-icon>mdi-delete</v-icon>
                     </v-btn>

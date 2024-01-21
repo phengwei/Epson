@@ -5,13 +5,16 @@ namespace Epson.Core.Domain.Enum
 {
     public enum ApprovalStateEnum
     {
+        [Description("Pending Sales Section Head Approval")]
+        PendingSalesSectionHeadAction = 10,
+
         [Description("Pending Fulfiller Action")]
         PendingFulfillerAction = 20,
 
         [Description("Pending Requester Action")]
         PendingRequesterAction = 30,
 
-        [Description("Pending Sales Section Head Final Action")]
+        [Description("Pending Sales Section Head Final Approval")]
         PendingSalesSectionHeadFinalAction = 40,
 
         [Description("Approved")]

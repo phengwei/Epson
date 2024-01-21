@@ -2,7 +2,7 @@
   <v-dialog v-model="localDialogCoverplus" max-width="500px">
     <v-card>
       <v-card-title>
-        <span class="headline">Add Coverplus</span>
+        <span class="headline">{{ isEditMode ? 'Edit Coverplus' : 'Add Coverplus' }}</span>
       </v-card-title>
       <v-card-text>
         <div class="form-group">
@@ -26,7 +26,9 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" @click="onAddCoverplus">Add</v-btn>
+        <v-btn color="primary" @click="isEditMode ? onEditCoverplus() : onAddCoverplus()">
+          {{ isEditMode ? 'Save Changes' : 'Add' }}
+        </v-btn>
         <v-btn color="secondary" @click="onCancel">Cancel</v-btn>
       </v-card-actions>
     </v-card>
@@ -45,7 +47,8 @@
         localDialogCoverplus: this.dialogCoverplus,
         localCoverplus: { ...this.coverplus },
         localCoverplusOptions: [],
-        categories: []
+        categories: [],
+        isEditMode: false
       };
     },
     watch: {
@@ -54,10 +57,15 @@
       },
       localDialogCoverplus(newVal) {
         this.$emit('update:dialogCoverplus', newVal);
+        if (!newVal) {
+          this.isEditMode = false;
+        }
       },
       coverplus: {
+        immediate: true,
         handler(newVal) {
           this.localCoverplus = { ...newVal };
+          this.isEditMode = newVal && newVal.id != null;
         },
         deep: true,
       },
@@ -87,23 +95,50 @@
           } catch (error) {
             console.error(error);
           }
+        } else {
+          this.localCoverplsOptions = [];
         }
       },
-      onAddCoverplus() {
-        if (this.localCoverplus.category && this.localCoverplus.productId && this.localCoverplus.quantity && this.localCoverplus.dealerPrice && this.localCoverplus.endUserPrice) {
-          this.$emit('add-coverplus', this.localCoverplus);
-          this.localCoverplus = {
-            category: null,
-            productId: null,
-            quantity: null,
-            distyPrice: null,
-            dealerPrice: null,
-            endUserPrice: null,
-          };
+      setEditMode(isEdit, coverplus) {
+        this.isEditMode = isEdit;
+        this.localCoverplus = { ...coverplus};
+        if (coverplus.productId != null) {
+          this.localCoverplus.category = coverplus.category;
+          this.updateCoverplusOptions();
+        }
+      },
+      onEditCoverplus() {
+        if (this.validateCoverplus()) {
+          this.$emit('edit-coverplus', this.localCoverplus);
+          this.resetLocalCoverplus();
           this.localDialogCoverplus = false;
         } else {
           this.$swal('Error', 'Please fill out all coverplus fields', 'error');
         }
+      },
+      onAddCoverplus() {
+        if (this.validateCoverplus()) {
+          this.$emit('add-coverplus', this.localCoverplus);
+          this.resetLocalCoverplus();
+          this.localDialogCoverplus = false;
+        } else {
+          this.$swal('Error', 'Please fill out all coverplus fields', 'error');
+        }
+      },
+      validateCoverplus() {
+        return this.localCoverplus.category && this.localCoverplus.productId
+          && this.localCoverplus.quantity && this.localCoverplus.dealerPrice
+          && this.localCoverplus.endUserPrice;
+      },
+      resetLocalCoverplus() {
+        this.localCoverplus = {
+          category: null,
+          productId: null,
+          quantity: null,
+          distyPrice: null,
+          dealerPrice: null,
+          endUserPrice: null,
+        };
       },
       onCancel() {
         this.localDialogCoverplus = false;

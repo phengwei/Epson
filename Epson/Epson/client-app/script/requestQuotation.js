@@ -81,6 +81,8 @@ export default {
       dealJustification: '',
       deadline: '',
       dialogProduct: false,
+      selectedProduct: null,
+      selectedCoverplus: null,
       dialogCompetitor: false,
       dialogCoverplus: false,
       dialogProductFulfillment: false,
@@ -134,6 +136,51 @@ export default {
     }
   },
   methods: {
+    openAddProductDialog() {
+      this.selectedProduct = {}; 
+      this.dialogProduct = true;
+    },
+    openEditProductDialog(product) {
+      this.selectedProduct = { ...product };
+      this.$nextTick(() => {
+        this.dialogProduct = true;
+        this.$refs.productDialog.setEditMode(true, product);
+      });
+    },
+    editProductRow(editedProduct) {
+      console.log("product", editedProduct);
+      const index = this.productsToShow.findIndex(product => product.id === editedProduct.id);
+      
+      if (index !== -1) {
+        const updatedProduct = { ...editedProduct };
+        updatedProduct.distyPrice = updatedProduct.distyPrice || 0;
+        updatedProduct.dealerPrice = updatedProduct.dealerPrice || 0;
+        updatedProduct.endUserPrice = updatedProduct.endUserPrice || 0;
+        
+        this.$set(this.products, index, updatedProduct);
+        
+        this.showUpdatedProducts(updatedProduct);
+      } else {
+        console.error("Product not found for editing.");
+      }
+      
+      this.dialogProduct = false;
+    },
+    addProductRow(product) {
+      const newProduct = { ...product };
+      newProduct.distyPrice = newProduct.distyPrice || 0;
+      newProduct.dealerPrice = newProduct.dealerPrice || 0;
+      newProduct.endUserPrice = newProduct.endUserPrice || 0;
+      this.products.push(newProduct);
+      this.showAddedProducts(newProduct);
+      this.product.category = null;
+      this.product.productId = null;
+      this.product.quantity = null;
+      this.product.distyPrice = null;
+      this.product.dealerPrice = null;
+      this.product.endUserPrice = null;
+      this.dialogProduct = false;
+    },
     isMode(mode) {
       return this.$route.query[mode] === 'true';
     },
@@ -277,6 +324,36 @@ export default {
     showAddedCompetitors(newCompetitor) {
       this.competitorsToShow.push(newCompetitor);
     },
+    openAddCoverplusDialog() {
+      this.selectedCoverplus = {};
+      this.dialogCoverplus = true;
+    },
+    openEditCoverplusDialog(coverplus) {
+      console.log("awd", coverplus);
+      this.selectedCoverplus = { ...coverplus };
+      this.$nextTick(() => {
+        this.dialogCoverplus = true;
+        this.$refs.coverplusDialog.setEditMode(true, coverplus);
+      });
+    },
+    editCoverplusRow(editedCoverplus) {
+      const index = this.coverplusesToShow.findIndex(coverplus => coverplus.id === editedCoverplus.id);
+
+      if (index !== -1) {
+        const updatedCoverplus = { ...editedCoverplus };
+        updatedCoverplus.distyPrice = updatedCoverplus.distyPrice || 0;
+        updatedCoverplus.dealerPrice = updatedCoverplus.dealerPrice || 0;
+        updatedCoverplus.endUserPrice = updatedCoverplus.endUserPrice || 0;
+
+        this.$set(this.coverplus, index, updatedCoverplus);
+
+        this.showUpdatedCoverplus(updatedCoverplus);
+      } else {
+        console.error("Product not found for editing.");
+      }
+
+      this.dialogProduct = false;
+    },
     addCoverplusRow(coverplus) {
       const newCoverplus = { ...coverplus };
       newCoverplus.distyPrice = newCoverplus.distyPrice || 0;
@@ -295,29 +372,30 @@ export default {
     removeCoverplus(index) {
       this.coverplusesToShow.splice(index, 1);
     },
+    showUpdatedCoverplus(updatedCoverplus) {
+      const index = this.coverplusesToShow.findIndex(coverplus => coverplus.id === updatedCoverplus.id);
+
+      if (index !== -1) {
+        this.$set(this.coverplusesToShow, index, updatedCoverplus);
+      }
+    },
     showAddedCoverpluses(newCoverplus) {
       this.coverplusesToShow.push(newCoverplus);
-    },
-    addProductRow(product) {
-      const newProduct = { ...product };
-      newProduct.distyPrice = newProduct.distyPrice || 0;
-      newProduct.dealerPrice = newProduct.dealerPrice || 0;
-      newProduct.endUserPrice = newProduct.endUserPrice || 0;
-      this.products.push(newProduct);
-      this.showAddedProducts(newProduct);
-      this.product.category = null;
-      this.product.productId = null;
-      this.product.quantity = null;
-      this.product.distyPrice = null;
-      this.product.dealerPrice = null;
-      this.product.endUserPrice = null;
-      this.dialogProduct = false;
     },
     removeProduct(index) {
       this.productsToShow.splice(index, 1);
     },
     showAddedProducts(newProduct) {
       this.productsToShow.push(newProduct);
+    },
+    showUpdatedProducts(updatedProduct) {
+      const index = this.productsToShow.findIndex(product => product.id === updatedProduct.id);
+      
+      if (index !== -1) {
+        this.$set(this.productsToShow, index, updatedProduct);
+      } else {
+        console.error("Product not found for updating in the display array.");
+      }
     },
     findProductName(productId) {
       for (const category of this.categories) {

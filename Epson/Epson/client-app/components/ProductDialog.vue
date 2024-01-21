@@ -2,7 +2,7 @@
   <v-dialog v-model="localDialogProduct" max-width="500px">
     <v-card>
       <v-card-title>
-        <span class="headline">Add Product</span>
+        <span class="headline">{{ isEditMode ? 'Edit Product' : 'Add Product' }}</span>
       </v-card-title>
       <v-card-text>
         <div class="form-group">
@@ -26,7 +26,9 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" @click="onAddProduct">Add</v-btn>
+        <v-btn color="primary" @click="isEditMode ? onEditProduct() : onAddProduct()">
+          {{ isEditMode ? 'Save Changes' : 'Add' }}
+        </v-btn>
         <v-btn color="secondary" @click="onCancel">Cancel</v-btn>
       </v-card-actions>
     </v-card>
@@ -45,7 +47,8 @@
         localDialogProduct: this.dialogProduct,
         localProduct: { ...this.product },
         localProductOptions: [],
-        categories: []
+        categories: [],
+        isEditMode: false
       };
     },
     watch: {
@@ -54,10 +57,16 @@
       },
       localDialogProduct(newVal) {
         this.$emit('update:dialogProduct', newVal);
+        if (!newVal) { 
+          this.isEditMode = false;
+        }
       },
       product: {
+        immediate: true,
         handler(newVal) {
+          console.log("Product prop updated in ProductDialog:", newVal);
           this.localProduct = { ...newVal };
+          this.isEditMode = newVal && newVal.id != null;
         },
         deep: true,
       },
@@ -87,23 +96,52 @@
           } catch (error) {
             console.error(error);
           }
+        } else {
+          this.localProductOptions = [];
         }
       },
-      onAddProduct() {
-        if (this.localProduct.category && this.localProduct.productId && this.localProduct.quantity && this.localProduct.dealerPrice && this.localProduct.endUserPrice) {
-          this.$emit('add-product', this.localProduct);
-          this.localProduct = {
-            category: null,
-            productId: null,
-            quantity: null,
-            distyPrice: null,
-            dealerPrice: null,
-            endUserPrice: null,
-          };
+      setEditMode(isEdit, product) {
+        this.isEditMode = isEdit;
+        this.localProduct = { ...product };
+        console.log("edited product", product);
+        if (product.productId != null) {
+          this.localProduct.category = product.category;
+          this.updateProductOptions(); 
+        }
+      },
+      onEditProduct() {
+        console.log("edit");
+        if (this.validateProduct()) {
+          this.$emit('edit-product', this.localProduct);
+          this.resetLocalProduct();
           this.localDialogProduct = false;
         } else {
           this.$swal('Error', 'Please fill out all product fields', 'error');
         }
+      },
+      onAddProduct() {
+        if (this.validateProduct()) {
+          this.$emit('add-product', this.localProduct);
+          this.resetLocalProduct();
+          this.localDialogProduct = false;
+        } else {
+          this.$swal('Error', 'Please fill out all product fields', 'error');
+        }
+      },
+      validateProduct() {
+        return this.localProduct.category && this.localProduct.productId &&
+          this.localProduct.quantity && this.localProduct.dealerPrice &&
+          this.localProduct.endUserPrice;
+      },
+      resetLocalProduct() {
+        this.localProduct = {
+          category: null,
+          productId: null,
+          quantity: null,
+          distyPrice: null,
+          dealerPrice: null,
+          endUserPrice: null,
+        };
       },
       onCancel() {
         this.localDialogProduct = false;
