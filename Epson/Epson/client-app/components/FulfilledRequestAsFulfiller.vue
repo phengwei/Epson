@@ -48,7 +48,7 @@
           quantity: product.quantity,
           budget: product.endUserPrice,
           fulfilledPrice: product.dealerPrice,
-          fulfilledDate: moment(product.fulfilledDate).format('MMMM Do YYYY')
+          fulfilledDate: moment(product.fulfilledDate).format('DD MMM YY HH:mm')
         }));
       }
     },
@@ -62,7 +62,7 @@
 
           const requests = response.data.data.map(item => ({
             ...item,
-            createdOnUTC: moment(item.createdOnUTC).format('MMMM Do YYYY')
+            createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm')
           }));
 
           const request = requests.find(req => req.id === requestId);

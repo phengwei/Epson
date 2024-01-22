@@ -165,9 +165,9 @@
           this.products = result.data.data.map(product => {
             return {
               ...product,
-              createdOnUTC: moment(product.createdOnUTC).format('MMMM Do YYYY')
+              createdOnUTC: moment(product.createdOnUTC).format('DD MMM YY HH:mm')
             };
-          }).sort((a, b) => moment(b.createdOnUTC, 'MMMM Do YYYY').valueOf() - moment(a.createdOnUTC, 'MMMM Do YYYY').valueOf());
+          }).sort((a, b) => moment(b.createdOnUTC, 'DD MMM YY HH:mm').valueOf() - moment(a.createdOnUTC, 'DD MMM YY HH:mm').valueOf());
 
           this.loading = false;
         });

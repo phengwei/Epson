@@ -54,7 +54,7 @@
           });
       },
       formatDate(dateString) {
-        return moment(dateString).format('MMM DD, YYYY, h:mm:ss a');
+        return moment(dateString).format('DD MMM YY HH:mm');
       }
     },
   };

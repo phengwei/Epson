@@ -57,7 +57,7 @@
           .then(response => {
             this.requests = response.data.data.map(item => ({
               ...item,
-              createdOnUTC: moment(item.createdOnUTC).format('MMMM Do YYYY')    
+              createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm')    
             }));
           })
           .catch(error => {
