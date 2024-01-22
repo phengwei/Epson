@@ -134,6 +134,7 @@ namespace Epson.Factories
                         RequestProductsModel = request.RequestProducts.Select(rp => new RequestProductModel
                         {
                             Id = rp.Id,
+                            CreatedOnUTC = rp.CreatedOnUTC,
                             DistyPrice = rp.DistyPrice,
                             DealerPrice = rp.DealerPrice,
                             EndUserPrice = rp.EndUserPrice,

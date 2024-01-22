@@ -2,7 +2,7 @@
   <v-dialog v-model="localDialogCompetitor" max-width="500px">
     <v-card>
       <v-card-title>
-        <span class="headline">Add Competitor Information</span>
+        <span class="headline">Competitor Information</span>
       </v-card-title>
       <v-card-text>
         <div class="form-group">

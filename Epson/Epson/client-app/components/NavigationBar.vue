@@ -14,7 +14,7 @@
           <!-- Primary Navbar items -->
           <div class="hidden md:flex items-center w-full justify-end " v-if="isAuthenticated">
             <nuxt-link to="/user"
-                       class="w-40  h-full hover:bg-[#003399] flex justify-center items-center  font-semibold transition duration-300">User</nuxt-link>
+                       class="w-40  h-full hover:bg-[#003399] flex justify-center items-center  font-semibold transition duration-300">{{ loggedInUser.userName }}</nuxt-link>
             <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Product')" to="/reporting"
                        class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Report</nuxt-link>
 
@@ -39,6 +39,10 @@
                            class="block px-4 py-2 hover:bg-[#003399] hover:text-white">SLA Configuration</nuxt-link>
                 <nuxt-link to="/productAuditTrail"
                            class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Product Audit Trail</nuxt-link>
+                <nuxt-link to="/productDashboard"
+                           class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Product Dashboard</nuxt-link>
+                <nuxt-link to="/salesDashboard"
+                           class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Sales Dashboard</nuxt-link>
               </div>
             </div>
 

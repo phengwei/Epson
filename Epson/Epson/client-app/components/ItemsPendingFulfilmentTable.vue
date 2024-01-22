@@ -18,6 +18,7 @@
     <template v-slot:item="{ item }">
       <tr v-if="item.authorizedToFulfill && item.status === RequestProductStatusEnum.Pending">
         <td>{{ item.requestId }}</td>
+        <td>{{ item.createdOnUTC }}</td>
         <td>{{ item.createdBy }}</td>
         <td>{{ item.productName }}</td>
         <td>{{ item.endUserPrice }}</td>
@@ -31,6 +32,7 @@
 </template>
 
 <script>
+  import moment from 'moment';
   import ProductFulfillmentDialog from '~/components/ProductFulfillmentDialog.vue';
   import { RequestProductStatusEnum } from '~/script/requestProductStatusEnum.js';
   export default {
@@ -42,7 +44,8 @@
       return {
         dialogProductFulfillment: false,
         headers: [
-          { text: 'ID', value: 'id' },
+          { text: 'Request #', value: 'id' },
+          { text: 'Requested On', value: 'createdOnUTC' },
           { text: 'Requested By', value: 'createdBy' },
           { text: 'Product', value: 'productName' },
           { text: 'Budget', value: 'budget' },
@@ -104,10 +107,12 @@
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`).then(result => {
           this.itemsPendingFulfilment = [];
           result.data.data.forEach(item => {
+            console.log("item", item);
             item.requestProductsModel.forEach(product => {
               const newItem = {
                 ...item,
                 ...product,
+                createdOnUTC: moment(product.createdOnUTC).format('DD MMM YY HH:mm'),
                 productName: product.productName,
                 distyPrice: product.distyPrice,
                 dealerPrice: product.dealerPrice,

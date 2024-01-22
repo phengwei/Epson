@@ -2,7 +2,7 @@
   <v-dialog v-model="localDialogProduct" max-width="500px">
     <v-card>
       <v-card-title>
-        <span class="headline">{{ isEditMode ? 'Edit Product' : 'Add Product' }}</span>
+        <span class="headline">{{ isEditMode ? 'Edit Main Unit' : 'Add Main Unit' }}</span>
       </v-card-title>
       <v-card-text>
         <div class="form-group">

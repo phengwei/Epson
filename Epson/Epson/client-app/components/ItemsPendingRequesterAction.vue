@@ -150,7 +150,7 @@
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingrequesteritem`).then(result => {
           for (const requests in result.data.data) {
-            result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('MMMM Do YYYY');
+            result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('DD MMM YY HH:mm');
           }
           this.requests = result.data.data
           this.loading = false
@@ -160,9 +160,9 @@
         this.editedIndex = this.requests.indexOf(item)
         this.editedItem = { ...item };
         this.editedItem.requestProductsModel.forEach(product => {
-          product.fulfilledDate = moment(product.fulfilledDate).format('MMMM Do YYYY');
-          product.tenderDate = moment(product.tenderDate).format('MMMM Do YYYY');
-          product.deliveryDate = moment(product.deliveryDate).format('MMMM Do YYYY');
+          product.fulfilledDate = moment(product.fulfilledDate).format('DD MMM YY HH:mm');
+          product.tenderDate = moment(product.tenderDate).format('DD MMM YY HH:mm');
+          product.deliveryDate = moment(product.deliveryDate).format('DD MMM YY HH:mm');
         });
         this.dialog = true
       },
