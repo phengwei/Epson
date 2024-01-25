@@ -181,7 +181,7 @@ namespace Epson.Controllers.API
             var slaSetting = queryModel.Data;
             try
             {
-                var appSettingsPath = Path.Combine(_hostEnvironment.ContentRootPath, "appsettings.Development.json");
+                var appSettingsPath = Path.Combine(_hostEnvironment.ContentRootPath, "appsettings.json");
 
                 var json = System.IO.File.ReadAllText(appSettingsPath);
                 dynamic jsonObj = Newtonsoft.Json.JsonConvert.DeserializeObject(json);

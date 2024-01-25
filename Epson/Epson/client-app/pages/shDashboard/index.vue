@@ -1,23 +1,23 @@
 <template>
-  <main class="dashboard-header"  v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus')">
+  <main class="dashboard-header" v-if="loggedInUser.roles.includes('Sales Section Head')">
     <div class="grid-container">
       <div class="row">
         <div class="grid-item">
           <v-app>
-            <ItemsPendingFulfilmentTable />
+            <ItemsPendingRequesterAction />
           </v-app>
         </div>
         <div class="grid-item">
           <v-app>
-            <FulfilledRequestAsFulfiller />
+            <ItemsPendingFulfillmentAsRequester />
           </v-app>
         </div>
       </div>
       <div class="row">
         <div class="grid-item full-width request-table">
           <v-app>
-            <FulfillmentRequestSummary />
-          </v-app>-
+            <SalesRequestSummary />
+          </v-app>
         </div>
       </div>
     </div>
@@ -26,9 +26,9 @@
 
 <script>
   import { mapGetters } from 'vuex';
-  import ItemsPendingFulfilmentTable from '~/components/ItemsPendingFulfilmentTable.vue';
-  import FulfillmentRequestSummary from '~/components/FulfillmentRequestSummary.vue';
-  import FulfilledRequestAsFulfiller from '~/components/FulfilledRequestAsFulfiller.vue';
+  import ItemsPendingRequesterAction from '~/components/ItemsPendingRequesterAction.vue';
+  import ItemsPendingFulfillmentAsRequester from '~/components/ItemsPendingFulfillmentAsRequester.vue';
+  import SalesRequestSummary from '~/components/SalesRequestSummary.vue';
 
   export default {
     name: 'ProductDashboard',
@@ -40,9 +40,9 @@
       return {};
     },
     components: {
-      ItemsPendingFulfilmentTable,
-      FulfillmentRequestSummary,
-      FulfilledRequestAsFulfiller
+      ItemsPendingRequesterAction,
+      ItemsPendingFulfillmentAsRequester,
+      SalesRequestSummary
     }
   };
 </script>
@@ -52,8 +52,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 90%; 
-    margin: 0 auto; 
+    width: 90%;
+    margin: 0 auto;
   }
 
   .row {

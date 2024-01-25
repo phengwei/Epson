@@ -453,5 +453,91 @@ namespace Epson.Controllers.API
 
             return Ok(response);
         }
+
+        [HttpGet("getpendingsalessectionheaditem")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        public async Task<IActionResult> GetPendingSalesSectionHeadItem()
+        {
+            var response = new GenericResponseModel<List<RequestModel>>();
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString());
+
+
+            var requests = _requestService.GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction)
+                                                                    .ToList();
+
+            var requestModels = _requestModelFactory.PrepareRequestModels(requests);
+
+            response.Data = requestModels;
+
+            return Ok(response);
+        }
+
+        [HttpGet("getcompletedrequests")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        public async Task<IActionResult> GetCompletedRequests()
+        {
+            var response = new GenericResponseModel<List<RequestModel>>();
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString());
+
+            var requests = _requestService.GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.Approved)
+                                                                    .ToList();
+
+            var requestModels = _requestModelFactory.PrepareRequestModels(requests);
+
+            response.Data = requestModels;
+
+            return Ok(response);
+        }
+
+        [HttpGet("getnumberofrequestssummary")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        public async Task<IActionResult> GetNumberOfRequestsSummary(DateTime startDate, DateTime endDate, string granularity)
+        {
+            var response = new GenericResponseModel<List<NoOfRequestSummary>>();
+
+            var user = _workContext.CurrentUser;
+
+            var requestSummary = _requestService.GetTotalRequestSummary(startDate, endDate, granularity, user.Id);
+
+            response.Data = requestSummary;
+
+            return Ok(response);
+        }
+
+        [HttpGet("getnumberofpendingrequestssummary")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        public async Task<IActionResult> GetNumberOfPendingRequestsSummary(DateTime startDate, DateTime endDate, string granularity)
+        {
+            var response = new GenericResponseModel<List<NoOfPendingRequestSummary>>();
+
+            var user = _workContext.CurrentUser;
+
+            var requestSummary = _requestService.GetTotalPendingRequestSummary(startDate, endDate, granularity, user.Id);
+
+            response.Data = requestSummary;
+
+            return Ok(response);
+        }
+
+        [HttpGet("getnumberofcompletedrequestssummary")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        public async Task<IActionResult> GetNumberOfCompletedRequestsSummary(DateTime startDate, DateTime endDate, string granularity)
+        {
+            var response = new GenericResponseModel<List<NoOfCompletedRequestSummary>>();
+
+            var user = _workContext.CurrentUser;
+
+            var requestSummary = _requestService.GetTotalCompletedRequestSummary(startDate, endDate, granularity, user.Id);
+
+            response.Data = requestSummary;
+
+            return Ok(response);
+        }
     }
 }

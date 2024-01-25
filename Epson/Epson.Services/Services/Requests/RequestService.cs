@@ -917,6 +917,136 @@ namespace Epson.Services.Services.Requests
             return salesSummary;
         }
 
+        public List<NoOfRequestSummary> GetTotalRequestSummary(DateTime startDate, DateTime endDate, string granularity, string userId)
+        {
+            var requests = GetRequests();
+            var filteredRequests = requests.
+                Where(r => r.CreatedOnUTC >= startDate
+                && r.CreatedOnUTC <= endDate);
+
+            List<NoOfRequestSummary> requestSummary;
+
+            switch (granularity.ToLower())
+            {
+                case "day":
+                    requestSummary = filteredRequests.GroupBy(r => r.CreatedOnUTC.Date)
+                                .Select(group => new NoOfRequestSummary
+                                {
+                                    Period = group.Key.ToString("MMMM dd, yyyy"),
+                                    Requests = group.Count()
+                                }).ToList();
+                    break;
+                case "week":
+                    requestSummary = filteredRequests.GroupBy(r => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(r.CreatedOnUTC.Date, CalendarWeekRule.FirstDay, DayOfWeek.Sunday))
+                                .Select(group => new NoOfRequestSummary
+                                {
+                                    Period = "Week " + group.Key.ToString(),
+                                    Requests = group.Count()
+                                }).ToList();
+                    break;
+                case "month":
+                    requestSummary = filteredRequests.GroupBy(r => r.CreatedOnUTC.Date.Month)
+                                .Select(group => new NoOfRequestSummary
+                                {
+                                    Period = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(group.Key),
+                                    Requests = group.Count()
+                                }).ToList();
+                    break;
+                default:
+                    throw new ArgumentException("Invalid granularity. Allowed values are 'day', 'week', 'month'");
+            }
+
+            return requestSummary;
+        }
+
+        public List<NoOfPendingRequestSummary> GetTotalPendingRequestSummary(DateTime startDate, DateTime endDate, string granularity, string userId)
+        {
+            var requests = GetRequests();
+            var filteredRequests = requests.
+                Where(r => r.CreatedOnUTC >= startDate
+                && r.CreatedOnUTC <= endDate
+                && r.ApprovalState == (int)ApprovalStateEnum.PendingRequesterAction
+                && r.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction
+                && r.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction);
+
+            List<NoOfPendingRequestSummary> requestSummary;
+
+            switch (granularity.ToLower())
+            {
+                case "day":
+                    requestSummary = filteredRequests.GroupBy(r => r.CreatedOnUTC.Date)
+                                .Select(group => new NoOfPendingRequestSummary
+                                {
+                                    Period = group.Key.ToString("MMMM dd, yyyy"),
+                                    PendingRequests = group.Count()
+                                }).ToList();
+                    break;
+                case "week":
+                    requestSummary = filteredRequests.GroupBy(r => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(r.CreatedOnUTC.Date, CalendarWeekRule.FirstDay, DayOfWeek.Sunday))
+                                .Select(group => new NoOfPendingRequestSummary
+                                {
+                                    Period = "Week " + group.Key.ToString(),
+                                    PendingRequests = group.Count()
+                                }).ToList();
+                    break;
+                case "month":
+                    requestSummary = filteredRequests.GroupBy(r => r.CreatedOnUTC.Date.Month)
+                                .Select(group => new NoOfPendingRequestSummary
+                                {
+                                    Period = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(group.Key),
+                                    PendingRequests = group.Count()
+                                }).ToList();
+                    break;
+                default:
+                    throw new ArgumentException("Invalid granularity. Allowed values are 'day', 'week', 'month'");
+            }
+
+            return requestSummary;
+        }
+
+        public List<NoOfCompletedRequestSummary> GetTotalCompletedRequestSummary(DateTime startDate, DateTime endDate, string granularity, string userId)
+        {
+            var requests = GetRequests();
+            var filteredRequests = requests.
+                Where(r => r.CreatedOnUTC >= startDate
+                && r.CreatedOnUTC <= endDate
+                && r.ApprovalState == (int)ApprovalStateEnum.Approved);
+
+            List<NoOfCompletedRequestSummary> requestSummary;
+
+            switch (granularity.ToLower())
+            {
+                case "day":
+                    requestSummary = filteredRequests.GroupBy(r => r.CreatedOnUTC.Date)
+                                .Select(group => new NoOfCompletedRequestSummary
+                                {
+                                    Period = group.Key.ToString("MMMM dd, yyyy"),
+                                    CompletedRequests = group.Count()
+                                }).ToList();
+                    break;
+                case "week":
+                    requestSummary = filteredRequests.GroupBy(r => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(r.CreatedOnUTC.Date, CalendarWeekRule.FirstDay, DayOfWeek.Sunday))
+                                .Select(group => new NoOfCompletedRequestSummary
+                                {
+                                    Period = "Week " + group.Key.ToString(),
+                                    CompletedRequests = group.Count()
+                                }).ToList();
+                    break;
+                case "month":
+                    requestSummary = filteredRequests.GroupBy(r => r.CreatedOnUTC.Date.Month)
+                                .Select(group => new NoOfCompletedRequestSummary
+                                {
+                                    Period = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(group.Key),
+                                    CompletedRequests = group.Count()
+                                }).ToList();
+                    break;
+                default:
+                    throw new ArgumentException("Invalid granularity. Allowed values are 'day', 'week', 'month'");
+            }
+
+            return requestSummary;
+        }
+
         public TimeSpan CalculateResolutionTime(DateTime approvedTime, DateTime ticketCreateTime, List<SLAStaffLeaveDTO> staffLeaves, List<SLAHolidayDTO> holidays)
         {
             TimeSpan resolutionTime = approvedTime - ticketCreateTime;
