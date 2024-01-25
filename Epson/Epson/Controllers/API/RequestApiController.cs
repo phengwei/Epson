@@ -82,7 +82,7 @@ namespace Epson.Controllers.API
             else
                 requests = _requestService.GetRequests().Where(x => x.CreatedById == currentUser.Id).ToList();
 
-            var requestModels = _requestModelFactory.PrepareRequestModels(requests);
+            var requestModels = _requestModelFactory.PrepareRequestModels(requests.OrderByDescending(x => x.CreatedOnUTC).ToList());
 
             response.Data = requestModels;
 

@@ -19,7 +19,7 @@
       } else if (userRoles.includes('Sales')) {
         this.$router.push('/salesDashboard');
       } else if (userRoles.includes('Sales Section Head')) {
-        this.$router.push('/request');
+        this.$router.push('/shDashboard');
       } else {
         this.$router.push('/reporting'); 
       }

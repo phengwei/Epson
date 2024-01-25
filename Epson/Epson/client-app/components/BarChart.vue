@@ -6,13 +6,12 @@
     mixins: [mixins.reactiveProp],
     props: ['chartData', 'options'],
     mounted() {
-      this.renderChart(this.chartData, this.options)
+      this.renderChart(this.chartData, this.options);
+    },
+    watch: {
+      chartData() {
+        this.$data._chart.update(); 
+      }
     }
   }
 </script>
-
-<style>
-  #this.$el {
-    max-width: 800px;
-  }
-</style>

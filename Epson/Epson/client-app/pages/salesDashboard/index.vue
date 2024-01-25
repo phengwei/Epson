@@ -31,7 +31,7 @@
   import SalesRequestSummary from '~/components/SalesRequestSummary.vue';
 
   export default {
-    name: 'ProductDashboard',
+    name: 'SalesDashboard',
     middleware: 'auth',
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser'])

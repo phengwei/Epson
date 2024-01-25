@@ -965,9 +965,9 @@ namespace Epson.Services.Services.Requests
             var filteredRequests = requests.
                 Where(r => r.CreatedOnUTC >= startDate
                 && r.CreatedOnUTC <= endDate
-                && r.ApprovalState == (int)ApprovalStateEnum.PendingRequesterAction
-                && r.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction
-                && r.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction);
+                && (r.ApprovalState == (int)ApprovalStateEnum.PendingRequesterAction
+                || r.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction
+                || r.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction));
 
             List<NoOfPendingRequestSummary> requestSummary;
 

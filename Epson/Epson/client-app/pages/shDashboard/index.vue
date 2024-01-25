@@ -2,21 +2,21 @@
   <main class="dashboard-header" v-if="loggedInUser.roles.includes('Sales Section Head')">
     <div class="grid-container">
       <div class="row">
-        <div class="grid-item">
+        <div class="grid-item full-width margin">
           <v-app>
-            <ItemsPendingRequesterAction />
-          </v-app>
-        </div>
-        <div class="grid-item">
-          <v-app>
-            <ItemsPendingFulfillmentAsRequester />
+            <ItemsPendingSalesSectionHeadAction />
           </v-app>
         </div>
       </div>
       <div class="row">
-        <div class="grid-item full-width request-table">
+        <div class="grid-item">
           <v-app>
-            <SalesRequestSummary />
+            <PendingRequestSummary />
+          </v-app>
+        </div>
+        <div class="grid-item">
+          <v-app>
+            <CompletedRequestSummary />
           </v-app>
         </div>
       </div>
@@ -26,12 +26,12 @@
 
 <script>
   import { mapGetters } from 'vuex';
-  import ItemsPendingRequesterAction from '~/components/ItemsPendingRequesterAction.vue';
-  import ItemsPendingFulfillmentAsRequester from '~/components/ItemsPendingFulfillmentAsRequester.vue';
-  import SalesRequestSummary from '~/components/SalesRequestSummary.vue';
+  import ItemsPendingSalesSectionHeadAction from '~/components/ItemsPendingSalesSectionHeadAction.vue';
+  import PendingRequestSummary from '~/components/PendingRequestSummary.vue';
+  import CompletedRequestSummary from '~/components/CompletedRequestSummary.vue';
 
   export default {
-    name: 'ProductDashboard',
+    name: 'SHDashboard',
     middleware: 'auth',
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser'])
@@ -40,9 +40,9 @@
       return {};
     },
     components: {
-      ItemsPendingRequesterAction,
-      ItemsPendingFulfillmentAsRequester,
-      SalesRequestSummary
+      ItemsPendingSalesSectionHeadAction,
+      PendingRequestSummary,
+      CompletedRequestSummary
     }
   };
 </script>
@@ -74,6 +74,10 @@
     width: 100%;
   }
 
+  .margin{
+      margin-bottom: 5%;
+      margin-top: 1%;
+  }
   .v-application--wrap {
     min-height: 20vh !important;
   }

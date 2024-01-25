@@ -49,11 +49,11 @@
     },
     methods: {
       async fetchData() {
-        const response = await this.$axios.get(`${this.$config.restUrl}/api/request/getrequestsummary?startDate=${this.startDate}&endDate=${this.endDate}&granularity=${this.granularity}`);
+        const response = await this.$axios.get(`${this.$config.restUrl}/api/request/getnumberofcompletedrequestssummary?startDate=${this.startDate}&endDate=${this.endDate}&granularity=${this.granularity}`);
         const responseData = response.data.data;
 
         this.$set(this.chartData, 'labels', responseData.map(item => item.period));
-        this.$set(this.chartData.datasets[0], 'data', responseData.map(item => item.sales));
+        this.$set(this.chartData.datasets[0], 'data', responseData.map(item => item.completedRequests));
 
         this.chartKey++;
       }

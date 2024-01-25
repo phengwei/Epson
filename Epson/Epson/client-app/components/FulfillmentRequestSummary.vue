@@ -1,6 +1,6 @@
 <template>
   <div>
-    <bar-chart v-if="chartData" :chart-data="chartData" :options="chartOptions" />
+    <bar-chart :key="chartKey" v-if="chartData" :chart-data="chartData" :options="chartOptions" />
 
     <div>
       <label>Start Date: <input type="date" v-model="startDate" /></label>
@@ -28,14 +28,24 @@
     },
     data() {
       return {
-        startDate: '2023-05-01',
-        endDate: '2023-12-31',
+        startDate: '',
+        endDate: '',
         granularity: 'day',
-        chartData: null,
+        chartData: {
+          labels: [],
+          datasets: [{
+            label: 'Number of Completed Requests',
+            data: [],
+            backgroundColor: 'rgba(75,192,192,0.4)',
+            borderColor: 'rgba(75,192,192,1)',
+            borderWidth: 1
+          }]
+        },
         chartOptions: {
           responsive: true,
           maintainAspectRatio: false
-        }
+        },
+        chartKey: 0
       }
     },
     methods: {
@@ -43,24 +53,21 @@
         const response = await this.$axios.get(`${this.$config.restUrl}/api/request/getfulfillmentsummary?startDate=${this.startDate}&endDate=${this.endDate}&granularity=${this.granularity}`);
         const responseData = response.data.data;
 
-        const chartData = {
-          labels: responseData.map(item => item.period),  
-          datasets: [
-            {
-              label: 'Fulfillments',
-              data: responseData.map(item => item.fulfillments),
-              backgroundColor: 'rgba(75,192,192,0.4)', 
-              borderColor: 'rgba(75,192,192,1)',
-              borderWidth: 1
-            }
-          ]
-        };
+        this.$set(this.chartData, 'labels', responseData.map(item => item.period));
+        this.$set(this.chartData.datasets[0], 'data', responseData.map(item => item.fulfillments));
 
-        this.chartData = chartData;
+        this.chartKey++;
       }
     },
     created() {
-      this.fetchData()
+      const now = new Date();
+      const timezoneOffset = now.getTimezoneOffset() * 60000;
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      this.startDate = new Date(startOfMonth - timezoneOffset).toISOString().split('T')[0];
+
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      this.endDate = new Date(endOfMonth.getTime() - timezoneOffset).toISOString().split('T')[0];
+
     }
   }
 </script>

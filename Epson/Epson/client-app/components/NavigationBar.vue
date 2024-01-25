@@ -43,6 +43,8 @@
                            class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Product Dashboard</nuxt-link>
                 <nuxt-link to="/salesDashboard"
                            class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Sales Dashboard</nuxt-link>
+                <nuxt-link to="/shDashboard"
+                           class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Sales Section Dashboard</nuxt-link>
               </div>
             </div>
 

@@ -13,7 +13,7 @@
           <option value="month">Month</option>
         </select>
       </label>
-      <button @click="fetchData">Fetch Data</button>
+      <button @click="fetchData" class="mb-2">Fetch Data</button>
     </div>
   </div>
 </template>
@@ -33,7 +33,7 @@
         chartData: {
           labels: [],
           datasets: [{
-            label: 'Number of Completed Requests',
+            label: 'Number of Pending Requests',
             data: [],
             backgroundColor: 'rgba(75,192,192,0.4)',
             borderColor: 'rgba(75,192,192,1)',
@@ -47,13 +47,14 @@
         chartKey: 0
       }
     },
+
     methods: {
       async fetchData() {
-        const response = await this.$axios.get(`${this.$config.restUrl}/api/request/getrequestsummary?startDate=${this.startDate}&endDate=${this.endDate}&granularity=${this.granularity}`);
+        const response = await this.$axios.get(`${this.$config.restUrl}/api/request/getnumberofpendingrequestssummary?startDate=${this.startDate}&endDate=${this.endDate}&granularity=${this.granularity}`);
         const responseData = response.data.data;
 
         this.$set(this.chartData, 'labels', responseData.map(item => item.period));
-        this.$set(this.chartData.datasets[0], 'data', responseData.map(item => item.sales));
+        this.$set(this.chartData.datasets[0], 'data', responseData.map(item => item.pendingRequests));
 
         this.chartKey++;
       }
@@ -70,3 +71,4 @@
     }
   }
 </script>
+
