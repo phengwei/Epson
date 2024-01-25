@@ -7,48 +7,13 @@
         <!-- Fulfiller Dialog -->
         <ProductFulfillmentDialog :editedItem="editedItem"
                                   :dialogProductFulfillment.sync="dialogProductFulfillment" />
-        <div class="d-flex justify-end">
-          <v-btn v-if="isMode('isFulfill')"
-                 class="mr-2"
-                 color="primary"
-                 @click="fulfillNonCoverplusItem()">
-            Fulfill request
-          </v-btn>
-          <v-btn v-if="isMode('isFulfillCoverplus')"
-                 class="mr-2"
-                 color="primary"
-                 @click="fulfillCoverplusItem()">
-            Fulfill coverplus request
-          </v-btn>
-          <v-btn v-if="isMode('isApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadAction"
-                 class="mr-2"
-                 color="primary"
-                 @click="approveQuotation()">
-            Approve Quotation
-          </v-btn>
-          <v-btn v-if="isMode('view')"
-                 class="mr-2"
-                 color="primary" @click="exportToExcel">Export</v-btn>
-          <v-btn v-if="isMode('isFinalApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadFinalAction"
-                 class="mr-2"
-                 color="primary"
-                 @click="approveRequest()">
-            Approve Request
-          </v-btn>
-          <v-btn v-if="isMode('amendable')"
-                 class="mr-2"
-                 color="primary"
-                 @click="confirmAmmendQuotation()">
-            Set Request to Amend
-          </v-btn>
-        </div>
 
         <!-- Product Dialog -->
         <ProductDialog ref="productDialog" :dialogProduct.sync="dialogProduct"
                        :product="product"
                        :isViewMode="isViewMode"
                        @add-product="addProductRow"
-                       @edit-product="editProductRow"/>
+                       @edit-product="editProductRow" />
         <v-card class="mb-5 mt-2">
           <v-card-text>
             <div class="table-actions mb-4">
@@ -67,7 +32,7 @@
                   <th>Product</th>
                   <th>Quantity</th>
                   <th>Disty Price</th>
-                  <th>Dealer Price</th> 
+                  <th>Dealer Price</th>
                   <th>End User Price</th>
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
@@ -102,7 +67,7 @@
                          :coverplus="coverplus"
                          :isViewMode="isViewMode"
                          @add-coverplus="addCoverplusRow"
-                         @edit-coverplus="editCoverplusRow"/>
+                         @edit-coverplus="editCoverplusRow" />
         <v-card class="mb-5 mt-2">
           <v-card-text>
             <div class="table-actions mb-4">
@@ -385,8 +350,16 @@
         <button type="submit" @click="acceptDeal" v-if="isMode('dealable')">Accept Deal</button>
         <button type="submit" @click="rejectDeal" v-if="isMode('dealable')">Reject Deal</button>
         <button type="submit" @click="exitDeal" v-if="isMode('amendable')">Close Deal</button>
+        <button type="submit" @click="fulfillNonCoverplusItem" v-if="isMode('isFulfill')">Fulfill Request</button>
+        <button type="submit" @click="fulfillCoverplusItem" v-if="isMode('isFulfillCoverplus')">Fulfill Coverplus Request</button>
+        <button type="submit" @click="approveRequest" v-if="isMode('isFinalApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadFinalAction">Approve Request</button>
+        <button type="submit" @click="confirmAmmendQuotation" v-if="isMode('amendable')">Set Request to Amend</button>
+        <button type="submit" @click="approveQuotation()" v-if="isMode('isApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadAction">Approve Quotation</button>
         <button type="submit" @click="redirectToRequest" v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head')">
           Return to Request
+        </button>
+        <button type="submit" @click="exportToExcel" v-if="isMode('view')">
+          Export
         </button>
       </v-card-text>
     </v-card>
