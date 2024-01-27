@@ -136,7 +136,7 @@
         let queryParameters = { view: true, request: JSON.stringify(request) };
 
         if (request.approvalState === ApprovalStateEnum.PendingRequesterAction) {
-          queryParameters = { ...queryParameters, dealable: true };
+          queryParameters = { ...queryParameters, dealable: true, amendable: true };
         } else if (request.approvalState === ApprovalStateEnum.RejectedByFulfiller) {
           queryParameters = { ...queryParameters, amendable: true };
         }

@@ -344,14 +344,24 @@ namespace Epson.Controllers.API
 
 
         [HttpGet("getpendingrequesteritem")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin")]
         public async Task<IActionResult> GetPendingRequesterItem()
         {
             var response = new GenericResponseModel<List<RequestModel>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+            var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString());
 
-            var requests = _requestService.GetRequests().Where(x => x.CreatedById == user.Id && x.ApprovalState != (int)ApprovalStateEnum.Cancelled).ToList();
+            List<RequestDTO> requests = new List<RequestDTO>();
+
+            if (isAdminUser)
+            {
+                requests = _requestService.GetRequests().Where(x => x.ApprovalState != (int)ApprovalStateEnum.Cancelled).ToList();
+            }
+            else
+            {
+                requests = _requestService.GetRequests().Where(x => x.CreatedById == user.Id && x.ApprovalState != (int)ApprovalStateEnum.Cancelled).ToList();
+            }
 
             var pendingRequests = requests.Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingRequesterAction                      
                                                 || x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller)

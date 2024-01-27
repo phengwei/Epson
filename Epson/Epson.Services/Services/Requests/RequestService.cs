@@ -315,6 +315,10 @@ namespace Epson.Services.Services.Requests
                     requestProduct.RequestId = request.Id;
                     requestProduct.CreatedOnUTC = request.CreatedOnUTC;
                     requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
+                    if (requestProduct.Status == (int)RequestProductStatusEnum.Approved)
+                        requestProduct.Status = (int)RequestProductStatusEnum.Approved;
+                    else
+                        requestProduct.Status = (int)RequestProductStatusEnum.Pending;
 
                     InsertRequestProduct(requestProduct);
                 }
@@ -497,7 +501,7 @@ namespace Epson.Services.Services.Requests
             if (DateTime.UtcNow > projectInformation.ClosingDate)
                 request.Breached = true;
 
-            request.ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadFinalAction;
+            request.ApprovalState = (int)ApprovalStateEnum.Approved;
             request.ApprovedBy = user.Id;
             request.ApprovedTime = DateTime.UtcNow;
             request.UpdatedOnUTC = DateTime.UtcNow;
@@ -810,6 +814,7 @@ namespace Epson.Services.Services.Requests
 
                 List<RequestProduct> requestProducts = _RequestProductRepository.Table.Where(x => x.RequestId == requestProduct.RequestId).ToList();
                 bool allRejected = requestProducts.All(rp => rp.Status == (int)RequestProductStatusEnum.Rejected);
+                bool allFulfilled = requestProducts.All(rp => rp.HasFulfilled == true);
 
                 if (DateTime.UtcNow > projectInformation.ClosingDate)
                     requestProduct.Breached = true;
@@ -818,6 +823,10 @@ namespace Epson.Services.Services.Requests
                 if (allRejected)
                 {
                     request.ApprovalState = (int)ApprovalStateEnum.RejectedByFulfiller;
+                    _RequestRepository.Update(_mapper.Map<Request>(request));
+                }else if (allFulfilled)
+                {
+                    request.ApprovalState = (int)ApprovalStateEnum.PendingRequesterAction;
                     _RequestRepository.Update(_mapper.Map<Request>(request));
                 }
 

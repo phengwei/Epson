@@ -72,7 +72,7 @@
           product.status === this.RequestProductStatusEnum.Rejected
         );
         let queryParameters = { request: JSON.stringify(request) };
-
+        console.log("reques", request.approvalState);
         if (this.loggedInUser.roles.includes('Sales Section Head')
           && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadAction) {
           queryParameters = { ...queryParameters, isApprove: true, view: true };
@@ -81,7 +81,7 @@
           queryParameters = { ...queryParameters, isFinalApprove: true, view: true };
         } else if (this.loggedInUser.id === request.createdById
           && request.approvalState === this.ApprovalStateEnum.PendingRequesterAction) {
-          queryParameters = { ...queryParameters, dealable: true, view: true };
+          queryParameters = { ...queryParameters, dealable: true, view: true, amendable: true };
         } else if (this.loggedInUser.id === request.createdById
           && request.approvalState === this.ApprovalStateEnum.PendingFulfillerAction
           && anyProductRejected) {

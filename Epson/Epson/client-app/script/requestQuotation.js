@@ -408,6 +408,7 @@ export default {
       return 'N/A';
     },
     async populateForm(requestData) {
+      console.log("re", requestData);
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProductsModel) {
         const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
@@ -438,6 +439,7 @@ export default {
             endUserPrice: productModel.endUserPrice,
             productName: productModel.productName,
             remarks: productModel.remarks || 'n/a',
+            status: productModel.status,
             statusStr: productModel.statusStr,
             fulfilledPrice: productModel.fulfilledPrice
           };
@@ -694,6 +696,7 @@ export default {
           distyPrice: this.productsToShow[product].distyPrice,
           dealerPrice: this.productsToShow[product].dealerPrice,
           endUserPrice: this.productsToShow[product].endUserPrice,
+          status: this.productsToShow[product].status,
           isCoverplus: false
         };
         quotationData.requestProducts.push(productToInsert);
