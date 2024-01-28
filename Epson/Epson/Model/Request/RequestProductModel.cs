@@ -30,5 +30,6 @@ namespace Epson.Model.Request
         public DateTime UpdatedOnUTC { get; set; }
         public bool IsCoverplus { get; set; }
         public bool AuthorizedToFulfill { get; set; }
+        public bool HasReminded { get; set; }
     }
 }

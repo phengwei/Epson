@@ -28,5 +28,6 @@ namespace Epson.Services.DTO.Requests
         public DateTime UpdatedOnUTC { get; set; }
         public bool IsCoverplus { get; set; }
         public bool AuthorizedToFulfill { get; set; }
+        public bool HasReminded { get; set; }
     }
 }

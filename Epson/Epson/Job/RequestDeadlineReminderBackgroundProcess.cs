@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Epson.Core.Domain.Email;
+using Epson.Core.Domain.Requests;
+using Epson.Data;
 using Epson.Data.Context;
 using Epson.Services.Interface.Email;
 using Epson.Services.Interface.Requests;
@@ -16,12 +18,17 @@ namespace Epson.Job
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly Serilog.ILogger _logger;
+        private readonly IRepository<RequestProduct> _RequestProductRepository;
         private Timer _timer;
 
-        public DeadlineReminderService(IServiceProvider serviceProvider, Serilog.ILogger logger)
+        public DeadlineReminderService(
+            IServiceProvider serviceProvider, 
+            Serilog.ILogger logger,
+            IRepository<RequestProduct> requestProductRepository)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
+            _RequestProductRepository = requestProductRepository;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -41,6 +48,7 @@ namespace Epson.Job
 
             var requestProductsToNotify = await dbContext.RequestProduct
                 .Where(rp => !rp.HasFulfilled
+                            && !rp.HasReminded
                             && dbContext.Request.Any(r => r.Id == rp.RequestId
                                 && dbContext.ProjectInformation.Any(p => p.RequestId == r.Id && p.ClosingDate.Date < targetDate)))
                 .ToListAsync();
@@ -53,6 +61,8 @@ namespace Epson.Job
             {
                 var queues = await emailService.CreateReminderEmailQueue(requestProduct);
                 emailQueues.AddRange(queues);
+                requestProduct.HasReminded = true;
+                _RequestProductRepository.Update(requestProduct);
             }
 
             foreach (var emailQueue in emailQueues)
