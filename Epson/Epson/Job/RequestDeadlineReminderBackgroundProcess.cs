@@ -18,23 +18,20 @@ namespace Epson.Job
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly Serilog.ILogger _logger;
-        private readonly IRepository<RequestProduct> _RequestProductRepository;
         private Timer _timer;
 
         public DeadlineReminderService(
             IServiceProvider serviceProvider, 
-            Serilog.ILogger logger,
-            IRepository<RequestProduct> requestProductRepository)
+            Serilog.ILogger logger)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
-            _RequestProductRepository = requestProductRepository;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.Information("[{0}] Begin executing process.", "RequestDeadlineReminderBackgroundProcess");
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromHours(24));
+            //_timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromHours(24));
             _logger.Information("[{0}] Finished executing process.", "RequestDeadlineReminderBackgroundProcess");
             return Task.CompletedTask;
         }
@@ -45,6 +42,7 @@ namespace Epson.Job
             var dbContext = scope.ServiceProvider.GetRequiredService<EpsonDbContext>();
             var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
             var targetDate = DateTime.UtcNow.Date.AddDays(3);
+            var requestProductRepository = scope.ServiceProvider.GetRequiredService<IRepository<RequestProduct>>();
 
             var requestProductsToNotify = await dbContext.RequestProduct
                 .Where(rp => !rp.HasFulfilled
@@ -53,8 +51,6 @@ namespace Epson.Job
                                 && dbContext.ProjectInformation.Any(p => p.RequestId == r.Id && p.ClosingDate.Date < targetDate)))
                 .ToListAsync();
 
-
-
             List<EmailQueue> emailQueues = new List<EmailQueue>();
 
             foreach (var requestProduct in requestProductsToNotify)
@@ -62,7 +58,7 @@ namespace Epson.Job
                 var queues = await emailService.CreateReminderEmailQueue(requestProduct);
                 emailQueues.AddRange(queues);
                 requestProduct.HasReminded = true;
-                _RequestProductRepository.Update(requestProduct);
+                requestProductRepository.Update(requestProduct);
             }
 
             foreach (var emailQueue in emailQueues)

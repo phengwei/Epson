@@ -106,44 +106,75 @@ namespace Epson.Services.Services.Email
             var subject = "New Request";
 
             var body = $@"
-            <html>
-                <head>
-                    <style>
-                        body {{
-                            font-family: Arial, sans-serif;
-                        }}
-                        table {{
-                            border-collapse: collapse;
-                            width: 100%;
-                        }}
-                        th, td {{
-                            border: 1px solid #dddddd;
-                            padding: 8px;
-                            text-align: left;
-                        }}
-                        th {{
-                            background-color: #f2f2f2;
-                        }}
-                    </style>
-                </head>
-                <body>
-                    <h2>New Request</h2>
-                    <p>New request is created with the following details:</p>
-                    <table>
-                        <tr>
-                            <th>Requester</th>
-                            <td>{requester.Result.UserName}</td>
-                        </tr>
-                        <tr>
-                            <th>Total Budget</th>
-                            <td>{request.TotalBudget}</td>
-                        </tr>
-                        <tr>
-                            <th>Products</th>
-                            <td>{string.Join(", ", productNames)}</td>
-                        </tr>
-                    </table>
-                </body>
+            <!DOCTYPE html>
+            <html lang='en'>
+            <head>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <style>
+                    body {{
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        margin: 0;
+                        padding: 0;
+                        background-color: #f4f4f4;
+                    }}
+                    .email-container {{
+                        max-width: 600px;
+                        margin: auto;
+                        background: #ffffff;
+                        padding: 20px;
+                        border: 1px solid #dddddd;
+                    }}
+                    .email-header {{
+                        background-color: #004aad;
+                        color: white;
+                        padding: 10px 20px;
+                        text-align: center;
+                    }}
+                    .email-body {{
+                        padding: 20px;
+                        line-height: 1.5;
+                        color: #333333;
+                    }}
+                    table {{
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }}
+                    th, td {{
+                        padding: 10px;
+                        border: 1px solid #dddddd;
+                        text-align: left;
+                    }}
+                    th {{
+                        background-color: #f2f2f2;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class='email-container'>
+                    <div class='email-header'>
+                        <h1>New Request</h1>
+                    </div>
+                    <div class='email-body'>
+                        <p>A new request has been created with the following details:</p>
+                        <table>
+                            <tr>
+                                <th>Requester</th>
+                                <td>{requester.Result.UserName}</td>
+                            </tr>
+                            <tr>
+                                <th>Total Budget</th>
+                                <td>RM {request.TotalBudget}</td>
+                            </tr>
+                            <tr>
+                                <th>Products</th>
+                                <td>{string.Join(", ", productNames)}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </body>
             </html>";
 
             var emailQueue = new EmailQueue
@@ -181,45 +212,86 @@ namespace Epson.Services.Services.Email
             var subject = "New Request";
 
             var body = $@"
-            <html>
-                <head>
-                    <style>
-                        body {{
-                            font-family: Arial, sans-serif;
-                        }}
-                        table {{
-                            border-collapse: collapse;
-                            width: 100%;
-                        }}
-                        th, td {{
-                            border: 1px solid #dddddd;
-                            padding: 8px;
-                            text-align: left;
-                        }}
-                        th {{
-                            background-color: #f2f2f2;
-                        }}
-                    </style>
-                </head>
-                <body>
-                    <h2>New Request</h2>
-                    <p>New request is created with the following details:</p>
-                    <table>
-                        <tr>
-                            <th>Requester</th>
-                            <td>{requester.Result.UserName}</td>
-                        </tr>
-                        <tr>
-                            <th>Total Budget</th>
-                            <td>{request.TotalBudget}</td>
-                        </tr>
-                        <tr>
-                            <th>Products</th>
-                            <td>{string.Join(", ", productNames)}</td>
-                        </tr>
-                    </table>
-                </body>
+            <!DOCTYPE html>
+            <html lang='en'>
+            <head>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <style>
+                    body {{
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        margin: 0;
+                        padding: 0;
+                        background-color: #f4f4f4;
+                    }}
+                    .email-container {{
+                        max-width: 600px;
+                        margin: auto;
+                        background: #ffffff;
+                        padding: 20px;
+                        border: 1px solid #dddddd;
+                    }}
+                    .email-header {{
+                        background-color: #004aad;
+                        color: white;
+                        padding: 10px 20px;
+                        text-align: center;
+                    }}
+                    .email-body {{
+                        padding: 20px;
+                        line-height: 1.5;
+                        color: #333333;
+                    }}
+                    .email-footer {{
+                        text-align: center;
+                        padding: 10px 20px;
+                        background-color: #004aad;
+                        color: white;
+                    }}
+                    table {{
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }}
+                    th, td {{
+                        padding: 10px;
+                        border: 1px solid #dddddd;
+                        text-align: left;
+                    }}
+                    th {{
+                        background-color: #f2f2f2;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class='email-container'>
+                    <div class='email-header'>
+                        <h1>New Request</h1>
+                    </div>
+                    <div class='email-body'>
+                        <p>A new request has been created with the following details:</p>
+                        <table>
+                            <tr>
+                                <th>Requester</th>
+                                <td>{requester.Result.UserName}</td>
+                            </tr>
+                            <tr>
+                                <th>Total Budget</th>
+                                <td>RM {request.TotalBudget}</td>
+                            </tr>
+                            <tr>
+                                <th>Products</th>
+                                <td>{string.Join(", ", productNames)}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class='email-footer'>
+                        <p>Thank you for your submission.</p>
+                    </div>
+                </div>
+            </body>
             </html>";
+
 
             if (emailAccount == null)
                 return new List<EmailQueue>();
@@ -255,49 +327,87 @@ namespace Epson.Services.Services.Email
             var subject = $"Request {requestProduct.Id} due soon!";
 
             var body = $@"
-            <html>
-                <head>
-                    <style>
-                        body {{
-                            font-family: Arial, sans-serif;
-                        }}
-                        table {{
-                            border-collapse: collapse;
-                            width: 100%;
-                        }}
-                        th, td {{
-                            border: 1px solid #dddddd;
-                            padding: 8px;
-                            text-align: left;
-                        }}
-                        th {{
-                            background-color: #f2f2f2;
-                        }}
-                    </style>
-                </head>
-                <body>
-                    <h2>Reminder</h2>
-                    <p>Request {requestProduct.Id} is due soon with the following details:</p>
-                    <table>
-                        <tr>
-                            <th>Product</th>
-                            <td>{product.Name}</td>
-                        </tr>
-                        <tr>
-                            <th>Quantity</th>
-                            <td>{requestProduct.Quantity}</td>
-                        </tr>
-                        <tr>
-                            <th>End User Price</th>
-                            <td>{requestProduct.EndUserPrice}</td>
-                        </tr>
-                        <tr>
-                            <th>Request Created On</th>
-                            <td>{requestProduct.CreatedOnUTC}</td>
-                        </tr>
-                    </table>
-                </body>
+            <!DOCTYPE html>
+            <html lang='en'>
+            <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <style>
+                body {{
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    margin: 0;
+                    padding: 0;
+                    background-color: #f4f4f4;
+                }}
+                .email-container {{
+                    max-width: 600px;
+                    margin: auto;
+                    background: #ffffff;
+                    padding: 20px;
+                    border: 1px solid #dddddd;
+                }}
+                .email-header {{
+                    background-color: #004aad;
+                    color: white;
+                    padding: 10px 20px;
+                    text-align: center;
+                }}
+                .email-body {{
+                    padding: 20px;
+                    line-height: 1.5;
+                    color: #333333;
+                }}
+                .email-footer {{
+                    text-align: center;
+                    padding: 10px 20px;
+                    background-color: #004aad;
+                    color: white;
+                }}
+                table {{
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 20px;
+                }}
+                th, td {{
+                    padding: 10px;
+                    border: 1px solid #dddddd;
+                    text-align: left;
+                }}
+                th {{
+                    background-color: #f2f2f2;
+                }}
+            </style>
+            </head>
+            <body>
+                <div class='email-container'>
+                    <div class='email-header'>
+                        <h1>Reminder</h1>
+                    </div>
+                    <div class='email-body'>
+                        <p><strong>Request {requestProduct.Id}</strong> is due soon with the following details:</p>
+                        <table>
+                            <tr>
+                                <th>Product</th>
+                                <td>{product.Name}</td>
+                            </tr>
+                            <tr>
+                                <th>Quantity</th>
+                                <td>{requestProduct.Quantity}</td>
+                            </tr>
+                            <tr>
+                                <th>End User Price</th>
+                                <td>RM {requestProduct.EndUserPrice}</td>
+                            </tr>
+                            <tr>
+                                <th>Request Created On</th>
+                                <td>{requestProduct.CreatedOnUTC:MM/dd/yyyy HH:mm:ss}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </body>
             </html>";
+
 
             if (emailAccount == null)
                 return new List<EmailQueue>();
@@ -363,19 +473,44 @@ namespace Epson.Services.Services.Email
                 subject = $"Request {request.Id} partially fulfillment";
 
             var body = $@"
-            <html>
+                <!DOCTYPE html>
+                <html lang='en'>
                 <head>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
                     <style>
                         body {{
-                            font-family: Arial, sans-serif;
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            background-color: #f4f4f4;
+                        }}
+                        .email-container {{
+                            max-width: 600px;
+                            margin: auto;
+                            background: #ffffff;
+                            padding: 20px;
+                            border: 1px solid #dddddd;
+                        }}
+                        .email-header {{
+                            background-color: #004aad;
+                            color: white;
+                            padding: 10px 20px;
+                            text-align: center;
+                        }}
+                        .email-body {{
+                            padding: 20px;
+                            line-height: 1.5;
+                            color: #333333;
                         }}
                         table {{
-                            border-collapse: collapse;
                             width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
                         }}
                         th, td {{
+                            padding: 10px;
                             border: 1px solid #dddddd;
-                            padding: 8px;
                             text-align: left;
                         }}
                         th {{
@@ -384,24 +519,31 @@ namespace Epson.Services.Services.Email
                     </style>
                 </head>
                 <body>
-                    <h2>Request Fulfillment</h2>
-                    <p>Request is fulfilled by {fulfiller.Result.UserName} with the following details:</p>
-                    <table>
-                        <tr>
-                            <th>Product</th>
-                            <td>{product.Name}</td>
-                        </tr>
-                        <tr>
-                            <th>Quantity</th>
-                            <td>{requestProduct.Quantity}</td>
-                        </tr>
-                        <tr>
-                            <th>Price Fulfilled</th>
-                            <td>{requestProduct.FulfilledPrice}</td>
-                        </tr>
-                    </table>
+                    <div class='email-container'>
+                        <div class='email-header'>
+                            <h1>Request Fulfillment</h1>
+                        </div>
+                        <div class='email-body'>
+                            <p>Request {request.Id} is fulfilled by {fulfiller.Result.UserName} with the following details:</p>
+                            <table>
+                                <tr>
+                                    <th>Product</th>
+                                    <td>{product.Name}</td>
+                                </tr>
+                                <tr>
+                                    <th>Quantity</th>
+                                    <td>{requestProduct.Quantity}</td>
+                                </tr>
+                                <tr>
+                                    <th>Price Fulfilled</th>
+                                    <td>RM {requestProduct.FulfilledPrice}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
                 </body>
-            </html>";
+                </html>";
+
 
             var emailQueue = new EmailQueue
             {
@@ -433,45 +575,77 @@ namespace Epson.Services.Services.Email
             subject = $"Request {request.Id} amended by {requester.Result.UserName} ";
 
             var body = $@"
-            <html>
-                <head>
-                    <style>
-                        body {{
-                            font-family: Arial, sans-serif;
-                        }}
-                        table {{
-                            border-collapse: collapse;
-                            width: 100%;
-                        }}
-                        th, td {{
-                            border: 1px solid #dddddd;
-                            padding: 8px;
-                            text-align: left;
-                        }}
-                        th {{
-                            background-color: #f2f2f2;
-                        }}
-                    </style>
-                </head>
-                <body>
-                    <h2>Request Amendment</h2>
-                    <p>Request is in amend state by {fulfiller.Result.UserName} with these being the old fulfilled details:</p>
-                    <table>
-                        <tr>
-                            <th>Product</th>
-                            <td>{product.Name}</td>
-                        </tr>
-                        <tr>
-                            <th>Quantity</th>
-                            <td>{requestProduct.Quantity}</td>
-                        </tr>
-                        <tr>
-                            <th>Price Fulfilled</th>
-                            <td>{requestProduct.FulfilledPrice}</td>
-                        </tr>
-                    </table>
-                </body>
+            <!DOCTYPE html>
+            <html lang='en'>
+            <head>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <style>
+                    body {{
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        margin: 0;
+                        padding: 0;
+                        background-color: #f4f4f4;
+                    }}
+                    .email-container {{
+                        max-width: 600px;
+                        margin: auto;
+                        background: #ffffff;
+                        padding: 20px;
+                        border: 1px solid #dddddd;
+                    }}
+                    .email-header {{
+                        background-color: #004aad;
+                        color: white;
+                        padding: 10px 20px;
+                        text-align: center;
+                    }}
+                    .email-body {{
+                        padding: 20px;
+                        line-height: 1.5;
+                        color: #333333;
+                    }}
+                    table {{
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }}
+                    th, td {{
+                        padding: 10px;
+                        border: 1px solid #dddddd;
+                        text-align: left;
+                    }}
+                    th {{
+                        background-color: #f2f2f2;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class='email-container'>
+                    <div class='email-header'>
+                        <h1>Request Amendment</h1>
+                    </div>
+                    <div class='email-body'>
+                        <p>The request is in an amended state by {fulfiller.Result.UserName} with the following old fulfilled details:</p>
+                        <table>
+                            <tr>
+                                <th>Product</th>
+                                <td>{product.Name}</td>
+                            </tr>
+                            <tr>
+                                <th>Quantity</th>
+                                <td>{requestProduct.Quantity}</td>
+                            </tr>
+                            <tr>
+                                <th>Price Fulfilled</th>
+                                <td>RM {requestProduct.FulfilledPrice}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </body>
             </html>";
+
 
             var emailQueue = new EmailQueue
             {
@@ -503,44 +677,75 @@ namespace Epson.Services.Services.Email
             subject = $"Request {request.Id} amended by {requester.Result.UserName} ";
 
             var body = $@"
-            <html>
-                <head>
-                    <style>
-                        body {{
-                            font-family: Arial, sans-serif;
-                        }}
-                        table {{
-                            border-collapse: collapse;
-                            width: 100%;
-                        }}
-                        th, td {{
-                            border: 1px solid #dddddd;
-                            padding: 8px;
-                            text-align: left;
-                        }}
-                        th {{
-                            background-color: #f2f2f2;
-                        }}
-                    </style>
-                </head>
-                <body>
-                    <h2>Request Cancellation</h2>
-                    <p>Request is cancelled by {fulfiller.Result.UserName} with these being the fulfilled details</p>
-                    <table>
-                        <tr>
-                            <th>Product</th>
-                            <td>{product.Name}</td>
-                        </tr>
-                        <tr>
-                            <th>Quantity</th>
-                            <td>{requestProduct.Quantity}</td>
-                        </tr>
-                        <tr>
-                            <th>Price Fulfilled</th>
-                            <td>{requestProduct.FulfilledPrice}</td>
-                        </tr>
-                    </table>
-                </body>
+            <!DOCTYPE html>
+            <html lang='en'>
+            <head>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <style>
+                    body {{
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        margin: 0;
+                        padding: 0;
+                        background-color: #f4f4f4;
+                    }}
+                    .email-container {{
+                        max-width: 600px;
+                        margin: auto;
+                        background: #ffffff;
+                        padding: 20px;
+                        border: 1px solid #dddddd;
+                    }}
+                    .email-header {{
+                        background-color: #004aad;
+                        color: white;
+                        padding: 10px 20px;
+                        text-align: center;
+                    }}
+                    .email-body {{
+                        padding: 20px;
+                        line-height: 1.5;
+                        color: #333333;
+                    }}
+                    table {{
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }}
+                    th, td {{
+                        padding: 10px;
+                        border: 1px solid #dddddd;
+                        text-align: left;
+                    }}
+                    th {{
+                        background-color: #f2f2f2;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class='email-container'>
+                    <div class='email-header'>
+                        <h1>Request Cancellation</h1>
+                    </div>
+                    <div class='email-body'>
+                        <p>The request has been cancelled by {fulfiller.Result.UserName} with the following fulfilled details:</p>
+                        <table>
+                            <tr>
+                                <th>Product</th>
+                                <td>{product.Name}</td>
+                            </tr>
+                            <tr>
+                                <th>Quantity</th>
+                                <td>{requestProduct.Quantity}</td>
+                            </tr>
+                            <tr>
+                                <th>Price Fulfilled</th>
+                                <td>RM {requestProduct.FulfilledPrice}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </body>
             </html>";
 
             var emailQueue = new EmailQueue
