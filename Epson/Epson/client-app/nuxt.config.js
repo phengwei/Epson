@@ -165,7 +165,7 @@ export default {
 
   
   publicRuntimeConfig: {
-    restUrl: process.env.REST_URL || 'https://epson-asia.azurewebsites.net',
+    restUrl: 'https://epson-stg-dev.eba-8tvp5kuf.ap-southeast-1.elasticbeanstalk.com/',
     baseURL: process.env.BASE_URL,
   },
   privateRuntimeConfig: {
@@ -178,7 +178,7 @@ export default {
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    baseURL: process.env.REST_URL || 'https://epson-asia.azurewebsites.net',
+    baseURL: 'https://epson-stg-dev.eba-8tvp5kuf.ap-southeast-1.elasticbeanstalk.com/',
     https: true,
   },
   // PWA module configuration: https://go.nuxtjs.dev/pwa

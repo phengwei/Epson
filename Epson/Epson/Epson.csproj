@@ -66,6 +66,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include=".ebextensions\ssl.config" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Miscellaneous\" />
   </ItemGroup>
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
