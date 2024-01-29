@@ -273,6 +273,29 @@ namespace Epson.Controllers.API
                 return BadRequest("Failed to set complete first level approval for request");
         }
 
+        [HttpPost("rejectfirstlevelrequest")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head")]
+        public async Task<IActionResult> RejectFirstLevelRequest(int requestId)
+        {
+            if (requestId == 0)
+                return NotFound("Resources not found!");
+
+            var request = _requestService.GetRequestById(requestId);
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (request == null)
+                return NotFound("Resources not found!");
+
+            if (user == null)
+                return Unauthorized("User not authorized to perform this operation");
+
+            if (_requestService.RejectFirstLevelRequest(_mapper.Map<Request>(request)))
+                return Ok("Request has been rejected");
+            else
+                return BadRequest("Failed to set complete first level approval for request");
+        }
+
         [HttpPost("approvefinalrequest")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head")]
         public async Task<IActionResult> ApproveFinalRequest(int requestId, bool isAccept)

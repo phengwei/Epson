@@ -316,9 +316,15 @@ namespace Epson.Services.Services.Requests
                     requestProduct.CreatedOnUTC = request.CreatedOnUTC;
                     requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
                     if (requestProduct.Status == (int)RequestProductStatusEnum.Approved)
+                    {
                         requestProduct.Status = (int)RequestProductStatusEnum.Approved;
+                        requestProduct.HasFulfilled = true;
+                    }
                     else
+                    {
                         requestProduct.Status = (int)RequestProductStatusEnum.Pending;
+                        requestProduct.HasFulfilled = false;
+                    }
 
                     InsertRequestProduct(requestProduct);
                 }
@@ -705,6 +711,29 @@ namespace Epson.Services.Services.Requests
                 throw new Exception("Invalid request.");
 
             request.ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction;
+
+            try
+            {
+                _RequestRepository.Update(request);
+                _logger.Information("Completing first level approval for request {id}", request.Id);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error completing first level approval for request {id}", request.Id);
+                return false;
+            }
+        }
+
+        public bool RejectFirstLevelRequest(Request request)
+        {
+            var req = GetRequestById(request.Id);
+
+            if (req == null)
+                throw new Exception("Invalid request.");
+
+            request.ApprovalState = (int)ApprovalStateEnum.RejectedBySalesSectionHead;
 
             try
             {

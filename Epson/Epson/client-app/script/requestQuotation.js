@@ -116,6 +116,9 @@ export default {
     isViewMode() {
       return this.$route.query.view === 'true';
     },
+    isAmendMode() {
+      return this.$route.query.editable === 'true';
+    },
     isFulfillMode() {
       return this.$route.query.isFulfill === 'true' || this.$route.query.isFulfillCoverplus === 'true';
     },
@@ -151,18 +154,14 @@ export default {
       });
     },
     editProductRow(editedProduct) {
-      console.log("product", editedProduct);
-      const index = this.productsToShow.findIndex(product => product.id === editedProduct.id);
-      
+      const index = this.productsToShow.findIndex(product => product.productId === editedProduct.productId);
       if (index !== -1) {
         const updatedProduct = { ...editedProduct };
         updatedProduct.distyPrice = updatedProduct.distyPrice || 0;
         updatedProduct.dealerPrice = updatedProduct.dealerPrice || 0;
         updatedProduct.endUserPrice = updatedProduct.endUserPrice || 0;
         
-        this.$set(this.products, index, updatedProduct);
-        
-        this.showUpdatedProducts(updatedProduct);
+        this.$set(this.productsToShow, index, updatedProduct);
       } else {
         console.error("Product not found for editing.");
       }
@@ -234,6 +233,32 @@ export default {
             }).catch(error => {
               console.log('error', error);
               Swal.fire('Error', 'Failed to approve quotation', 'error');
+            });
+        }
+      });
+    },
+    rejectQuotation() {
+      Swal.fire({
+        title: 'Confirmation',
+        text: 'Are you sure you want to reject the quotation?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'No'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.$axios.post(`${this.$config.restUrl}/api/request/rejectfirstlevelrequest?requestId=${this.currentRequest.id}`)
+            .then(response => {
+              this.closeDialogProductFulfillment();
+              Swal.fire('Approved!', 'Quotation is successfully rejected.', 'success')
+                .then(() => {
+                  this.$router.push('/request');
+                });
+            }).catch(error => {
+              console.log('error', error);
+              Swal.fire('Error', 'Failed to reject quotation', 'error');
             });
         }
       });
@@ -348,9 +373,7 @@ export default {
         updatedCoverplus.dealerPrice = updatedCoverplus.dealerPrice || 0;
         updatedCoverplus.endUserPrice = updatedCoverplus.endUserPrice || 0;
 
-        this.$set(this.coverplus, index, updatedCoverplus);
-
-        this.showUpdatedCoverplus(updatedCoverplus);
+        this.$set(this.coverplusesToShow, index, updatedCoverplus);
       } else {
         console.error("Product not found for editing.");
       }
@@ -441,7 +464,7 @@ export default {
             dealerPrice: productModel.dealerPrice,
             endUserPrice: productModel.endUserPrice,
             productName: productModel.productName,
-            remarks: productModel.remarks || 'n/a',
+            remarks: (productModel.remarks === null || productModel.remarks === "null") ? 'N/A' : productModel.remarks,
             status: productModel.status,
             statusStr: productModel.statusStr,
             fulfilledPrice: productModel.fulfilledPrice
@@ -721,6 +744,7 @@ export default {
           distyPrice: this.coverplusesToShow[coverplus].distyPrice,
           dealerPrice: this.coverplusesToShow[coverplus].dealerPrice,
           endUserPrice: this.coverplusesToShow[coverplus].endUserPrice,
+          status: this.coverplusesToShow[coverplus].status,
           isCoverplus: true
         };
         quotationData.requestProducts.push(coverplusToInsert);

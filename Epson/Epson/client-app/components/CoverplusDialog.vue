@@ -2,7 +2,7 @@
   <v-dialog v-model="localDialogCoverplus" max-width="500px">
     <v-card>
       <v-card-title>
-        <span class="headline">{{ isEditMode ? 'Edit Coverplus' : 'Add Coverplus' }}</span>
+        <span class="headline">{{ isEditMode ? 'Coverplus' : 'Coverplus' }}</span>
       </v-card-title>
       <v-card-text>
         <div class="form-group">
@@ -102,6 +102,7 @@
       setEditMode(isEdit, coverplus) {
         this.isEditMode = isEdit;
         this.localCoverplus = { ...coverplus };
+        this.localCoverplus.status = 0;
         if (coverplus.productId != null) {
           this.localCoverplus.category = coverplus.category;
           this.updateCoverplusOptions();

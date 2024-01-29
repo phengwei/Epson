@@ -41,7 +41,10 @@
               </thead>
               <tbody>
                 <tr v-for="(product, index) in productsToShow" :key="index"
-                     :class="{ 'not-approved': isFulfillMode && product.statusStr !== 'Approved' }">
+                    :class="{
+                              'not-approved': isFulfillMode && product.statusStr !== 'Approved',
+                              'approved': isAmendMode && product.statusStr === 'Approved'
+                            }">
                   <td>{{ product.category ? product.category.name : 'N/A' }}</td>
                   <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
                   <td>{{ product.quantity || 'N/A' }}</td>
@@ -96,7 +99,10 @@
               </thead>
               <tbody>
                 <tr v-for="(coverplus, index) in coverplusesToShow" :key="index"
-                    :class="{ 'not-approved': isFulfillMode && coverplus.statusStr !== 'Approved' }">
+                          :class="{
+                            'not-approved': isFulfillMode && coverplus.statusStr !== 'Approved',
+                            'approved': isAmendMode && coverplus.statusStr === 'Approved'
+                          }">
                   <td>{{ coverplus.category ? coverplus.category.name : 'N/A' }}</td>
                   <td>{{ coverplus.productId ? findProductName(coverplus.productId) : coverplus.productName }}</td>
                   <td>{{ coverplus.quantity || 'N/A' }}</td>
@@ -342,10 +348,10 @@
             </table>
           </v-card-text>
         </v-card>
-        <div class="form-group" v-if="comments != ''">
+        <!--<div class="form-group" v-if="comments != ''">
           <label>Comments</label>
           <textarea v-model="comments" class="border-input"></textarea>
-        </div>
+        </div>-->
         <button type="submit" @click="submitQuotation" v-if="isMode('create')">Submit</button>
         <!--<button type="submit" @click="saveDraft" v-if="isMode('create')">Save Draft</button>-->
         <button type="submit" @click="submitQuotation" v-if="isMode('editable')">Amend Request</button>
@@ -357,6 +363,7 @@
         <button type="submit" @click="approveRequest" v-if="isMode('isFinalApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadFinalAction">Approve Request</button>
         <button type="submit" @click="confirmAmmendQuotation" v-if="isMode('amendable')">Set Request to Amend</button>
         <button type="submit" @click="approveQuotation()" v-if="isMode('isApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadAction">Approve Quotation</button>
+        <button type="submit" @click="rejectQuotation()" v-if="isMode('isApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadAction">Reject Quotation</button>
         <button type="submit" @click="redirectToRequest" v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head')">
           Return to Request
         </button>
@@ -381,6 +388,11 @@
   .not-approved {
     border-left: 4px solid red;
     background-color: #ffcccc;
+  }
+
+  .approved {
+    border-left: 4px solid green;
+    background-color: #90EE90;
   }
 
   .products-title {
