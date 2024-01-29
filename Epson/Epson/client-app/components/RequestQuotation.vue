@@ -40,7 +40,8 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(product, index) in productsToShow" :key="index">
+                <tr v-for="(product, index) in productsToShow" :key="index"
+                     :class="{ 'not-approved': isFulfillMode && product.statusStr !== 'Approved' }">
                   <td>{{ product.category ? product.category.name : 'N/A' }}</td>
                   <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
                   <td>{{ product.quantity || 'N/A' }}</td>
@@ -94,7 +95,8 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(coverplus, index) in coverplusesToShow" :key="index">
+                <tr v-for="(coverplus, index) in coverplusesToShow" :key="index"
+                    :class="{ 'not-approved': isFulfillMode && coverplus.statusStr !== 'Approved' }">
                   <td>{{ coverplus.category ? coverplus.category.name : 'N/A' }}</td>
                   <td>{{ coverplus.productId ? findProductName(coverplus.productId) : coverplus.productName }}</td>
                   <td>{{ coverplus.quantity || 'N/A' }}</td>
@@ -102,7 +104,7 @@
                   <td>{{ coverplus.dealerPrice || 'N/A' }}</td>
                   <td>{{ coverplus.endUserPrice || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ coverplus.remarks || 'N/A' }}</td>
-                  <td v-if="isViewMode">{{ coverplus.statusStr || 'N/A' }}</td>
+                  <td v-if="isViewMode">{{ coverplus.statusStr }}</td>
                   <td v-if="!isViewMode">
                     <v-btn small color="primary" @click="openEditCoverplusDialog(coverplus)">
                       <v-icon>mdi-pencil</v-icon>
@@ -349,7 +351,7 @@
         <button type="submit" @click="submitQuotation" v-if="isMode('editable')">Amend Request</button>
         <button type="submit" @click="acceptDeal" v-if="isMode('dealable')">Accept Deal</button>
         <button type="submit" @click="rejectDeal" v-if="isMode('dealable')">Reject Deal</button>
-        <button type="submit" @click="exitDeal" v-if="isMode('amendable')">Close Deal</button>
+        <button type="submit" @click="exitDeal" v-if="isMode('amendable')">Exit Deal</button>
         <button type="submit" @click="fulfillNonCoverplusItem" v-if="isMode('isFulfill')">Fulfill Request</button>
         <button type="submit" @click="fulfillCoverplusItem" v-if="isMode('isFulfillCoverplus')">Fulfill Coverplus Request</button>
         <button type="submit" @click="approveRequest" v-if="isMode('isFinalApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadFinalAction">Approve Request</button>
@@ -376,6 +378,11 @@
 </script>
 
 <style scoped>
+  .not-approved {
+    border-left: 4px solid red;
+    background-color: #ffcccc;
+  }
+
   .products-title {
     font-size: 2em;
     text-align: center;

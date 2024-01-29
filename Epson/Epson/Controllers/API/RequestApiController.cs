@@ -400,11 +400,23 @@ namespace Epson.Controllers.API
             var response = new GenericResponseModel<List<RequestModel>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+            var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString());
 
-            var requests = _requestService.GetRequests().Where(x => x.CreatedById == user.Id
-                                                                && x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction 
+            List<RequestDTO> requests = new List<RequestDTO>();
+
+            if (isAdminUser)
+            {
+                requests = _requestService.GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction
                                                                 || x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation)
                                                                     .ToList();
+            }
+            else
+            {
+                requests = _requestService.GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction
+                                                                || x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction
+                                                                || x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation)
+                                                                    .ToList();
+            }
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests);
 

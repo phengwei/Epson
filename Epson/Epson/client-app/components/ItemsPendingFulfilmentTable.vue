@@ -16,7 +16,7 @@
     </template>
 
     <template v-slot:item="{ item }">
-      <tr v-if="item.authorizedToFulfill && item.status === RequestProductStatusEnum.Pending">
+      <tr>
         <td>{{ item.requestId }}</td>
         <td>{{ item.createdOnUTC }}</td>
         <td>{{ item.createdBy }}</td>
@@ -109,37 +109,40 @@
           result.data.data.forEach(item => {
             console.log("item", item);
             item.requestProductsModel.forEach(product => {
-              const newItem = {
-                ...item,
-                ...product,
-                createdOnUTC: moment(product.createdOnUTC).format('DD MMM YY HH:mm'),
-                productName: product.productName,
-                distyPrice: product.distyPrice,
-                dealerPrice: product.dealerPrice,
-                endUserPrice: product.endUserPrice,
-                quantity: product.quantity,
-                authorizedToFulfill: product.authorizedToFulfill,
-                competitors: [],
-                status: product.status,
-              };
-              item.competitorInformationModel.forEach(comp => {
-                const c = {
-                  model: comp.model,
-                  brand: comp.brand,
-                  price: comp.price
-                }
-                newItem.competitors.push(c);
-              });
-              this.itemsPendingFulfilment.push(newItem);
-              const p = {
-                quantity: product.quantity,
-                distyPrice: product.distyPrice,
-                dealerPrice: product.dealerPrice,
-                endUserPrice: product.endUserPrice,
-                productName: product.productName,
-                remarks: product.remarks
-              };
-              this.productsToShow.push(p);
+              if (product.authorizedToFulfill && product.status === RequestProductStatusEnum.Pending) {
+                const newItem = {
+                  ...item,
+                  ...product,
+                  createdOnUTC: moment(product.createdOnUTC).format('DD MMM YY HH:mm'),
+                  productName: product.productName,
+                  distyPrice: product.distyPrice,
+                  dealerPrice: product.dealerPrice,
+                  endUserPrice: product.endUserPrice,
+                  quantity: product.quantity,
+                  authorizedToFulfill: product.authorizedToFulfill,
+                  competitors: [],
+                  status: product.status,
+                };
+
+                item.competitorInformationModel.forEach(comp => {
+                  const c = {
+                    model: comp.model,
+                    brand: comp.brand,
+                    price: comp.price
+                  }
+                  newItem.competitors.push(c);
+                });
+                this.itemsPendingFulfilment.push(newItem);
+                const p = {
+                  quantity: product.quantity,
+                  distyPrice: product.distyPrice,
+                  dealerPrice: product.dealerPrice,
+                  endUserPrice: product.endUserPrice,
+                  productName: product.productName,
+                  remarks: product.remarks
+                };
+                this.productsToShow.push(p);
+              }
             });
           });
           this.loading = false;

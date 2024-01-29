@@ -306,7 +306,7 @@
 
         if (request.approvalState === ApprovalStateEnum.AmendQuotation) {
           queryParameters = { ...queryParameters, editable: true };
-        } else if (request.approvalState === ApprovalStateEnum.PendingFulfillerAction) {
+        } else {
           queryParameters = { ...queryParameters, view: true };
         }
 

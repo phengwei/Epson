@@ -116,6 +116,9 @@ export default {
     isViewMode() {
       return this.$route.query.view === 'true';
     },
+    isFulfillMode() {
+      return this.$route.query.isFulfill === 'true' || this.$route.query.isFulfillCoverplus === 'true';
+    },
     currentRequestApprovalState() {
       return this.currentRequest ? this.currentRequest.approvalState : null;
     },
