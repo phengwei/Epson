@@ -1,5 +1,5 @@
 <template>
-  <main class="dashboard-header"  v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus')">
+  <main class="dashboard-header"  v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Admin')">
     <div class="grid-container">
       <div class="row">
         <div class="grid-item">

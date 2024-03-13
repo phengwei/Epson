@@ -149,12 +149,14 @@
       getPendingRequesterItem() {
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingrequesteritem`).then(result => {
-          for (const requests in result.data.data) {
-            result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('DD MMM YY HH:mm');
-          }
-          this.requests = result.data.data
-          this.loading = false
-        })
+          this.requests = result.data.data.map(request => {
+            return {
+              ...request,
+              createdOnUTC: moment(request.createdOnUTC).format('DD MMM YY HH:mm') 
+            };
+          });
+          this.loading = false;
+        });
       },
       editItem(item) {
         this.editedIndex = this.requests.indexOf(item)
