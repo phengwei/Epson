@@ -518,6 +518,26 @@ namespace Epson.Controllers.API
             response.Data = requestModels;
 
             return Ok(response);
+        }        
+        
+        [HttpGet("getpendingsalessectionheaddepartmentrequests")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        public async Task<IActionResult> GetPendingSalesSectionHeadDepartmentItems()
+        {
+            var response = new GenericResponseModel<List<RequestModel>>();
+
+            var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+           var requests = _requestService.GetRequests()
+                .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
+                            x.RequestProducts.Any(rp => _userManager.Users.Any(u => u.Id == rp.FulfillerId && u.TeamId == currentUser.TeamId)))
+                .ToList();
+
+            var requestModels = _requestModelFactory.PrepareRequestModels(requests);
+
+            response.Data = requestModels;
+
+            return Ok(response);
         }
 
         [HttpGet("getcompletedrequests")]

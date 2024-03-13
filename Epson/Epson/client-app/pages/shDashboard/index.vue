@@ -1,10 +1,15 @@
 <template>
   <main class="dashboard-header" v-if="loggedInUser.roles.includes('Sales Section Head') || loggedInUser.roles.includes('Admin')">
     <div class="grid-container">
-      <div class="row">
-        <div class="grid-item full-width margin">
+      <div class="row sales-head-table">
+        <div class="grid-item">
           <v-app>
             <ItemsPendingSalesSectionHeadAction />
+          </v-app>
+        </div>
+        <div class="grid-item">
+          <v-app>
+            <ItemsPendingSalesSectionHeadDepartment />
           </v-app>
         </div>
       </div>
@@ -27,6 +32,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import ItemsPendingSalesSectionHeadAction from '~/components/ItemsPendingSalesSectionHeadAction.vue';
+  import ItemsPendingSalesSectionHeadDepartment from '~/components/ItemsPendingSalesSectionHeadDepartment.vue';
   import PendingRequestSummary from '~/components/PendingRequestSummary.vue';
   import CompletedRequestSummary from '~/components/CompletedRequestSummary.vue';
 
@@ -41,6 +47,7 @@
     },
     components: {
       ItemsPendingSalesSectionHeadAction,
+      ItemsPendingSalesSectionHeadDepartment,
       PendingRequestSummary,
       CompletedRequestSummary
     }
@@ -74,10 +81,6 @@
     width: 100%;
   }
 
-  .margin{
-      margin-bottom: 5%;
-      margin-top: 1%;
-  }
   .v-application--wrap {
     min-height: 20vh !important;
   }
@@ -86,8 +89,7 @@
     margin-top: 7rem;
   }
 
-  .request-table {
-    margin-top: 5rem;
-    margin-bottom: 5rem;
+  .dashboard-header .sales-head-table {
+    margin-bottom: 1rem;
   }
 </style>
