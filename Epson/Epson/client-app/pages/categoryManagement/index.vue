@@ -101,20 +101,21 @@
         return this.editedIndex === -1 ? 'New Category' : 'Edit Category'
       },
       availableUsersForFulfiller1() {
-        return this.users.filter(user => user.id !== this.newCategory.backupFulfiller2);
+        return this.users.filter(user => user.id !== this.newCategory.backupFulfiller2 &&
+                                                  user.id !== this.newCategory.escalationFulfiller);
       },
       availableUsersForFulfiller2() {
-        return this.users.filter(user => user.id !== this.newCategory.backupFulfiller1);
+        return this.users.filter(user => user.id !== this.newCategory.backupFulfiller1 &&
+                                                  user.id !== this.newCategory.escalationFulfiller);
       },
       availableUsersForEscalationFulfiller() {
-        return this.salesHeadUsers.filter(user => user.id !== this.newCategory.backupFulfiller1 &&
+        return this.users.filter(user => user.id !== this.newCategory.backupFulfiller1 &&
                                                   user.id !== this.newCategory.backupFulfiller2);
       },
     },
     created() {
       this.getCategories();
       this.getUsers();
-      this.getSalesSectionHeadUsers();
     },
     watch: {
       dialog(newVal) {
@@ -128,15 +129,6 @@
         this.$axios.get(`${this.$config.restUrl}/api/customer/getallfulfillers`)
           .then(response => {
             this.users = response.data.data;
-          })
-          .catch(error => {
-            console.error('Error fetching users:', error);
-          });
-      },
-      getSalesSectionHeadUsers() {
-        this.$axios.get(`${this.$config.restUrl}/api/customer/getallsalessectionheadusers`)
-          .then(response => {
-            this.salesHeadUsers = response.data.data;
           })
           .catch(error => {
             console.error('Error fetching users:', error);
