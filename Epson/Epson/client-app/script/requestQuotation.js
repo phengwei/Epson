@@ -38,7 +38,7 @@ export default {
       months: ['None', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
       product: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null, remarks: null },
       products: [],
-      coverplus: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
+      coverplus: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null , remarks: null, warrantyRequest: null, warrantyRequestPeriod: null },
       coverpluses: [],
       competitor: { model: null, brand: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
       competitors: [],
@@ -357,7 +357,6 @@ export default {
       this.dialogCoverplus = true;
     },
     openEditCoverplusDialog(coverplus) {
-      console.log("awd", coverplus);
       this.selectedCoverplus = { ...coverplus };
       this.$nextTick(() => {
         this.dialogCoverplus = true;
@@ -372,6 +371,8 @@ export default {
         updatedCoverplus.distyPrice = updatedCoverplus.distyPrice || 0;
         updatedCoverplus.dealerPrice = updatedCoverplus.dealerPrice || 0;
         updatedCoverplus.endUserPrice = updatedCoverplus.endUserPrice || 0;
+        updatedCoverplus.warrantyRequest = updatedCoverplus.warrantyRequest || '';
+        updatedCoverplus.warrantyRequestPeriod = updatedCoverplus.warrantyRequestPeriod || '';
 
         this.$set(this.coverplusesToShow, index, updatedCoverplus);
       } else {
@@ -385,6 +386,8 @@ export default {
       newCoverplus.distyPrice = newCoverplus.distyPrice || 0;
       newCoverplus.dealerPrice = newCoverplus.dealerPrice || 0;
       newCoverplus.endUserPrice = newCoverplus.endUserPrice || 0;
+      newCoverplus.warrantyRequest = newCoverplus.warrantyRequest || 0;
+      newCoverplus.warrantyRequestPeriod = newCoverplus.warrantyRequestPeriod || 0;
       this.coverpluses.push(newCoverplus);
       this.showAddedCoverpluses(newCoverplus);
       this.product.category = null;
@@ -393,6 +396,8 @@ export default {
       this.product.distyPrice = null;
       this.product.dealerPrice = null;
       this.product.endUserPrice = null;
+      this.product.warrantyRequest = null;
+      this.product.warrantyRequestPeriod = null;
       this.dialogCoverplus = false;
     },
     removeCoverplus(index) {
@@ -434,7 +439,6 @@ export default {
       return 'N/A';
     },
     async populateForm(requestData) {
-      console.log("re", requestData);
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProductsModel) {
         const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
@@ -467,7 +471,9 @@ export default {
             remarks: (productModel.remarks === null || productModel.remarks === "null") ? 'N/A' : productModel.remarks,
             status: productModel.status,
             statusStr: productModel.statusStr,
-            fulfilledPrice: productModel.fulfilledPrice
+            fulfilledPrice: productModel.fulfilledPrice,
+            warrantyRequest: productModel.warrantyRequest,
+            warrantyRequestPeriod: productModel.warrantyRequestPeriod
           };
           if (productModel.isCoverplus === true) {
             this.coverplusesToShow.push(p);
@@ -744,6 +750,8 @@ export default {
           distyPrice: this.coverplusesToShow[coverplus].distyPrice,
           dealerPrice: this.coverplusesToShow[coverplus].dealerPrice,
           endUserPrice: this.coverplusesToShow[coverplus].endUserPrice,
+          warrantyRequest: this.coverplusesToShow[coverplus].warrantyRequest,
+          warrantyRequestPeriod: this.coverplusesToShow[coverplus].warrantyRequestPeriod,
           status: this.coverplusesToShow[coverplus].status,
           isCoverplus: true
         };

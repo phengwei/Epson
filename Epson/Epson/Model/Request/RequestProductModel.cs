@@ -25,6 +25,8 @@ namespace Epson.Model.Request
         public int Status { get; set; }
         public string? StatusStr { get; set; }
         public string? OverallRequestStatusStr { get; set; }
+        public string? WarrantyRequest { get; set; }
+        public string? WarrantyRequestPeriod { get; set; }
         public ProductCategoryModel ProductCategory { get; set; } = new ProductCategoryModel();
         public string? Remarks { get; set; }
         public DateTime CreatedOnUTC { get; set; }

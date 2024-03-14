@@ -16,12 +16,21 @@
           </select>
           <label>Quantity</label>
           <input v-model="localCoverplus.quantity" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-          <label>Disty Price</label>
-          <input v-model="localCoverplus.distyPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-          <label>Dealer Price</label>
-          <input v-model="localCoverplus.dealerPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-          <label>End User Price</label>
-          <input v-model="localCoverplus.endUserPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <label>Warranty Request</label>
+            <select v-model="localCoverplus.warrantyRequest" class="border-input">
+              <option v-for="warrantyRequest in warrantyRequests" :key="warrantyRequest" class="form-check-label" :value="warrantyRequest">{{ warrantyRequest }}</option>
+            </select>
+            <div class="mt-2" v-if="localCoverplus.warrantyRequest && localCoverplus.warrantyRequest != 'None'">
+              <select v-model="localCoverplus.warrantyRequestPeriod" class="border-input">
+                <option v-for="warrantyRequestPeriod in warrantyRequestPeriods" :key="warrantyRequestPeriod" class="form-check-label" :value="warrantyRequestPeriod">{{ warrantyRequestPeriod }}</option>
+              </select>
+            </div>
+        <label>Disty Price</label>
+        <input v-model="localCoverplus.distyPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+        <label>Dealer Price</label>
+        <input v-model="localCoverplus.dealerPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+        <label>End User Price</label>
+        <input v-model="localCoverplus.endUserPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
         </div>
       </v-card-text>
       <v-card-actions>
@@ -48,6 +57,8 @@
         localCoverplus: { ...this.coverplus },
         localCoverplusOptions: [],
         categories: [],
+        warrantyRequests: ['None', 'Carry-in', 'On-site'],
+        warrantyRequestPeriods: ['None', '+1', '+2', '+3', '+4'],
         isEditMode: false
       };
     },
@@ -129,7 +140,7 @@
       validateCoverplus() {
         return this.localCoverplus.category && this.localCoverplus.productId
           && this.localCoverplus.quantity && this.localCoverplus.dealerPrice
-          && this.localCoverplus.endUserPrice;
+          && this.localCoverplus.endUserPrice && this.localCoverplus.warrantyRequest;
       },
       resetLocalCoverplus() {
         this.localCoverplus = {
@@ -139,6 +150,8 @@
           distyPrice: null,
           dealerPrice: null,
           endUserPrice: null,
+          warrantyRequest: null,
+          warrantyRequestPeriod: null
         };
       },
       onCancel() {

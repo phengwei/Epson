@@ -29,5 +29,7 @@ namespace Epson.Services.DTO.Requests
         public bool IsCoverplus { get; set; }
         public bool AuthorizedToFulfill { get; set; }
         public bool HasReminded { get; set; }
+        public string? WarrantyRequest { get; set; }
+        public string? WarrantyRequestPeriod { get; set; }
     }
 }

@@ -167,6 +167,8 @@ namespace Epson.Factories
                             StatusStr = ((RequestProductStatusEnum)rp.Status).GetDescription(),
                             Remarks = rp.Remarks,
                             AuthorizedToFulfill = rp.AuthorizedToFulfill,
+                            WarrantyRequest = rp.WarrantyRequest,
+                            WarrantyRequestPeriod = rp.WarrantyRequestPeriod,
                             ProductCategory = _productService.GetProductCategoriesByProductId(rp.ProductId).Select(pc => new ProductCategoryModel
                             {
                                 ProductId = pc.ProductId,

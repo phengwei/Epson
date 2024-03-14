@@ -55,6 +55,7 @@
       getRequests() {
         this.$axios.get(`${this.$config.restUrl}/api/request/getrequests`)
           .then(response => {
+
             this.requests = response.data.data.map(item => ({
               ...item,
               createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm')    

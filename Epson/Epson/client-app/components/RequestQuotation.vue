@@ -89,13 +89,14 @@
             <table class="mb-5 mt-2">
               <thead>
                 <tr class="header-row">
-                  <th colspan="3"><h2>PROPOSED COVERPLUS</h2></th>
-                  <th colspan="7"><h2>PRICE EXPECTATION (RM)</h2></th>
+                  <th colspan="4"><h2>PROPOSED COVERPLUS</h2></th>
+                  <th colspan="8"><h2>PRICE EXPECTATION (RM)</h2></th>
                 </tr>
                 <tr>
                   <th>Category</th>
                   <th>Product</th>
                   <th>Quantity</th>
+                  <th>Warranty Details</th>
                   <th>Disty Price</th>
                   <th>Dealer Price</th>
                   <th>End User Price</th>
@@ -106,13 +107,17 @@
               </thead>
               <tbody>
                 <tr v-for="(coverplus, index) in coverplusesToShow" :key="index"
-                          :class="{
+                    :class="{
                             'not-approved': isFulfillMode && coverplus.statusStr !== 'Approved',
                             'approved': isAmendMode && coverplus.statusStr === 'Approved'
                           }">
                   <td>{{ coverplus.category ? coverplus.category.name : 'N/A' }}</td>
                   <td>{{ coverplus.productId ? findProductName(coverplus.productId) : coverplus.productName }}</td>
                   <td>{{ coverplus.quantity || 'N/A' }}</td>
+                  <td>
+                    {{ coverplus.warrantyRequest || 'N/A' }}
+                    <span v-if="coverplus.warrantyRequest"> {{ coverplus.warrantyRequestPeriod || "" }}</span>
+                  </td>
                   <td>{{ coverplus.distyPrice || 'N/A' }}</td>
                   <td>{{ coverplus.dealerPrice || 'N/A' }}</td>
                   <td>{{ coverplus.endUserPrice || 'N/A' }}</td>
