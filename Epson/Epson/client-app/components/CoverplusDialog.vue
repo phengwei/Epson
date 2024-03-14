@@ -16,21 +16,31 @@
           </select>
           <label>Quantity</label>
           <input v-model="localCoverplus.quantity" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-          <label>Warranty Request</label>
-            <select v-model="localCoverplus.warrantyRequest" class="border-input">
-              <option v-for="warrantyRequest in warrantyRequests" :key="warrantyRequest" class="form-check-label" :value="warrantyRequest">{{ warrantyRequest }}</option>
-            </select>
-            <div class="mt-2" v-if="localCoverplus.warrantyRequest && localCoverplus.warrantyRequest != 'None'">
-              <select v-model="localCoverplus.warrantyRequestPeriod" class="border-input">
-                <option v-for="warrantyRequestPeriod in warrantyRequestPeriods" :key="warrantyRequestPeriod" class="form-check-label" :value="warrantyRequestPeriod">{{ warrantyRequestPeriod }}</option>
+          <div class="flex-row">
+            <div class="flex-column">
+              <label>Warranty Request</label>
+              <select v-model="localCoverplus.warrantyRequest" class="border-input">
+                <option v-for="warrantyRequest in warrantyRequests" :key="warrantyRequest" :value="warrantyRequest">
+                  {{ warrantyRequest }}
+                </option>
               </select>
             </div>
-        <label>Disty Price</label>
-        <input v-model="localCoverplus.distyPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-        <label>Dealer Price</label>
-        <input v-model="localCoverplus.dealerPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-        <label>End User Price</label>
-        <input v-model="localCoverplus.endUserPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+
+            <div class="flex-column" v-if="localCoverplus.warrantyRequest && localCoverplus.warrantyRequest != 'None'">
+              <label>Warranty Request Period</label>
+              <select v-model="localCoverplus.warrantyRequestPeriod" class="border-input">
+                <option v-for="warrantyRequestPeriod in warrantyRequestPeriods" :key="warrantyRequestPeriod" :value="warrantyRequestPeriod">
+                  {{ warrantyRequestPeriod }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <label>Disty Price</label>
+          <input v-model="localCoverplus.distyPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <label>Dealer Price</label>
+          <input v-model="localCoverplus.dealerPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <label>End User Price</label>
+          <input v-model="localCoverplus.endUserPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
         </div>
       </v-card-text>
       <v-card-actions>
@@ -171,6 +181,23 @@
 </script>
 
 <style scoped>
+  .flex-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1em; 
+  }
+
+  .flex-column {
+    display: flex;
+    flex-direction: column;
+    flex: 1; 
+    margin-right: 16px; 
+  }
+
+    .flex-column:last-child {
+      margin-right: 0; 
+    }
+
   .products-title {
     font-size: 2em;
     text-align: center;
