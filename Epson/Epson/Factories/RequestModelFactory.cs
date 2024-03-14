@@ -70,6 +70,19 @@ namespace Epson.Factories
             List<RequestProductModel> requestProductModels = new List<RequestProductModel>();
             foreach (var requestProduct in requestProducts)
             {
+                var approvalState = _requestService.GetRequestById(requestProduct.RequestId).ApprovalState;
+
+                var overallRequestStatusStr = "Pending";
+
+                if (approvalState == (int)ApprovalStateEnum.Approved)
+                {
+                    overallRequestStatusStr = "Successful";
+                }
+                else if ((approvalState >= (int)ApprovalStateEnum.RejectedByFulfiller) && (approvalState <= (int)ApprovalStateEnum.DealExited))
+                {
+                    overallRequestStatusStr = "Failed";
+                }
+
                 var requestProductModel = new RequestProductModel
                 {
                     Id = requestProduct.Id,
@@ -92,6 +105,7 @@ namespace Epson.Factories
                     Status = requestProduct.Status,
                     StatusStr = ((RequestProductStatusEnum)requestProduct.Status).GetDescription(),
                     Remarks = requestProduct.Remarks,
+                    OverallRequestStatusStr = overallRequestStatusStr
                 };
 
                 requestProductModels.Add(requestProductModel);

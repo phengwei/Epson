@@ -28,11 +28,12 @@
         headers: [
           { text: 'Request #', value: 'id' },
           { text: 'Requester', value: 'requestedBy' },
-          { text: 'Product Name', value: 'productName' },
+          { text: 'Product', value: 'productName' },
           { text: 'Quantity', value: 'quantity' },
           { text: 'Budget', value: 'budget' },
           { text: 'Fulfilled Price', value: 'fulfilledPrice' },
           { text: 'Fulfilled Date', value: 'fulfilledDate' },
+          { text: 'Request Status', value: 'overallRequestStatusStr' },
           { text: 'Actions', value: 'action', sortable: false }
         ],
         requests: [],
@@ -47,6 +48,7 @@
           productName: product.productName,
           quantity: product.quantity,
           budget: product.endUserPrice,
+          overallRequestStatusStr: product.overallRequestStatusStr,
           fulfilledPrice: product.dealerPrice,
           fulfilledDate: moment(product.fulfilledDate).format('DD MMM YY HH:mm')
         }));

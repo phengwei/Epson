@@ -52,7 +52,14 @@
                   <td>{{ product.dealerPrice || 'N/A' }}</td>
                   <td>{{ product.endUserPrice || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ product.remarks || 'N/A' }}</td>
-                  <td v-if="isViewMode">{{ product.statusStr || 'N/A' }}</td>
+                  <td v-if="isViewMode">
+                    <span v-if="product.statusStr === 'Approved'">
+                      Approved at RM {{ product.dealerPrice }}
+                    </span>
+                    <span v-else>
+                      {{ product.statusStr || 'N/A' }}
+                    </span>
+                  </td>
                   <td v-if="!isViewMode">
                     <v-btn small color="primary" @click="openEditProductDialog(product)">
                       <v-icon>mdi-pencil</v-icon>
@@ -110,7 +117,14 @@
                   <td>{{ coverplus.dealerPrice || 'N/A' }}</td>
                   <td>{{ coverplus.endUserPrice || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ coverplus.remarks || 'N/A' }}</td>
-                  <td v-if="isViewMode">{{ coverplus.statusStr }}</td>
+                  <td v-if="isViewMode">
+                    <span v-if="coverplus.statusStr === 'Approved'">
+                      Approved at RM {{ coverplus.dealerPrice }}
+                    </span>
+                    <span v-else>
+                      {{ coverplus.statusStr || 'N/A' }}
+                    </span>
+                  </td>
                   <td v-if="!isViewMode">
                     <v-btn small color="primary" @click="openEditCoverplusDialog(coverplus)">
                       <v-icon>mdi-pencil</v-icon>
@@ -313,6 +327,18 @@
                   <td>:</td>
                   <td><input type="datetime-local" v-model="projectInformation.deliveryDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
+                <tr>
+                  <td>If Staggered Delivery, please select the month</td>
+                  <td>:</td>
+                  <td>
+                    <select v-model="projectInformation.staggeredMonth" class="border-input" :class="{'readonly-field': isViewMode}" :disabled="isViewMode">
+                      <option v-for="month in months" :key="month" class="form-check-label" :value="month">{{ month }}</option>
+                    </select>
+                    <div class="mt-2" v-if="projectInformation.staggeredMonth && projectInformation.staggeredMonth != 'None'">
+                      <input type="text" v-model="projectInformation.staggeredComments" placeholder="Enter Reason" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+                    </div>
+                  </td>
+                </tr>
               <td>Key Customer Requirements <span class="required-asterisk">*</span></td>
               <td>:</td>
               <td><input type="text" v-model="projectInformation.requirements" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
@@ -326,18 +352,6 @@
                 <td>Customer's Budget for this purchase <span class="required-asterisk">*</span></td>
                 <td>:</td>
                 <td><input type="number" min="1" v-model="projectInformation.budget" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
-              </tr>
-              <tr>
-                <td>If Staggered Delivery, please select the month</td>
-                <td>:</td>
-                <td>
-                  <select v-model="projectInformation.staggeredMonth" class="border-input" :class="{'readonly-field': isViewMode}" :disabled="isViewMode">
-                    <option v-for="month in months" :key="month" class="form-check-label" :value="month">{{ month }}</option>
-                  </select>
-                  <div class="mt-2" v-if="projectInformation.staggeredMonth && projectInformation.staggeredMonth != 'None'">
-                    <input type="text" v-model="projectInformation.staggeredComments" placeholder="Enter Reason" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-                  </div>
-                </td>
               </tr>
               <tr>
                 <td>Other Information</td>

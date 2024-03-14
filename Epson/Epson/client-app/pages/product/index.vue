@@ -48,7 +48,7 @@
                       <input v-model="editedItem.name" class="border-input" label="Product name" required></input>
                     </div>
                     <div class="form-group">
-                      <label>Price</label>
+                      <label>Dealer Price</label>
                       <input type="number" v-model="editedItem.price" class="border-input" label="Price" required></input>
                     </div>
 
