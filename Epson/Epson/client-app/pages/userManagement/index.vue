@@ -179,7 +179,6 @@
           confirmButtonText: 'Yes, change it!'
         }).then((result) => {
           if (result.isConfirmed) {
-            console.log("saveee");
             this.saveUserPassword();
           }
         })
@@ -307,7 +306,6 @@
         this.dialogPassword = true
       },
       saveUserPassword() {
-        console.log("entered");
         if (this.editedIndex > -1) {
           this.$axios.post(`${this.$config.restUrl}/api/customer/adminchangepassword?newPassword=${this.password}`
           ).then(response => {
@@ -359,7 +357,6 @@
         })
       },
       reactivateAccountConfirmation(item) {
-        console.log("item", item);
         this.$swal({
           title: 'Are you sure?',
           text: "Unlock account!",

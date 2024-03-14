@@ -107,7 +107,6 @@
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`).then(result => {
           this.itemsPendingFulfilment = [];
           result.data.data.forEach(item => {
-            console.log("item", item);
             item.requestProductsModel.forEach(product => {
               if (product.authorizedToFulfill && product.status === RequestProductStatusEnum.Pending) {
                 const newItem = {

@@ -98,7 +98,6 @@
             }
           }).then(response => {
             const userRoles = this.$auth.user.data.roles;
-            console.log("roles", this.$auth.user.data.roles);
             if (userRoles.includes('Admin')) {
               this.$router.push('/userManagement');
             } else if (userRoles.includes('Product')) {

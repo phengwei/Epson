@@ -132,7 +132,6 @@
     },
     methods: {
       viewRequest(request) {
-        console.log("req", request);
         let queryParameters = { view: true, request: JSON.stringify(request) };
 
         if (request.approvalState === ApprovalStateEnum.PendingRequesterAction) {

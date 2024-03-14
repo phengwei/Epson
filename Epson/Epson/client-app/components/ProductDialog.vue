@@ -64,7 +64,6 @@
       product: {
         immediate: true,
         handler(newVal) {
-          console.log("Product prop updated in ProductDialog:", newVal);
           this.localProduct = { ...newVal };
           this.isEditMode = newVal && newVal.id != null;
         },
@@ -101,7 +100,6 @@
         }
       },
       setEditMode(isEdit, product) {
-        console.log("pro", product);
         this.isEditMode = isEdit;
         this.localProduct = { ...product };
         this.localProduct.status = 0;
@@ -111,7 +109,6 @@
         }
       },
       onEditProduct() {
-        console.log("edit");
         if (this.validateProduct()) {
           this.$emit('edit-product', this.localProduct);
           this.resetLocalProduct();

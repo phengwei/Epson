@@ -116,7 +116,6 @@
             "2023-05-09T16:00:00.000Z"
           ];
 
-          console.log("staff", t);
         } catch (error) {
           console.error('There was a problem fetching the staff:', error);
         }
@@ -154,7 +153,6 @@
           });
           const staffLeaves = data;
 
-          console.log('SLA staff leaves:', staffLeaves);
         } catch (error) {
           console.error('There was a problem fetching SLA staff leaves:', error);
         }

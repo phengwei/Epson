@@ -161,7 +161,6 @@
       getProducts() {
         this.loading = true;
         this.$axios.get(`${this.$config.restUrl}/api/product/getproducts`).then(result => {
-          console.log("res", result);
           this.products = result.data.data.map(product => {
             return {
               ...product,
@@ -202,7 +201,6 @@
         }
       },
       deactivateItemConfirm(item) {
-        console.log("item", item);
         this.$swal({
           title: 'Are you sure to deactivate the product?',
           icon: 'warning',
