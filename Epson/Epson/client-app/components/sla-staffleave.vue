@@ -106,15 +106,8 @@
       async getAllStaffs() {
         try {
           const response = await fetch('api/customer/getallstaff');
-          const { data } = await response.json();
+          const data  = await response.json();
           this.staffMembers = data;
-
-          const t = [
-            "2023-04-29T16:00:00.000Z",
-            "2023-05-04T16:00:00.000Z",
-            "2023-05-03T16:00:00.000Z",
-            "2023-05-09T16:00:00.000Z"
-          ];
 
         } catch (error) {
           console.error('There was a problem fetching the staff:', error);
@@ -146,12 +139,11 @@
       },
       async getSLAStaffLeavesByStaff(staffId) {
         try {
-          const { data } = await this.$axios.get(`${this.$config.restUrl}/api/sla/getslastaffleavesbystaff`, {
+          await this.$axios.get(`${this.$config.restUrl}/api/sla/getslastaffleavesbystaff`, {
             params: {
               staffId
             }
           });
-          const staffLeaves = data;
 
         } catch (error) {
           console.error('There was a problem fetching SLA staff leaves:', error);
