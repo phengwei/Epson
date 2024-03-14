@@ -8,6 +8,7 @@ using Epson.Services.Interface.Categories;
 using Epson.Model.Categories;
 using Epson.Core.Domain.Categories;
 using Epson.Services.Interface.Products;
+using Microsoft.IdentityModel.Abstractions;
 
 namespace Epson.Controllers.API
 {
@@ -100,7 +101,8 @@ namespace Epson.Controllers.API
             {
                 Name = model.Name,
                 BackupFulfiller1 = model.BackupFulfiller1,
-                BackupFulfiller2 = model.BackupFulfiller2
+                BackupFulfiller2 = model.BackupFulfiller2,
+                EscalationFulfiller = model.EscalationFulfiller
             };
 
             if (_categoryService.InsertCategory(category, user.Id))
@@ -132,7 +134,8 @@ namespace Epson.Controllers.API
                 Id = category.Id,
                 Name = model.Name,
                 BackupFulfiller1 = model.BackupFulfiller1,
-                BackupFulfiller2 = model.BackupFulfiller2
+                BackupFulfiller2 = model.BackupFulfiller2,
+                EscalationFulfiller =  model.EscalationFulfiller
             };
 
             if (_categoryService.UpdateCategory(updatedCategory, user.Id))

@@ -19,7 +19,7 @@
                 <input v-model="newCategory.name" class="border-input" required></input>
               </div>
               <div class="form-group">
-                <label>Backup Fulfiller 1</label>
+                <label>Primary Fulfiller</label>
                 <select v-model="newCategory.backupFulfiller1" class="border-input">
                   <option value="">None</option>
                   <option v-for="user in availableUsersForFulfiller1" :key="user.id" :value="user.id">
@@ -28,10 +28,19 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>Backup Fulfiller 2</label>
+                <label>Secondary Fulfiller</label>
                 <select v-model="newCategory.backupFulfiller2" class="border-input">
                   <option value="">None</option>
                   <option v-for="user in availableUsersForFulfiller2" :key="user.id" :value="user.id">
+                    {{ user.userName }}
+                  </option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>3rd Tier Escalation</label>
+                <select v-model="newCategory.escalationFulfiller" class="border-input">
+                  <option value="">None</option>
+                  <option v-for="user in availableUsersForEscalationFulfiller" :key="user.id" :value="user.id">
                     {{ user.userName }}
                   </option>
                 </select>
@@ -70,11 +79,14 @@
           name: '',
           products: [],
           backupFulfiller1: '',
-          backupFulfiller2: ''
+          backupFulfiller2: '',
+          escalationFulfiller:  ''
         },
         users: [],
+        salesHeadUsers: [],
         backupFulfiller1: null,
         backupFulfiller2: null,
+        escalationFulfiller: null,
         categories: [],
         headers: [
           { text: 'Category', value: 'name' },
@@ -94,10 +106,15 @@
       availableUsersForFulfiller2() {
         return this.users.filter(user => user.id !== this.newCategory.backupFulfiller1);
       },
+      availableUsersForEscalationFulfiller() {
+        return this.salesHeadUsers.filter(user => user.id !== this.newCategory.backupFulfiller1 &&
+                                                  user.id !== this.newCategory.backupFulfiller2);
+      },
     },
     created() {
       this.getCategories();
-      this.getUsers(); 
+      this.getUsers();
+      this.getSalesSectionHeadUsers();
     },
     watch: {
       dialog(newVal) {
@@ -111,7 +128,15 @@
         this.$axios.get(`${this.$config.restUrl}/api/customer/getallfulfillers`)
           .then(response => {
             this.users = response.data.data;
-            console.log("this.user", this.users);
+          })
+          .catch(error => {
+            console.error('Error fetching users:', error);
+          });
+      },
+      getSalesSectionHeadUsers() {
+        this.$axios.get(`${this.$config.restUrl}/api/customer/getallsalessectionheadusers`)
+          .then(response => {
+            this.salesHeadUsers = response.data.data;
           })
           .catch(error => {
             console.error('Error fetching users:', error);
@@ -147,7 +172,8 @@
         this.newCategory = {
           name: '',
           backupFulfiller1: '',
-          backupFulfiller2: ''
+          backupFulfiller2: '',
+          escalationFulfiller: ''
         };
         this.editedIndex = -1;
       },
@@ -155,7 +181,6 @@
         this.$axios.get(`${this.$config.restUrl}/api/category/getcategories`)
           .then(response => {
             this.categories = response.data.data;
-            console.log("this", this.categories);
           })
           .catch(error => {
             console.error('Error fetching categories:', error);
@@ -166,7 +191,8 @@
           data: {
             name: this.newCategory.name,
             backupFulfiller1: this.newCategory.backupFulfiller1,
-            backupFulfiller2: this.newCategory.backupFulfiller2
+            backupFulfiller2: this.newCategory.backupFulfiller2,
+            escalationFulfiller: this.newCategory.escalationFulfiller
           }
         }).then(response => {
           this.dialog = false;
@@ -179,7 +205,6 @@
         });
       },
       editCategory(item) {
-        console.log("item", item);
         this.isEditing = true;
         this.editedIndex = this.categories.indexOf(item)
         this.newCategory = Object.assign({}, item)
@@ -194,7 +219,8 @@
               id: this.newCategory.id,
               name: this.newCategory.name,
               backupFulfiller1: this.newCategory.backupFulfiller1,
-              backupFulfiller2: this.newCategory.backupFulfiller2
+              backupFulfiller2: this.newCategory.backupFulfiller2,
+              escalationFulfiller: this.newCategory.escalationFulfiller
             }
           }).then(response => {
             Object.assign(this.categories[this.editedIndex], response.data);

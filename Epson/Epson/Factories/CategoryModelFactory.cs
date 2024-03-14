@@ -50,7 +50,8 @@ namespace Epson.Factories
                     Name = category.Name,
                     Products = _mapper.Map<List<Product>>(_productService.GetProductsByCategory(category.Id).ToList()),
                     BackupFulfiller1 = category.BackupFulfiller1,
-                    BackupFulfiller2 = category.BackupFulfiller2
+                    BackupFulfiller2 = category.BackupFulfiller2,
+                    EscalationFulfiller = category.EscalationFulfiller
                 };
                 categoryModels.Add(categoryModel);
             }

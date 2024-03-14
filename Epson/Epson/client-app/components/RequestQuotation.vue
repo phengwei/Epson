@@ -208,7 +208,7 @@
                   <td><input type="text" v-model="submissionDetail.contactPersonName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
                 <tr>
-                  <td>Telephone No</td>
+                  <td>Telephone No <span class="required-asterisk">*</span></td>
                   <td>:</td>
                   <td><input type="text" v-model="submissionDetail.telephoneNo" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
@@ -218,7 +218,7 @@
                   <td><input type="text" v-model="submissionDetail.faxNo" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
                 <tr>
-                  <td>Email</td>
+                  <td>Email <span class="required-asterisk">*</span></td>
                   <td>:</td>
                   <td><input type="text" v-model="submissionDetail.email" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
@@ -261,7 +261,7 @@
                   <td><input type="text" v-model="projectInformation.contactPersonName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
                 <tr>
-                  <td>Telephone No</td>
+                  <td>Telephone No <span class="required-asterisk">*</span></td>
                   <td>:</td>
                   <td><input type="text" v-model="projectInformation.telephoneNo" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
@@ -271,7 +271,7 @@
                   <td><input type="text" v-model="projectInformation.email" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
                 <tr>
-                  <td>Type</td>
+                  <td>Type <span class="required-asterisk">*</span></td>
                   <td>:</td>
                   <td>
                     <div class="form-check">
@@ -304,16 +304,16 @@
                   </td>
                 </tr>
                 <tr>
-                  <td>Closing Date</td>
+                  <td>Closing Date <span class="required-asterisk">*</span></td>
                   <td>:</td>
                   <td><input type="datetime-local" v-model="projectInformation.closingDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
                 <tr>
-                  <td>Delivery Date</td>
+                  <td>Delivery Date <span class="required-asterisk">*</span></td>
                   <td>:</td>
                   <td><input type="datetime-local" v-model="projectInformation.deliveryDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
-              <td>Key Customer Requirements</td>
+              <td>Key Customer Requirements <span class="required-asterisk">*</span></td>
               <td>:</td>
               <td><input type="text" v-model="projectInformation.requirements" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
               </tr>
@@ -323,7 +323,7 @@
                 <td><input type="text" v-model="projectInformation.customerApplications" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
               </tr>
               <tr>
-                <td>Customer's Budget for this purchase'</td>
+                <td>Customer's Budget for this purchase <span class="required-asterisk">*</span></td>
                 <td>:</td>
                 <td><input type="number" min="1" v-model="projectInformation.budget" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
               </tr>
@@ -426,6 +426,11 @@
     border: 1px solid #ddd;
     padding: 8px;
     text-align: left;
+  }
+
+  .required-asterisk {
+    color: red;
+    margin-left: 2px;
   }
 
   h1 {

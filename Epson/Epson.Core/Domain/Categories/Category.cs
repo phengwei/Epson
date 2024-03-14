@@ -13,5 +13,6 @@ namespace Epson.Core.Domain.Categories
         public string Name { get; set; }
         public string BackupFulfiller1 { get; set; }
         public string BackupFulfiller2 { get; set; }
+        public string EscalationFulfiller { get; set; }
     }
 }
