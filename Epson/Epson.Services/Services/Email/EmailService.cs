@@ -19,6 +19,7 @@ using Epson.Core.Domain.Users;
 using Epson.Services.Interface.Products;
 using Epson.Services.Interface.Requests;
 using Epson.Core.Domain.Products;
+using Epson.Services.Interface.Users;
 
 namespace Epson.Services.Services.Email
 {
@@ -28,22 +29,31 @@ namespace Epson.Services.Services.Email
         private readonly IMapper _mapper;
         private readonly IRepository<EmailAccount> _EmailAccountRepository;
         private readonly IRepository<EmailQueue> _EmailQueueRepository;
+        private readonly IRepository<ProjectInformation> _ProjectInformationRepository;
+        private readonly IRepository<Request> _RequestRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IProductService _productService;
+        private readonly IUserService _userService;
         public EmailService
             (ILogger logger,
             IMapper mapper,
             IRepository<EmailAccount> EmailAccountRepository,
             IRepository<EmailQueue> EmailQueueRepository,
+            IRepository<ProjectInformation> ProjectInformationRepository,
+            IRepository<Request> RequestRepository,
             UserManager<ApplicationUser> userManager,
-            IProductService productService)
+            IProductService productService,
+            IUserService userService)
         {
             _logger = logger;
             _mapper = mapper;
             _EmailAccountRepository = EmailAccountRepository;
             _EmailQueueRepository = EmailQueueRepository;
+            _ProjectInformationRepository = ProjectInformationRepository;
+            _RequestRepository = RequestRepository;
             _userManager = userManager;
             _productService = productService;
+            _userService = userService;
         }
 
         public EmailAccountDTO GetEmailAccountById(int id)
@@ -272,12 +282,20 @@ namespace Epson.Services.Services.Email
                         <p>A new request has been created with the following details:</p>
                         <table>
                             <tr>
+                                <th>Org</th>
+                                <td>EMSB - {_userService.GetTeamById(requester.Result.TeamId).Name}</td>
+                            </tr>
+                            <tr>
                                 <th>Requester</th>
                                 <td>{requester.Result.UserName}</td>
                             </tr>
                             <tr>
                                 <th>Total Budget</th>
                                 <td>RM {request.TotalBudget}</td>
+                            </tr>
+                            <tr>
+                                <th>End User</th>
+                                <td>RM {_ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault().ProjectName}</td>
                             </tr>
                             <tr>
                                 <th>Products</th>
@@ -323,6 +341,9 @@ namespace Epson.Services.Services.Email
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
             var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
             var product = _productService.GetProductById(requestProduct.ProductId);
+            var requesterTask = _userManager.FindByIdAsync(_RequestRepository.GetById(requestProduct.RequestId).CreatedById);
+            requesterTask.Wait();
+            var requester = requesterTask;
 
             var subject = $"Request {requestProduct.Id} due soon!";
 
@@ -385,7 +406,15 @@ namespace Epson.Services.Services.Email
                     </div>
                     <div class='email-body'>
                         <p><strong>Request {requestProduct.Id}</strong> is due soon with the following details:</p>
-                        <table>
+                        <table>                    
+                            <tr>
+                                <th>Org</th>
+                                <td>EMSB - {_userService.GetTeamById(requester.Result.TeamId).Name}</td>
+                            </tr>
+                            <tr>
+                                <th>Requester</th>
+                                <td>{requester.Result.UserName}</td>
+                            </tr>
                             <tr>
                                 <th>Product</th>
                                 <td>{product.Name}</td>
@@ -401,6 +430,10 @@ namespace Epson.Services.Services.Email
                             <tr>
                                 <th>Request Created On</th>
                                 <td>{requestProduct.CreatedOnUTC:MM/dd/yyyy HH:mm:ss}</td>
+                            </tr>
+                            <tr>
+                                <th>End User</th>
+                                <td>RM {_ProjectInformationRepository.GetAll().Where(x => x.RequestId == requestProduct.RequestId).FirstOrDefault().ProjectName}</td>
                             </tr>
                         </table>
                     </div>
@@ -458,7 +491,6 @@ namespace Epson.Services.Services.Email
 
         public EmailQueue CreateFulfillEmailQueue(Request request, RequestProduct requestProduct, bool hasFulfillmentComplete)
         {
-            //todo: configure to capture from user / request
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
             if (emailAccount == null)
                 return new EmailQueue();
@@ -523,9 +555,17 @@ namespace Epson.Services.Services.Email
                         <div class='email-header'>
                             <h1>Request Fulfillment</h1>
                         </div>
-                        <div class='email-body'>
+                        <div class='email-body'> 
                             <p>Request {request.Id} is fulfilled by {fulfiller.Result.UserName} with the following details:</p>
-                            <table>
+                            <table>                            
+                                <tr>
+                                    <th>Org</th>
+                                    <td>EMSB - {_userService.GetTeamById(requester.Result.TeamId).Name}</td>
+                                </tr>
+                                <tr>
+                                    <th>Requester</th>
+                                    <td>{requester.Result.UserName}</td>
+                                </tr>
                                 <tr>
                                     <th>Product</th>
                                     <td>{product.Name}</td>
@@ -537,6 +577,10 @@ namespace Epson.Services.Services.Email
                                 <tr>
                                     <th>Price Fulfilled</th>
                                     <td>RM {requestProduct.FulfilledPrice}</td>
+                                </tr>
+                                <tr>
+                                    <th>End User</th>
+                                    <td>RM {_ProjectInformationRepository.GetAll().Where(x => x.RequestId == requestProduct.RequestId).FirstOrDefault().ProjectName}</td>
                                 </tr>
                             </table>
                         </div>

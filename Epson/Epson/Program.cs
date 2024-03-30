@@ -71,6 +71,13 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
 });
 
 builder.Services.AddSingleton<Serilog.ILogger>(log);
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder => builder.WithOrigins("http://epson-stg-dev.eba-8tvp5kuf.ap-southeast-1.elasticbeanstalk.com")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod());
+});
 builder.Host.UseSerilog();
 #endregion
 
