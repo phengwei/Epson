@@ -82,7 +82,7 @@
             <v-data-table :headers="headers" :items="filteredUsers(item)" class="elevation-1">
               <template v-slot:item.actions="{ item }">
                 <v-icon small class="mr-2" @click="editUser(item)">mdi-pencil</v-icon>
-                <v-icon small class="mr-2" @click="deleteUserConfirmation(item)">mdi-delete</v-icon>
+                <!--<v-icon small class="mr-2" @click="deleteUserConfirmation(item)">mdi-delete</v-icon>-->
                 <v-icon small class="mr-2" @click="changePassword(item)">mdi-lock-reset</v-icon>
                 <v-icon small v-if="item.lockoutEnd != null" class="mr-2" @click="reactivateAccountConfirmation(item)">mdi-account-reactivate</v-icon>
               </template>
@@ -224,7 +224,7 @@
       getAllRoles() {
         this.$axios.get(`${this.$config.restUrl}/api/customer/getallroles`)
           .then(response => {
-            this.roles = response.data.data;
+            this.roles = response.data.data.filter(role => role.name !== 'admin');
           })
           .catch(error => {
             console.error('Error fetching roles:', error);
