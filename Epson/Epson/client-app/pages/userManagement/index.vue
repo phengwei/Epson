@@ -118,7 +118,7 @@
           { text: 'Team', value: 'teams' },
           { text: 'Actions', value: 'actions', sortable: false },
         ],
-        tabItems: ['Sales', 'Product', 'Admin', 'Coverplus', 'Sales Section Head'],
+        tabItems: ['Sales', 'Product', 'Coverplus', 'Sales Section Head'],
         tab: null,
         users: [],
         teams: [],
@@ -224,6 +224,7 @@
       getAllRoles() {
         this.$axios.get(`${this.$config.restUrl}/api/customer/getallroles`)
           .then(response => {
+            response.data.data = response.data.data.filter(role => role.name !== 'Admin');
             this.roles = response.data.data.filter(role => role.name !== 'admin');
           })
           .catch(error => {
