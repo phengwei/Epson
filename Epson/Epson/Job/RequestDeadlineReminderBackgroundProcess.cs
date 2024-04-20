@@ -48,7 +48,8 @@ namespace Epson.Job
                 .Where(rp => !rp.HasFulfilled
                             && !rp.HasReminded
                             && dbContext.Request.Any(r => r.Id == rp.RequestId
-                                && dbContext.ProjectInformation.Any(p => p.RequestId == r.Id && p.ClosingDate.Date < targetDate)))
+                                && dbContext.ProjectInformation.Any(p => p.RequestId == r.Id)
+                                && rp.CreatedOnUTC.AddDays(3) <= DateTime.UtcNow))
                 .ToListAsync();
 
             List<EmailQueue> emailQueues = new List<EmailQueue>();

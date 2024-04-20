@@ -79,5 +79,46 @@ namespace Epson.Services.Services.Users
             return productRoleUsers;
         }
 
+        private Dictionary<string, string> InitializeTeamHierarchy()
+        {
+            return new Dictionary<string, string>
+            {
+                {"Corporate Sales", "Corp & Gov"},
+                {"Government Sales", "Corp & Gov"},
+                {"Inside Sales", "Channel Support"},
+                {"Sales Support Management", "Channel Support"},
+                {"Product Marketing", "Channel Support"},
+                {"Brand & Comms", "Channel Support"},
+                {"Vertical Biz (LFP)", "Channel Support"},
+                {"Area (City)", "Retail"},
+                {"Area - MDT / Chain Store / E Commerce", "Retail"}
+            };
+        }
+
+        public async Task<ApplicationUser> GetFulfillerSalesHead(int teamID)
+        {
+            string fulfillerTeamName = _TeamRepository.GetAll().Where(x => x.Id == teamID).FirstOrDefault().Name; 
+            var teamHierarchy = InitializeTeamHierarchy();
+            var parentTeamName = teamHierarchy.ContainsKey(fulfillerTeamName) ? teamHierarchy[fulfillerTeamName] : null;
+
+            if (parentTeamName == null)
+            {
+                _logger.Information($"No parent team found for team {fulfillerTeamName}");
+                return null;
+            }
+
+            var parentTeam = _TeamRepository.Table.FirstOrDefault(t => t.Name == parentTeamName);
+            if (parentTeam == null)
+            {
+                _logger.Information($"Parent team {parentTeamName} not found in the repository.");
+                return null;
+            }
+
+            var salesUsers = await _userManager.GetUsersInRoleAsync("Sales Section Head");
+            var salesHeadUser = salesUsers.FirstOrDefault(x => x.TeamId == parentTeam.Id);
+
+            return salesHeadUser;
+        }
+
     }
 }

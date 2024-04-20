@@ -31,6 +31,7 @@ namespace Epson.Services.Services.Email
         private readonly IRepository<EmailQueue> _EmailQueueRepository;
         private readonly IRepository<ProjectInformation> _ProjectInformationRepository;
         private readonly IRepository<Request> _RequestRepository;
+        private readonly IRepository<Team> _TeamRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IProductService _productService;
         private readonly IUserService _userService;
@@ -41,6 +42,7 @@ namespace Epson.Services.Services.Email
             IRepository<EmailQueue> EmailQueueRepository,
             IRepository<ProjectInformation> ProjectInformationRepository,
             IRepository<Request> RequestRepository,
+            IRepository<Team> TeamRepository,
             UserManager<ApplicationUser> userManager,
             IProductService productService,
             IUserService userService)
@@ -446,6 +448,9 @@ namespace Epson.Services.Services.Email
                 return new List<EmailQueue>();
 
             List<EmailQueue> emailQueues = new List<EmailQueue>();
+            ApplicationUser ccSalesHead = await _userService.GetFulfillerSalesHead(fulfiller.Result.TeamId);
+
+            string ccEmails = ccSalesHead.Email + "hanson.ong@emsb.epson.com.my";
 
             if (requestProduct.IsCoverplus == false)
             {
@@ -458,6 +463,7 @@ namespace Epson.Services.Services.Email
                     ScheduleTime = DateTime.UtcNow,
                     SendAttempts = 0,
                     SentTime = null,
+                    Cc = ccEmails,
                     EmailAccountId = emailAccount.Id
                 };
 
@@ -817,6 +823,15 @@ namespace Epson.Services.Services.Email
                 MailMessage message = new MailMessage(emailQueue.FromEmail, emailQueue.ToEmail, emailQueue.Subject, emailQueue.Body);
 
                 message.IsBodyHtml = true;
+
+                if (!string.IsNullOrEmpty(emailQueue.Cc))
+                {
+                    foreach (var ccEmail in emailQueue.Cc.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        message.CC.Add(ccEmail.Trim());
+                    }
+                }
+
                 SmtpClient client = new SmtpClient(emailAccount.OutgoingServer, int.Parse(emailAccount.OutgoingPort));
 
                 client.UseDefaultCredentials = false;
