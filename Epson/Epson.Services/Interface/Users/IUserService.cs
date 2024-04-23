@@ -14,6 +14,6 @@ namespace Epson.Services.Interface.Users
         public List<TeamDTO> GetTeams();
         public List<ApplicationUser> GetAllUsers();
         public List<ApplicationUser> GetGovtUsersWithProductRole();
-        Task<ApplicationUser> GetFulfillerSalesHead(int teamID);
+        Task<ApplicationUser> GetUserSalesHead(int teamID);
     }
 }

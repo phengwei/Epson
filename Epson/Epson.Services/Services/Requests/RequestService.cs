@@ -102,7 +102,7 @@ namespace Epson.Services.Services.Requests
                     ApprovedTime = x.ApprovedTime,
                     CompetitorInformations = _CompetitorInformationRepository.Table.Where(p => p.RequestId == x.Id).ToList(),
                     CreatedById = x.CreatedById,
-                    CreatedOnUTC = x.CreatedOnUTC,
+                    CreatedOnUTC = x.CreatedOnUTC.AddHours(8),
                     UpdatedById = x.UpdatedById,
                     UpdatedOnUTC = x.UpdatedOnUTC,
                     Segment = x.Segment,
@@ -254,6 +254,14 @@ namespace Epson.Services.Services.Requests
                     InsertCompetitorInformation(competitorInformation);
                 }
 
+                var projectInformationId = _ProjectInformationRepository.Add(projectInformation);
+
+                foreach (var projectInformationReason in projectInformationDTO.ProjectInformationReasons)
+                {
+                    projectInformationReason.ProjectInformationId = projectInformationId;
+                    _ProjectInformationReasonRepository.Add(projectInformationReason);
+                }
+
                 List<EmailQueue> emailQueues = _emailService.NotifySalesSectionHeadUsers(request, requestProducts);
 
                 emailQueues.Add(_emailService.CreateRequestEmailQueue(request, requestProducts));
@@ -261,14 +269,6 @@ namespace Epson.Services.Services.Requests
                 foreach (var emailQueue in emailQueues)
                 {
                     _emailService.InsertEmailQueue(emailQueue);
-                }
-
-                var projectInformationId = _ProjectInformationRepository.Add(projectInformation);
-
-                foreach (var projectInformationReason in projectInformationDTO.ProjectInformationReasons)
-                {
-                    projectInformationReason.ProjectInformationId = projectInformationId;
-                    _ProjectInformationReasonRepository.Add(projectInformationReason);
                 }
 
                 requestSubmissionDetail.CreatedBy = request.CreatedById;
@@ -703,7 +703,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool ApproveFirstLevelRequest(Request request)
+        public async Task<bool> ApproveFirstLevelRequest(Request request)
         {
             var req = GetRequestById(request.Id);
 
@@ -716,6 +716,15 @@ namespace Epson.Services.Services.Requests
             {
                 _RequestRepository.Update(request);
                 _logger.Information("Completing first level approval for request {id}", request.Id);
+
+                List<RequestProductDTO> requestProducts = GetRequestProducts();
+
+                List<EmailQueue> emailQueues = await _emailService.NotifyFulfillers(request);
+
+                foreach (var emailQueue in emailQueues)
+                {
+                    _emailService.InsertEmailQueue(emailQueue);
+                }
 
                 return true;
             }

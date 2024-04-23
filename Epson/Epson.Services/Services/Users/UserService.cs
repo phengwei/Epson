@@ -95,7 +95,7 @@ namespace Epson.Services.Services.Users
             };
         }
 
-        public async Task<ApplicationUser> GetFulfillerSalesHead(int teamID)
+        public async Task<ApplicationUser> GetUserSalesHead(int teamID)
         {
             string fulfillerTeamName = _TeamRepository.GetAll().Where(x => x.Id == teamID).FirstOrDefault().Name; 
             var teamHierarchy = InitializeTeamHierarchy();

@@ -1,18 +1,14 @@
 import { mapGetters } from 'vuex';
 import Swal from 'sweetalert2';
-import ProductDialog from '~/components/ProductDialog.vue';
-import CompetitorInformationDialog from '~/components/CompetitorInformationDialog.vue';
-import CoverplusDialog from '~/components/CoverplusDialog.vue';
-import ProductFulfillmentDialog from '~/components/ProductFulfillmentDialog.vue';
 import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
 
 export default {
   name: "request-quotation",
   components: {
-    ProductDialog,
-    CompetitorInformationDialog,
-    CoverplusDialog,
-    ProductFulfillmentDialog
+    ProductDialog: () => import('~/components/ProductDialog.vue'),
+    CompetitorInformationDialog: () => import('~/components/CompetitorInformationDialog.vue'),
+    CoverplusDialog: () => import('~/components/CoverplusDialog.vue'),
+    ProductFulfillmentDialog: () => import('~/components/ProductFulfillmentDialog.vue'),
   },
   watch: {
     reasons: {
@@ -438,13 +434,12 @@ export default {
       }
       return 'N/A';
     },
-    async populateForm(requestData) {
+    populateForm(requestData) {
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProductsModel) {
         const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
         if (categoryFound) {
           this.selectedCategories.push(categoryFound);
-          await this.fetchProductsForCategory(categoryFound);
           const newItem = {
             ...requestData,
             ...productModel,
@@ -516,9 +511,7 @@ export default {
       try {
         const response = await this.$axios.get(`${this.$config.restUrl}/api/category/getvalidcategories`);
         this.categories = response.data.data;
-        for (const category of this.categories) {
-          await this.fetchProductsForCategory(category);
-        }
+
       } catch (error) {
         console.error(error);
       }

@@ -73,14 +73,7 @@ namespace Epson.Controllers.API
             var response = new GenericResponseModel<List<CategoryModel>>();
 
             var categories = _categoryService.GetCategories();
-
-            var categoryModels = _categoryModelFactory.PrepareCategoryModels(categories);
-
-            categoryModels = categoryModels
-                .Where(cm => _productService.GetProductsByCategory(cm.Id).Any())
-                .ToList();
-
-            response.Data = categoryModels;
+            response.Data = _categoryModelFactory.GetValidCategories(categories);
 
             return Ok(response);
         }

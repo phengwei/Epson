@@ -267,7 +267,7 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (_requestService.ApproveFirstLevelRequest(_mapper.Map<Request>(request)))
+            if (await _requestService.ApproveFirstLevelRequest(_mapper.Map<Request>(request)))
                 return Ok("Request has been approved to proceed");
             else
                 return BadRequest("Failed to set complete first level approval for request");
