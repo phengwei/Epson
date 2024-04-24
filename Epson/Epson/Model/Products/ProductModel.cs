@@ -11,6 +11,7 @@ namespace Epson.Model.Products
         public int Id { get; set; }
         public string Name { get; set; }
         public decimal Price { get; set; }
+        public decimal DealerPrice { get; set; }
         public string? CreatedById { get; set; }
         public string? UpdatedById { get; set; }
         public DateTime? CreatedOnUTC { get; set; }

@@ -17,6 +17,8 @@ using System.Globalization;
 using Epson.Services.DTO.Report;
 using Epson.Services.Interface.Users;
 using Epson.Services.DTO.Products;
+using Microsoft.EntityFrameworkCore;
+using Epson.Data;
 
 namespace Epson.Controllers.API
 {
@@ -30,6 +32,7 @@ namespace Epson.Controllers.API
         private readonly IWorkContext _workContext;
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IRepository<Team> _teamRepository;
         private readonly IConfiguration _configuration;
 
         public RequestApiController(
@@ -40,6 +43,7 @@ namespace Epson.Controllers.API
             IWorkContext workContext,
             IMapper mapper,
             UserManager<ApplicationUser> userManager,
+            IRepository<Team> teamRepository,
             IConfiguration configuration)
         {
             _requestService = requestService;
@@ -49,6 +53,7 @@ namespace Epson.Controllers.API
             _workContext = workContext;
             _mapper = mapper;
             _userManager = userManager;
+            _teamRepository = teamRepository;
             _configuration = configuration;
         }
         [HttpGet("getrequestbyid")]
@@ -425,20 +430,23 @@ namespace Epson.Controllers.API
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
             var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString());
 
-            List<RequestDTO> requests = new List<RequestDTO>();
+            List<RequestDTO> requests;
 
             if (isAdminUser)
             {
-                requests = _requestService.GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction
-                                                                || x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation)
-                                                                    .ToList();
+                requests = _requestService.GetRequests()
+                                          .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction ||
+                                                      x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation)
+                                          .ToList();
             }
             else
             {
-                requests = _requestService.GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction
-                                                                || x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction
-                                                                || x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation)
-                                                                    .ToList();
+                requests = _requestService.GetRequests()
+                                          .Where(x => (x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction ||
+                                                       x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction ||
+                                                       x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation) &&
+                                                       x.CreatedById == user.Id)
+                                          .ToList();
             }
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests);
@@ -447,6 +455,7 @@ namespace Epson.Controllers.API
 
             return Ok(response);
         }
+
 
         [HttpGet("getrequestsummary")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
@@ -505,21 +514,40 @@ namespace Epson.Controllers.API
         {
             var response = new GenericResponseModel<List<RequestModel>>();
 
-            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+            var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-            var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString());
+            var teamHierarchy = _userService.InitializeTeamHierarchy();
 
+            var currentUserTeamName = _teamRepository.GetAll().FirstOrDefault(t => t.Id == currentUser.TeamId)?.Name;
 
-            var requests = _requestService.GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction)
-                                                                    .ToList();
+            var relevantTeamNames = teamHierarchy.Where(kvp => kvp.Value == currentUserTeamName)
+                                                 .Select(kvp => kvp.Key)
+                                                 .ToList();
 
-            var requestModels = _requestModelFactory.PrepareRequestModels(requests);
+            var relevantTeamIds =  _teamRepository.GetAll()
+                                                        .Where(t => relevantTeamNames.Contains(t.Name))
+                                                        .ToList()
+                                                        .Select(t => t.Id)
+                                                        .ToList();
+
+            var filteredRequestsQuery = from req in _requestService.GetRequests()
+                                        where req.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction
+                                        join user in _userManager.Users on req.CreatedById equals user.Id
+                                        where relevantTeamIds.Contains(user.TeamId)
+                                        select req;
+
+            var filteredRequests = filteredRequestsQuery.ToList();
+
+            var requestModels = _requestModelFactory.PrepareRequestModels(filteredRequests);
 
             response.Data = requestModels;
 
             return Ok(response);
-        }        
-        
+        }
+
+
+
+
         [HttpGet("getpendingsalessectionheaddepartmentrequests")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
         public async Task<IActionResult> GetPendingSalesSectionHeadDepartmentItems()
@@ -532,6 +560,7 @@ namespace Epson.Controllers.API
                 .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
                             x.RequestProducts.Any(rp => _userManager.Users.Any(u => u.Id == rp.FulfillerId && u.TeamId == currentUser.TeamId)))
                 .ToList();
+
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests);
 

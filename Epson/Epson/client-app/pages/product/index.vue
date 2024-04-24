@@ -48,8 +48,12 @@
                       <input v-model="editedItem.name" class="border-input" label="Product name" required></input>
                     </div>
                     <div class="form-group">
+                      <label>Bottom Price</label>
+                      <input type="number" v-model="editedItem.price" class="border-input" label="Bottom Price" required></input>
+                    </div>
+                    <div class="form-group">
                       <label>Dealer Price</label>
-                      <input type="number" v-model="editedItem.price" class="border-input" label="Price" required></input>
+                      <input type="number" v-model="editedItem.dealerPrice" class="border-input" label="Dealer Price" required></input>
                     </div>
 
                     <v-card-actions>
@@ -117,7 +121,8 @@
             align: 'start',
             value: 'name',
           },
-          { text: 'Price', value: 'price' },
+          { text: 'Bottom Price', value: 'price' },
+          { text: 'Dealer Price', value: 'dealerPrice' },
           { text: 'Created On', value: 'createdOnUTC' },
           { text: 'Status', value: 'status' },
           { text: 'Actions', value: 'actions', sortable: false },
@@ -133,10 +138,12 @@
           id: 0,
           name: '',
           price: 0,
+          dealerPrice: 0
         },
         defaultItem: {
           name: '',
           price: 0,
+          dealerPrice: 0
         },
       }
     },
@@ -302,6 +309,7 @@
                   id: this.editedItem.id,
                   name: this.editedItem.name,
                   price: this.editedItem.price,
+                  dealerPrice: this.editedItem.dealerPrice,
                   productcategories: this.selectedCategories.map(category => ({
                     categoryid: category.id,
                     productId: this.editedItem.id
@@ -319,6 +327,7 @@
                 data: {
                   name: this.editedItem.name,
                   price: this.editedItem.price,
+                  dealerPrice: this.editedItem.dealerPrice,
                   productcategories: this.selectedCategories.map(category => ({
                     categoryid: category.id,
                     productId: this.editedItem.id

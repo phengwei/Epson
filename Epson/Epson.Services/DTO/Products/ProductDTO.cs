@@ -16,6 +16,7 @@ namespace Epson.Services.DTO.Products
         public string Name { get; set; }
         [Required(ErrorMessage = "Please enter price")]
         public decimal Price { get; set; }
+        public decimal DealerPrice { get; set; }
         public string CreatedById { get; set; }
         public string UpdatedById { get; set; }
         public DateTime CreatedOnUTC { get; set; }

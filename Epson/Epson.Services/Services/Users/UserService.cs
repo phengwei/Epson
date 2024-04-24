@@ -79,7 +79,7 @@ namespace Epson.Services.Services.Users
             return productRoleUsers;
         }
 
-        private Dictionary<string, string> InitializeTeamHierarchy()
+        public Dictionary<string, string> InitializeTeamHierarchy()
         {
             return new Dictionary<string, string>
             {

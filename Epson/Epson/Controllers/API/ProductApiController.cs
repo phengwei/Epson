@@ -101,10 +101,12 @@ namespace Epson.Controllers.API
             {
                 Name = model.Name,
                 Price = model.Price,
+                DealerPrice = model.DealerPrice,
                 CreatedOnUTC = DateTime.UtcNow,
                 UpdatedOnUTC = DateTime.UtcNow,
                 CreatedById = user.Id,
-                UpdatedById = user.Id
+                UpdatedById = user.Id,
+                IsActive = true
             };
 
             if (_productService.InsertProduct(product, model.ProductCategories, user.Id))
@@ -136,6 +138,7 @@ namespace Epson.Controllers.API
                 Id = product.Id,
                 Name = model.Name,
                 Price = model.Price,
+                DealerPrice = model.DealerPrice,
                 CreatedOnUTC = product.CreatedOnUTC,
                 UpdatedOnUTC = DateTime.UtcNow,
                 CreatedById = user.Id,
