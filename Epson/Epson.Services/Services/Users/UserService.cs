@@ -92,8 +92,8 @@ namespace Epson.Services.Services.Users
                 {"Vertical Biz (LFP)", "Channel Support"},
                 {"Area (City)", "Retail"},
                 {"Area - MDT / Chain Store / E Commerce", "Retail"},
-                {"West M'sia (Province)", "West M'sia (Province)" },
-                {"East M'sia (Province)", "East M'sia (Province)" }
+                {"Corporate Sales (West M'sia)", "Corporate Sales (West M'sia)" },
+                {"Corporate Sales (East M'sia)", "Corporate Sales (East M'sia)" }
             };
         }
 
