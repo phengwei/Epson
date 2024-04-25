@@ -504,7 +504,7 @@ namespace Epson.Services.Services.Requests
             var projectInformation = _ProjectInformationRepository.GetAll()
                 .FirstOrDefault(x => x.RequestId == request.Id) ?? new ProjectInformation { ClosingDate = DateTime.MinValue };
 
-            if (DateTime.UtcNow > projectInformation.ClosingDate)
+            if (DateTime.UtcNow > request.CreatedOnUTC.AddDays(5))
                 request.Breached = true;
 
             request.ApprovalState = (int)ApprovalStateEnum.Approved;
@@ -551,7 +551,7 @@ namespace Epson.Services.Services.Requests
             request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
             request.Comments = comments;
 
-            if (DateTime.UtcNow > projectInformation.ClosingDate)
+            if (DateTime.UtcNow > request.CreatedOnUTC.AddDays(5))
                 request.Breached = true;
 
             try
@@ -591,7 +591,7 @@ namespace Epson.Services.Services.Requests
             request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
             request.Comments = comments;
 
-            if (DateTime.UtcNow > projectInformation.ClosingDate)
+            if (DateTime.UtcNow > request.CreatedOnUTC.AddDays(5))
                 request.Breached = true;
 
             try
@@ -634,7 +634,7 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.Remarks = remarks;
             requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
 
-            if (DateTime.UtcNow > requestProductToFulfill.CreatedOnUTC.AddDays(3))
+            if (DateTime.UtcNow > requestProductToFulfill.CreatedOnUTC.AddDays(5))
                 requestProductToFulfill.Breached = true;
 
             try
@@ -854,7 +854,7 @@ namespace Epson.Services.Services.Requests
                 bool allRejected = requestProducts.All(rp => rp.Status == (int)RequestProductStatusEnum.Rejected);
                 bool allFulfilled = requestProducts.All(rp => rp.HasFulfilled == true);
 
-                if (DateTime.UtcNow > projectInformation.ClosingDate)
+                if (DateTime.UtcNow > requestProduct.CreatedOnUTC.AddDays(5))
                     requestProduct.Breached = true;
 
                 //if all products in a request is rejected, set status of request to reject
