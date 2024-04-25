@@ -384,7 +384,7 @@
         <button type="submit" @click="approveQuotation()" v-if="isMode('isApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadAction">Approve Quotation</button>
         <button type="submit" @click="rejectQuotation()" v-if="isMode('isApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadAction">Reject Quotation</button>
         <button type="submit" @click="redirectToRequest" v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head')">
-          Return to Request
+          Return to request list
         </button>
         <button type="submit" @click="exportToExcel" v-if="isMode('view')">
           Export
