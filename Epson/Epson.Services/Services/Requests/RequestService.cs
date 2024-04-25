@@ -634,7 +634,7 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.Remarks = remarks;
             requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
 
-            if (DateTime.UtcNow > projectInformation.ClosingDate)
+            if (DateTime.UtcNow > requestProductToFulfill.CreatedOnUTC.AddDays(3))
                 requestProductToFulfill.Breached = true;
 
             try
