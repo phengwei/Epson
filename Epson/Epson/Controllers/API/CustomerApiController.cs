@@ -445,6 +445,7 @@ namespace Epson.Controllers.API
                     UserName = user.UserName,
                     Email = user.Email,
                     Roles = roles.ToList(),
+                    Phone = user.PhoneNumber,
                     TeamId = user.TeamId,
                     Teams = _mapper.Map<Team>(_userService.GetTeamById(user.TeamId)).Name,
                     LockoutEnd = user.LockoutEnd
