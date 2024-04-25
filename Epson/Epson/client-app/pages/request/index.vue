@@ -3,11 +3,17 @@
     <v-card class="mx-auto" style="width: 90%">
       <v-card-title class="d-flex justify-content-between align-items-center">
         <span style="flex-grow: 1;">Request</span>
+        <v-text-field v-model="search"
+                      class="search-input"
+                      append-icon="mdi-magnify"
+                      label="Search by request #"
+                      single-line
+                      hide-details></v-text-field>
         <v-btn class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
       </v-card-title>
       <v-card-text>
         <v-data-table :headers="headers"
-                      :items="requests"
+                      :items="filteredRequests"
                       :items-per-page="5"
                       :options.sync="options"
                       :loading="loading"
@@ -20,7 +26,8 @@
     </v-card>
   </div>
 </template>
-      
+
+
 <script>
   import { mapGetters } from 'vuex';
   import moment from 'moment';
@@ -30,7 +37,15 @@
   export default {
     name: 'RequestOverview',
     computed: {
-      ...mapGetters(['isAuthenticated', 'loggedInUser'])
+      ...mapGetters(['isAuthenticated', 'loggedInUser']),
+      filteredRequests() {
+        if (this.search.trim() === '') {
+          return this.requests; 
+        }
+        return this.requests.filter(request => {
+          return String(request.id).toLowerCase().includes(this.search.toLowerCase());
+        });
+      }
     },
     data() {
       return {
@@ -44,6 +59,7 @@
         requests: [],
         options: {},
         loading: false,
+        search: '', 
         ApprovalStateEnum,
         RequestProductStatusEnum,
       };
@@ -58,7 +74,7 @@
 
             this.requests = response.data.data.map(item => ({
               ...item,
-              createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm')    
+              createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm')
             }));
           })
           .catch(error => {
@@ -109,6 +125,7 @@
   .vh-100 {
     height: 100vh;
   }
+
   .request-btn {
     background-color: #272727 !important;
     color: white !important;
@@ -118,4 +135,11 @@
     font-size: 14px;
     border-radius: 4px;
   }
+  .search-input {
+    flex-grow: 1;
+    margin-left: 16px; 
+    margin-right: 16px;
+    width: 5%;
+  }
+
 </style>
