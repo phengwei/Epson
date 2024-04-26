@@ -545,9 +545,6 @@ namespace Epson.Controllers.API
             return Ok(response);
         }
 
-
-
-
         [HttpGet("getpendingsalessectionheaddepartmentrequests")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
         public async Task<IActionResult> GetPendingSalesSectionHeadDepartmentItems()
@@ -556,11 +553,19 @@ namespace Epson.Controllers.API
 
             var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-           var requests = _requestService.GetRequests()
-                .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
-                            x.RequestProducts.Any(rp => _userManager.Users.Any(u => u.Id == rp.FulfillerId && u.TeamId == currentUser.TeamId)))
-                .ToList();
 
+            var relevantTeamIds = _userService.GetChildTeamIds(currentUser.TeamId, _teamRepository);
+            relevantTeamIds.Add(currentUser.TeamId); 
+
+            var usersInRelevantTeams = _userManager.Users
+                                                   .Where(u => relevantTeamIds.Contains(u.TeamId))
+                                                   .Select(u => u.Id)
+                                                   .ToList();
+
+            var requests = _requestService.GetRequests()
+                .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
+                            x.RequestProducts.Any(rp => usersInRelevantTeams.Contains(rp.FulfillerId)))
+                .ToList();
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests);
 
@@ -568,6 +573,7 @@ namespace Epson.Controllers.API
 
             return Ok(response);
         }
+
 
         [HttpGet("getcompletedrequests")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]

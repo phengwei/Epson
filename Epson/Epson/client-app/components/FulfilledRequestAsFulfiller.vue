@@ -1,12 +1,18 @@
 <template>
   <v-data-table :headers="headers"
-                :items="flattenedRequests"
+                :items="filteredFlattenedRequests"
                 :items-per-page="5"
                 class="elevation-1">
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title>Fulfilled Request</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
+        <v-text-field v-model="search"
+                      class="search-input"
+                      append-icon="mdi-magnify"
+                      label="Search by request #"
+                      single-line
+                      hide-details></v-text-field>
         <v-spacer></v-spacer>
       </v-toolbar>
     </template>
@@ -36,6 +42,7 @@
           { text: 'Request Status', value: 'overallRequestStatusStr' },
           { text: 'Actions', value: 'action', sortable: false }
         ],
+        search: '',
         requests: [],
       };
     },
@@ -52,7 +59,14 @@
           fulfilledPrice: product.dealerPrice,
           fulfilledDate: moment(product.fulfilledDate).format('DD MMM YY HH:mm')
         }));
-      }
+      },
+      filteredFlattenedRequests() {
+        if (!this.search) return this.requests;
+        const searchTerm = this.search.toLowerCase();
+        return this.requests.filter(request => {
+          return request.id.toString().toLowerCase().includes(searchTerm);
+        });
+      },
     },
     created() {
       this.getFulfilledRequestAsFulfiller();
@@ -104,5 +118,12 @@
 <style scoped>
   .vh-100 {
     height: 100vh;
+  }
+
+  .search-input {
+    flex-grow: 1;
+    margin-left: 16px;
+    margin-right: 16px;
+    width: 5%;
   }
 </style>

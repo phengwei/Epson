@@ -2,7 +2,7 @@
   <v-app>
     <div class="table-container">
       <v-data-table :headers="headers"
-                    :items="requests"
+                    :items="filteredRequests"
                     :options.sync="options"
                     :items-per-page="5"
                     :loading="loading"
@@ -11,6 +11,12 @@
           <v-toolbar flat>
             <v-toolbar-title>Requests pending fulfillment</v-toolbar-title>
             <v-divider class="mx-4" inset vertical></v-divider>
+            <v-text-field v-model="search"
+                          class="search-input"
+                          append-icon="mdi-magnify"
+                          label="Search by request #"
+                          single-line
+                          hide-details></v-text-field>
             <v-spacer></v-spacer>
           </v-toolbar>
         </template>
@@ -107,6 +113,7 @@
         options: {},
         requests: [],
         loading: false,
+        search: '',
         editedIndex: -1,
         editedItem: {
           id: 0,
@@ -120,6 +127,14 @@
     computed: {
       formTitle() {
         return 'Request'
+      },
+      filteredRequests() {
+        console.log('Filtering requests with search term:', this.search);
+        if (!this.search) return this.requests;
+        const searchTerm = this.search.toLowerCase();
+        return this.requests.filter(request => {
+          return request.id.toString().toLowerCase().includes(searchTerm);
+        });
       }
     },
     watch: {
@@ -266,5 +281,12 @@
 
   .readonly-field {
     background-color: #ddd;
+  }
+
+  .search-input {
+    flex-grow: 1;
+    margin-left: 16px;
+    margin-right: 16px;
+    width: 5%;
   }
 </style>

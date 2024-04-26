@@ -1,4 +1,5 @@
 ﻿using Epson.Core.Domain.Users;
+using Epson.Data;
 using Epson.Services.DTO.Users;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,7 @@ namespace Epson.Services.Interface.Users
         public List<ApplicationUser> GetAllUsers();
         public List<ApplicationUser> GetGovtUsersWithProductRole();
         Dictionary<string, string> InitializeTeamHierarchy();
+        List<int> GetChildTeamIds(int parentTeamId, IRepository<Team> teamRepository);
         Task<ApplicationUser> GetUserSalesHead(int teamID);
     }
 }

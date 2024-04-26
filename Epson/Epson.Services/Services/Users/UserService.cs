@@ -97,6 +97,26 @@ namespace Epson.Services.Services.Users
             };
         }
 
+        public List<int> GetChildTeamIds(int parentTeamId, IRepository<Team> teamRepository)
+        {
+            var teamHierarchy = InitializeTeamHierarchy();
+
+            var parentTeamName = teamRepository.GetAll().FirstOrDefault(t => t.Id == parentTeamId)?.Name;
+
+            var childTeamNames = teamHierarchy
+                .Where(kvp => kvp.Value == parentTeamName)
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            var childTeamIds = teamRepository.GetAll()
+                .Where(t => childTeamNames.Contains(t.Name))
+                .Select(t => t.Id)
+                .ToList();
+
+            return childTeamIds;
+        }
+
+
         public async Task<ApplicationUser> GetUserSalesHead(int teamID)
         {
             string fulfillerTeamName = _TeamRepository.GetAll().Where(x => x.Id == teamID).FirstOrDefault().Name; 

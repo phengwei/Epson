@@ -293,7 +293,6 @@
         return 'Request'
       },
       filteredRequests() {
-        console.log('Filtering requests with search term:', this.search);
         if (!this.search) return this.requests;
         const searchTerm = this.search.toLowerCase();
         return this.requests.filter(request => {

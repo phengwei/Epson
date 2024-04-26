@@ -1,12 +1,18 @@
 <template>
   <v-data-table :headers="headers"
-                :items="itemsPendingFulfilment"
+                :items="filteredItemsPendingFulfilment"
                 :loading="loading"
                 class="elevation-1">
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title>New Request</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
+        <v-text-field v-model="search"
+                      class="search-input"
+                      append-icon="mdi-magnify"
+                      label="Search by request #"
+                      single-line
+                      hide-details></v-text-field>
         <v-spacer></v-spacer>
 
         <ProductFulfillmentDialog :editedItem="editedItem"
@@ -54,11 +60,21 @@
         ],
         itemsPendingFulfilment: [],
         productsToShow: [],
+        search: '',
         competitorsToShow: [],
         loading: false,
         editedItem: {},
         RequestProductStatusEnum
       }
+    },
+    computed: {
+      filteredItemsPendingFulfilment() {
+        if (!this.search) return this.itemsPendingFulfilment;
+        const searchTerm = this.search.toLowerCase();
+        return this.itemsPendingFulfilment.filter(request => {
+          return request.requestId.toString().toLowerCase().includes(searchTerm);
+        });
+      },
     },
     watch: {
       options: {
@@ -158,3 +174,12 @@
     },
   }
 </script>
+
+<style>
+  .search-input {
+    flex-grow: 1;
+    margin-left: 16px;
+    margin-right: 16px;
+    width: 5%;
+  }
+</style>
