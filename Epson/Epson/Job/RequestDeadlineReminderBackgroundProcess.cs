@@ -7,6 +7,7 @@ using Epson.Core.Domain.Enum;
 using Epson.Core.Domain.Requests;
 using Epson.Data;
 using Epson.Data.Context;
+using Epson.Extensions;
 using Epson.Services.Interface.Email;
 using Epson.Services.Interface.Requests;
 using Microsoft.EntityFrameworkCore;
@@ -42,17 +43,20 @@ namespace Epson.Job
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<EpsonDbContext>();
             var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
-            var targetDate = DateTime.UtcNow.Date.AddDays(3);
             var requestProductRepository = scope.ServiceProvider.GetRequiredService<IRepository<RequestProduct>>();
 
-            var requestProductsToNotify = await dbContext.RequestProduct
+            var requestProducts = await dbContext.RequestProduct
                 .Where(rp => !rp.HasFulfilled
-                            && !rp.HasReminded
-                            && rp.Status != (int)RequestProductStatusEnum.Cancelled
-                            && dbContext.Request.Any(r => r.Id == rp.RequestId
-                                && dbContext.ProjectInformation.Any(p => p.RequestId == r.Id)
-                                && rp.CreatedOnUTC.AddDays(3) <= DateTime.UtcNow))
+                             && !rp.HasReminded
+                             && rp.Status != (int)RequestProductStatusEnum.Cancelled
+                             && dbContext.Request.Any(r => r.Id == rp.RequestId
+                                 && dbContext.ProjectInformation.Any(p => p.RequestId == r.Id)))
                 .ToListAsync();
+
+            var requestProductsToNotify = requestProducts
+                .Where(rp => rp.CreatedOnUTC.AddWorkingDays(3) <= DateTime.UtcNow)
+                .ToList();
+
 
             List<EmailQueue> emailQueues = new List<EmailQueue>();
 
