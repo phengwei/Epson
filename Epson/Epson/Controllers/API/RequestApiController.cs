@@ -89,11 +89,6 @@ namespace Epson.Controllers.API
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests.OrderByDescending(x => x.CreatedOnUTC).ToList());
 
-            var fulfiller = _userManager.FindByIdAsync(requestModels.First().RequestProductsModel.First().FulfillerId);
-            ApplicationUser ccSalesHead = await _userService.GetUserSalesHead(fulfiller.Result.TeamId);
-
-            string ccEmails = ccSalesHead.Email + "hanson.ong@emsb.epson.com.my";
-
             response.Data = requestModels;
 
             return Ok(response);

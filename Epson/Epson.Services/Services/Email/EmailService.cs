@@ -553,7 +553,7 @@ namespace Epson.Services.Services.Email
                         <h1>Reminder</h1>
                     </div>
                     <div class='email-body'>
-                        <p><strong>Request {requestProduct.Id}</strong> is due soon with the following details:</p>
+                        <p><strong>Request {requestProduct.RequestId}</strong> is due soon with the following details:</p>
                         <table>                    
                             <tr>
                                 <th>Org</th>

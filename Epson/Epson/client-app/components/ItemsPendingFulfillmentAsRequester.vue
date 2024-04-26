@@ -1,6 +1,6 @@
 <template>
   <v-data-table :headers="headers"
-                :items="requests"
+                :items="filteredRequests"
                 :options.sync="options"
                 :items-per-page="5"
                 :loading="loading"
@@ -9,6 +9,12 @@
       <v-toolbar flat>
         <v-toolbar-title>Pending</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
+        <v-text-field v-model="search"
+                      class="search-input"
+                      append-icon="mdi-magnify"
+                      label="Search by request #"
+                      single-line
+                      hide-details></v-text-field>
         <v-spacer></v-spacer>
         <v-dialog v-model="dialog" max-width="500px">
           <v-card>
@@ -261,6 +267,7 @@
         selectedProducts: {},
         quantity: {},
         budget: {},
+        search: '',
         priority: {
           value: 1,
           options: [
@@ -285,7 +292,15 @@
       formTitle() {
         return 'Request'
       },
-
+      filteredRequests() {
+        console.log('Filtering requests with search term:', this.search);
+        if (!this.search) return this.requests;
+        const searchTerm = this.search.toLowerCase();
+        return this.requests.filter(request => {
+          return request.id.toString().toLowerCase().includes(searchTerm);
+        });
+      },
+      
     },
     watch: {
       options: {
@@ -651,5 +666,12 @@
     width: 1.2em;
     height: 1.2em;
     margin-left: 5%
+  }
+
+  .search-input {
+    flex-grow: 1;
+    margin-left: 16px;
+    margin-right: 16px;
+    width: 5%;
   }
 </style>

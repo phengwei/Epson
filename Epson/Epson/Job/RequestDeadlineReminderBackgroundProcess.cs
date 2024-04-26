@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Epson.Core.Domain.Email;
+using Epson.Core.Domain.Enum;
 using Epson.Core.Domain.Requests;
 using Epson.Data;
 using Epson.Data.Context;
@@ -47,6 +48,7 @@ namespace Epson.Job
             var requestProductsToNotify = await dbContext.RequestProduct
                 .Where(rp => !rp.HasFulfilled
                             && !rp.HasReminded
+                            && rp.Status != (int)RequestProductStatusEnum.Cancelled
                             && dbContext.Request.Any(r => r.Id == rp.RequestId
                                 && dbContext.ProjectInformation.Any(p => p.RequestId == r.Id)
                                 && rp.CreatedOnUTC.AddDays(3) <= DateTime.UtcNow))
