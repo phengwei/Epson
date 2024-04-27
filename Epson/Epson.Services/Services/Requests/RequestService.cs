@@ -10,6 +10,7 @@ using Epson.Data;
 using Epson.Services.DTO.Report;
 using Epson.Services.DTO.Requests;
 using Epson.Services.DTO.SLA;
+using Epson.Services.Extensions;
 using Epson.Services.Interface.Email;
 using Epson.Services.Interface.Products;
 using Epson.Services.Interface.Requests;
@@ -504,7 +505,7 @@ namespace Epson.Services.Services.Requests
             var projectInformation = _ProjectInformationRepository.GetAll()
                 .FirstOrDefault(x => x.RequestId == request.Id) ?? new ProjectInformation { ClosingDate = DateTime.MinValue };
 
-            if (DateTime.UtcNow > request.CreatedOnUTC.AddDays(5))
+            if (DateTime.UtcNow > request.CreatedOnUTC.AddWorkingDays(5))
                 request.Breached = true;
 
             request.ApprovalState = (int)ApprovalStateEnum.Approved;
@@ -551,7 +552,7 @@ namespace Epson.Services.Services.Requests
             request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
             request.Comments = comments;
 
-            if (DateTime.UtcNow > request.CreatedOnUTC.AddDays(5))
+            if (DateTime.UtcNow > request.CreatedOnUTC.AddWorkingDays(5))
                 request.Breached = true;
 
             try
@@ -591,7 +592,7 @@ namespace Epson.Services.Services.Requests
             request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
             request.Comments = comments;
 
-            if (DateTime.UtcNow > request.CreatedOnUTC.AddDays(5))
+            if (DateTime.UtcNow > request.CreatedOnUTC.AddWorkingDays(5))
                 request.Breached = true;
 
             try
@@ -634,7 +635,7 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.Remarks = remarks;
             requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
 
-            if (DateTime.UtcNow > requestProductToFulfill.CreatedOnUTC.AddDays(5))
+            if (DateTime.UtcNow > requestProductToFulfill.CreatedOnUTC.AddWorkingDays(5))
                 requestProductToFulfill.Breached = true;
 
             try
@@ -854,7 +855,7 @@ namespace Epson.Services.Services.Requests
                 bool allRejected = requestProducts.All(rp => rp.Status == (int)RequestProductStatusEnum.Rejected);
                 bool allFulfilled = requestProducts.All(rp => rp.HasFulfilled == true);
 
-                if (DateTime.UtcNow > requestProduct.CreatedOnUTC.AddDays(5))
+                if (DateTime.UtcNow > requestProduct.CreatedOnUTC.AddWorkingDays(5))
                     requestProduct.Breached = true;
 
                 //if all products in a request is rejected, set status of request to reject
