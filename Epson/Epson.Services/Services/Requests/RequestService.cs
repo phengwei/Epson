@@ -652,7 +652,21 @@ namespace Epson.Services.Services.Requests
                 bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled == true);
 
                 if (allProductsFulfilled)
+                {
                     existingRequest.ApprovalState = (int)ApprovalStateEnum.Approved;
+
+                    var request = _RequestRepository.GetById(requestProduct.RequestId);
+                    List<RequestProduct> rps = _RequestProductRepository.GetAll().Where(x => x.RequestId == requestProduct.RequestId).ToList();
+
+                    List<EmailQueue> emailQueues = _emailService.NotifySalesSectionHeadUsersOnApprovedRequest(request, rps);
+
+                    emailQueues.Add(_emailService.CreateApprovedEmailQueue(request, rps));
+
+                    foreach (var emailQueue in emailQueues)
+                    {
+                        _emailService.InsertEmailQueue(emailQueue);
+                    }
+                }
 
                 _RequestRepository.Update(_mapper.Map<Request>(existingRequest));
 

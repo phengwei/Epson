@@ -207,6 +207,260 @@ namespace Epson.Services.Services.Email
             return emailQueue;
         }
 
+        public EmailQueue CreateApprovedEmailQueue(Request request, List<RequestProduct> requestProducts)
+        {
+            var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
+            var requester = _userManager.FindByIdAsync(request.CreatedById);
+            var productNames = requestProducts.Select(rp =>
+            {
+                var product = _productService.GetProductById(rp.ProductId);
+                return product != null ? product.Name : "Unknown Product";
+            });
+
+            if (emailAccount == null)
+                return new EmailQueue();
+
+            var subject = $"Request { request.Id } has been approved";
+
+            var body = $@"
+                <!DOCTYPE html>
+                <html lang='en'>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <style>
+                        body {{
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            background-color: #f4f4f4;
+                        }}
+                        .email-container {{
+                            max-width: 600px;
+                            margin: auto;
+                            background: #ffffff;
+                            padding: 20px;
+                            border: 1px solid #dddddd;
+                        }}
+                        .email-header {{
+                            background-color: #004aad;
+                            color: white;
+                            padding: 10px 20px;
+                            text-align: center;
+                        }}
+                        .email-body {{
+                            padding: 20px;
+                            line-height: 1.5;
+                            color: #333333;
+                        }}
+                        .email-footer {{
+                            text-align: center;
+                            padding: 10px 20px;
+                            background-color: #004aad;
+                            color: white;
+                        }}
+                        table {{
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                        }}
+                        th, td {{
+                            padding: 10px;
+                            border: 1px solid #dddddd;
+                            text-align: left;
+                        }}
+                        th {{
+                            background-color: #f2f2f2;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class='email-container'>
+                        <div class='email-header'>
+                            <h1>New Request</h1>
+                        </div>
+                        <div class='email-body'>
+                            <p>A new request has been created with the following details:</p>
+                            <table>
+                                <tr>
+                                    <th>Org</th>
+                                    <td>EMSB - {_userService.GetTeamById(requester.Result.TeamId).Name}</td>
+                                </tr>
+                                <tr>
+                                    <th>Requester</th>
+                                    <td>{requester.Result.UserName}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total Budget</th>
+                                    <td>RM {request.TotalBudget}</td>
+                                </tr>
+                                <tr>
+                                    <th>End User</th>
+                                    <td>{_ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault().ProjectName}</td>
+                                </tr>
+                                <tr>
+                                    <th>Products</th>
+                                    <td>{string.Join(", ", productNames)}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class='email-footer'>
+                            <p>Thank you for your submission.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>";
+
+            var emailQueue = new EmailQueue
+            {
+                FromEmail = emailAccount.Username,
+                ToEmail = requester.Result.Email,
+                Subject = subject,
+                Body = body,
+                ScheduleTime = DateTime.UtcNow,
+                SendAttempts = 0,
+                SentTime = null,
+                EmailAccountId = emailAccount.Id
+            };
+
+            return emailQueue;
+        }
+
+        public List<EmailQueue> NotifySalesSectionHeadUsersOnApprovedRequest(Request request, List<RequestProduct> requestProducts)
+        {
+            var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
+            var requesterTask = _userManager.FindByIdAsync(request.CreatedById);
+            requesterTask.Wait();
+            var requester = requesterTask;
+
+            var salesSectionHeadUser = _userService.GetUserSalesHead(requester.Result.TeamId);
+
+            if (salesSectionHeadUser.Result != null)
+            {
+                var productNames = requestProducts.Select(rp =>
+                {
+                    var product = _productService.GetProductById(rp.ProductId);
+                    return product != null ? product.Name : "Unknown Product";
+                });
+
+                var subject = $"Request {request.Id} has been approved";
+
+                var body = $@"
+                <!DOCTYPE html>
+                <html lang='en'>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <style>
+                        body {{
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            background-color: #f4f4f4;
+                        }}
+                        .email-container {{
+                            max-width: 600px;
+                            margin: auto;
+                            background: #ffffff;
+                            padding: 20px;
+                            border: 1px solid #dddddd;
+                        }}
+                        .email-header {{
+                            background-color: #004aad;
+                            color: white;
+                            padding: 10px 20px;
+                            text-align: center;
+                        }}
+                        .email-body {{
+                            padding: 20px;
+                            line-height: 1.5;
+                            color: #333333;
+                        }}
+                        .email-footer {{
+                            text-align: center;
+                            padding: 10px 20px;
+                            background-color: #004aad;
+                            color: white;
+                        }}
+                        table {{
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                        }}
+                        th, td {{
+                            padding: 10px;
+                            border: 1px solid #dddddd;
+                            text-align: left;
+                        }}
+                        th {{
+                            background-color: #f2f2f2;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class='email-container'>
+                        <div class='email-header'>
+                            <h1>New Request</h1>
+                        </div>
+                        <div class='email-body'>
+                            <p>A new request has been created with the following details:</p>
+                            <table>
+                                <tr>
+                                    <th>Org</th>
+                                    <td>EMSB - {_userService.GetTeamById(requester.Result.TeamId).Name}</td>
+                                </tr>
+                                <tr>
+                                    <th>Requester</th>
+                                    <td>{requester.Result.UserName}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total Budget</th>
+                                    <td>RM {request.TotalBudget}</td>
+                                </tr>
+                                <tr>
+                                    <th>End User</th>
+                                    <td>{_ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault().ProjectName}</td>
+                                </tr>
+                                <tr>
+                                    <th>Products</th>
+                                    <td>{string.Join(", ", productNames)}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class='email-footer'>
+                            <p>Thank you for your submission.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>";
+
+
+                if (emailAccount == null)
+                    return new List<EmailQueue>();
+
+                var emailQueues = new List<EmailQueue>();
+
+                var emailQueue = new EmailQueue
+                {
+                    FromEmail = emailAccount.Username,
+                    ToEmail = salesSectionHeadUser.Result.Email,
+                    Subject = subject,
+                    Body = body,
+                    ScheduleTime = DateTime.UtcNow,
+                    SendAttempts = 0,
+                    SentTime = null,
+                    EmailAccountId = emailAccount.Id
+                };
+                emailQueues.Add(emailQueue);
+
+                return emailQueues;
+            }
+            else
+            {
+                return new List<EmailQueue>();
+            }
+        }
+
 
         public async Task<List<EmailQueue>> NotifyFulfillers(Request request)
         {
@@ -353,10 +607,6 @@ namespace Epson.Services.Services.Email
             var requester = requesterTask;
 
             var salesSectionHeadUser = _userService.GetUserSalesHead(requester.Result.TeamId);
-
-            //var salesSectionHeadUsersTask = _userManager.GetUsersInRoleAsync("Sales Section Head");
-            //salesSectionHeadUsersTask.Wait();
-            //var salesSectionHeadUsers = salesSectionHeadUsersTask.Result.ToList();
 
             if (salesSectionHeadUser.Result != null)
             {
