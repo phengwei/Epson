@@ -149,9 +149,9 @@ namespace Epson.Services.Services.Requests
 
         public List<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
         {
-            var requests = GetRequests();
+            var requests = GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction);
 
-            return requests
+            var r = requests
                 .Select(x =>
                 {
                     foreach (var rp in x.RequestProducts)
@@ -161,8 +161,9 @@ namespace Epson.Services.Services.Requests
 
                     return x;
                 })
-                .Where(x => x.RequestProducts.Any(rp => rp.AuthorizedToFulfill) && x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
+                .Where(x => x.RequestProducts.Any(rp => rp.AuthorizedToFulfill))
                 .ToList();
+            return r;
         }
 
         private bool DetermineAuthorization(RequestProductDTO rp, ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
@@ -651,7 +652,7 @@ namespace Epson.Services.Services.Requests
                 bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled == true);
 
                 if (allProductsFulfilled)
-                    existingRequest.ApprovalState = (int)ApprovalStateEnum.PendingRequesterAction;
+                    existingRequest.ApprovalState = (int)ApprovalStateEnum.Approved;
 
                 _RequestRepository.Update(_mapper.Map<Request>(existingRequest));
 
@@ -865,7 +866,7 @@ namespace Epson.Services.Services.Requests
                     _RequestRepository.Update(_mapper.Map<Request>(request));
                 }else if (allFulfilled)
                 {
-                    request.ApprovalState = (int)ApprovalStateEnum.PendingRequesterAction;
+                    request.ApprovalState = (int)ApprovalStateEnum.Approved;
                     _RequestRepository.Update(_mapper.Map<Request>(request));
                 }
 

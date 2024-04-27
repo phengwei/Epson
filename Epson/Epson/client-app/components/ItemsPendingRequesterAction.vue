@@ -98,6 +98,11 @@
             align: 'start',
             value: 'totalBudget',
           },
+          {
+            text: 'Approval State',
+            align: 'start',
+            value: 'approvalStateStr',
+          },
           { text: 'Record', value: 'actions', sortable: false },
         ],
         productHeaders: [
@@ -165,7 +170,7 @@
           this.requests = result.data.data.map(request => {
             return {
               ...request,
-              createdOnUTC: moment(request.createdOnUTC).format('DD MMM YY HH:mm') 
+              createdOnUTC: moment(request.createdOnUTC).format('DD MMM YY HH:mm')
             };
           });
           this.loading = false;

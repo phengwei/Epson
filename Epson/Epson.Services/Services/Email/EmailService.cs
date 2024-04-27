@@ -662,7 +662,7 @@ namespace Epson.Services.Services.Email
             if (hasFulfillmentComplete)
                 subject = $"Request {request.Id} completed fulfillment";
             else
-                subject = $"Request {request.Id} partially fulfillment";
+                subject = $"Request {request.Id} partial fulfillment";
 
             var body = $@"
                 <!DOCTYPE html>

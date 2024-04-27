@@ -391,11 +391,15 @@ namespace Epson.Controllers.API
                 requests = _requestService.GetRequests().Where(x => x.CreatedById == user.Id && x.ApprovalState != (int)ApprovalStateEnum.Cancelled).ToList();
             }
 
-            var pendingRequests = requests.Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingRequesterAction                      
-                                                || x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller)
+            //var pendingRequests = requests.Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingRequesterAction                      
+            //                                    || x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller)
+            //                                    .ToList();            
+            
+            var approvedRequests = requests.Where(x => x.ApprovalState == (int)ApprovalStateEnum.Approved
+                                                  || x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller)
                                                 .ToList();
 
-            var requestModels = _requestModelFactory.PrepareRequestModels(pendingRequests);
+            var requestModels = _requestModelFactory.PrepareRequestModels(approvedRequests);
 
             response.Data = requestModels;
 
