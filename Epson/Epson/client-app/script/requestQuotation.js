@@ -1,5 +1,7 @@
 import { mapGetters } from 'vuex';
 import Swal from 'sweetalert2';
+import JsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
 
 export default {
@@ -680,28 +682,47 @@ export default {
       }
     },
     exportToExcel() {
-      this.$axios.get('/api/export/toExcel', {
-        params: { requestId: this.projectInformation.requestId },
-        responseType: 'blob'
-      })
-        .then(response => {
-          const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-          const url = URL.createObjectURL(blob);
+      const navBar = document.querySelector('.ums-header');
+      const originalDisplayStyle = navBar.style.display;
+      navBar.style.display = 'none';
 
-          Swal.fire({
-            title: 'Exported!',
-            html: `<a href="${url}" download="request.xlsx">Click here to download</a>`,
-            confirmButtonText: 'Close',
-            onClose: () => {
-              URL.revokeObjectURL(url);
-            }
-          });
-        })
-        .catch(error => {
-          console.error('Error exporting to Excel:', error);
-          Swal.fire('Error', 'Failed to generate Excel file', 'error');
+      html2canvas(document.body, {
+        x: 0,
+        y: navBar.offsetHeight,
+        width: document.body.offsetWidth,
+        height: document.body.offsetHeight - navBar.offsetHeight,
+        useCORS: true
+      }).then(canvas => {
+        navBar.style.display = originalDisplayStyle;
+
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new JsPDF({
+          orientation: 'portrait',
+          unit: 'px',
+          format: 'a4'
         });
+
+        const scaleFactor = Math.min(
+          pdf.internal.pageSize.getWidth() / canvas.width,
+          pdf.internal.pageSize.getHeight() / canvas.height
+        );
+
+        const scaledWidth = canvas.width * scaleFactor;
+        const scaledHeight = canvas.height * scaleFactor;
+
+        const xOffset = (pdf.internal.pageSize.getWidth() - scaledWidth) / 2;
+        const yOffset = (pdf.internal.pageSize.getHeight() - scaledHeight) / 2;
+
+        pdf.addImage(imgData, 'PNG', xOffset, yOffset, scaledWidth, scaledHeight);
+
+        pdf.save('download.pdf');
+      }).catch(error => {
+        navBar.style.display = originalDisplayStyle;
+        console.error('Error exporting to PDF:', error);
+        Swal.fire('Error', 'Failed to generate PDF file', 'error');
+      });
     },
+
 
     processQuotation() {
       const quotationData = {

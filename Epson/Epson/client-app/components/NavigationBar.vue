@@ -1,5 +1,5 @@
 <template>
-  <nav class="bg-[#19212b] top-0 inset-x-0 w-full z-30 text-white fixed transition duration-300 delay-0 ease-out" :class="{'transition-right': showPopup}">
+  <nav class="ums-header bg-[#19212b]  top-0 inset-x-0 w-full z-30 text-white fixed transition duration-300 delay-0 ease-out" :class="{'transition-right': showPopup}">
     <div class="flex sm:px-18 px-4">
       <div class="w-full flex justify-between flex-row-reverse">
         <div class="flex md:space-x-7 md:w-full">

@@ -1,6 +1,6 @@
 <template>
   <div class="create-quotation-container">
-    <h1>Pricing Request</h1>
+    <h1 class="mb-4">Pricing Request</h1>
 
     <v-card class="mx-auto" width="800">
       <v-card-text>

@@ -19,6 +19,9 @@ using Epson.Services.Interface.Users;
 using Epson.Services.DTO.Products;
 using Epson.Model.Products;
 using OfficeOpenXml;
+using System.Drawing.Imaging;
+using System.Drawing.Printing;
+using DinkToPdf;
 
 namespace Epson.Controllers.API
 {
@@ -76,6 +79,34 @@ namespace Epson.Controllers.API
             stream.Position = 0;
             return File(stream, fileType, fileName);
         }
+
+        [HttpPost("createPdf")]
+        public IActionResult CreatePdfFromHtml([FromBody] HtmlContentModel content)
+        {
+            var converter = new BasicConverter(new PdfTools());
+            var doc = new HtmlToPdfDocument()
+            {
+                GlobalSettings = {
+            ColorMode = DinkToPdf.ColorMode.Color,
+            Orientation = Orientation.Portrait,
+            PaperSize = DinkToPdf.PaperKind.A4,
+        },
+                Objects = {
+            new ObjectSettings() {
+                PagesCount = true,
+                HtmlContent = content.Html,
+                WebSettings = { DefaultEncoding = "utf-8" },
+                HeaderSettings = { /* ... */ },
+                FooterSettings = { /* ... */ }
+            }
+        }
+            };
+
+            byte[] pdf = converter.Convert(doc);
+            return File(pdf, "application/pdf", "document.pdf");
+        }
+
+
 
         private async Task PopulateRequestWorksheet(ExcelWorksheet ws, RequestDTO request)
         {
@@ -306,6 +337,11 @@ namespace Epson.Controllers.API
             cell.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
             cell.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
             cell.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+        }
+
+        public class HtmlContentModel
+        {
+            public string Html { get; set; }
         }
     }
 }
