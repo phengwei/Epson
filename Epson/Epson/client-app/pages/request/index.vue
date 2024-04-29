@@ -54,6 +54,7 @@
           { text: 'Approval State', value: 'approvalStateStr' },
           { text: 'Total Budget (RM)', value: 'totalBudget' },
           { text: 'Created On', value: 'createdOnUTC' },
+          { text: 'Created By', value: 'createdBy' },
           { text: 'Actions', value: 'action' }
         ],
         requests: [],
