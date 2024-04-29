@@ -715,7 +715,7 @@ export default {
 
         pdf.addImage(imgData, 'PNG', xOffset, yOffset, scaledWidth, scaledHeight);
 
-        pdf.save('download.pdf');
+        pdf.save('request.pdf');
       }).catch(error => {
         navBar.style.display = originalDisplayStyle;
         console.error('Error exporting to PDF:', error);

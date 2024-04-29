@@ -849,7 +849,7 @@ namespace Epson.Services.Services.Email
             string ccEmails = "";
             if (ccSalesHead != null)
             {
-                ccEmails = ccSalesHead.Email + "hanson.ong@emsb.epson.com.my";
+                ccEmails = ccSalesHead.Email + " hanson.ong@emsb.epson.com.my";
             }
             else
             {
