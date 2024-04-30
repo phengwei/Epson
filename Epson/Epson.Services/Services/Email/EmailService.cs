@@ -20,6 +20,8 @@ using Epson.Services.Interface.Products;
 using Epson.Services.Interface.Requests;
 using Epson.Core.Domain.Products;
 using Epson.Services.Interface.Users;
+using Epson.Services.Interface.Categories;
+using Epson.Core.Domain.Categories;
 
 namespace Epson.Services.Services.Email
 {
@@ -35,6 +37,7 @@ namespace Epson.Services.Services.Email
         private readonly IRepository<Team> _TeamRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IProductService _productService;
+        private readonly ICategoryService _categoryService;
         private readonly IUserService _userService;
         public EmailService
             (ILogger logger,
@@ -47,6 +50,7 @@ namespace Epson.Services.Services.Email
             IRepository<Team> TeamRepository,
             UserManager<ApplicationUser> userManager,
             IProductService productService,
+            ICategoryService categoryService,
             IUserService userService)
         {
             _logger = logger;
@@ -58,6 +62,7 @@ namespace Epson.Services.Services.Email
             _RequestProductRepository = RequestProductRepository;
             _userManager = userManager;
             _productService = productService;
+            _categoryService = categoryService;
             _userService = userService;
         }
 
@@ -739,11 +744,30 @@ namespace Epson.Services.Services.Email
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
             var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
             var product = _productService.GetProductById(requestProduct.ProductId);
+            var productCategories = _productService.GetCategoryIdsByProductId(requestProduct.ProductId);
+            List<string> backupFulfillerEmails = new List<string>();
+
+            foreach (var pc in productCategories)
+            {
+                var category = _categoryService.GetCategoryById(pc.CategoryId); 
+
+                var backupFulfiller1 = await _userManager.FindByIdAsync(category.BackupFulfiller1);
+                var backupFulfiller2 = await _userManager.FindByIdAsync(category.BackupFulfiller2);
+
+                if (backupFulfiller1 != null)
+                {
+                    backupFulfillerEmails.Add(backupFulfiller1.Email);
+                }
+                if (backupFulfiller2 != null)
+                {
+                    backupFulfillerEmails.Add(backupFulfiller2.Email);
+                }
+            }
             var requesterTask = _userManager.FindByIdAsync(_RequestRepository.GetById(requestProduct.RequestId).CreatedById);
             requesterTask.Wait();
             var requester = requesterTask;
 
-            var subject = $"Request {requestProduct.Id} due soon!";
+            var subject = $"Request {requestProduct.RequestId} due soon!";
 
             var body = $@"
             <!DOCTYPE html>
@@ -846,55 +870,36 @@ namespace Epson.Services.Services.Email
             List<EmailQueue> emailQueues = new List<EmailQueue>();
             ApplicationUser ccSalesHead = await _userService.GetUserSalesHead(fulfiller.Result.TeamId);
 
-            string ccEmails = "";
-            if (ccSalesHead != null)
+            HashSet<string> uniqueEmails = new HashSet<string>(backupFulfillerEmails); 
+            uniqueEmails.Add("hanson.ong@emsb.epson.com.my");
+
+            if (uniqueEmails.Contains(fulfiller.Result.Email))
             {
-                ccEmails = ccSalesHead.Email + " hanson.ong@emsb.epson.com.my";
-            }
-            else
-            {
-                ccEmails = "hanson.ong@emsb.epson.com.my";
+                uniqueEmails.Remove(fulfiller.Result.Email);
             }
 
-            if (requestProduct.IsCoverplus == false)
+            if (ccSalesHead != null && !uniqueEmails.Contains(ccSalesHead.Email))
             {
-                var emailQueue = new EmailQueue
-                {
-                    FromEmail = emailAccount.Username,
-                    ToEmail = fulfiller.Result.Email,
-                    Subject = subject,
-                    Body = body,
-                    ScheduleTime = DateTime.UtcNow,
-                    SendAttempts = 0,
-                    SentTime = null,
-                    Cc = ccEmails,
-                    EmailAccountId = emailAccount.Id
-                };
-
-                emailQueues.Add(emailQueue);
-            }
-            else
-            {
-                var coverplusFulfillers = await _userManager.GetUsersInRoleAsync("Coverplus");
-
-                foreach (var coverplusFulfiller in coverplusFulfillers)
-                {
-                    var emailQueue = new EmailQueue
-                    {
-                        FromEmail = emailAccount.Username,
-                        ToEmail = coverplusFulfiller.Email,
-                        Subject = subject,
-                        Body = body,
-                        ScheduleTime = DateTime.UtcNow,
-                        SendAttempts = 0,
-                        SentTime = null,
-                        EmailAccountId = emailAccount.Id
-                    };
-
-                    emailQueues.Add(emailQueue);
-                }
+                uniqueEmails.Add(ccSalesHead.Email); 
             }
 
+            string ccEmails = string.Join(" ", uniqueEmails);
+
+            var emailQueue = new EmailQueue
+            {
+                FromEmail = emailAccount.Username,
+                ToEmail = fulfiller.Result.Email,
+                Subject = subject,
+                Body = body,
+                ScheduleTime = DateTime.UtcNow,
+                SendAttempts = 0,
+                SentTime = null,
+                Cc = ccEmails,
+                EmailAccountId = emailAccount.Id
+            };
+
+            emailQueues.Add(emailQueue);
+            
             return emailQueues;
         }
 
