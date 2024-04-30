@@ -87,7 +87,7 @@ namespace Epson.Services.Services.Users
                 {"Government Sales", "Corp & Gov"},
                 {"Inside Sales", "Channel Support"},
                 {"Sales Support Management", "Channel Support"},
-                {"Product Marketing", "Channel Support"},
+                {"Product Marketing", "Product Marketing"},
                 {"Brand & Comms", "Channel Support"},
                 {"Vertical Biz (LFP)", "Channel Support"},
                 {"Area (City)", "Retail"},

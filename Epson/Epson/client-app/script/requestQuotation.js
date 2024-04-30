@@ -69,7 +69,7 @@ export default {
           { value: 3, label: 'Low' }
         ]
       },
-      distributors: ['Servex', 'Ingram', 'VSTech', 'Etech IT', 'GOS', 'EDAP'],
+      distributors: ['Servex', 'Ingram', 'VSTECs', 'Etech IT', 'GOS', 'EDAP'],
       quantity: {},
       budget: {},
       fulfilledPrice: {},
