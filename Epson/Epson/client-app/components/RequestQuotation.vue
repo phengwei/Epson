@@ -203,7 +203,17 @@
                 <tr>
                   <td>Request Date</td>
                   <td>:</td>
-                  <td><input type="datetime-local" v-model="submissionDetail.createdOnUTC" class="border-input" readonly></td>
+                  <td>
+                    <input v-if="isViewMode"
+                           type="text"
+                           v-model="formattedRequestDate"
+                           class="border-input"
+                           readonly />
+                    <input v-else
+                           type="datetime-local"
+                           v-model="submissionDetail.createdOnUTC"
+                           class="border-input" />
+                  </td>
                 </tr>
                 <tr>
                   <td>Distributor Name</td>
@@ -240,6 +250,17 @@
                   <td>Email <span class="required-asterisk">*</span></td>
                   <td>:</td>
                   <td><input type="text" v-model="submissionDetail.email" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr v-if="currentRequestApprovalState === ApprovalStateEnum.Approved">
+                  <td>Approved Time</td>
+                  <td>:</td>
+                  <td>
+                    <input v-if="isViewMode"
+                           type="text"
+                           v-model="formattedRequestDate"
+                           class="border-input"
+                           readonly />
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -325,13 +346,34 @@
                 <tr>
                   <td>Closing Date <span class="required-asterisk">*</span></td>
                   <td>:</td>
-                  <td><input type="datetime-local" v-model="projectInformation.closingDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                  <td>
+                    <input v-if="isViewMode"
+                           type="text"
+                           v-model="formattedClosingDate"
+                           class="border-input"
+                           readonly />
+                    <input v-else
+                           type="datetime-local"
+                           v-model="projectInformation.closingDate"
+                           class="border-input" />
+                  </td>
                 </tr>
                 <tr>
                   <td>Delivery Date <span class="required-asterisk">*</span></td>
                   <td>:</td>
-                  <td><input type="datetime-local" v-model="projectInformation.deliveryDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                  <td>
+                    <input v-if="isViewMode"
+                           type="text"
+                           v-model="formattedDeliveryDate"
+                           class="border-input"
+                           readonly />
+                    <input v-else
+                           type="datetime-local"
+                           v-model="projectInformation.deliveryDate"
+                           class="border-input" />
+                  </td>
                 </tr>
+
                 <tr>
                   <td>If Staggered Delivery, please select the month</td>
                   <td>:</td>

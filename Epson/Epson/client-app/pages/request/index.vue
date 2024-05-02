@@ -55,6 +55,7 @@
           { text: 'Total Budget (RM)', value: 'totalBudget' },
           { text: 'Created On', value: 'createdOnUTC' },
           { text: 'Created By', value: 'createdBy' },
+          { text: 'Approved Time', value: 'approvedTime' },
           { text: 'Actions', value: 'action' }
         ],
         requests: [],
@@ -72,11 +73,17 @@
       getRequests() {
         this.$axios.get(`${this.$config.restUrl}/api/request/getrequests`)
           .then(response => {
+            this.requests = response.data.data.map(item => {
+              const isApproved = item.approvalState === this.ApprovalStateEnum.Approved;
 
-            this.requests = response.data.data.map(item => ({
-              ...item,
-              createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm')
-            }));
+              const approvedTime = isApproved ? moment(item.approvedTime).add(8, 'hours').format('DD MMM YY HH:mm') : 'N/A';
+
+              return {
+                ...item,
+                createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm'),
+                approvedTime
+              };
+            });
           })
           .catch(error => {
             console.error('Error fetching requests:', error);

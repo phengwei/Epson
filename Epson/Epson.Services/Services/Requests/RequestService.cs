@@ -654,6 +654,7 @@ namespace Epson.Services.Services.Requests
                 if (allProductsFulfilled)
                 {
                     existingRequest.ApprovalState = (int)ApprovalStateEnum.Approved;
+                    //existingRequest.ApprovedTime = DateTime.UtcNow;
 
                     var request = _RequestRepository.GetById(requestProduct.RequestId);
                     List<RequestProduct> rps = _RequestProductRepository.GetAll().Where(x => x.RequestId == requestProduct.RequestId).ToList();
@@ -719,7 +720,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public async Task<bool> ApproveFirstLevelRequest(Request request)
+        public async Task<bool> ApproveFirstLevelRequest(string userId, Request request)
         {
             var req = GetRequestById(request.Id);
 
@@ -727,6 +728,8 @@ namespace Epson.Services.Services.Requests
                 throw new Exception("Invalid request.");
 
             request.ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction;
+            request.ApprovedTime = DateTime.UtcNow;
+            request.ApprovedBy = userId;
 
             try
             {

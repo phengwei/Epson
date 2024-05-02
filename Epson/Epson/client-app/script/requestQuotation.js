@@ -1,4 +1,5 @@
 import { mapGetters } from 'vuex';
+import moment from 'moment';
 import Swal from 'sweetalert2';
 import JsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -108,6 +109,18 @@ export default {
   },
   computed: {
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
+    formattedRequestDate() {
+      return moment(this.submissionDetail.createdOnUTC).format('DD/MM/YYYY hh:mm A');
+    },
+    formattedApprovedTime() {
+      return moment(this.approvedTime).format('DD/MM/YYYY hh:mm A');
+    },
+    formattedClosingDate() {
+      return moment(this.projectInformation.closingDate).format('DD/MM/YYYY hh:mm A');
+    },
+    formattedDeliveryDate() {
+      return moment(this.projectInformation.deliveryDate).format('DD/MM/YYYY hh:mm A');
+    },
     isCommentEditable() {
       return this.isViewMode && !this.isMode('dealable');
     },
