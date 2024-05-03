@@ -520,7 +520,7 @@ namespace Epson.Controllers.API
 
             var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-            var teamHierarchy = _userService.InitializeTeamHierarchy();
+            var teamHierarchy = _userService.InitializeTeamHierarchy(true);
 
             var currentUserTeamName = _teamRepository.GetAll().FirstOrDefault(t => t.Id == currentUser.TeamId)?.Name;
 

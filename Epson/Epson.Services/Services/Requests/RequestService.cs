@@ -632,7 +632,7 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.HasFulfilled = true;
             requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
             requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;
-            requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate, requestProductToFulfill.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
+            requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate, existingRequest.ApprovedTime, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
             requestProductToFulfill.Remarks = remarks;
             requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
 

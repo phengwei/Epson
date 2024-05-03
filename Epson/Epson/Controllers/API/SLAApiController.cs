@@ -17,6 +17,11 @@ using System;
 using System.IO;
 using Microsoft.Extensions.Hosting;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
+using Epson.Core.Domain.Users;
+using Epson.Services.Interface.Users;
+using Epson.Data;
+using Epson.Core.Domain.Enum;
 
 namespace Epson.Controllers.API
 {
@@ -30,6 +35,10 @@ namespace Epson.Controllers.API
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _hostEnvironment;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserService _userService;
+        private readonly IRequestService _requestService;
+        private readonly IRepository<Team> _teamRepository;
 
 
         public SLAApiController(
@@ -38,7 +47,11 @@ namespace Epson.Controllers.API
             IWorkContext workContext,
             IMapper mapper,
             IConfiguration configuration,
-            IWebHostEnvironment hostEnvironment)
+            IWebHostEnvironment hostEnvironment,
+            UserManager<ApplicationUser> userManager,
+            IUserService userService,
+            IRequestService requestService,
+            IRepository<Team> teamRepository)
         {
             _slaService = slaService;
             _slaModelFactory = slaModelFactory;
@@ -46,6 +59,10 @@ namespace Epson.Controllers.API
             _mapper = mapper;
             _configuration = configuration;
             _hostEnvironment = hostEnvironment;
+            _userManager = userManager;
+            _userService = userService;
+            _requestService = requestService;
+            _teamRepository = teamRepository;
         }
 
         [HttpGet("getslaholidays")]
@@ -211,13 +228,33 @@ namespace Epson.Controllers.API
         [HttpGet("getslametrics")]
         public async Task<IActionResult> GetSLAMetricsModel()
         {
-            var currentUserId = _workContext.CurrentUser.Id;
+            var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser.Id);
+            var salesUsers = await _userManager.GetUsersInRoleAsync("Sales Section Head");
+
+            bool isSalesSectionHeadUser = false;
+            if (salesUsers.Where(x => x.Equals(currentUser)).Count() > 0) 
+                isSalesSectionHeadUser = true;
+
+            var relevantTeamIds = _userService.GetChildTeamIds(currentUser.TeamId, _teamRepository);
+            relevantTeamIds.Add(currentUser.TeamId);
+
+            var usersInRelevantTeams = _userManager.Users
+                                                   .Where(u => relevantTeamIds.Contains(u.TeamId))
+                                                   .Select(u => u.Id)
+                                                   .ToList();
+
+            var requests = _requestService.GetRequests()
+                .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
+                            x.RequestProducts.Any(rp => usersInRelevantTeams.Contains(rp.FulfillerId)))
+
+                .ToList();
+
             var response = new GenericResponseModel<SLAMetricsModel>();
 
-            response.Data.AverageTimeToResolutionInHours = _slaService.GetAverageTimeToResolutionInHours(currentUserId);
-            response.Data.TotalTickets = _slaService.GetTotalTicketCount(currentUserId);
-            response.Data.BreachedTickets = _slaService.GetBreachedTicketCount(currentUserId);
-            response.Data.SuccessRate = _slaService.GetSuccessRateOfTickets(currentUserId);
+            response.Data.AverageTimeToResolutionInHours = _slaService.GetAverageTimeToResolutionInHours(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests);
+            response.Data.TotalTickets = _slaService.GetTotalTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests);
+            response.Data.BreachedTickets = _slaService.GetBreachedTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests);
+            response.Data.SuccessRate = _slaService.GetSuccessRateOfTickets(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests);
 
             return Ok(response);
         }

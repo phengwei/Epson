@@ -79,22 +79,42 @@ namespace Epson.Services.Services.Users
             return productRoleUsers;
         }
 
-        public Dictionary<string, string> InitializeTeamHierarchy()
+        public Dictionary<string, string> InitializeTeamHierarchy(bool isSalesHead = false)
         {
-            return new Dictionary<string, string>
+            if (!isSalesHead)
             {
-                {"Corporate Sales", "Corp & Gov"},
-                {"Government Sales", "Corp & Gov"},
-                {"Inside Sales", "Channel Support"},
-                {"Sales Support Management", "Channel Support"},
-                {"Product Marketing", "Product Marketing"},
-                {"Brand & Comms", "Channel Support"},
-                {"Vertical Biz (LFP)", "Channel Support"},
-                {"Area (City)", "Retail"},
-                {"Area - MDT / Chain Store / E Commerce", "Retail"},
-                {"Corporate Sales (West M'sia)", "Corporate Sales (West M'sia)" },
-                {"Corporate Sales (East M'sia)", "Corporate Sales (East M'sia)" }
-            };
+                return new Dictionary<string, string>
+                {
+                    {"Corporate Sales", "Corp & Gov"},
+                    {"Government Sales", "Corp & Gov"},
+                    {"Inside Sales", "Channel Support"},
+                    {"Sales Support Management", "Channel Support"},
+                    {"Product Marketing", "Product Marketing"},
+                    {"Brand & Comms", "Channel Support"},
+                    {"Vertical Biz (LFP)", "Channel Support"},
+                    {"Area (City)", "Retail"},
+                    {"Area - MDT / Chain Store / E Commerce", "Retail"},
+                    {"Corporate Sales (West M'sia)", "Corporate Sales (West M'sia)" },
+                    {"Corporate Sales (East M'sia)", "Corporate Sales (East M'sia)" }
+                };
+            }
+            else
+            {
+                return new Dictionary<string, string>
+                {
+                    {"Corporate Sales", "Corp & Gov"},
+                    {"Government Sales", "Corp & Gov"},
+                    {"Inside Sales", "Channel Support"},
+                    {"Sales Support Management", "Channel Support"},
+                    {"Product Marketing", "Product Marketing"},
+                    {"Brand & Comms", "Channel Support"},
+                    {"Vertical Biz (LFP)", "Channel Support"},
+                    {"Area (City)", "Retail"},
+                    {"Area - MDT / Chain Store / E Commerce", "Retail"},
+                    {"Corporate Sales (West M'sia)", "Corp & Gov" },
+                    {"Corporate Sales (East M'sia)", "Corp & Gov" }
+                };
+            }
         }
 
         public List<int> GetChildTeamIds(int parentTeamId, IRepository<Team> teamRepository)

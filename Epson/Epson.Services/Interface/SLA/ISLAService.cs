@@ -1,5 +1,7 @@
 ﻿using Epson.Core.Domain.Enum;
 using Epson.Core.Domain.SLA;
+using Epson.Core.Domain.Users;
+using Epson.Services.DTO.Requests;
 using Epson.Services.DTO.SLA;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -22,10 +24,9 @@ namespace Epson.Services.Interface.SLA
         public bool DeleteSLAHoliday(SLAHoliday slaHoliday);
         public bool DeleteStaffLeaveHoliday(SLAStaffLeave slaStaffLeave);
         public SLASettingDTO GetSLASettings();
-        public decimal GetAverageTimeToResolutionInHours(string userId);
-        public int GetBreachedTicketCount(string userId);
-        public int GetTotalTicketCount(string userId);
-        public int GetApprovedTickets(string userId);
-        public decimal GetSuccessRateOfTickets(string userId);
+        public decimal GetAverageTimeToResolutionInHours(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests);
+        public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests);
+        public int GetTotalTicketCount(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests);
+        public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests);
     }
 }
