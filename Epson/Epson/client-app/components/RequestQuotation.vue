@@ -257,7 +257,7 @@
                   <td>
                     <input v-if="isViewMode"
                            type="text"
-                           v-model="formattedRequestDate"
+                           v-model="formattedApprovedTime"
                            class="border-input"
                            readonly />
                   </td>

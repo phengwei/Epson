@@ -100,7 +100,7 @@ namespace Epson.Services.Services.Requests
                 {
                     Id = x.Id,
                     ApprovedBy = x.ApprovedBy,
-                    ApprovedTime = x.ApprovedTime,
+                    ApprovedTime = x.ApprovedTime.AddHours(8),
                     CompetitorInformations = _CompetitorInformationRepository.Table.Where(p => p.RequestId == x.Id).ToList(),
                     CreatedById = x.CreatedById,
                     CreatedOnUTC = x.CreatedOnUTC.AddHours(8),

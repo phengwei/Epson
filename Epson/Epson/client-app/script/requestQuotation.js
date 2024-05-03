@@ -1,7 +1,6 @@
 import { mapGetters } from 'vuex';
 import moment from 'moment';
 import Swal from 'sweetalert2';
-import JsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
 
@@ -502,6 +501,7 @@ export default {
         };
         this.competitorsToShow.push(c);
       }
+      this.approvedTime = requestData.approvedTime;
       this.submissionDetail = requestData.requestSubmissionDetailModel;
       this.projectInformation = requestData.projectInformationModel;
       this.approvalStateStr = requestData.approvalStateStr;
@@ -709,32 +709,20 @@ export default {
         navBar.style.display = originalDisplayStyle;
 
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new JsPDF({
-          orientation: 'portrait',
-          unit: 'px',
-          format: 'a4'
-        });
+        const link = document.createElement('a');
+        link.href = imgData;
+        link.download = 'request.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-        const scaleFactor = Math.min(
-          pdf.internal.pageSize.getWidth() / canvas.width,
-          pdf.internal.pageSize.getHeight() / canvas.height
-        );
-
-        const scaledWidth = canvas.width * scaleFactor;
-        const scaledHeight = canvas.height * scaleFactor;
-
-        const xOffset = (pdf.internal.pageSize.getWidth() - scaledWidth) / 2;
-        const yOffset = (pdf.internal.pageSize.getHeight() - scaledHeight) / 2;
-
-        pdf.addImage(imgData, 'PNG', xOffset, yOffset, scaledWidth, scaledHeight);
-
-        pdf.save('request.pdf');
       }).catch(error => {
         navBar.style.display = originalDisplayStyle;
-        console.error('Error exporting to PDF:', error);
-        Swal.fire('Error', 'Failed to generate PDF file', 'error');
+        console.error('Error exporting to PNG:', error);
+        Swal.fire('Error', 'Failed to generate PNG file', 'error');
       });
     },
+
 
 
     processQuotation() {
