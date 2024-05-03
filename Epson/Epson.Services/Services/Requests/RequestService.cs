@@ -661,6 +661,7 @@ namespace Epson.Services.Services.Requests
 
                     List<EmailQueue> emailQueues = _emailService.NotifySalesSectionHeadUsersOnApprovedRequest(request, rps);
 
+                    emailQueues.AddRange(_emailService.NotifySalesOperationTeamsOnApprovedRequest(request, rps));
                     emailQueues.Add(_emailService.CreateApprovedEmailQueue(request, rps));
 
                     foreach (var emailQueue in emailQueues)
