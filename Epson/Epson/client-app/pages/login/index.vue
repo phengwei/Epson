@@ -1,7 +1,7 @@
 <template>
   <main class="w-full h-full flex items-center justify-center">
     <div class="absolute top-0 w-full h-full bg-gray-900"></div>
-    <div class="absolute top-0 left-0 ml-4 mt-4">
+    <div class="absolute top-0 right-0 mr-4 mt-4">
       <nuxt-link to="/" class="flex items-center py-4 px-2">
         <img class="w-[150px] h-14 object-contain"
              src="/images/svg/navbar/epson-logo.png"
@@ -57,6 +57,7 @@
 
 
 
+
 <script>
 
   import Swal from 'sweetalert2';
@@ -73,7 +74,7 @@
         userName: '',
         password: '',
         error: null,
-        loginDisabled: false, 
+        loginDisabled: false,
       }
     },
     head() {
@@ -125,7 +126,7 @@
             }
           }).catch(error => {
             setTimeout(() => {
-              this.loginDisabled = false; 
+              this.loginDisabled = false;
             }, 5000);
 
             const errorMessage = error.response.data.error;
@@ -139,7 +140,7 @@
         } catch (err) {
           console.log(err);
         } finally {
-          this.loginDisabled = false; 
+          this.loginDisabled = false;
         }
       }
 

@@ -106,7 +106,6 @@
         this.$axios.get(`${this.$config.restUrl}/api/request/getfulfilledrequestasfulfiller`)
           .then(response => {
             this.requests = response.data.data;
-            console.log("awd", this.requests);
           })
           .catch(error => {
             console.error('Error fetching fulfilled request:', error);
