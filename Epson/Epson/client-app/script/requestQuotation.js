@@ -1,6 +1,7 @@
 import { mapGetters } from 'vuex';
 import moment from 'moment';
 import Swal from 'sweetalert2';
+import JsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
 
@@ -708,20 +709,23 @@ export default {
       }).then(canvas => {
         navBar.style.display = originalDisplayStyle;
 
-        const imgData = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.href = imgData;
-        link.download = 'request.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const imgData = canvas.toDataURL('image/jpeg', 0.8); 
+        const pdf = new JsPDF({
+          orientation: 'portrait', 
+          unit: 'px', 
+          format: [canvas.width, canvas.height], 
+        });
+
+        pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+        pdf.save('request.pdf');
 
       }).catch(error => {
         navBar.style.display = originalDisplayStyle;
-        console.error('Error exporting to PNG:', error);
-        Swal.fire('Error', 'Failed to generate PNG file', 'error');
+        console.error('Error exporting to PDF:', error);
+        Swal.fire('Error', 'Failed to generate PDF file', 'error');
       });
     },
+
 
 
 
