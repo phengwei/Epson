@@ -2,12 +2,14 @@
   <main class="dashboard-header" v-if="loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Admin')">
     <div class="grid-container">
       <div class="row">
-        <div class="grid-item">
+        <div class="grid-item full-width request-table">
           <v-app>
             <ItemsPendingRequesterAction />
           </v-app>
         </div>
-        <div class="grid-item">
+      </div>
+      <div class="row">
+        <div class="grid-item full-width request-table">
           <v-app>
             <ItemsPendingFulfillmentAsRequester />
           </v-app>

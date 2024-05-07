@@ -84,7 +84,19 @@
       async fetchtopproductsbyrevenue() {
         const response = await this.$axios.get(`${this.$config.restUrl}/api/report/gettopproductsbyrevenue`);
 
-        const labels = response.data.data.map(({ productName }) => productName);
+        const abbreviateProductName = (name) => {
+          if (name.length > 6) {
+            return name.slice(0, 5) + '...';
+          }
+          return name;
+        };
+
+        const productNamesMap = {};
+        const labels = response.data.data.map(({ productName }) => {
+          const abbreviated = abbreviateProductName(productName);
+          productNamesMap[abbreviated] = productName;
+          return abbreviated;
+        });
         const data = response.data.data.map(({ totalRevenue }) => totalRevenue);
 
         this.topproductsbyrevenue = {
@@ -96,7 +108,27 @@
               data
             }
           ]
-        }
+        };
+
+        this.options = {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            yAxes: [{
+              ticks: {
+                beginAtZero: true
+              }
+            }]
+          },
+          tooltips: {
+            callbacks: {
+              title: (tooltipItems) => {
+                const abbreviatedName = tooltipItems[0].label;
+                return productNamesMap[abbreviatedName] || abbreviatedName;
+              }
+            }
+          }
+        };
       },
       async fetchmonthlysalesbyrequester() {
         if (this.selectedRequester) {

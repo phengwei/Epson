@@ -2,7 +2,7 @@
   <v-data-table :headers="headers"
                 :items="filteredRequests"
                 :options.sync="options"
-                :items-per-page="5"
+                :items-per-page="10"
                 :loading="loading"
                 class="elevation-1">
     <template v-slot:top>

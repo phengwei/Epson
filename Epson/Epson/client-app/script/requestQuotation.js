@@ -502,6 +502,7 @@ export default {
         };
         this.competitorsToShow.push(c);
       }
+      this.approvedByName = requestData.approvedByName;
       this.approvedTime = requestData.approvedTime;
       this.submissionDetail = requestData.requestSubmissionDetailModel;
       this.projectInformation = requestData.projectInformationModel;

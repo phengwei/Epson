@@ -132,6 +132,7 @@ namespace Epson.Factories
                     {
                         Id = request.Id,
                         ApprovedBy = request.ApprovedBy,
+                        ApprovedByName = request.ApprovedBy != null ? _userManager.FindByIdAsync(request.ApprovedBy).Result.UserName : null,
                         ApprovedTime = request.ApprovedTime,
                         CreatedBy = _userManager.FindByIdAsync(request.CreatedById).Result.UserName,
                         CreatedById = request.CreatedById,

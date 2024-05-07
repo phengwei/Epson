@@ -212,7 +212,7 @@
                     <input v-else
                            type="datetime-local"
                            v-model="submissionDetail.createdOnUTC"
-                           class="border-input" />
+                           class="border-input" readonly />
                   </td>
                 </tr>
                 <tr>
@@ -250,6 +250,17 @@
                   <td>Email <span class="required-asterisk">*</span></td>
                   <td>:</td>
                   <td><input type="text" v-model="submissionDetail.email" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr v-if="currentRequestApprovalState === ApprovalStateEnum.Approved">
+                  <td>Approved By</td>
+                  <td>:</td>
+                  <td>
+                    <input v-if="isViewMode"
+                           type="text"
+                           v-model="this.approvedByName"
+                           class="border-input"
+                           readonly />
+                  </td>
                 </tr>
                 <tr v-if="currentRequestApprovalState === ApprovalStateEnum.Approved">
                   <td>Approved Time</td>

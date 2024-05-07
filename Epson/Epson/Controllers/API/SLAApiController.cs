@@ -25,7 +25,7 @@ using Epson.Core.Domain.Enum;
 
 namespace Epson.Controllers.API
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin, Sales, Product")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin, Sales, Product, Sales Section Head")]
     [Route("api/sla")]
     public class SLAApiController : BaseApiController
     {

@@ -1,4 +1,5 @@
-﻿using Epson.Core.Domain.Products;
+﻿using Epson.Core.Domain.Enum;
+using Epson.Core.Domain.Products;
 using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.Users;
 using Epson.Data;
@@ -31,7 +32,7 @@ namespace Epson.Services.Services.Report
         public async Task<List<RequesterSales>> GetMonthlySalesByRequester(string requesterId)
         {
             var monthlySales = _requestRepository.Table
-                .Where(r => r.ApprovalState == 30 && r.CreatedById == requesterId)
+                .Where(r => r.ApprovalState == (int)ApprovalStateEnum.Approved && r.CreatedById == requesterId)
                 .GroupBy(r => new
                 {
                     Month = r.CreatedOnUTC.ToString("yyyy-MM"),
@@ -41,7 +42,7 @@ namespace Epson.Services.Services.Report
                 {
                     Month = g.Key.Month,
                     RequesterName = g.Key.Requester,
-                    MonthlySales = g.Sum(r => r.TotalPrice)
+                    MonthlySales = g.Sum(r => r.TotalBudget)
                 })
                 .ToList();
 
@@ -51,13 +52,13 @@ namespace Epson.Services.Services.Report
         public async Task<List<RequesterSales>> GetTopRequestersBySales()
         {
             var topRequesters = _requestRepository.Table
-                .Where(r => r.ApprovalState == 30)
+                .Where(r => r.ApprovalState == (int)ApprovalStateEnum.Approved)
                 .GroupBy(r => r.CreatedById)
                 .Select(g => new RequesterSales
                 {
                     RequesterId = g.Key,
                     TotalNumberOfSales = g.Count(),
-                    TotalSales = g.Sum(r => r.TotalPrice)
+                    TotalSales = g.Sum(r => r.TotalBudget)
                 })
                 .OrderByDescending(x => x.TotalSales)
                 .Take(10)
@@ -75,7 +76,7 @@ namespace Epson.Services.Services.Report
         public async Task<List<ProductRevenue>> GetTopProductsByRevenue()
         {
             var topProducts = _requestRepository.Table
-                .Where(r => r.ApprovalState == 30)
+                .Where(r => r.ApprovalState == (int)ApprovalStateEnum.Approved)
                 .Join(
                     _requestProductRepository.Table,
                     r => r.Id,
@@ -86,7 +87,7 @@ namespace Epson.Services.Services.Report
                     _productRepository.Table,
                     j => j.RequestProduct.ProductId,
                     p => p.Id,
-                    (j, p) => new { ProductName = p.Name, TotalRevenue = j.RequestProduct.Quantity * j.RequestProduct.FulfilledPrice }
+                    (j, p) => new { ProductName = p.Name, TotalRevenue = j.RequestProduct.Quantity * j.RequestProduct.DealerPrice }
                 )
                 .GroupBy(
                     j => j.ProductName,

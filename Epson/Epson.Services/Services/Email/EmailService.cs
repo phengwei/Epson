@@ -1000,7 +1000,7 @@ namespace Epson.Services.Services.Email
                             </tr>
                             <tr>
                                 <th>End User</th>
-                                <td>RM {_ProjectInformationRepository.GetAll().Where(x => x.RequestId == requestProduct.RequestId).FirstOrDefault().ProjectName}</td>
+                                <td>{_ProjectInformationRepository.GetAll().Where(x => x.RequestId == requestProduct.RequestId).FirstOrDefault().ProjectName}</td>
                             </tr>
                         </table>
                     </div>
@@ -1140,7 +1140,7 @@ namespace Epson.Services.Services.Email
                                 </tr>
                                 <tr>
                                     <th>End User</th>
-                                    <td>RM {_ProjectInformationRepository.GetAll().Where(x => x.RequestId == requestProduct.RequestId).FirstOrDefault().ProjectName}</td>
+                                    <td>{_ProjectInformationRepository.GetAll().Where(x => x.RequestId == requestProduct.RequestId).FirstOrDefault().ProjectName}</td>
                                 </tr>
                             </table>
                         </div>
