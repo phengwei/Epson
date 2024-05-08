@@ -53,10 +53,16 @@ namespace Epson.Job
                                  && dbContext.ProjectInformation.Any(p => p.RequestId == r.Id)))
                 .ToListAsync();
 
-            var requestProductsToNotify = requestProducts
-                .Where(rp => rp.CreatedOnUTC.AddWorkingDays(3) <= DateTime.UtcNow)
-                .ToList();
+            List<RequestProduct> requestProductsToNotify = new List<RequestProduct>();
 
+            foreach (var rp in requestProducts)
+            {
+                var request = await dbContext.Request.Where(x => x.Id == rp.RequestId).FirstAsync();  
+                if (request != null && request.ApprovedTime != DateTime.MinValue && request.ApprovedTime.AddWorkingDays(3) <= DateTime.UtcNow)
+                {
+                    requestProductsToNotify.Add(rp);
+                }
+            }
 
             List<EmailQueue> emailQueues = new List<EmailQueue>();
 
