@@ -57,12 +57,18 @@ namespace Epson.Job
 
             foreach (var rp in requestProducts)
             {
-                var request = await dbContext.Request.Where(x => x.Id == rp.RequestId).FirstAsync();  
-                if (request != null && request.ApprovedTime != DateTime.MinValue && request.ApprovedTime.AddWorkingDays(3) <= DateTime.UtcNow)
+                var request = await dbContext.Request.Where(x => x.Id == rp.RequestId).FirstAsync();
+
+                if (request != null)
                 {
-                    requestProductsToNotify.Add(rp);
+                    var referenceTime = request.AmendQuotationTime ?? request.ApprovedTime;
+                    if (referenceTime != DateTime.MinValue && referenceTime.AddWorkingDays(3) <= DateTime.UtcNow)
+                    {
+                        requestProductsToNotify.Add(rp);
+                    }
                 }
             }
+
 
             List<EmailQueue> emailQueues = new List<EmailQueue>();
 
