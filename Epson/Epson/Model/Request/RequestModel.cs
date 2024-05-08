@@ -9,6 +9,7 @@ namespace Epson.Model.Request
         public DateTime? ApprovedTime { get; set; }
         public string? ApprovedBy { get; set; }
         public string? ApprovedByName { get; set; }
+        public DateTime? AmendQuotationTime { get; set; }
         public string Segment { get; set; }
         public decimal TotalBudget { get; set; }
         public int ApprovalState { get; set; }

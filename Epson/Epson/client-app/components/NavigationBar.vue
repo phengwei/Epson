@@ -1,19 +1,10 @@
 <template>
-  <nav class="ums-header bg-[#19212b]  top-0 inset-x-0 w-full z-30 text-white fixed transition duration-300 delay-0 ease-out">
+  <nav class="ums-header bg-[#19212b] top-0 inset-x-0 w-full z-30 text-white fixed transition duration-300 delay-0 ease-out">
     <div class="flex sm:px-18 px-4">
-      <div class="w-full flex justify-between flex-row-reverse">
-        <div class="flex md:space-x-7 md:w-full">
-          <!-- Website Logo -->
-          <div class="flex items-center">
-            <nuxt-link to="/" class="py-4 px-2 w-[150px]">
-              <img class="w-[150px] h-14 object-contain"
-                   src="/images/svg/epson-logo.png"
-                   alt="Epson" />
-            </nuxt-link>
-          </div>
-
+      <div class="w-full flex justify-between">
+        <div class="flex md:space-x-7 md:w-full justify-start">
           <!-- Dashboard Dropdown and Primary Navbar items -->
-          <div class="hidden md:flex items-center w-full justify-end" v-if="isAuthenticated">
+          <div class="hidden md:flex items-center w-full" v-if="isAuthenticated">
             <nuxt-link to="/user"
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">{{ loggedInUser.userName }}</nuxt-link>
 
@@ -59,10 +50,20 @@
               </div>
             </div>
 
-            <a class="w-40  h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300 cursor-pointer"
+            <a class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300 cursor-pointer"
                @click="logout">Logout</a>
           </div>
         </div>
+
+        <!-- Website Logo -->
+        <div class="flex items-center">
+          <nuxt-link to="/" class="py-4 px-2 w-[150px]">
+            <img class="w-[150px] h-14 object-contain"
+                 src="/images/svg/epson-logo.png"
+                 alt="Epson" />
+          </nuxt-link>
+        </div>
+
         <!-- Mobile menu button -->
         <div class="md:hidden flex items-center">
           <button class="outline-none" @click="openPopup()">

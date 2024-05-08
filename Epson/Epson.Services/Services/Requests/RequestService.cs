@@ -101,6 +101,7 @@ namespace Epson.Services.Services.Requests
                     Id = x.Id,
                     ApprovedBy = x.ApprovedBy,
                     ApprovedTime = x.ApprovedTime.AddHours(8),
+                    AmendQuotationTime = x.AmendQuotationTime,
                     CompetitorInformations = _CompetitorInformationRepository.Table.Where(p => p.RequestId == x.Id).ToList(),
                     CreatedById = x.CreatedById,
                     CreatedOnUTC = x.CreatedOnUTC.AddHours(8),
@@ -632,7 +633,10 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.HasFulfilled = true;
             requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
             requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;
-            requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate, existingRequest.ApprovedTime, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
+            requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate,
+                                                                               existingRequest.AmendQuotationTime ?? existingRequest.ApprovedTime,
+                                                                               _slaService.GetSLAStaffLeavesByStaffId(user.Id),
+                                                                               _slaService.GetSLAHolidays()); 
             requestProductToFulfill.Remarks = remarks;
             requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
 
@@ -693,6 +697,8 @@ namespace Epson.Services.Services.Requests
                 throw new Exception("Invalid request.");
 
             request.ApprovalState = (int)ApprovalStateEnum.AmendQuotation;
+            request.AmendQuotationTime = DateTime.UtcNow;
+            request.UpdatedOnUTC = DateTime.UtcNow;
 
             List<RequestProduct> requestProducts = _RequestProductRepository.Table.Where(x => x.RequestId == req.Id).ToList();
 
@@ -703,14 +709,8 @@ namespace Epson.Services.Services.Requests
 
                 foreach (var requestProduct in requestProducts)
                 {
-                    if (requestProduct.HasFulfilled == true)
-                    {
-                        var amendQuotationEmailQueue = _emailService.CreateAmendQuotationEmailQueue(request, requestProduct);
-                        _emailService.InsertEmailQueue(amendQuotationEmailQueue);
-                        requestProduct.HasFulfilled = false;
-                        requestProduct.FulfilledDate = DateTime.MinValue;
-                        requestProduct.FulfillerId = string.Empty;
-                    }
+                    var amendQuotationEmailQueue = _emailService.CreateAmendQuotationEmailQueue(request, requestProduct);
+                    _emailService.InsertEmailQueue(amendQuotationEmailQueue);
                 }
                 return true;
             }

@@ -134,6 +134,7 @@ namespace Epson.Factories
                         ApprovedBy = request.ApprovedBy,
                         ApprovedByName = request.ApprovedBy != null ? _userManager.FindByIdAsync(request.ApprovedBy).Result.UserName : null,
                         ApprovedTime = request.ApprovedTime,
+                        AmendQuotationTime = request.AmendQuotationTime,
                         CreatedBy = _userManager.FindByIdAsync(request.CreatedById).Result.UserName,
                         CreatedById = request.CreatedById,
                         CreatedOnUTC = request.CreatedOnUTC,
