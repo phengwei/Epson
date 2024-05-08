@@ -5,7 +5,7 @@
         <div class="card-header">Monthly Sales by Requester</div>
         <div class="card-body">
           <select v-model="selectedRequester" @change="fetchmonthlysalesbyrequester">
-            <option value="">Select Requester</option>
+            <option value="all">All Requesters</option>
             <option v-for="requester in requesters" :value="requester.id" :key="requester.id">{{ requester.userName }}</option>
           </select>
           <bar-chart :chart-data="monthlysalesbyrequester" :options="options"></bar-chart>
@@ -49,7 +49,7 @@
             }]
           }
         },
-        selectedRequester: '',
+        selectedRequester: 'all',
         requesters: []
       }
     },
@@ -131,27 +131,30 @@
         };
       },
       async fetchmonthlysalesbyrequester() {
-        if (this.selectedRequester) {
-          const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequester?requesterId=${this.selectedRequester}`);
+        let response;
+        if (this.selectedRequester === 'all') {
+          response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequester?allRequester=true`);
+        } else {
+          response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequester?requesterId=${this.selectedRequester}`);
+        }
 
-          const monthlySalesData = Array(12).fill(0);
+        const monthlySalesData = Array(12).fill(0);
 
-          response.data.data.forEach(salesData => {
-            const monthNumber = parseInt(salesData.month.split('-')[1], 10);
+        response.data.data.forEach(salesData => {
+          const monthNumber = parseInt(salesData.month.split('-')[1], 10);
 
-            monthlySalesData[monthNumber - 1] = salesData.monthlySales;
-          });
+          monthlySalesData[monthNumber - 1] = salesData.monthlySales;
+        });
 
-          this.monthlysalesbyrequester = {
-            labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-            datasets: [
-              {
-                label: 'Monthly Sales',
-                backgroundColor: '#f87979',
-                data: monthlySalesData
-              }
-            ]
-          }
+        this.monthlysalesbyrequester = {
+          labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+          datasets: [
+            {
+              label: 'Monthly Sales',
+              backgroundColor: '#f87979',
+              data: monthlySalesData
+            }
+          ]
         }
       }
     },

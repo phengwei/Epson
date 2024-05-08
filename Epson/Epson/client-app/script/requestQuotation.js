@@ -710,15 +710,20 @@ export default {
       }).then(canvas => {
         navBar.style.display = originalDisplayStyle;
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.8); 
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
         const pdf = new JsPDF({
-          orientation: 'portrait', 
-          unit: 'px', 
-          format: [canvas.width, canvas.height], 
+          orientation: 'portrait',
+          unit: 'px',
+          format: [canvas.width, canvas.height],
         });
 
         pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
-        pdf.save('request.pdf');
+
+        // Get the request ID from the currentRequest object
+        const requestId = this.currentRequest.id;
+        const fileName = `request_${requestId}.pdf`;
+
+        pdf.save(fileName);
 
       }).catch(error => {
         navBar.style.display = originalDisplayStyle;
@@ -726,10 +731,6 @@ export default {
         Swal.fire('Error', 'Failed to generate PDF file', 'error');
       });
     },
-
-
-
-
     processQuotation() {
       const quotationData = {
         ApprovalState: 20,

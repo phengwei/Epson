@@ -40,11 +40,11 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getmonthlysalesbyrequester")]
-        public async Task<IActionResult> MonthlySalesByRequester(string requesterId)
+        public async Task<IActionResult> MonthlySalesByRequester(string requesterId, bool allRequester = false)
         {
             var response = new GenericResponseModel<List<RequesterSales>>();
 
-            var monthlySalesByRequester = await _reportService.GetMonthlySalesByRequester(requesterId);
+            var monthlySalesByRequester = await _reportService.GetMonthlySalesByRequester(requesterId, allRequester);
 
             response.Data = monthlySalesByRequester;
             return Ok(response);

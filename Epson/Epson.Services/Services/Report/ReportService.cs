@@ -29,22 +29,40 @@ namespace Epson.Services.Services.Report
             _userManager = userManager;
         }
 
-        public async Task<List<RequesterSales>> GetMonthlySalesByRequester(string requesterId)
+        public async Task<List<RequesterSales>> GetMonthlySalesByRequester(string requesterId, bool allRequester = false)
         {
-            var monthlySales = _requestRepository.Table
-                .Where(r => r.ApprovalState == (int)ApprovalStateEnum.Approved && r.CreatedById == requesterId)
-                .GroupBy(r => new
-                {
-                    Month = r.CreatedOnUTC.ToString("yyyy-MM"),
-                    Requester = r.CreatedById
-                })
-                .Select(g => new RequesterSales
-                {
-                    Month = g.Key.Month,
-                    RequesterName = g.Key.Requester,
-                    MonthlySales = g.Sum(r => r.TotalBudget)
-                })
-                .ToList();
+            List<RequesterSales> monthlySales = new List<RequesterSales>();
+
+            if (!allRequester)
+            {
+                monthlySales = _requestRepository.Table
+                    .Where(r => r.ApprovalState == (int)ApprovalStateEnum.Approved && r.CreatedById == requesterId)
+                    .GroupBy(r => new
+                    {
+                        Month = r.CreatedOnUTC.ToString("yyyy-MM"),
+                        Requester = r.CreatedById
+                    })
+                    .Select(g => new RequesterSales
+                    {
+                        Month = g.Key.Month,
+                        RequesterName = g.Key.Requester,
+                        MonthlySales = g.Sum(r => r.TotalBudget)
+                    })
+                    .ToList();
+            }
+            else
+            {
+                monthlySales = _requestRepository.Table
+                    .Where(r => r.ApprovalState == (int)ApprovalStateEnum.Approved)
+                    .GroupBy(r => r.CreatedOnUTC.ToString("yyyy-MM"))
+                    .Select(g => new RequesterSales
+                    {
+                        Month = g.Key,
+                        RequesterName = "All Requesters",
+                        MonthlySales = g.Sum(r => r.TotalBudget)
+                    })
+                    .ToList();
+            }
 
             return monthlySales;
         }

@@ -60,6 +60,7 @@ namespace Epson.Services.Services.Email
             _ProjectInformationRepository = ProjectInformationRepository;
             _RequestRepository = RequestRepository;
             _RequestProductRepository = RequestProductRepository;
+            _TeamRepository = TeamRepository;
             _userManager = userManager;
             _productService = productService;
             _categoryService = categoryService;
@@ -1199,13 +1200,7 @@ namespace Epson.Services.Services.Email
 
             HashSet<string> uniqueEmails = new HashSet<string>(backupFulfillerEmails);
 
-            if (uniqueEmails.Contains(fulfiller.Result.Email))
-            {
-                uniqueEmails.Remove(fulfiller.Result.Email);
-            }
-
             string ccEmails = string.Join(" ", uniqueEmails);
-
 
             var emailQueue = new EmailQueue
             {
