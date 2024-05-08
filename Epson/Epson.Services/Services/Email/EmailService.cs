@@ -629,6 +629,26 @@ namespace Epson.Services.Services.Email
 
             foreach (var rp in requestProducts)
             {
+                var productCategories = _productService.GetCategoryIdsByProductId(rp.ProductId);
+                List<string> backupFulfillerEmails = new List<string>();
+
+                foreach (var pc in productCategories)
+                {
+                    var category = _categoryService.GetCategoryById(pc.CategoryId);
+
+                    var backupFulfiller1 = await _userManager.FindByIdAsync(category.BackupFulfiller1);
+                    var backupFulfiller2 = await _userManager.FindByIdAsync(category.BackupFulfiller2);
+
+                    if (backupFulfiller1 != null)
+                    {
+                        backupFulfillerEmails.Add(backupFulfiller1.Email);
+                    }
+                    if (backupFulfiller2 != null)
+                    {
+                        backupFulfillerEmails.Add(backupFulfiller2.Email);
+                    }
+                }
+
                 ApplicationUser fulfiller = await _userManager.FindByIdAsync(rp.FulfillerId);
                 fulfillers.Add(fulfiller);
 
@@ -730,6 +750,14 @@ namespace Epson.Services.Services.Email
                     </body>
                     </html>";
 
+                HashSet<string> uniqueEmails = new HashSet<string>(backupFulfillerEmails);
+
+                if (uniqueEmails.Contains(fulfiller.Email))
+                {
+                    uniqueEmails.Remove(fulfiller.Email);
+                }
+
+                string ccEmails = string.Join(" ", uniqueEmails);
 
                 var emailQueue = new EmailQueue
                 {
@@ -740,6 +768,7 @@ namespace Epson.Services.Services.Email
                     ScheduleTime = DateTime.UtcNow,
                     SendAttempts = 0,
                     SentTime = null,
+                    Cc = ccEmails,
                     EmailAccountId = emailAccount.Id
                 };
                 emailQueues.Add(emailQueue);
@@ -1058,6 +1087,26 @@ namespace Epson.Services.Services.Email
             var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
             var product = _productService.GetProductById(requestProduct.ProductId);
 
+            var productCategories = _productService.GetCategoryIdsByProductId(requestProduct.ProductId);
+            List<string> backupFulfillerEmails = new List<string>();
+
+            foreach (var pc in productCategories)
+            {
+                var category = _categoryService.GetCategoryById(pc.CategoryId);
+
+                var backupFulfiller1 = _userManager.FindByIdAsync(category.BackupFulfiller1);
+                var backupFulfiller2 = _userManager.FindByIdAsync(category.BackupFulfiller2);
+
+                if (backupFulfiller1 != null)
+                {
+                    backupFulfillerEmails.Add(backupFulfiller1.Result.Email);
+                }
+                if (backupFulfiller2 != null)
+                {
+                    backupFulfillerEmails.Add(backupFulfiller2.Result.Email);
+                }
+            }
+
             var subject = "";
             if (hasFulfillmentComplete)
                 subject = $"Request {request.Id} completed fulfillment";
@@ -1148,6 +1197,15 @@ namespace Epson.Services.Services.Email
                 </body>
                 </html>";
 
+            HashSet<string> uniqueEmails = new HashSet<string>(backupFulfillerEmails);
+
+            if (uniqueEmails.Contains(fulfiller.Result.Email))
+            {
+                uniqueEmails.Remove(fulfiller.Result.Email);
+            }
+
+            string ccEmails = string.Join(" ", uniqueEmails);
+
 
             var emailQueue = new EmailQueue
             {
@@ -1158,6 +1216,7 @@ namespace Epson.Services.Services.Email
                 ScheduleTime = DateTime.UtcNow,
                 SendAttempts = 0,
                 SentTime = null,
+                Cc = ccEmails,
                 EmailAccountId = emailAccount.Id
             };
 
