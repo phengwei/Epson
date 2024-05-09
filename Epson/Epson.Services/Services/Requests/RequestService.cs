@@ -300,14 +300,23 @@ namespace Epson.Services.Services.Requests
             if (GetRequestById(request.Id) == null)
                 throw new ArgumentNullException(nameof(request));
 
+            var existingRequest = _RequestRepository.GetById(request.Id);
             var projectInformation = _mapper.Map<ProjectInformation>(projectInformationDTO);
 
             try
             {
-                request.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => (decimal)rp.EndUserPrice);
-                if (request.ApprovedBy == null)
+                existingRequest.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => (decimal)rp.EndUserPrice);
+                existingRequest.UpdatedOnUTC = DateTime.UtcNow;
+                existingRequest.Comments = request.Comments;
+                existingRequest.Segment = request.Segment;
+                existingRequest.UpdatedById = request.UpdatedById;
+                if (existingRequest.ApprovedBy == null)
                 {
-                    request.ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction;
+                    existingRequest.ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction;
+                }
+                else
+                {
+                    existingRequest.ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction;
                 }
                 _RequestRepository.Update(request);
                 _logger.Information("Updating request {id}", request.Id);
