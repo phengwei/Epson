@@ -474,16 +474,12 @@ namespace Epson.Services.Services.Email
             requesterTask.Wait();
             var requester = requesterTask;
 
-            var salesOperationTeams = _TeamRepository.GetAll()
-                .Where(t => t.Name == "Sales Operation Team")
-                .Select(t => t.Id)
-                .ToList();
+            var salesOperationUsersTask = _userManager.GetUsersInRoleAsync("Sales Section Head");
+            salesOperationUsersTask.Wait();
 
-            var salesOperationUsers = _userService.GetAllUsers()
-                .Where(user => salesOperationTeams.Contains(user.TeamId))
-                .ToList();
+            var salesOperationUsers = salesOperationUsersTask;
 
-            if (salesOperationUsers.Count > 0)
+            if (salesOperationUsers.Result.Count > 0)
             {
                 var productNames = requestProducts.Select(rp =>
                 {
@@ -588,7 +584,7 @@ namespace Epson.Services.Services.Email
 
                 var emailQueues = new List<EmailQueue>();
 
-                foreach (var salesOpUser in salesOperationUsers)
+                foreach (var salesOpUser in salesOperationUsers.Result)
                 {
                     var emailQueue = new EmailQueue
                     {

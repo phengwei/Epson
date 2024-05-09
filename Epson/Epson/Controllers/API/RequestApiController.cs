@@ -74,7 +74,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getrequests")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation")]
         public async Task<IActionResult> GetRequests()
         {
             var response = new GenericResponseModel<List<RequestModel>>();
@@ -82,7 +82,9 @@ namespace Epson.Controllers.API
 
             List<RequestDTO> requests = new List<RequestDTO>();
 
-            if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus") || currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Sales Section Head"))
+            if (currentUser.Roles.Contains("Sales Operation"))
+                requests = _requestService.GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.Approved).ToList();
+            else if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus") || currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Sales Section Head"))
                 requests = _requestService.GetRequests();
             else
                 requests = _requestService.GetRequests().Where(x => x.CreatedById == currentUser.Id).ToList();

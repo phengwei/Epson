@@ -118,7 +118,7 @@
           { text: 'Team', value: 'teams' },
           { text: 'Actions', value: 'actions', sortable: false },
         ],
-        tabItems: ['Sales', 'Product', 'Coverplus', 'Sales Section Head'],
+        tabItems: ['Sales', 'Product', 'Coverplus', 'Sales Section Head', 'Sales Operation'],
         tab: null,
         users: [],
         teams: [],

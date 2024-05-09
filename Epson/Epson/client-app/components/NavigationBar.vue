@@ -9,7 +9,7 @@
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">{{ loggedInUser.userName }}</nuxt-link>
 
             <!-- Dashboard Dropdown -->
-            <div class="relative group" @click="toggleDashboardDropdown" ref="dashboardDropdown">
+            <div class="relative group" @click="toggleDashboardDropdown" ref="dashboardDropdown" v-if="!loggedInUser.roles.includes('Sales Operation')">
               <span class="w-40 h-full flex justify-center items-center font-semibold transition duration-300 cursor-pointer">Dashboard</span>
               <div class="absolute left-0 mt-1 w-48 rounded-md shadow-lg py-1 bg-white text-black z-50" :class="{ 'hidden': !showDashboardDropdown }">
                 <nuxt-link v-for="link in dashboardLinks"
@@ -24,7 +24,7 @@
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Report</nuxt-link>
             <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Sales Section Head')" to="/slaDashboard"
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">SLA Overview</nuxt-link>
-            <nuxt-link v-if="loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head')" to="/request"
+            <nuxt-link v-if="loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head') || loggedInUser.roles.includes('Sales Operation')" to="/request"
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Requests</nuxt-link>
             <nuxt-link v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Admin')" to="/product"
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Products</nuxt-link>

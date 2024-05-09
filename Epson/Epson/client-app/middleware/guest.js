@@ -5,6 +5,8 @@ export default function ({ store, redirect }) {
     const userRoles = store.state.auth.user.data.roles;  
     if (userRoles.includes('Admin')) {
       return redirect('/userManagement');
+    } else if (userRoles.includes('Sales Operation')) {
+      return redirect('/request');
     } else if (userRoles.includes('Product')) {
       return redirect('/productDashboard'); 
     } else if (userRoles.includes('Sales') || userRoles.includes('Coverplus')) {
