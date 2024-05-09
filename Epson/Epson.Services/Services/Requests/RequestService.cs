@@ -305,6 +305,10 @@ namespace Epson.Services.Services.Requests
             try
             {
                 request.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => (decimal)rp.EndUserPrice);
+                if (request.ApprovedBy == null)
+                {
+                    request.ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction;
+                }
                 _RequestRepository.Update(request);
                 _logger.Information("Updating request {id}", request.Id);
 
