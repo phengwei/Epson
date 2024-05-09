@@ -79,9 +79,26 @@ namespace Epson.Services.Services.Users
             return productRoleUsers;
         }
 
-        public Dictionary<string, string> InitializeTeamHierarchy(bool isSalesHead = false)
+        public Dictionary<string, string> InitializeTeamHierarchy(bool isSalesHead = false, bool multiRole = false)
         {
             if (!isSalesHead)
+            {
+                return new Dictionary<string, string>
+                {
+                    {"Corporate Sales", "Corp & Gov"},
+                    {"Government Sales", "Corp & Gov"},
+                    {"Inside Sales", "Channel Support"},
+                    {"Sales Support Management", "Channel Support"},
+                    {"Product Marketing", "Product Marketing"},
+                    {"Brand & Comms", "Channel Support"},
+                    {"Vertical Biz (LFP)", "Channel Support"},
+                    {"Area (City)", "Retail"},
+                    {"Area - MDT / Chain Store / E Commerce", "Retail"},
+                    {"Corporate Sales (West M'sia)", "Corporate Sales (West M'sia)" },
+                    {"Corporate Sales (East M'sia)", "Corporate Sales (East M'sia)" }
+                };
+            }
+            else if (isSalesHead && multiRole)
             {
                 return new Dictionary<string, string>
                 {

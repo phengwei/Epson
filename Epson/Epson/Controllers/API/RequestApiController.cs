@@ -145,6 +145,9 @@ namespace Epson.Controllers.API
             var updatedRequest = new Request
             {
                 Id = request.Id,
+                ApprovedBy = request.ApprovedBy,
+                ApprovedTime = request.ApprovedTime,
+                AmendQuotationTime = request.AmendQuotationTime,
                 CreatedOnUTC = request.CreatedOnUTC,
                 UpdatedOnUTC = DateTime.UtcNow,
                 CreatedById = user.Id,
@@ -520,7 +523,7 @@ namespace Epson.Controllers.API
 
             var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-            var teamHierarchy = _userService.InitializeTeamHierarchy(true);
+            var teamHierarchy = _userService.InitializeTeamHierarchy(true, true);
 
             var currentUserTeamName = _teamRepository.GetAll().FirstOrDefault(t => t.Id == currentUser.TeamId)?.Name;
 

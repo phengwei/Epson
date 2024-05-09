@@ -318,7 +318,7 @@ namespace Epson.Services.Services.Requests
                 {
                     existingRequest.ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction;
                 }
-                _RequestRepository.Update(request);
+                _RequestRepository.Update(existingRequest);
                 _logger.Information("Updating request {id}", request.Id);
 
                 DeleteRequestProductOfRequest(request.Id);
