@@ -1,12 +1,12 @@
 <template>
-  <div class="d-flex justify-content-center align-items-center vh-100" data-app="true" v-if="loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head') || loggedInUser.roles.includes('Sales Operation') ">
+  <div class="d-flex justify-content-center align-items-center vh-100" data-app="true" v-if="loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head') || loggedInUser.roles.includes('Sales Operation')">
     <v-card class="mx-auto" style="width: 90%">
       <v-card-title class="d-flex justify-content-between align-items-center">
         <span style="flex-grow: 1;">Request</span>
         <v-text-field v-model="search"
                       class="search-input"
                       append-icon="mdi-magnify"
-                      label="Search by request #"
+                      label="Search by end user or request #"
                       single-line
                       hide-details></v-text-field>
         <v-btn class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
@@ -27,7 +27,6 @@
   </div>
 </template>
 
-
 <script>
   import { mapGetters } from 'vuex';
   import moment from 'moment';
@@ -40,10 +39,14 @@
       ...mapGetters(['isAuthenticated', 'loggedInUser']),
       filteredRequests() {
         if (this.search.trim() === '') {
-          return this.requests; 
+          return this.requests;
         }
         return this.requests.filter(request => {
-          return String(request.id).toLowerCase().includes(this.search.toLowerCase());
+          const requestIdMatch = String(request.id).toLowerCase().includes(this.search.toLowerCase());
+          const projectNameMatch = request.projectInformationModel &&
+            request.projectInformationModel.projectName &&
+            request.projectInformationModel.projectName.toLowerCase().includes(this.search.toLowerCase());
+          return requestIdMatch || projectNameMatch;
         });
       }
     },
@@ -61,7 +64,7 @@
         requests: [],
         options: {},
         loading: false,
-        search: '', 
+        search: '',
         ApprovalStateEnum,
         RequestProductStatusEnum,
       };
@@ -143,11 +146,11 @@
     font-size: 14px;
     border-radius: 4px;
   }
+
   .search-input {
     flex-grow: 1;
-    margin-left: 16px; 
+    margin-left: 16px;
     margin-right: 16px;
     width: 5%;
   }
-
 </style>
