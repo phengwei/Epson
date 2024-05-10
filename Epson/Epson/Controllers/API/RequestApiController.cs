@@ -79,15 +79,40 @@ namespace Epson.Controllers.API
         {
             var response = new GenericResponseModel<List<RequestModel>>();
             var currentUser = _workContext.CurrentUser;
+            var currentUserDetail = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
             List<RequestDTO> requests = new List<RequestDTO>();
 
+
             if (currentUser.Roles.Contains("Sales Operation"))
+            {
                 requests = _requestService.GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.Approved).ToList();
-            else if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus") || currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Sales Section Head"))
+            }
+            else if (currentUser.Roles.Contains("Sales Section Head"))
+            {
+
+
+                var relevantTeamIds = _userService.GetChildTeamIds(currentUserDetail.TeamId, _teamRepository);
+                relevantTeamIds.Add(currentUserDetail.TeamId);
+
+                var usersInRelevantTeams = _userManager.Users
+                                                       .Where(u => relevantTeamIds.Contains(u.TeamId))
+                                                       .Select(u => u.Id)
+                                                       .ToList();
+
+                requests = _requestService.GetRequests()
+                                          .Where(x => usersInRelevantTeams.Contains(x.CreatedById))
+                                          .ToList();
+            }
+            else if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus") || currentUser.Roles.Contains("Admin"))
+            {
                 requests = _requestService.GetRequests();
+            }
             else
+            {
                 requests = _requestService.GetRequests().Where(x => x.CreatedById == currentUser.Id).ToList();
+            }
+               
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests.OrderByDescending(x => x.CreatedOnUTC).ToList());
 
