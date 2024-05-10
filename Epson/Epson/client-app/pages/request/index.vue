@@ -9,7 +9,7 @@
                       label="Search by end user or request #"
                       single-line
                       hide-details></v-text-field>
-        <v-btn class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
+        <v-btn v-if="loggedInUser.roles.includes('Sales')" class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
       </v-card-title>
       <v-card-text>
         <v-data-table :headers="headers"

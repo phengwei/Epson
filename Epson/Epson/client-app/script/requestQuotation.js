@@ -103,9 +103,6 @@ export default {
       const request = JSON.parse(this.$route.query.request);
       this.populateForm(request);
     }
-    else {
-      await this.loadDraft();
-    }
   },
   computed: {
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
@@ -560,32 +557,42 @@ export default {
     },
     loadDraft() {
       try {
-        this.selectedCategories = [];
-        this.productsToShow = [];
-
+        this.selectedCategories = JSON.parse(localStorage.getItem("savedItem-selectedCategories")) || [];
         this.productsToShow = JSON.parse(localStorage.getItem("savedItem-productsToShowList")) || [];
         this.competitorsToShow = JSON.parse(localStorage.getItem("savedItem-competitorsToShowList")) || [];
-        this.customerName = localStorage.getItem("savedItem-customerName", this.customerName) || "";
-        this.priority.value = localStorage.getItem("savedItem-priority", this.priority.value);
-        this.dealJustification = localStorage.getItem("savedItem-dealJustification", this.dealJustification) || "";
-        this.deadline = localStorage.getItem("savedItem-deadline", this.deadline);
-
+        this.coverplusesToShow = JSON.parse(localStorage.getItem("savedItem-coverplusesToShowList")) || [];
+        this.submissionDetail = JSON.parse(localStorage.getItem("savedItem-submissionDetail")) || this.submissionDetail;
+        this.projectInformation = JSON.parse(localStorage.getItem("savedItem-projectInformation")) || this.projectInformation;
+        this.projectInformationReasonsToInsert = JSON.parse(localStorage.getItem("savedItem-projectInformationReasonsToInsert")) || [];
+        this.reasons = JSON.parse(localStorage.getItem("savedItem-reasons")) || this.reasons;
+        this.priority = JSON.parse(localStorage.getItem("savedItem-priority")) || this.priority;
+        this.comments = localStorage.getItem("savedItem-comments") || this.comments;
+        this.customerName = localStorage.getItem("savedItem-customerName") || this.customerName;
+        this.dealJustification = localStorage.getItem("savedItem-dealJustification") || this.dealJustification;
+        this.deadline = localStorage.getItem("savedItem-deadline") || this.deadline;
       } catch (error) {
         console.error(error);
       }
     },
     saveDraft() {
-
-      localStorage.clear();
-
-      localStorage.setItem("savedItem-productsToShowList", JSON.stringify(this.productsToShow));
-      localStorage.setItem("savedItem-competitorsToShowList", JSON.stringify(this.competitorsToShow));
-      localStorage.setItem("savedItem-customerName", this.customerName);
-      localStorage.setItem("savedItem-priority", this.priority.value);
-      localStorage.setItem("savedItem-dealJustification", this.dealJustification);
-      localStorage.setItem("savedItem-deadline", this.deadline);
-      this.$swal('Request draft saved');
-
+      try {
+        localStorage.setItem("savedItem-selectedCategories", JSON.stringify(this.selectedCategories));
+        localStorage.setItem("savedItem-productsToShowList", JSON.stringify(this.productsToShow));
+        localStorage.setItem("savedItem-competitorsToShowList", JSON.stringify(this.competitorsToShow));
+        localStorage.setItem("savedItem-coverplusesToShowList", JSON.stringify(this.coverplusesToShow));
+        localStorage.setItem("savedItem-submissionDetail", JSON.stringify(this.submissionDetail));
+        localStorage.setItem("savedItem-projectInformation", JSON.stringify(this.projectInformation));
+        localStorage.setItem("savedItem-projectInformationReasonsToInsert", JSON.stringify(this.projectInformationReasonsToInsert));
+        localStorage.setItem("savedItem-reasons", JSON.stringify(this.reasons));
+        localStorage.setItem("savedItem-priority", JSON.stringify(this.priority));
+        localStorage.setItem("savedItem-comments", this.comments);
+        localStorage.setItem("savedItem-customerName", this.customerName);
+        localStorage.setItem("savedItem-dealJustification", this.dealJustification);
+        localStorage.setItem("savedItem-deadline", this.deadline);
+        this.$swal('Request draft saved');
+      } catch (error) {
+        console.error(error);
+      }
     },
     async submitForm(selectedCategory) {
       if (selectedCategory.id != null) {
