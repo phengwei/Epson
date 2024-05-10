@@ -19,6 +19,7 @@ using Epson.Services.Interface.Users;
 using Epson.Services.DTO.Products;
 using Microsoft.EntityFrameworkCore;
 using Epson.Data;
+using System.Web.Razor.Generator;
 
 namespace Epson.Controllers.API
 {
@@ -81,18 +82,26 @@ namespace Epson.Controllers.API
             var currentUser = _workContext.CurrentUser;
             var currentUserDetail = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-            List<RequestDTO> requests = new List<RequestDTO>();
+            HashSet<RequestDTO> requestSet = new HashSet<RequestDTO>();
 
+            if (currentUser.Roles.Contains("Admin"))
+            {
+                requestSet.UnionWith(_requestService.GetRequests());
+            }
 
             if (currentUser.Roles.Contains("Sales Operation"))
             {
-                requests = _requestService.GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.Approved).ToList();
+                requestSet.UnionWith(_requestService.GetRequests()
+                                                     .Where(x => x.ApprovalState == (int)ApprovalStateEnum.Approved));
             }
-            else if (currentUser.Roles.Contains("Sales Section Head"))
+
+            if (currentUser.Roles.Contains("Sales Section Head"))
             {
+                bool multiRoles = currentUser.Roles.Count > 1;
 
+                var teamHierarchy = _userService.InitializeTeamHierarchy(true, multiRoles);
 
-                var relevantTeamIds = _userService.GetChildTeamIds(currentUserDetail.TeamId, _teamRepository);
+                var relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUserDetail.TeamId, _teamRepository);
                 relevantTeamIds.Add(currentUserDetail.TeamId);
 
                 var usersInRelevantTeams = _userManager.Users
@@ -100,19 +109,23 @@ namespace Epson.Controllers.API
                                                        .Select(u => u.Id)
                                                        .ToList();
 
-                requests = _requestService.GetRequests()
-                                          .Where(x => usersInRelevantTeams.Contains(x.CreatedById))
-                                          .ToList();
+                requestSet.UnionWith(_requestService.GetRequests()
+                                                    .Where(x => usersInRelevantTeams.Contains(x.CreatedById) &&
+                                                           x.CreatedById != currentUser.Id));
             }
-            else if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus") || currentUser.Roles.Contains("Admin"))
+
+            if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus") || currentUser.Roles.Contains("Admin"))
             {
-                requests = _requestService.GetRequests();
+                requestSet.UnionWith(_requestService.GetRequests());
             }
-            else
+
+            if (currentUser.Roles.Contains("Sales"))
             {
-                requests = _requestService.GetRequests().Where(x => x.CreatedById == currentUser.Id).ToList();
+                requestSet.UnionWith(_requestService.GetRequests()
+                                                     .Where(x => x.CreatedById == currentUser.Id));
             }
-               
+
+            var requests = requestSet.ToList();
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests.OrderByDescending(x => x.CreatedOnUTC).ToList());
 
@@ -122,7 +135,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("createrequest")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Sales Section Head")]
         public async Task<IActionResult> CreateRequest([FromBody] BaseQueryModel<RequestModel> queryModel)
         {
             if (!ModelState.IsValid)
@@ -550,25 +563,40 @@ namespace Epson.Controllers.API
 
             var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-            var teamHierarchy = _userService.InitializeTeamHierarchy(true, true);
+            var userRoles = await _userManager.GetRolesAsync(currentUser);
 
-            var currentUserTeamName = _teamRepository.GetAll().FirstOrDefault(t => t.Id == currentUser.TeamId)?.Name;
+            bool multiRoles = false;
+            if (userRoles.Count > 1)
+                multiRoles = true;
 
-            var relevantTeamNames = teamHierarchy.Where(kvp => kvp.Value == currentUserTeamName)
-                                                 .Select(kvp => kvp.Key)
-                                                 .ToList();
+            var teamHierarchy = _userService.InitializeTeamHierarchy(true, multiRoles);
 
-            var relevantTeamIds =  _teamRepository.GetAll()
-                                                        .Where(t => relevantTeamNames.Contains(t.Name))
-                                                        .ToList()
-                                                        .Select(t => t.Id)
-                                                        .ToList();
+            var relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUser.TeamId, _teamRepository);
+            relevantTeamIds.Add(currentUser.TeamId);
 
-            var filteredRequestsQuery = from req in _requestService.GetRequests()
-                                        where req.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction
-                                        join user in _userManager.Users on req.CreatedById equals user.Id
-                                        where relevantTeamIds.Contains(user.TeamId)
-                                        select req;
+            var usersInRelevantTeams = _userManager.Users
+                                                   .Where(u => relevantTeamIds.Contains(u.TeamId))
+                                                   .Select(u => u.Id)
+                                                   .ToList();
+
+            List<RequestDTO> filteredRequestsQuery = new List<RequestDTO>();
+
+            if (userRoles.Contains("Admin"))
+            {
+                filteredRequestsQuery = _requestService.GetRequests()
+                          .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction)
+                          .ToList();
+
+            }
+            else
+            {
+                filteredRequestsQuery = _requestService.GetRequests()
+                          .Where(x => usersInRelevantTeams.Contains(x.CreatedById) &&
+                                 x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction &&
+                                 x.CreatedById != currentUser.Id)
+                          .ToList();
+
+            }
 
             var filteredRequests = filteredRequestsQuery.ToList();
 
@@ -587,8 +615,9 @@ namespace Epson.Controllers.API
 
             var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
+            var teamHierarchy = _userService.InitializeTeamHierarchy();
 
-            var relevantTeamIds = _userService.GetChildTeamIds(currentUser.TeamId, _teamRepository);
+            var relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUser.TeamId, _teamRepository);
             relevantTeamIds.Add(currentUser.TeamId); 
 
             var usersInRelevantTeams = _userManager.Users

@@ -339,7 +339,15 @@ namespace Epson.Services.Services.Email
             requesterTask.Wait();
             var requester = requesterTask;
 
-            var salesSectionHeadUser = _userService.GetUserSalesHead(requester.Result.TeamId);
+            var salesHeadUsers = _userManager.GetUsersInRoleAsync("Sales Section Head");
+            salesHeadUsers.Wait();
+
+            bool isSalesHead = salesHeadUsers.Result.Any(user => user.Id == requester.Result.Id);
+
+            var approverTask = _userManager.FindByIdAsync(request.ApprovedBy);
+            var approver = approverTask.Result;
+
+            var salesSectionHeadUser = _userService.GetUserSalesHead(requester.Result.TeamId, isSalesHead);
 
             if (salesSectionHeadUser.Result != null)
             {
@@ -444,20 +452,42 @@ namespace Epson.Services.Services.Email
                 if (emailAccount == null)
                     return new List<EmailQueue>();
 
+
+
                 var emailQueues = new List<EmailQueue>();
 
-                var emailQueue = new EmailQueue
+                if (salesSectionHeadUser.Result.Email == approver.Email)
                 {
-                    FromEmail = emailAccount.Username,
-                    ToEmail = salesSectionHeadUser.Result.Email,
-                    Subject = subject,
-                    Body = body,
-                    ScheduleTime = DateTime.UtcNow,
-                    SendAttempts = 0,
-                    SentTime = null,
-                    EmailAccountId = emailAccount.Id
-                };
-                emailQueues.Add(emailQueue);
+                    var emailQueue = new EmailQueue
+                    {
+                        FromEmail = emailAccount.Username,
+                        ToEmail = salesSectionHeadUser.Result.Email,
+                        Subject = subject,
+                        Body = body,
+                        ScheduleTime = DateTime.UtcNow,
+                        SendAttempts = 0,
+                        SentTime = null,
+                        EmailAccountId = emailAccount.Id
+                    };
+                    emailQueues.Add(emailQueue);
+                }
+                else
+                {
+                    var emailQueue = new EmailQueue
+                    {
+                        FromEmail = emailAccount.Username,
+                        ToEmail = approver.Email,
+                        Subject = subject,
+                        Body = body,
+                        ScheduleTime = DateTime.UtcNow,
+                        SendAttempts = 0,
+                        SentTime = null,
+                        Cc = salesSectionHeadUser.Result.Email,
+                        EmailAccountId = emailAccount.Id
+                    };
+                    emailQueues.Add(emailQueue);
+                }
+
 
                 return emailQueues;
             }
@@ -474,7 +504,7 @@ namespace Epson.Services.Services.Email
             requesterTask.Wait();
             var requester = requesterTask;
 
-            var salesOperationUsersTask = _userManager.GetUsersInRoleAsync("Sales Section Head");
+            var salesOperationUsersTask = _userManager.GetUsersInRoleAsync("Sales Operation");
             salesOperationUsersTask.Wait();
 
             var salesOperationUsers = salesOperationUsersTask;
@@ -782,7 +812,12 @@ namespace Epson.Services.Services.Email
             requesterTask.Wait(); 
             var requester = requesterTask;
 
-            var salesSectionHeadUser = _userService.GetUserSalesHead(requester.Result.TeamId);
+            var salesHeadUsers = _userManager.GetUsersInRoleAsync("Sales Section Head");
+            salesHeadUsers.Wait();
+
+            bool isSalesHead = salesHeadUsers.Result.Any(user => user.Id == requester.Result.Id);
+
+            var salesSectionHeadUser = _userService.GetUserSalesHead(requester.Result.TeamId, isSalesHead);
 
             if (salesSectionHeadUser.Result != null)
             {

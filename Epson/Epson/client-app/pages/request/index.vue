@@ -101,7 +101,8 @@
         );
         let queryParameters = { request: JSON.stringify(request) };
         if (this.loggedInUser.roles.includes('Sales Section Head')
-          && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadAction) {
+          && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadAction
+          && request.createdById !== this.loggedInUser.id) {
           queryParameters = { ...queryParameters, isApprove: true, view: true };
         } else if (this.loggedInUser.roles.includes('Sales Section Head')
           && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadFinalAction) {

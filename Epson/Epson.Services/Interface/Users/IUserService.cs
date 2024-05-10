@@ -16,7 +16,7 @@ namespace Epson.Services.Interface.Users
         public List<ApplicationUser> GetAllUsers();
         public List<ApplicationUser> GetGovtUsersWithProductRole();
         Dictionary<string, string> InitializeTeamHierarchy(bool isSalesHead = false, bool multiRole = false);
-        List<int> GetChildTeamIds(int parentTeamId, IRepository<Team> teamRepository);
-        Task<ApplicationUser> GetUserSalesHead(int teamID);
+        List<int> GetChildTeamIds(Dictionary<string, string> teamHierarchy, int parentTeamId, IRepository<Team> teamRepository);
+        Task<ApplicationUser> GetUserSalesHead(int teamID, bool isSalesHead = false);
     }
 }

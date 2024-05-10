@@ -85,8 +85,9 @@ namespace Epson.Services.Services.Users
             {
                 return new Dictionary<string, string>
                 {
-                    {"Corporate Sales", "Corp & Gov"},
-                    {"Government Sales", "Corp & Gov"},
+                    {"Corporate Sales", "Corporate Sales"},
+                    {"Government Sales", "Government Sales"},
+                    {"Corp & Gov", "Corp & Gov"},
                     {"Inside Sales", "Channel Support"},
                     {"Sales Support Management", "Channel Support"},
                     {"Product Marketing", "Product Marketing"},
@@ -104,6 +105,7 @@ namespace Epson.Services.Services.Users
                 {
                     {"Corporate Sales", "Corp & Gov"},
                     {"Government Sales", "Corp & Gov"},
+                    {"Corp & Gov", "Corp & Gov"},
                     {"Inside Sales", "Channel Support"},
                     {"Sales Support Management", "Channel Support"},
                     {"Product Marketing", "Product Marketing"},
@@ -121,6 +123,7 @@ namespace Epson.Services.Services.Users
                 {
                     {"Corporate Sales", "Corp & Gov"},
                     {"Government Sales", "Corp & Gov"},
+                    {"Corp & Gov", "Corp & Gov"},
                     {"Inside Sales", "Channel Support"},
                     {"Sales Support Management", "Channel Support"},
                     {"Product Marketing", "Product Marketing"},
@@ -134,10 +137,8 @@ namespace Epson.Services.Services.Users
             }
         }
 
-        public List<int> GetChildTeamIds(int parentTeamId, IRepository<Team> teamRepository)
+        public List<int> GetChildTeamIds(Dictionary<string, string> teamHierarchy, int parentTeamId, IRepository<Team> teamRepository)
         {
-            var teamHierarchy = InitializeTeamHierarchy();
-
             var parentTeamName = teamRepository.GetAll().FirstOrDefault(t => t.Id == parentTeamId)?.Name;
 
             var childTeamNames = teamHierarchy
@@ -154,10 +155,10 @@ namespace Epson.Services.Services.Users
         }
 
 
-        public async Task<ApplicationUser> GetUserSalesHead(int teamID)
+        public async Task<ApplicationUser> GetUserSalesHead(int teamID, bool isSalesHead = false)
         {
             string fulfillerTeamName = _TeamRepository.GetAll().Where(x => x.Id == teamID).FirstOrDefault().Name; 
-            var teamHierarchy = InitializeTeamHierarchy();
+            var teamHierarchy = InitializeTeamHierarchy(isSalesHead);
             var parentTeamName = teamHierarchy.ContainsKey(fulfillerTeamName) ? teamHierarchy[fulfillerTeamName] : null;
 
             if (parentTeamName == null)

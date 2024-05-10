@@ -235,7 +235,8 @@ namespace Epson.Controllers.API
             if (salesUsers.Where(x => x.Equals(currentUser)).Count() > 0) 
                 isSalesSectionHeadUser = true;
 
-            var relevantTeamIds = _userService.GetChildTeamIds(currentUser.TeamId, _teamRepository);
+            var teamHierarchy = _userService.InitializeTeamHierarchy();
+            var relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUser.TeamId, _teamRepository);
             relevantTeamIds.Add(currentUser.TeamId);
 
             var usersInRelevantTeams = _userManager.Users
