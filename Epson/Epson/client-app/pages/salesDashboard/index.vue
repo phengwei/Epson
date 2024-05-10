@@ -15,13 +15,13 @@
           </v-app>
         </div>
       </div>
-      <div class="row">
+      <!--<div class="row">
         <div class="grid-item full-width request-table">
           <v-app>
             <SalesRequestSummary />
           </v-app>
         </div>
-      </div>
+      </div>-->
     </div>
   </main>
 </template>
@@ -30,7 +30,6 @@
   import { mapGetters } from 'vuex';
   import ItemsPendingRequesterAction from '~/components/ItemsPendingRequesterAction.vue';
   import ItemsPendingFulfillmentAsRequester from '~/components/ItemsPendingFulfillmentAsRequester.vue';
-  import SalesRequestSummary from '~/components/SalesRequestSummary.vue';
 
   export default {
     name: 'SalesDashboard',
@@ -43,8 +42,7 @@
     },
     components: {
       ItemsPendingRequesterAction,
-      ItemsPendingFulfillmentAsRequester,
-      SalesRequestSummary
+      ItemsPendingFulfillmentAsRequester
     }
   };
 </script>

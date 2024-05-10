@@ -1,30 +1,27 @@
 <template>
   <main class="dashboard-header" v-if="loggedInUser.roles.includes('Sales Section Head') || loggedInUser.roles.includes('Admin')">
     <div class="grid-container">
-      <div class="row sales-head-table">
-        <div class="grid-item">
+      <div class="row">
+        <div class="grid-item full-width sales-head-table">
           <v-app>
             <ItemsPendingSalesSectionHeadAction />
           </v-app>
         </div>
-        <div class="grid-item">
+      </div>
+      <div class="row">
+        <div class="grid-item full-width sales-head-table">
           <v-app>
             <ItemsPendingSalesSectionHeadDepartment />
           </v-app>
         </div>
       </div>
-      <div class="row">
-        <div class="grid-item">
+      <!--<div class="row">
+        <div class="grid-item full-width sales-head-table">
           <v-app>
-            <PendingRequestSummary />
+            <SalesSectionRequestSummary />
           </v-app>
         </div>
-        <div class="grid-item">
-          <v-app>
-            <CompletedRequestSummary />
-          </v-app>
-        </div>
-      </div>
+      </div>-->
     </div>
   </main>
 </template>
@@ -33,8 +30,6 @@
   import { mapGetters } from 'vuex';
   import ItemsPendingSalesSectionHeadAction from '~/components/ItemsPendingSalesSectionHeadAction.vue';
   import ItemsPendingSalesSectionHeadDepartment from '~/components/ItemsPendingSalesSectionHeadDepartment.vue';
-  import PendingRequestSummary from '~/components/PendingRequestSummary.vue';
-  import CompletedRequestSummary from '~/components/CompletedRequestSummary.vue';
 
   export default {
     name: 'SHDashboard',
@@ -47,9 +42,7 @@
     },
     components: {
       ItemsPendingSalesSectionHeadAction,
-      ItemsPendingSalesSectionHeadDepartment,
-      PendingRequestSummary,
-      CompletedRequestSummary
+      ItemsPendingSalesSectionHeadDepartment
     }
   };
 </script>
@@ -89,7 +82,8 @@
     margin-top: 7rem;
   }
 
-  .dashboard-header .sales-head-table {
-    margin-bottom: 1rem;
+  .sales-head-table {
+    margin-top: 5rem;
+    margin-bottom: 5rem;
   }
 </style>
