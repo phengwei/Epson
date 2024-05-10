@@ -8,9 +8,9 @@
             <nuxt-link to="/user"
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">{{ loggedInUser.userName }}</nuxt-link>
 
-            <!-- Dashboard Dropdown -->
-            <div class="relative group" @click="toggleDashboardDropdown" ref="dashboardDropdown" v-if="!loggedInUser.roles.includes('Sales Operation')">
-              <span class="w-40 h-full flex justify-center items-center font-semibold transition duration-300 cursor-pointer">Dashboard</span>
+            <!-- Home Button or Dropdown based on roles -->
+            <div v-if="hasMultipleRoles" class="relative group" @click="toggleDashboardDropdown" ref="dashboardDropdown">
+              <span class="w-40 h-full flex justify-center items-center font-semibold transition duration-300 cursor-pointer">Home</span>
               <div class="absolute left-0 mt-1 w-48 rounded-md shadow-lg py-1 bg-white text-black z-50" :class="{ 'hidden': !showDashboardDropdown }">
                 <nuxt-link v-for="link in dashboardLinks"
                            :to="link.route"
@@ -20,6 +20,10 @@
                 </nuxt-link>
               </div>
             </div>
+            <nuxt-link v-else
+                       :to="homeRoute"
+                       class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Home</nuxt-link>
+
             <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Product')" to="/reporting"
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Report</nuxt-link>
             <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Sales Section Head')" to="/slaDashboard"
@@ -97,19 +101,35 @@
     },
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser']),
+      hasMultipleRoles() {
+        return this.loggedInUser.roles.length > 1;
+      },
+      homeRoute() {
+        if (this.loggedInUser.roles.includes('Product')) {
+          return '/productDashboard';
+        } else if (this.loggedInUser.roles.includes('Sales')) {
+          return '/salesDashboard';
+        } else if (this.loggedInUser.roles.includes('Sales Section Head')) {
+          return '/shDashboard';
+        } else if (this.loggedInUser.roles.includes('Sales Operation')) {
+          return '/request';
+        } else {
+          return '/';
+        }
+      },
       dashboardLinks() {
         const links = [];
         if (this.loggedInUser.roles.includes('Admin')) {
           links.push({ route: '/userManagement', label: 'User Management' });
         }
         if (this.loggedInUser.roles.includes('Sales')) {
-          links.push({ route: '/salesDashboard', label: 'Sales Dashboard' });
+          links.push({ route: '/salesDashboard', label: 'Sales Home' });
         }
         if (this.loggedInUser.roles.includes('Product') || this.loggedInUser.roles.includes('Coverplus')) {
-          links.push({ route: '/productDashboard', label: 'Product Dashboard' });
+          links.push({ route: '/productDashboard', label: 'Product Home' });
         }
         if (this.loggedInUser.roles.includes('Sales Section Head')) {
-          links.push({ route: '/shDashboard', label: 'Sales Section Dashboard' });
+          links.push({ route: '/shDashboard', label: 'Sales Head Home' });
         }
         return links;
       }
