@@ -151,6 +151,7 @@ namespace Epson.Factories
                         RequestProductsModel = request.RequestProducts.Select(rp => new RequestProductModel
                         {
                             Id = rp.Id,
+                            Breached = rp.Breached,
                             CreatedOnUTC = rp.CreatedOnUTC,
                             DistyPrice = rp.DistyPrice,
                             DealerPrice = rp.DealerPrice,

@@ -76,13 +76,13 @@ namespace Epson.Controllers.API
 
         [HttpGet("getrequests")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation")]
-        public async Task<IActionResult> GetRequests()
+        public async Task<IActionResult> GetRequests(bool breached = false)
         {
             var response = new GenericResponseModel<List<RequestModel>>();
             var currentUser = _workContext.CurrentUser;
             var currentUserDetail = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-            HashSet<RequestDTO> requestSet = new HashSet<RequestDTO>();
+            HashSet<RequestDTO> requestSet = new HashSet<RequestDTO>(new RequestDTOComparer());
 
             if (currentUser.Roles.Contains("Admin"))
             {
@@ -125,14 +125,39 @@ namespace Epson.Controllers.API
                                                      .Where(x => x.CreatedById == currentUser.Id));
             }
 
-            var requests = requestSet.ToList();
+            var requests = requestSet.ToList().Distinct(new RequestDTOComparer()).ToList();
 
             var requestModels = _requestModelFactory.PrepareRequestModels(requests.OrderByDescending(x => x.CreatedOnUTC).ToList());
+
+            if (breached)
+            {
+                requestModels = requestModels
+                    .Where(x => x.RequestProductsModel.Any(rp => rp.Breached))
+                    .ToList();
+            }
 
             response.Data = requestModels;
 
             return Ok(response);
         }
+
+        public class RequestDTOComparer : IEqualityComparer<RequestDTO>
+        {
+            public bool Equals(RequestDTO x, RequestDTO y)
+            {
+                if (Object.ReferenceEquals(x, y)) return true;
+                if (Object.ReferenceEquals(x, null) || Object.ReferenceEquals(y, null)) return false;
+                return x.Id == y.Id;
+            }
+
+            public int GetHashCode(RequestDTO obj)
+            {
+                if (Object.ReferenceEquals(obj, null)) return 0;
+                return obj.Id.GetHashCode();
+            }
+        }
+
+
 
         [HttpPost("createrequest")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Sales Section Head")]

@@ -480,7 +480,8 @@ export default {
             statusStr: productModel.statusStr,
             fulfilledPrice: productModel.fulfilledPrice,
             warrantyRequest: productModel.warrantyRequest,
-            warrantyRequestPeriod: productModel.warrantyRequestPeriod
+            warrantyRequestPeriod: productModel.warrantyRequestPeriod,
+            breached: productModel.breached
           };
           if (productModel.isCoverplus === true) {
             this.coverplusesToShow.push(p);

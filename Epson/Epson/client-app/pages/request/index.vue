@@ -65,16 +65,19 @@
         options: {},
         loading: false,
         search: '',
+        breached: false,
         ApprovalStateEnum,
         RequestProductStatusEnum,
       };
     },
     created() {
+      this.breached = this.$route.query.breached === 'true';
       this.getRequests();
     },
     methods: {
       getRequests() {
-        this.$axios.get(`${this.$config.restUrl}/api/request/getrequests`)
+        const params = { breached: this.breached };
+        this.$axios.get(`${this.$config.restUrl}/api/request/getrequests`, { params })
           .then(response => {
             this.requests = response.data.data.map(item => {
               const isApproved = item.approvalState === this.ApprovalStateEnum.Approved;

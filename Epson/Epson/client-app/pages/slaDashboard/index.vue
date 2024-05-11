@@ -1,26 +1,27 @@
 <template>
   <div class="page">
     <div class="container">
-        <div class="card">
-          <div class="mini-card">
-            <h3 class="number">{{ AverageTimeToResolutionInHours }}</h3>
-            <p>Average time to resolution in hours:</p>
-          </div>
-          <div class="mini-card">
-            <h3 class="number">{{ TotalTickets }}</h3>
-            <p>Total Tickets</p>
-          </div>
+      <div class="card">
+        <div class="mini-card average-time-card">
+          <h3 class="number">{{ AverageTimeToResolutionInHours }}</h3>
+          <p>Average time to resolution in hours</p>
         </div>
-        <div class="card">
-          <div class="breached-card">
-            <h3 class="number">{{ BreachedTickets }}</h3>
-            <p>Breached Ticket</p>
-          </div>
-          <div class="mini-card">
-            <h3 class="number">{{ SuccessRate }}%</h3>
-            <p>Success Rate</p>
-          </div>
+        <div class="mini-card total-tickets-card">
+          <h3 class="number">{{ TotalTickets }}</h3>
+          <p>Total Tickets</p>
         </div>
+      </div>
+      <div class="card">
+        <div class="breached-card">
+          <h3 class="number">{{ BreachedTickets }}</h3>
+          <p>Breached Ticket</p>
+          <button @click="goToBreachedTickets" class="breached-button">Go to Breached Tickets</button>
+        </div>
+        <div class="mini-card success-rate-card">
+          <h3 class="number">{{ SuccessRate }}%</h3>
+          <p>Success Rate</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -55,6 +56,9 @@
         } catch (error) {
           console.error('There was a problem fetching the SLA metrics:', error);
         }
+      },
+      goToBreachedTickets() {
+        this.$router.push({ path: '/request', query: { breached: true } });
       }
     },
     mounted() {
@@ -123,20 +127,43 @@
     color: white;
   }
 
-    .breached-card p {
-      font-size: 18px;
-      color: white;
-    }
-
-    .mini-card .number,
-    .breached-card .number {
-      font-size: 50px;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-    }
-
-  .mini-card p {
-    font-size: 18px;
-    color: #102381b3;
+  .average-time-card {
+    background-color: #4caf50; /* Green */
   }
+
+  .total-tickets-card {
+    background-color: #2196f3; /* Blue */
+  }
+
+  .success-rate-card {
+    background-color: #ff9800; /* Orange */
+  }
+
+  .mini-card .number,
+  .breached-card .number {
+    font-size: 50px;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .mini-card p,
+  .breached-card p {
+    font-size: 18px;
+  }
+
+  .breached-button {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    margin-top: 1rem;
+    cursor: pointer;
+    color: #9b5050;
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+    .breached-button:hover {
+      background-color: #f2dede;
+    }
 </style>

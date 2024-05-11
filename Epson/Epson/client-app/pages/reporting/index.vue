@@ -2,7 +2,7 @@
   <div>
     <div class="chart-container">
       <div class="card">
-        <div class="card-header">Monthly Sales by Requester</div>
+        <div class="card-header">Monthly request value by Requester</div>
         <div class="card-body">
           <select v-model="selectedRequester" @change="fetchmonthlysalesbyrequester">
             <option value="all">All Requesters</option>

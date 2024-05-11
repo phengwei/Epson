@@ -42,6 +42,7 @@
               <tbody>
                 <tr v-for="(product, index) in productsToShow" :key="index"
                     :class="{
+                              'highlighted': currentRequestApprovalState === ApprovalStateEnum.Approved && product.breached,
                               'not-approved': isFulfillMode && product.statusStr !== 'Approved',
                               'approved': isAmendMode && product.statusStr === 'Approved'
                             }">
@@ -108,6 +109,7 @@
               <tbody>
                 <tr v-for="(coverplus, index) in coverplusesToShow" :key="index"
                     :class="{
+                            'highlighted': currentRequestApprovalState === ApprovalStateEnum.Approved && coverplus.breached,
                             'not-approved': isFulfillMode && coverplus.statusStr !== 'Approved',
                             'approved': isAmendMode && coverplus.statusStr === 'Approved'
                           }">
@@ -421,9 +423,9 @@
           </v-card-text>
         </v-card>
         <!--<div class="form-group" v-if="comments != ''">
-    <label>Comments</label>
-    <textarea v-model="comments" class="border-input"></textarea>
-  </div>-->
+          <label>Comments</label>
+          <textarea v-model="comments" class="border-input"></textarea>
+        </div>-->
         <button type="submit" @click="submitQuotation" v-if="isMode('create')">Submit</button>
         <button type="submit" @click="saveDraft" v-if="isMode('create')">Save Draft</button>
         <button type="submit" @click="loadDraft" v-if="isMode('create')">Load Draft</button>
@@ -468,6 +470,10 @@
     background-color: #90EE90;
   }
 
+  .highlighted {
+    background-color: #ffcccc;
+  }
+
   .products-title {
     font-size: 2em;
     text-align: center;
@@ -484,6 +490,7 @@
   .header-row {
     background-color: #C0C0C0;
   }
+
     .header-row th {
       text-align: center;
       vertical-align: middle;
