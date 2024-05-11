@@ -10,7 +10,7 @@
         <v-text-field v-model="search"
                       class="search-input"
                       append-icon="mdi-magnify"
-                      label="Search by request #"
+                      label="Search by end user or request #"
                       single-line
                       hide-details></v-text-field>
         <v-spacer></v-spacer>
@@ -49,6 +49,7 @@
     computed: {
       flattenedRequests() {
         return this.requests.map(product => ({
+          projectInformationModel: product.projectInformationModel,
           id: product.requestId,
           requestedBy: product.requestedBy,
           productId: product.productId,
@@ -57,14 +58,19 @@
           budget: product.endUserPrice,
           overallRequestStatusStr: product.overallRequestStatusStr,
           fulfilledPrice: product.dealerPrice,
-          fulfilledDate: moment(product.fulfilledDate).format('DD MMM YY HH:mm')
+          fulfilledDate: moment(product.fulfilledDate).format('DD MMM YY HH:mm'),
+          projectName: product.projectName
         }));
       },
       filteredFlattenedRequests() {
-        if (!this.search) return this.flattenedRequests;
-        const searchTerm = this.search.toLowerCase();
+        if (this.search.trim() === '') {
+          return this.flattenedRequests;
+        }
         return this.flattenedRequests.filter(request => {
-          return request.id.toString().toLowerCase().includes(searchTerm);
+          const requestIdMatch = String(request.id).toLowerCase().includes(this.search.toLowerCase());
+          const projectNameMatch = request.projectName &&
+            request.projectName.toLowerCase().includes(this.search.toLowerCase());
+          return requestIdMatch || projectNameMatch;
         });
       },
     },

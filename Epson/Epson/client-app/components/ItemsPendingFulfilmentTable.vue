@@ -10,7 +10,7 @@
         <v-text-field v-model="search"
                       class="search-input"
                       append-icon="mdi-magnify"
-                      label="Search by request #"
+                      label="Search by end user or request #"
                       single-line
                       hide-details></v-text-field>
         <v-spacer></v-spacer>
@@ -69,10 +69,15 @@
     },
     computed: {
       filteredItemsPendingFulfilment() {
-        if (!this.search) return this.itemsPendingFulfilment;
-        const searchTerm = this.search.toLowerCase();
+        if (this.search.trim() === '') {
+          return this.itemsPendingFulfilment;
+        }
         return this.itemsPendingFulfilment.filter(request => {
-          return request.requestId.toString().toLowerCase().includes(searchTerm);
+          const requestIdMatch = String(request.requestId).toLowerCase().includes(this.search.toLowerCase());
+          const projectNameMatch = request.projectInformationModel &&
+            request.projectInformationModel.projectName &&
+            request.projectInformationModel.projectName.toLowerCase().includes(this.search.toLowerCase());
+          return requestIdMatch || projectNameMatch;
         });
       },
     },

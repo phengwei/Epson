@@ -12,7 +12,7 @@
         <v-text-field v-model="search"
                       class="search-input"
                       append-icon="mdi-magnify"
-                      label="Search by request #"
+                      label="Search by end user or request #"
                       single-line
                       hide-details></v-text-field>
         <v-spacer></v-spacer>
@@ -293,10 +293,15 @@
         return 'Request'
       },
       filteredRequests() {
-        if (!this.search) return this.requests;
-        const searchTerm = this.search.toLowerCase();
+        if (this.search.trim() === '') {
+          return this.requests;
+        }
         return this.requests.filter(request => {
-          return request.id.toString().toLowerCase().includes(searchTerm);
+          const requestIdMatch = String(request.id).toLowerCase().includes(this.search.toLowerCase());
+          const projectNameMatch = request.projectInformationModel &&
+            request.projectInformationModel.projectName &&
+            request.projectInformationModel.projectName.toLowerCase().includes(this.search.toLowerCase());
+          return requestIdMatch || projectNameMatch;
         });
       },
       

@@ -34,5 +34,6 @@ namespace Epson.Model.Request
         public bool IsCoverplus { get; set; }
         public bool AuthorizedToFulfill { get; set; }
         public bool HasReminded { get; set; }
+        public string ProjectName { get; set; }
     }
 }
