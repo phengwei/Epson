@@ -10,5 +10,6 @@ namespace Epson.Services.DTO.Report
     {
         public string ProductName { get; set; }
         public decimal? TotalRevenue { get; set; }
+        public int TotalNoOfSales { get; set; }
     }
 }

@@ -14,12 +14,20 @@
       <div class="card">
         <div class="card-header">Top 10 Requesters by Sales</div>
         <div class="card-body">
+          <select v-model="selectedMonth_requesterBySales" @change="fetchtoprequestersbysales">
+            <option value="0">All Months</option>
+            <option v-for="month in months" :value="month.value" :key="month.value">{{ month.text }}</option>
+          </select>
           <bar-chart :chart-data="toprequestersbysales" :options="options"></bar-chart>
         </div>
       </div>
       <div class="card">
-        <div class="card-header">Top 10 Products By Revenue</div>
+        <div class="card-header">Top 10 Products By Sales Count</div>
         <div class="card-body">
+          <select v-model="selectedMonth_productsByRevenue" @change="fetchtopproductsbyrevenue">
+            <option value="0">All Months</option>
+            <option v-for="month in months" :value="month.value" :key="month.value">{{ month.text }}</option>
+          </select>
           <bar-chart :chart-data="topproductsbyrevenue" :options="options"></bar-chart>
         </div>
       </div>
@@ -50,7 +58,23 @@
           }
         },
         selectedRequester: 'all',
-        requesters: []
+        selectedMonth_requesterBySales: '0',
+        selectedMonth_productsByRevenue: '0',
+        requesters: [],
+        months: [
+          { text: 'January', value: '1' },
+          { text: 'February', value: '2' },
+          { text: 'March', value: '3' },
+          { text: 'April', value: '4' },
+          { text: 'May', value: '5' },
+          { text: 'June', value: '6' },
+          { text: 'July', value: '7' },
+          { text: 'August', value: '8' },
+          { text: 'September', value: '9' },
+          { text: 'October', value: '10' },
+          { text: 'November', value: '11' },
+          { text: 'December', value: '12' }
+        ]
       }
     },
     async created() {
@@ -65,10 +89,11 @@
         this.requesters = response.data.data;
       },
       async fetchtoprequestersbysales() {
-        const response = await this.$axios.get(`${this.$config.restUrl}/api/report/gettoprequestersbysales`);
+        const monthParam = this.selectedMonth_requesterBySales;
+        const response = await this.$axios.get(`${this.$config.restUrl}/api/report/gettoprequestersbysales?month=${monthParam}`);
 
         const labels = response.data.data.map(({ requesterName }) => requesterName);
-        const data = response.data.data.map(({ totalSales }) => totalSales);
+        const data = response.data.data.map(({ totalNumberOfSales }) => totalNumberOfSales);
 
         this.toprequestersbysales = {
           labels,
@@ -82,7 +107,8 @@
         }
       },
       async fetchtopproductsbyrevenue() {
-        const response = await this.$axios.get(`${this.$config.restUrl}/api/report/gettopproductsbyrevenue`);
+        const monthParam = this.selectedMonth_productsByRevenue;
+        const response = await this.$axios.get(`${this.$config.restUrl}/api/report/gettopproductsbyrevenue?month=${monthParam}`);
 
         const abbreviateProductName = (name) => {
           if (name.length > 6) {
@@ -97,7 +123,7 @@
           productNamesMap[abbreviated] = productName;
           return abbreviated;
         });
-        const data = response.data.data.map(({ totalRevenue }) => totalRevenue);
+        const data = response.data.data.map(({ totalNoOfSales }) => totalNoOfSales);
 
         this.topproductsbyrevenue = {
           labels,
@@ -143,7 +169,7 @@
         response.data.data.forEach(salesData => {
           const monthNumber = parseInt(salesData.month.split('-')[1], 10);
 
-          monthlySalesData[monthNumber - 1] = salesData.monthlySales;
+          monthlySalesData[monthNumber - 1] = salesData.totalNumberOfSales;
         });
 
         this.monthlysalesbyrequester = {
