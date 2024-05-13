@@ -423,12 +423,13 @@
           </v-card-text>
         </v-card>
         <!--<div class="form-group" v-if="comments != ''">
-          <label>Comments</label>
-          <textarea v-model="comments" class="border-input"></textarea>
-        </div>-->
+    <label>Comments</label>
+    <textarea v-model="comments" class="border-input"></textarea>
+  </div>-->
         <button type="submit" @click="submitQuotation" v-if="isMode('create')">Submit</button>
         <button type="submit" @click="saveDraft" v-if="isMode('create')">Save Draft</button>
-        <button type="submit" @click="loadDraft" v-if="isMode('create')">Load Draft</button>
+        <button type="submit" @click="saveDraft" v-if="loggedInUser.roles.includes('Sales') && !isMode('create')">Copy Form</button>
+        <button type="submit" @click="loadDraft" v-if="isMode('create')">Load Form</button>
         <button type="submit" @click="submitQuotation" v-if="isMode('editable')">Amend Request</button>
         <button type="submit" @click="acceptDeal" v-if="isMode('dealable')">Accept Deal</button>
         <button type="submit" @click="rejectDeal" v-if="isMode('dealable')">Reject Deal</button>

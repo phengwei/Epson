@@ -590,7 +590,7 @@ export default {
         localStorage.setItem("savedItem-customerName", this.customerName);
         localStorage.setItem("savedItem-dealJustification", this.dealJustification);
         localStorage.setItem("savedItem-deadline", this.deadline);
-        this.$swal('Request draft saved');
+        this.$swal('Form saved');
       } catch (error) {
         console.error(error);
       }
