@@ -2,7 +2,7 @@
   <div>
     <div class="chart-container">
       <div class="card">
-        <div class="card-header">Monthly request value by Requester</div>
+        <div class="card-header">Monthly request by Requester</div>
         <div class="card-body">
           <select v-model="selectedRequester" @change="fetchmonthlysalesbyrequester">
             <option value="all">All Requesters</option>
@@ -12,7 +12,7 @@
         </div>
       </div>
       <div class="card">
-        <div class="card-header">Top 10 Requesters by Sales</div>
+        <div class="card-header">Top 10 Requesters by request count</div>
         <div class="card-body">
           <select v-model="selectedMonth_requesterBySales" @change="fetchtoprequestersbysales">
             <option value="0">All Months</option>
@@ -22,7 +22,7 @@
         </div>
       </div>
       <div class="card">
-        <div class="card-header">Top 10 Products By Sales Count</div>
+        <div class="card-header">Top 10 Products By request Count</div>
         <div class="card-body">
           <select v-model="selectedMonth_productsByRevenue" @change="fetchtopproductsbyrevenue">
             <option value="0">All Months</option>
@@ -99,7 +99,7 @@
           labels,
           datasets: [
             {
-              label: 'Top Requesters by Sales',
+              label: 'Top Requesters by Request Count',
               backgroundColor: '#f87979',
               data
             }
@@ -129,7 +129,7 @@
           labels,
           datasets: [
             {
-              label: 'Top Products by Revenue',
+              label: 'Top Products by Request',
               backgroundColor: '#f87979',
               data
             }
@@ -176,7 +176,7 @@
           labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
           datasets: [
             {
-              label: 'Monthly Sales',
+              label: 'Monthly Request Count',
               backgroundColor: '#f87979',
               data: monthlySalesData
             }

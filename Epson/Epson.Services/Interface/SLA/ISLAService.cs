@@ -24,9 +24,9 @@ namespace Epson.Services.Interface.SLA
         public bool DeleteSLAHoliday(SLAHoliday slaHoliday);
         public bool DeleteStaffLeaveHoliday(SLAStaffLeave slaStaffLeave);
         public SLASettingDTO GetSLASettings();
-        public decimal GetAverageTimeToResolutionInHours(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests);
-        public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests);
-        public int GetTotalTicketCount(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests);
-        public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests);
+        public decimal GetAverageTimeToResolutionInHours(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser);
+        public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser);
+        public int GetTotalTicketCount(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser);
+        public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser);
     }
 }

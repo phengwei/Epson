@@ -114,9 +114,10 @@ namespace Epson.Controllers.API
                                                            x.CreatedById != currentUser.Id));
             }
 
-            if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus") || currentUser.Roles.Contains("Admin"))
+            if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus"))
             {
-                requestSet.UnionWith(_requestService.GetRequests());
+                requestSet.UnionWith(_requestService.GetRequests()
+                                             .Where(x => x.RequestProducts.Any(rp => rp.FulfillerId == currentUser.Id)));
             }
 
             if (currentUser.Roles.Contains("Sales"))

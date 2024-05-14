@@ -130,7 +130,7 @@
         options: {},
         products: [],
         categories: [],
-        loading: false,
+        loading: true,
         selectedCategories: [],
         totalProducts: 0,
         editedIndex: -1,

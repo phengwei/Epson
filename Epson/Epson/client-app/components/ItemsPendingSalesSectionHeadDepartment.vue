@@ -110,7 +110,7 @@
         ],
         options: {},
         requests: [],
-        loading: false,
+        loading: true,
         search: '',
         editedIndex: -1,
         editedItem: {

@@ -63,7 +63,7 @@
         ],
         requests: [],
         options: {},
-        loading: false,
+        loading: true,
         search: '',
         breached: false,
         ApprovalStateEnum,

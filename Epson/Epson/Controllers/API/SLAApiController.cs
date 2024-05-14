@@ -22,6 +22,7 @@ using Epson.Core.Domain.Users;
 using Epson.Services.Interface.Users;
 using Epson.Data;
 using Epson.Core.Domain.Enum;
+using Epson.Services.DTO.Requests;
 
 namespace Epson.Controllers.API
 {
@@ -231,31 +232,45 @@ namespace Epson.Controllers.API
             var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser.Id);
             var salesUsers = await _userManager.GetUsersInRoleAsync("Sales Section Head");
 
+            bool isAdminUser = false;
             bool isSalesSectionHeadUser = false;
-            if (salesUsers.Where(x => x.Equals(currentUser)).Count() > 0) 
+            if (salesUsers.Where(x => x.Equals(currentUser)).Count() > 0)
                 isSalesSectionHeadUser = true;
 
-            var teamHierarchy = _userService.InitializeTeamHierarchy();
-            var relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUser.TeamId, _teamRepository);
-            relevantTeamIds.Add(currentUser.TeamId);
+            Dictionary<string, string> teamHierarchy = new Dictionary<string, string>();
+            List<int> relevantTeamIds = new List<int>();
+            List<string> usersInRelevantTeams = new List<string>();
+            List<RequestDTO> requests = new List<RequestDTO>();
 
-            var usersInRelevantTeams = _userManager.Users
-                                                   .Where(u => relevantTeamIds.Contains(u.TeamId))
-                                                   .Select(u => u.Id)
-                                                   .ToList();
 
-            var requests = _requestService.GetRequests()
-                .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
-                            x.RequestProducts.Any(rp => usersInRelevantTeams.Contains(rp.FulfillerId)))
+            if ((await _userManager.IsInRoleAsync(currentUser, RoleEnum.Admin.ToString())))
+            {
+                isAdminUser = true;
+            }
+            if (isSalesSectionHeadUser)
+            {
+                teamHierarchy = _userService.InitializeTeamHierarchy();
+                relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUser.TeamId, _teamRepository);
+                relevantTeamIds.Add(currentUser.TeamId);
 
-                .ToList();
+                usersInRelevantTeams = _userManager.Users
+                                                       .Where(u => relevantTeamIds.Contains(u.TeamId))
+                                                       .Select(u => u.Id)
+                                                       .ToList();
+
+                requests = _requestService.GetRequests()
+                    .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
+                                x.RequestProducts.Any(rp => usersInRelevantTeams.Contains(rp.FulfillerId)))
+
+                    .ToList();
+            }
 
             var response = new GenericResponseModel<SLAMetricsModel>();
 
-            response.Data.AverageTimeToResolutionInHours = _slaService.GetAverageTimeToResolutionInHours(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests);
-            response.Data.TotalTickets = _slaService.GetTotalTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests);
-            response.Data.BreachedTickets = _slaService.GetBreachedTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests);
-            response.Data.SuccessRate = _slaService.GetSuccessRateOfTickets(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests);
+            response.Data.AverageTimeToResolutionInHours = _slaService.GetAverageTimeToResolutionInHours(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser);
+            response.Data.TotalTickets = _slaService.GetTotalTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser);
+            response.Data.BreachedTickets = _slaService.GetBreachedTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser);
+            response.Data.SuccessRate = _slaService.GetSuccessRateOfTickets(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser);
 
             return Ok(response);
         }

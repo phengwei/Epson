@@ -120,7 +120,7 @@ namespace Epson.Services.Services.Report
                     _productRepository.Table,
                     j => j.RequestProduct.ProductId,
                     p => p.Id,
-                    (j, p) => new { ProductName = p.Name, TotalRevenue = j.RequestProduct.Quantity * j.RequestProduct.DealerPrice }
+                    (j, p) => new { ProductName = p.Name, TotalRevenue = j.RequestProduct.Quantity * j.RequestProduct.DealerPrice, Quantity = j.RequestProduct.Quantity }
                 )
                 .GroupBy(
                     j => j.ProductName,
@@ -128,7 +128,7 @@ namespace Epson.Services.Services.Report
                     {
                         ProductName = key,
                         TotalRevenue = group.Sum(x => x.TotalRevenue),
-                        TotalNoOfSales = group.Count()
+                        TotalNoOfSales = group.Sum(x => x.Quantity)
                     }
                 )
                 .OrderByDescending(x => x.TotalNoOfSales)

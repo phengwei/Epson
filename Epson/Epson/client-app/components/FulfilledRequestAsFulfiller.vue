@@ -1,7 +1,7 @@
 <template>
   <v-data-table :headers="headers"
                 :items="filteredFlattenedRequests"
-                :items-per-page="5"
+                :items-per-page="10"
                 class="elevation-1">
     <template v-slot:top>
       <v-toolbar flat>

@@ -246,7 +246,7 @@
         ],
         options: {},
         requests: [],
-        loading: false,
+        loading: true,
         quotationDialog: false,
         editedIndex: -1,
         editedItem: {

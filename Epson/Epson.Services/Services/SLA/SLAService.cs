@@ -184,11 +184,17 @@ namespace Epson.Services.Services.SLA
             return _mapper.Map<SLASettingDTO>(_slaSetting.Value);
         }
 
-        public decimal GetAverageTimeToResolutionInHours(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests)
+        public decimal GetAverageTimeToResolutionInHours(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser)
         {
             List<RequestProduct> ticketsResolved = new List<RequestProduct>();
 
-            if (isSalesHeadUser)
+            if (isAdminUser)
+            {
+                ticketsResolved = _requestProductRepository.Table
+                     .Where(x => x.HasFulfilled == true)
+                     .ToList();
+            }
+            else if (isSalesHeadUser)
             {
                 ticketsResolved = _requestProductRepository.Table
                  .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true)
@@ -207,9 +213,6 @@ namespace Epson.Services.Services.SLA
             foreach (var ticket in ticketsResolved)
             {
                 totalResolutionTime += ticket.TimeToResolution;
-                //var request = _requestRepository.GetById(ticket.RequestId);
-                //TimeSpan resolutionTime = ticket.FulfilledDate - request.ApprovedTime;
-                //totalResolutionTime = totalResolutionTime.Add(resolutionTime);
             }
 
             decimal averageTimeToResolution = (decimal)totalResolutionTime.TotalHours / ticketsResolved.Count;
@@ -218,11 +221,17 @@ namespace Epson.Services.Services.SLA
             return averageTimeToResolution;
         }
 
-        public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests)
+        public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser)
         {
             List<RequestProduct> ticketsBreached = new List<RequestProduct>();
 
-            if (isSalesHeadUser)
+            if (isAdminUser)
+            {
+                ticketsBreached = _requestProductRepository.Table
+                 .Where(x => x.Breached == true)
+                 .ToList();
+            }
+            else if (isSalesHeadUser)
             {
                 ticketsBreached = _requestProductRepository.Table
                  .Where(x => users.Contains(x.FulfillerId) && x.Breached == true)
@@ -239,11 +248,15 @@ namespace Epson.Services.Services.SLA
             return ticketsBreached.Count;
         }
 
-        public int GetTotalTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests)
+        public int GetTotalTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser)
         {
             List<RequestProduct> totalTickets = new List<RequestProduct>();
 
-            if (isSalesHeadUser)
+            if (isAdminUser)
+            {
+                totalTickets = _requestProductRepository.Table.ToList();
+            }
+            else if (isSalesHeadUser)
             {
                 totalTickets = _requestProductRepository.Table
                  .Where(x => users.Contains(x.FulfillerId))
@@ -260,11 +273,18 @@ namespace Epson.Services.Services.SLA
             return totalTickets.Count;
         }
 
-        private int GetApprovedTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests)
+        private int GetApprovedTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser)
         {
             List<RequestProduct> approvedTickets = new List<RequestProduct>();
 
-            if (isSalesHeadUser)
+
+            if (isAdminUser)
+            {
+                approvedTickets = _requestProductRepository.Table
+                 .Where(x => x.HasFulfilled == true)
+                 .ToList();
+            }
+            else if (isSalesHeadUser)
             {
                 approvedTickets = _requestProductRepository.Table
                  .Where(x => users.Contains(x.FulfillerId) &&
@@ -282,11 +302,18 @@ namespace Epson.Services.Services.SLA
             return approvedTickets.Count;
         }
 
-        public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests)
+        public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser)
         {
             List<RequestProduct> successTickets = new List<RequestProduct>();
 
-            if (isSalesHeadUser)
+            if (isAdminUser)
+            {
+                successTickets = _requestProductRepository.Table
+                 .Where(x => x.HasFulfilled == true &&
+                             !x.Breached)
+                 .ToList();
+            }
+            else if (isSalesHeadUser)
             {
                 successTickets = _requestProductRepository.Table
                  .Where(x => users.Contains(x.FulfillerId) &&
@@ -303,7 +330,7 @@ namespace Epson.Services.Services.SLA
                     .ToList();
             }
 
-            var totalTickets = GetApprovedTickets(user, isSalesHeadUser, users, requests);
+            var totalTickets = GetApprovedTickets(user, isSalesHeadUser, users, requests, isAdminUser);
 
             decimal successRate = 0;
             if (totalTickets > 0)

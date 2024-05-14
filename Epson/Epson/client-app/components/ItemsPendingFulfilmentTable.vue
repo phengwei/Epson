@@ -62,7 +62,7 @@
         productsToShow: [],
         search: '',
         competitorsToShow: [],
-        loading: false,
+        loading: true,
         editedItem: {},
         RequestProductStatusEnum
       }
