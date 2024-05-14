@@ -8,8 +8,8 @@
             <nuxt-link to="/user"
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">{{ loggedInUser.userName }}</nuxt-link>
 
-            <!-- Home Button or Dropdown based on roles -->
-            <div v-if="hasMultipleRoles" class="relative group" @click="toggleDashboardDropdown" ref="dashboardDropdown">
+            <!-- Home Button or Dropdown based on roles, hidden if user is Admin -->
+            <div v-if="hasMultipleRoles && !isAdmin" class="relative group" @click="toggleDashboardDropdown" ref="dashboardDropdown">
               <span class="w-40 h-full flex justify-center items-center font-semibold transition duration-300 cursor-pointer">Home</span>
               <div class="absolute left-0 mt-1 w-48 rounded-md shadow-lg py-1 bg-white text-black z-50" :class="{ 'hidden': !showDashboardDropdown }">
                 <nuxt-link v-for="link in dashboardLinks"
@@ -20,11 +20,11 @@
                 </nuxt-link>
               </div>
             </div>
-            <nuxt-link v-else
+            <nuxt-link v-else-if="!isAdmin"
                        :to="homeRoute"
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Home</nuxt-link>
 
-            <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Product')" to="/reporting"
+            <nuxt-link v-if="loggedInUser.roles.includes('Admin')" to="/reporting"
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Report</nuxt-link>
             <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Sales Section Head')" to="/slaDashboard"
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">SLA Overview</nuxt-link>
@@ -103,6 +103,9 @@
       ...mapGetters(['isAuthenticated', 'loggedInUser']),
       hasMultipleRoles() {
         return this.loggedInUser.roles.length > 1;
+      },
+      isAdmin() {
+        return this.loggedInUser.roles.includes('Admin');
       },
       homeRoute() {
         if (this.loggedInUser.roles.includes('Product')) {
