@@ -35,7 +35,7 @@
             <input v-model="editedItem.createdOnUTC" class="border-input readonly-field" label="Date" disabled></input>
           </div>
           <div class="form-group">
-            <label>Customer's Expected Pricing'</label>
+            <label>Customer's Expected Pricing</label>
             <input v-model="editedItem.totalPrice" class="border-input readonly-field" label="Price" disabled></input>
           </div>
           <div class="form-group">
@@ -85,6 +85,11 @@
             text: 'Request #',
             align: 'start',
             value: 'id',
+          },
+          {
+            text: 'End User',
+            align: 'start',
+            value: 'endUserName',
           },
           {
             text: 'Created Time',
@@ -173,6 +178,7 @@
           this.requests = result.data.data.map(request => {
             return {
               ...request,
+              endUserName: request.projectInformationModel.projectName || 'N/A',
               createdOnUTC: moment(request.createdOnUTC).format('DD MMM YY HH:mm')
             };
           });

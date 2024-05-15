@@ -233,6 +233,11 @@
             value: 'id',
           },
           {
+            text: 'End User',
+            align: 'start',
+            value: 'endUserName',
+          },
+          {
             text: 'Created Time',
             align: 'start',
             value: 'createdOnUTC',
@@ -404,6 +409,7 @@
           this.requests = result.data.data.map(request => {
             return {
               ...request,
+              endUserName: request.projectInformationModel.projectName || 'N/A',
               createdOnUTC: moment(request.createdOnUTC).format('DD MMM YY HH:mm')
             };
           });

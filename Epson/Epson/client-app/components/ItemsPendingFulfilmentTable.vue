@@ -25,6 +25,7 @@
       <tr>
         <td>{{ item.requestId }}</td>
         <td>{{ item.createdOnUTC }}</td>
+        <td>{{ item.projectName }}</td>
         <td>{{ item.createdBy }}</td>
         <td>{{ item.productName }}</td>
         <td>{{ item.endUserPrice }}</td>
@@ -41,6 +42,7 @@
   import moment from 'moment';
   import ProductFulfillmentDialog from '~/components/ProductFulfillmentDialog.vue';
   import { RequestProductStatusEnum } from '~/script/requestProductStatusEnum.js';
+
   export default {
     name: 'ItemsPendingFulfilmentTable',
     components: {
@@ -50,11 +52,12 @@
       return {
         dialogProductFulfillment: false,
         headers: [
-          { text: 'Request #', value: 'id' },
+          { text: 'Request #', value: 'requestId' },
           { text: 'Requested On', value: 'createdOnUTC' },
+          { text: 'End User', align: 'start', value: 'projectName' },
           { text: 'Requested By', value: 'createdBy' },
           { text: 'Product', value: 'productName' },
-          { text: 'Budget', value: 'budget' },
+          { text: 'Budget', value: 'endUserPrice' },
           { text: 'Quantity', value: 'quantity' },
           { text: 'Fulfill Request', value: 'actions', sortable: false },
         ],
@@ -74,9 +77,7 @@
         }
         return this.itemsPendingFulfilment.filter(request => {
           const requestIdMatch = String(request.requestId).toLowerCase().includes(this.search.toLowerCase());
-          const projectNameMatch = request.projectInformationModel &&
-            request.projectInformationModel.projectName &&
-            request.projectInformationModel.projectName.toLowerCase().includes(this.search.toLowerCase());
+          const projectNameMatch = request.projectName && request.projectName.toLowerCase().includes(this.search.toLowerCase());
           return requestIdMatch || projectNameMatch;
         });
       },
@@ -95,7 +96,6 @@
     created() {
       this.getFulfillerItem();
     },
-
     methods: {
       viewRequest(request) {
         request.requestProductsModel = request.requestProductsModel.filter(product => product.productId === request.productId);
@@ -133,6 +133,7 @@
                 const newItem = {
                   ...item,
                   ...product,
+                  projectName: item.projectInformationModel && item.projectInformationModel.projectName ? item.projectInformationModel.projectName : 'N/A',
                   createdOnUTC: moment(product.createdOnUTC).format('DD MMM YY HH:mm'),
                   productName: product.productName,
                   distyPrice: product.distyPrice,

@@ -54,6 +54,7 @@
       return {
         headers: [
           { text: 'Request #', value: 'id' },
+          { text: 'End User', value: 'endUserName' },
           { text: 'Approval State', value: 'approvalStateStr' },
           { text: 'Total Budget (RM)', value: 'totalBudget' },
           { text: 'Created On', value: 'createdOnUTC' },
@@ -86,6 +87,7 @@
 
               return {
                 ...item,
+                endUserName: item.projectInformationModel.projectName || 'N/A',
                 createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm'),
                 approvedTime
               };

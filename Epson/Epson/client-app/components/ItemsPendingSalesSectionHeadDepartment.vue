@@ -87,6 +87,16 @@
             value: 'id',
           },
           {
+            text: 'Requested By',
+            align: 'start',
+            value: 'createdBy',
+          },
+          {
+            text: 'End User',
+            align: 'start',
+            value: 'endUserName'
+          },
+          {
             text: 'Created Time',
             align: 'start',
             value: 'createdOnUTC',
@@ -164,8 +174,10 @@
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingsalessectionheaddepartmentrequests`).then(result => {
           this.requests = result.data.data.map(request => {
+            console.log("awd", request);
             return {
               ...request,
+              endUserName: request.projectInformationModel.projectName || 'N/A',
               createdOnUTC: moment(request.createdOnUTC).format('DD MMM YY HH:mm')
             };
           });

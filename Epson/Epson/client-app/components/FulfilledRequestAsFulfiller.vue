@@ -34,6 +34,7 @@
         headers: [
           { text: 'Request #', value: 'id' },
           { text: 'Requester', value: 'requestedBy' },
+          { text: 'End User', value: 'projectName' },
           { text: 'Product', value: 'productName' },
           { text: 'Quantity', value: 'quantity' },
           { text: 'Budget', value: 'budget' },
