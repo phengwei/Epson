@@ -174,7 +174,6 @@
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingsalessectionheaddepartmentrequests`).then(result => {
           this.requests = result.data.data.map(request => {
-            console.log("awd", request);
             return {
               ...request,
               endUserName: request.projectInformationModel.projectName || 'N/A',

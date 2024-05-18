@@ -14,10 +14,6 @@
                       single-line
                       hide-details></v-text-field>
         <v-spacer></v-spacer>
-
-        <ProductFulfillmentDialog :editedItem="editedItem"
-                                  :dialogProductFulfillment="dialogProductFulfillment"
-                                  @close="close"></ProductFulfillmentDialog>
       </v-toolbar>
     </template>
 
@@ -40,17 +36,12 @@
 
 <script>
   import moment from 'moment';
-  import ProductFulfillmentDialog from '~/components/ProductFulfillmentDialog.vue';
   import { RequestProductStatusEnum } from '~/script/requestProductStatusEnum.js';
 
   export default {
     name: 'ItemsPendingFulfilmentTable',
-    components: {
-      ProductFulfillmentDialog
-    },
     data() {
       return {
-        dialogProductFulfillment: false,
         headers: [
           { text: 'Request #', value: 'requestId' },
           { text: 'Requested On', value: 'createdOnUTC' },
@@ -62,11 +53,8 @@
           { text: 'Fulfill Request', value: 'actions', sortable: false },
         ],
         itemsPendingFulfilment: [],
-        productsToShow: [],
         search: '',
-        competitorsToShow: [],
         loading: true,
-        editedItem: {},
         RequestProductStatusEnum
       }
     },
@@ -88,9 +76,6 @@
           this.getFulfillerItem()
         },
         deep: true,
-      },
-      dialogProductFulfillment(val) {
-        val || this.close()
       }
     },
     created() {
@@ -98,13 +83,18 @@
     },
     methods: {
       viewRequest(request) {
-        request.requestProductsModel = request.requestProductsModel.filter(product => product.productId === request.productId);
+        // Filter out the request products based on the selected product's ID and price
+        const selectedProduct = request;
+        const filteredRequest = {
+          ...request,
+          requestProductsModel: [selectedProduct]
+        };
 
-        let queryParameters = { view: true, request: JSON.stringify(request) };
+        let queryParameters = { view: true, request: JSON.stringify(filteredRequest) };
 
-        if (request.isCoverplus === true) {
+        if (selectedProduct.isCoverplus === true) {
           queryParameters = { ...queryParameters, isFulfillCoverplus: true };
-        } else if (request.isCoverplus === false) {
+        } else if (selectedProduct.isCoverplus === false) {
           queryParameters = { ...queryParameters, isFulfill: true };
         }
 
@@ -112,16 +102,6 @@
           path: '/createquotation',
           query: queryParameters
         });
-      },
-      today() {
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = ('0' + (date.getMonth() + 1)).slice(-2);
-        const day = ('0' + date.getDate()).slice(-2);
-        const hours = ('0' + date.getHours()).slice(-2);
-        const minutes = ('0' + date.getMinutes()).slice(-2);
-
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
       },
       getFulfillerItem() {
         this.loading = true
@@ -154,27 +134,10 @@
                   newItem.competitors.push(c);
                 });
                 this.itemsPendingFulfilment.push(newItem);
-                const p = {
-                  quantity: product.quantity,
-                  distyPrice: product.distyPrice,
-                  dealerPrice: product.dealerPrice,
-                  endUserPrice: product.endUserPrice,
-                  productName: product.productName,
-                  remarks: product.remarks
-                };
-                this.productsToShow.push(p);
               }
             });
           });
           this.loading = false;
-        })
-      },
-
-      close() {
-        this.dialogProductFulfillment = false
-        this.$nextTick(() => {
-          this.editedItem = Object.assign({}, this.defaultItem)
-          this.editedIndex = -1
         })
       },
     },

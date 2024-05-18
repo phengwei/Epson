@@ -23,6 +23,7 @@ namespace Epson.Model.Request
         public string? CreatedById { get; set; }
         public string? UpdatedById { get; set; }
         public string? Comments { get; set; }
+        public string? CreatedTeam { get; set; }
         public List<RequestProduct> RequestProducts { get; set; } = new List<RequestProduct>();
         public List<CompetitorInformation> CompetitorInformations { get; set; } = new List<CompetitorInformation>();
         public RequestSubmissionDetail RequestSubmissionDetail { get; set; } = new RequestSubmissionDetail();

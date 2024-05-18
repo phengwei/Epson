@@ -69,7 +69,7 @@
         </div>
 
         <!-- Mobile menu button -->
-        <div class="md:hidden flex items-center">
+        <!--<div class="md:hidden flex items-center">
           <button class="outline-none" @click="openPopup()">
             <svg class="w-6 h-6 text-white"
                  x-show="!showMenu"
@@ -82,7 +82,7 @@
               <path d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
           </button>
-        </div>
+        </div>-->
       </div>
     </div>
   </nav>

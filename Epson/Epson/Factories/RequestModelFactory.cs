@@ -22,18 +22,21 @@ namespace Epson.Factories
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
         private readonly IRequestService _requestService;
+        private readonly IRepository<Team> _teamRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         public RequestModelFactory
             (IMapper mapper,
             IProductService productService,
             ICategoryService categoryService,
             IRequestService requestService,
+            IRepository<Team> teamRepository,
             UserManager<ApplicationUser> userManager)
         {
             _mapper = mapper;
             _productService = productService;
             _categoryService = categoryService;
             _requestService = requestService;
+            _teamRepository = teamRepository;
             _userManager = userManager;
         }
         public RequestModel PrepareRequestModel(RequestDTO request)
@@ -115,30 +118,33 @@ namespace Epson.Factories
 
             return requestProductModels;
         }
-
         public List<RequestModel> PrepareRequestModels(List<RequestDTO> requests)
         {
-            if (requests?.Count == 0 || requests == null)
+            if (requests == null || requests.Count == 0)
                 return new List<RequestModel>();
 
-            
             List<RequestModel> requestModels = new List<RequestModel>();
 
             try
             {
-
                 foreach (var request in requests)
                 {
+                    var approverTask = request.ApprovedBy != null ? _userManager.FindByIdAsync(request.ApprovedBy) : Task.FromResult<ApplicationUser>(null);
+                    var creatorTask = request.CreatedById != null ? _userManager.FindByIdAsync(request.CreatedById) : Task.FromResult<ApplicationUser>(null);
+                    var approver = approverTask.Result;
+                    var creater = creatorTask.Result;
+
                     var requestModel = new RequestModel
                     {
                         Id = request.Id,
                         ApprovedBy = request.ApprovedBy,
-                        ApprovedByName = request.ApprovedBy != null ? _userManager.FindByIdAsync(request.ApprovedBy).Result.UserName : null,
+                        ApprovedByName = request.ApprovedBy != null ? approver?.UserName : null,
                         ApprovedTime = request.ApprovedTime,
                         AmendQuotationTime = request.AmendQuotationTime,
-                        CreatedBy = _userManager.FindByIdAsync(request.CreatedById).Result.UserName,
+                        CreatedBy = request.CreatedById != null ? creater?.UserName : null,
                         CreatedById = request.CreatedById,
                         CreatedOnUTC = request.CreatedOnUTC,
+                        CreatedTeam = creater != null ? _teamRepository.GetById(creater.TeamId)?.Name : null,
                         UpdatedById = request.UpdatedById,
                         UpdatedOnUTC = request.UpdatedOnUTC,
                         Segment = request.Segment,
@@ -163,7 +169,7 @@ namespace Epson.Factories
                             HasFulfilled = rp.HasFulfilled,
                             FulfilledDate = rp.FulfilledDate,
                             FulfillerId = rp.FulfillerId,
-                            FulfillerName = rp.FulfillerId != null ? _userManager.FindByIdAsync(rp.FulfillerId).Result.UserName : null,
+                            FulfillerName = rp.FulfillerId != null ? _userManager.FindByIdAsync(rp.FulfillerId).Result?.UserName : null,
                             FulfilledPrice = rp.FulfilledPrice,
                             IsCoverplus = rp.IsCoverplus,
                             TimeToResolution = rp.TimeToResolution,
@@ -202,18 +208,21 @@ namespace Epson.Factories
                             Email = request.RequestSubmissionDetail.Email,
                             CreatedOnUTC = request.RequestSubmissionDetail.CreatedOnUTC,
                             CreatedBy = request.RequestSubmissionDetail.CreatedBy,
-                            PreparedBy = _userManager.FindByIdAsync(request.RequestSubmissionDetail.CreatedBy).Result.UserName,
+                            PreparedBy = request.RequestSubmissionDetail.CreatedBy != null ? _userManager.FindByIdAsync(request.RequestSubmissionDetail.CreatedBy).Result?.UserName : null,
                         },
                         ProjectInformationModel = request.ProjectInformation,
                     };
+
                     requestModels.Add(requestModel);
                 }
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
             }
 
             return requestModels;
         }
+
     }
 }

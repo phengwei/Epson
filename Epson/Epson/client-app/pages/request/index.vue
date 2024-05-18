@@ -9,7 +9,7 @@
                       label="Search by end user or request #"
                       single-line
                       hide-details></v-text-field>
-        <v-btn v-if="loggedInUser.roles.includes('Sales')" class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
+        <v-btn v-if="loggedInUser && loggedInUser.roles.includes('Sales')" class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
       </v-card-title>
       <v-card-text>
         <v-data-table :headers="headers"
@@ -60,6 +60,7 @@
           { text: 'Created On', value: 'createdOnUTC' },
           { text: 'Created By', value: 'createdBy' },
           { text: 'Approved Time', value: 'approvedTime' },
+          { text: 'Requester Team', value: 'createdByTeam' },
           { text: 'Actions', value: 'action' }
         ],
         requests: [],
@@ -84,12 +85,12 @@
               const isApproved = item.approvalState === this.ApprovalStateEnum.Approved;
 
               const approvedTime = isApproved ? moment(item.approvedTime).add(8, 'hours').format('DD MMM YY HH:mm') : 'N/A';
-
               return {
                 ...item,
                 endUserName: item.projectInformationModel.projectName || 'N/A',
                 createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm'),
-                approvedTime
+                approvedTime,
+                createdByTeam: item.createdTeam || 'N/A'
               };
             });
           })
@@ -105,24 +106,24 @@
           product.status === this.RequestProductStatusEnum.Rejected
         );
         let queryParameters = { request: JSON.stringify(request) };
-        if (this.loggedInUser.roles.includes('Sales Section Head')
+        if (this.loggedInUser && this.loggedInUser.roles.includes('Sales Section Head')
           && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadAction
           && request.createdById !== this.loggedInUser.id) {
           queryParameters = { ...queryParameters, isApprove: true, view: true };
-        } else if (this.loggedInUser.roles.includes('Sales Section Head')
+        } else if (this.loggedInUser && this.loggedInUser.roles.includes('Sales Section Head')
           && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadFinalAction) {
           queryParameters = { ...queryParameters, isFinalApprove: true, view: true };
-        } else if (this.loggedInUser.id === request.createdById
+        } else if (this.loggedInUser && this.loggedInUser.id === request.createdById
           && request.approvalState === this.ApprovalStateEnum.PendingRequesterAction) {
           queryParameters = { ...queryParameters, dealable: true, view: true, amendable: true };
-        } else if (this.loggedInUser.id === request.createdById
+        } else if (this.loggedInUser && this.loggedInUser.id === request.createdById
           && request.approvalState === this.ApprovalStateEnum.PendingFulfillerAction
           && anyProductRejected) {
           queryParameters = { ...queryParameters, amendable: true, view: true };
-        } else if (this.loggedInUser.id === request.createdById
+        } else if (this.loggedInUser && this.loggedInUser.id === request.createdById
           && request.approvalState === this.ApprovalStateEnum.AmendQuotation) {
           queryParameters = { ...queryParameters, editable: true };
-        } else if (this.loggedInUser.id === request.createdById
+        } else if (this.loggedInUser && this.loggedInUser.id === request.createdById
           && request.approvalState === this.ApprovalStateEnum.RejectedByFulfiller) {
           queryParameters = { ...queryParameters, amendable: true, view: true };
         } else {
