@@ -8,7 +8,9 @@
             <option value="all">All Requesters</option>
             <option v-for="requester in requesters" :value="requester.id" :key="requester.id">{{ requester.userName }}</option>
           </select>
-          <bar-chart :chart-data="monthlysalesbyrequester" :options="options"></bar-chart>
+          <div class="bar-chart-container">
+            <bar-chart :chart-data="monthlysalesbyrequester" :options="options"></bar-chart>
+          </div>
         </div>
       </div>
       <div class="card">
@@ -18,7 +20,9 @@
             <option value="0">All Months</option>
             <option v-for="month in months" :value="month.value" :key="month.value">{{ month.text }}</option>
           </select>
-          <bar-chart :chart-data="toprequestersbysales" :options="options"></bar-chart>
+          <div class="bar-chart-container">
+            <bar-chart :chart-data="toprequestersbysales" :options="options"></bar-chart>
+          </div>
         </div>
       </div>
       <div class="card">
@@ -28,7 +32,9 @@
             <option value="0">All Months</option>
             <option v-for="month in months" :value="month.value" :key="month.value">{{ month.text }}</option>
           </select>
-          <bar-chart :chart-data="topproductsbyrevenue" :options="options"></bar-chart>
+          <div class="bar-chart-container">
+            <bar-chart :chart-data="topproductsbyrevenue" :options="options"></bar-chart>
+          </div>
         </div>
       </div>
     </div>
@@ -193,12 +199,15 @@
 <style scoped>
   .chart-container {
     display: flex;
-    justify-content: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
     gap: 20px;
+    width: 90%;
+    margin: 0 auto;
   }
 
   .card {
-    width: 300px;
+    flex: 1 1 30%;
     background-color: #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-radius: 4px;
@@ -209,6 +218,7 @@
     background-color: #f5f5f5;
     border-bottom: 1px solid #ddd;
     font-weight: bold;
+    text-align: center; 
   }
 
   .card-body {
@@ -226,6 +236,17 @@
   }
 
   .bar-chart-container {
-    height: 300px;
+    height: 380px;
+  }
+
+  @media (max-width: 768px) {
+    .chart-container {
+      flex-direction: column; 
+    }
+
+    .card {
+      flex: 1 1 100%; 
+      margin-bottom: 20px; 
+    }
   }
 </style>

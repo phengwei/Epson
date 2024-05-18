@@ -9,7 +9,7 @@
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">{{ loggedInUser.userName }}</nuxt-link>
 
             <!-- Home Button or Dropdown based on roles, hidden if user is Admin -->
-            <div v-if="hasMultipleRoles && !isAdmin" class="relative group" @click="toggleDashboardDropdown" ref="dashboardDropdown">
+            <div v-if="hasMultipleRoles && !isAdmin" class="relative group" @mouseover="showDashboardDropdown = true" @mouseleave="showDashboardDropdown = false">
               <span class="w-40 h-full flex justify-center items-center font-semibold transition duration-300 cursor-pointer">Home</span>
               <div class="absolute left-0 mt-1 w-48 rounded-md shadow-lg py-1 bg-white text-black z-50" :class="{ 'hidden': !showDashboardDropdown }">
                 <nuxt-link v-for="link in dashboardLinks"
@@ -34,9 +34,9 @@
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Products</nuxt-link>
 
             <!-- Admin Center Dropdown -->
-            <div class="relative group" @click="toggleDropdown" ref="dropdown" v-if="loggedInUser.roles.includes('Admin')">
+            <div class="relative group" @mouseover="showDropdown = true" @mouseleave="showDropdown = false">
               <span class="w-40 h-full flex justify-center items-center font-semibold transition duration-300 cursor-pointer">Admin Center</span>
-              <div class="absolute left-0 mt-1 w-48 rounded-md shadow-lg py-1 bg-white text-black z-50" :class="{ 'hidden': !showDropdown }">
+              <div class="absolute left-0 mt-0 w-48 rounded-md shadow-lg py-1 bg-white text-black z-50" :class="{ 'hidden': !showDropdown }">
                 <nuxt-link to="/userManagement"
                            class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Manage Users</nuxt-link>
                 <nuxt-link to="/categoryManagement"
@@ -156,6 +156,19 @@
 </script>
 
 <style>
+  .ums-header {
+    background-color: #19212b;
+  }
+
+  .group:hover .admin-center-dropdown,
+  .group:focus-within .admin-center-dropdown {
+    display: block !important;
+  }
+
+  .admin-center-dropdown {
+    display: none;
+  }
+
   .homeHeader {
     background-color: #f1f3f5;
     color: rgb(107 114 128);
