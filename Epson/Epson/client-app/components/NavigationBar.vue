@@ -46,11 +46,11 @@
                 <nuxt-link to="/productAuditTrail"
                            class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Product Audit Trail</nuxt-link>
                 <nuxt-link to="/productDashboard"
-                           class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Product Dashboard</nuxt-link>
+                           class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Fulfiller Dashboard</nuxt-link>
                 <nuxt-link to="/salesDashboard"
-                           class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Sales Dashboard</nuxt-link>
+                           class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Requester Dashboard</nuxt-link>
                 <nuxt-link to="/shDashboard"
-                           class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Sales Section Dashboard</nuxt-link>
+                           class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Sales Head Dashboard</nuxt-link>
               </div>
             </div>
 
