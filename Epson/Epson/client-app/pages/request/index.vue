@@ -2,13 +2,16 @@
   <div class="d-flex justify-content-center align-items-center vh-100" data-app="true">
     <v-card class="mx-auto" style="width: 90%">
       <v-card-title class="d-flex justify-content-between align-items-center">
-        <span style="flex-grow: 1;">Request</span>
-        <v-text-field v-model="search"
-                      class="search-input"
-                      append-icon="mdi-magnify"
-                      label="Search by end user or request #"
-                      single-line
-                      hide-details></v-text-field>
+        <span style="flex-grow: 1;">{{ breached ? 'Breached Request' : 'Request' }}</span>
+        <div class="d-flex align-items-center">
+          <v-text-field v-model="search"
+                        class="search-input"
+                        append-icon="mdi-magnify"
+                        label="Search by end user or request #"
+                        single-line
+                        hide-details></v-text-field>
+          <v-select v-model="selectedMonth" :items="months" @change="getRequests" class="month-select"></v-select>
+        </div>
         <v-btn v-if="loggedInUser && loggedInUser.roles.includes('Sales')" class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
       </v-card-title>
       <v-card-text>
@@ -26,7 +29,6 @@
     </v-card>
   </div>
 </template>
-
 <script>
   import { mapGetters } from 'vuex';
   import moment from 'moment';
@@ -38,16 +40,23 @@
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser']),
       filteredRequests() {
-        if (this.search.trim() === '') {
-          return this.requests;
+        let filtered = this.requests;
+        if (this.search.trim() !== '') {
+          filtered = filtered.filter(request => {
+            const requestIdMatch = String(request.id).toLowerCase().includes(this.search.toLowerCase());
+            const projectNameMatch = request.projectInformationModel &&
+              request.projectInformationModel.projectName &&
+              request.projectInformationModel.projectName.toLowerCase().includes(this.search.toLowerCase());
+            return requestIdMatch || projectNameMatch;
+          });
         }
-        return this.requests.filter(request => {
-          const requestIdMatch = String(request.id).toLowerCase().includes(this.search.toLowerCase());
-          const projectNameMatch = request.projectInformationModel &&
-            request.projectInformationModel.projectName &&
-            request.projectInformationModel.projectName.toLowerCase().includes(this.search.toLowerCase());
-          return requestIdMatch || projectNameMatch;
-        });
+        if (this.selectedMonth !== null) {
+          filtered = filtered.filter(request => {
+            const requestMonth = moment(request.createdOnUTC).month() + 1; // months are 0-indexed
+            return this.selectedMonth === 0 || requestMonth === this.selectedMonth;
+          });
+        }
+        return filtered;
       }
     },
     data() {
@@ -68,12 +77,29 @@
         loading: true,
         search: '',
         breached: false,
+        selectedMonth: new Date().getMonth() + 1,
+        months: [
+          { value: 0, text: 'All' },
+          { value: 1, text: 'January' },
+          { value: 2, text: 'February' },
+          { value: 3, text: 'March' },
+          { value: 4, text: 'April' },
+          { value: 5, text: 'May' },
+          { value: 6, text: 'June' },
+          { value: 7, text: 'July' },
+          { value: 8, text: 'August' },
+          { value: 9, text: 'September' },
+          { value: 10, text: 'October' },
+          { value: 11, text: 'November' },
+          { value: 12, text: 'December' }
+        ],
         ApprovalStateEnum,
         RequestProductStatusEnum,
       };
     },
     created() {
       this.breached = this.$route.query.breached === 'true';
+      this.selectedMonth = this.$route.query.month ? parseInt(this.$route.query.month) : new Date().getMonth() + 1;
       this.getRequests();
     },
     methods: {
@@ -83,7 +109,6 @@
           .then(response => {
             this.requests = response.data.data.map(item => {
               const isApproved = item.approvalState === this.ApprovalStateEnum.Approved;
-
               const approvedTime = isApproved ? moment(item.approvedTime).add(8, 'hours').format('DD MMM YY HH:mm') : 'N/A';
               return {
                 ...item,
@@ -105,7 +130,7 @@
         const anyProductRejected = request.requestProductsModel.some(product =>
           product.status === this.RequestProductStatusEnum.Rejected
         );
-        let queryParameters = { request: JSON.stringify(request) };
+        let queryParameters = { request: JSON.stringify(request), month: this.selectedMonth };
         if (this.loggedInUser && this.loggedInUser.roles.includes('Sales Section Head')
           && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadAction
           && request.createdById !== this.loggedInUser.id) {
@@ -138,7 +163,6 @@
     },
   };
 </script>
-
 <style scoped>
   .vh-100 {
     height: 100vh;
@@ -158,6 +182,17 @@
     flex-grow: 1;
     margin-left: 16px;
     margin-right: 16px;
-    width: 5%;
+    width: auto;
+  }
+
+  .filter-container {
+    display: flex;
+    align-items: center;
+    margin-right: 16px;
+  }
+
+  .month-select {
+    margin-left: 16px;
+    min-width: 150px;
   }
 </style>

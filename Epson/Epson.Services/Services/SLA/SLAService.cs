@@ -184,27 +184,26 @@ namespace Epson.Services.Services.SLA
             return _mapper.Map<SLASettingDTO>(_slaSetting.Value);
         }
 
-        public decimal GetAverageTimeToResolutionInHours(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser)
+        public decimal GetAverageTimeToResolutionInHours(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {
             List<RequestProduct> ticketsResolved = new List<RequestProduct>();
 
             if (isAdminUser)
             {
                 ticketsResolved = _requestProductRepository.Table
-                     .Where(x => x.HasFulfilled == true)
-                     .ToList();
+                    .Where(x => x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
             }
             else if (isSalesHeadUser)
             {
                 ticketsResolved = _requestProductRepository.Table
-                 .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true)
-                 .ToList();
+                    .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
             }
             else
             {
                 ticketsResolved = _requestProductRepository.Table
-                    .Where(x => x.FulfillerId == user.Id &&
-                    x.HasFulfilled == true)
+                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
                     .ToList();
             }
 
@@ -221,125 +220,118 @@ namespace Epson.Services.Services.SLA
             return averageTimeToResolution;
         }
 
-        public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser)
+        public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {
             List<RequestProduct> ticketsBreached = new List<RequestProduct>();
 
             if (isAdminUser)
             {
                 ticketsBreached = _requestProductRepository.Table
-                 .Where(x => x.Breached == true)
-                 .ToList();
+                    .Where(x => x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
             }
             else if (isSalesHeadUser)
             {
                 ticketsBreached = _requestProductRepository.Table
-                 .Where(x => users.Contains(x.FulfillerId) && x.Breached == true)
-                 .ToList();
+                    .Where(x => users.Contains(x.FulfillerId) && x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
             }
             else
             {
                 ticketsBreached = _requestProductRepository.Table
-                    .Where(x => x.FulfillerId == user.Id &&
-                    x.Breached == true)
+                    .Where(x => x.FulfillerId == user.Id && x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month))
                     .ToList();
             }
 
             return ticketsBreached.Count;
         }
 
-        public int GetTotalTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser)
+        public int GetTotalTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {
             List<RequestProduct> totalTickets = new List<RequestProduct>();
 
             if (isAdminUser)
             {
-                totalTickets = _requestProductRepository.Table.ToList();
+                totalTickets = _requestProductRepository.Table
+                    .Where(x => month == 0 || x.CreatedOnUTC.Month == month)
+                    .ToList();
             }
             else if (isSalesHeadUser)
             {
                 totalTickets = _requestProductRepository.Table
-                 .Where(x => users.Contains(x.FulfillerId))
-                 .ToList();
+                    .Where(x => users.Contains(x.FulfillerId) && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
             }
             else
             {
                 totalTickets = _requestProductRepository.Table
-                    .Where(x => x.FulfillerId == user.Id)
+                    .Where(x => x.FulfillerId == user.Id && (month == 0 || x.CreatedOnUTC.Month == month))
                     .ToList();
             }
-
 
             return totalTickets.Count;
         }
 
-        private int GetApprovedTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser)
+        private int GetApprovedTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {
             List<RequestProduct> approvedTickets = new List<RequestProduct>();
-
 
             if (isAdminUser)
             {
                 approvedTickets = _requestProductRepository.Table
-                 .Where(x => x.HasFulfilled == true)
-                 .ToList();
+                    .Where(x => x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
             }
             else if (isSalesHeadUser)
             {
                 approvedTickets = _requestProductRepository.Table
-                 .Where(x => users.Contains(x.FulfillerId) &&
-                            x.HasFulfilled == true)
-                 .ToList();
+                    .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
             }
             else
             {
                 approvedTickets = _requestProductRepository.Table
-                    .Where(x => x.FulfillerId == user.Id &&
-                            x.HasFulfilled == true)
+                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
                     .ToList();
             }
 
             return approvedTickets.Count;
         }
 
-        public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser)
+        public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {
             List<RequestProduct> successTickets = new List<RequestProduct>();
 
             if (isAdminUser)
             {
                 successTickets = _requestProductRepository.Table
-                 .Where(x => x.HasFulfilled == true &&
-                             !x.Breached)
-                 .ToList();
+                    .Where(x => x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
             }
             else if (isSalesHeadUser)
             {
                 successTickets = _requestProductRepository.Table
-                 .Where(x => users.Contains(x.FulfillerId) &&
-                             x.HasFulfilled == true &&
-                             !x.Breached)
-                 .ToList();
+                    .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
             }
             else
             {
                 successTickets = _requestProductRepository.Table
-                    .Where(x => x.FulfillerId == user.Id &&
-                             x.HasFulfilled == true &&
-                            !x.Breached)
+                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month))
                     .ToList();
             }
 
-            var totalTickets = GetApprovedTickets(user, isSalesHeadUser, users, requests, isAdminUser);
+            var totalTickets = GetApprovedTickets(user, isSalesHeadUser, users, requests, isAdminUser, month);
 
             decimal successRate = 0;
             if (totalTickets > 0)
             {
                 successRate = (decimal)successTickets.Count / totalTickets;
-                successRate = Math.Round(successRate * 100, 2); 
+                successRate = Math.Round(successRate * 100, 2);
             }
 
             return successRate;
         }
+
     }
 }
