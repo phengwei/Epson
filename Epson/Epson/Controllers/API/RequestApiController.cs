@@ -482,10 +482,22 @@ namespace Epson.Controllers.API
             var response = new GenericResponseModel<List<RequestProductModel>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+            var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString());
 
-            var requestProducts = _requestService.GetRequestProducts()
-                                                .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true)
-                                                .ToList();
+            List<RequestProductDTO> requestProducts = new List<RequestProductDTO>();
+
+            if (isAdminUser)
+            {
+                requestProducts = _requestService.GetRequestProducts()
+                                    .Where(x => x.HasFulfilled == true)
+                                    .ToList();
+            }
+            else
+            {
+                requestProducts = _requestService.GetRequestProducts()
+                                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true)
+                                    .ToList();
+            }
 
             var requestModels = _requestModelFactory.PrepareRequestProductModel(requestProducts);
 
