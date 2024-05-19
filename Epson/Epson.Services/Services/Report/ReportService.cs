@@ -63,6 +63,7 @@ namespace Epson.Services.Services.Report
                     MonthlySales = g.Sum(r => r.TotalBudget),
                     TotalNumberOfSales = g.Count()
                 })
+                .OrderByDescending(x => x.TotalNumberOfSales)
                 .ToList();
 
             return monthlySales;
@@ -87,8 +88,8 @@ namespace Epson.Services.Services.Report
                     TotalNumberOfSales = g.Count(),
                     TotalSales = g.Sum(r => r.TotalBudget)
                 })
-                .OrderByDescending(x => x.TotalSales)
-                .Take(10)
+                .OrderByDescending(x => x.TotalNumberOfSales)
+                .Take(25)
                 .ToList();
 
             foreach (var requester in topRequesters)
