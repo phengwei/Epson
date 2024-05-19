@@ -29,44 +29,45 @@ namespace Epson.Services.Services.Report
             _userManager = userManager;
         }
 
-        public async Task<List<RequesterSales>> GetMonthlySalesByRequester(string requesterId, bool allRequester = false)
+        public async Task<List<RequesterSales>> GetMonthlySalesByRequester(string requesterId, int month = 0, bool allRequester = false)
         {
+            if (allRequester)
+            {
+                return await GetTopRequestersBySales(month);
+            }
+
             List<RequesterSales> monthlySales = new List<RequesterSales>();
+
+            var query = _requestRepository.Table.AsQueryable();
+
+            if (month != 0)
+            {
+                query = query.Where(r => r.CreatedOnUTC.Month == month);
+            }
 
             if (!allRequester)
             {
-                monthlySales = _requestRepository.Table
-                    .Where(r => r.CreatedById == requesterId)
-                    .GroupBy(r => new
-                    {
-                        Month = r.CreatedOnUTC.ToString("yyyy-MM"),
-                        Requester = r.CreatedById
-                    })
-                    .Select(g => new RequesterSales
-                    {
-                        Month = g.Key.Month,
-                        RequesterName = g.Key.Requester,
-                        MonthlySales = g.Sum(r => r.TotalBudget),
-                        TotalNumberOfSales = g.Count()
-                    })
-                    .ToList();
+                query = query.Where(r => r.CreatedById == requesterId);
             }
-            else
-            {
-                monthlySales = _requestRepository.Table
-                    .GroupBy(r => r.CreatedOnUTC.ToString("yyyy-MM"))
-                    .Select(g => new RequesterSales
-                    {
-                        Month = g.Key,
-                        RequesterName = "All Requesters",
-                        MonthlySales = g.Sum(r => r.TotalBudget),
-                        TotalNumberOfSales = g.Count()
-                    })
-                    .ToList();
-            }
+
+            monthlySales = query
+                .GroupBy(r => new
+                {
+                    Month = r.CreatedOnUTC.ToString("yyyy-MM"),
+                    Requester = r.CreatedById
+                })
+                .Select(g => new RequesterSales
+                {
+                    Month = g.Key.Month,
+                    RequesterName = _userManager.FindByIdAsync(g.Key.Requester).Result.UserName,
+                    MonthlySales = g.Sum(r => r.TotalBudget),
+                    TotalNumberOfSales = g.Count()
+                })
+                .ToList();
 
             return monthlySales;
         }
+
 
         public async Task<List<RequesterSales>> GetTopRequestersBySales(int month)
         {

@@ -2,38 +2,30 @@
   <div>
     <div class="chart-container">
       <div class="card">
-        <div class="card-header">Monthly request by Requester</div>
+        <div class="card-header">Top Requester & Monthly Request Count</div>
         <div class="card-body">
-          <select v-model="selectedRequester" @change="fetchmonthlysalesbyrequester">
+          <select v-model="selectedRequester" @change="fetchCombinedChartData">
             <option value="all">All Requesters</option>
             <option v-for="requester in requesters" :value="requester.id" :key="requester.id">{{ requester.userName }}</option>
           </select>
-          <div class="bar-chart-container">
-            <bar-chart :chart-data="monthlysalesbyrequester" :options="options"></bar-chart>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">Top 10 Requesters by request count</div>
-        <div class="card-body">
-          <select v-model="selectedMonth_requesterBySales" @change="fetchtoprequestersbysales">
+          <select v-model="selectedMonth_requesterBySales" @change="fetchCombinedChartData">
             <option value="0">All Months</option>
             <option v-for="month in months" :value="month.value" :key="month.value">{{ month.text }}</option>
           </select>
           <div class="bar-chart-container">
-            <bar-chart :chart-data="toprequestersbysales" :options="options"></bar-chart>
+            <bar-chart :chart-data="combinedChartData" :options="options" ref="barChart"></bar-chart>
           </div>
         </div>
       </div>
       <div class="card">
-        <div class="card-header">Top 10 Products By request Count</div>
+        <div class="card-header">Top 10 Products By Request Count</div>
         <div class="card-body">
           <select v-model="selectedMonth_productsByRevenue" @change="fetchtopproductsbyrevenue">
             <option value="0">All Months</option>
             <option v-for="month in months" :value="month.value" :key="month.value">{{ month.text }}</option>
           </select>
           <div class="bar-chart-container">
-            <bar-chart :chart-data="topproductsbyrevenue" :options="options"></bar-chart>
+            <bar-chart :chart-data="topproductsbyrevenue" :options="options" ref="topProductsBarChart"></bar-chart>
           </div>
         </div>
       </div>
@@ -42,16 +34,14 @@
 </template>
 
 <script>
-  import BarChart from '~/components/BarChart.vue'
+  import BarChart from '~/components/BarChart.vue';
 
   export default {
     name: 'ReportingDashboard',
     data() {
       return {
-        monthlysalesbyrequester: null,
-        toprequestersbysales: null,
+        combinedChartData: null,
         topproductsbyrevenue: null,
-        datacollection: null,
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -85,8 +75,7 @@
     },
     async created() {
       await this.fetchRequesters();
-      await this.fetchmonthlysalesbyrequester();
-      await this.fetchtoprequestersbysales();
+      await this.fetchCombinedChartData();
       await this.fetchtopproductsbyrevenue();
     },
     methods: {
@@ -94,23 +83,53 @@
         const response = await this.$axios.get(`${this.$config.restUrl}/api/customer/getallrequesters`);
         this.requesters = response.data.data;
       },
-      async fetchtoprequestersbysales() {
-        const monthParam = this.selectedMonth_requesterBySales;
-        const response = await this.$axios.get(`${this.$config.restUrl}/api/report/gettoprequestersbysales?month=${monthParam}`);
+      async fetchCombinedChartData() {
+        const params = {
+          requesterId: this.selectedRequester === 'all' ? '' : this.selectedRequester,
+          month: this.selectedMonth_requesterBySales,
+          allRequester: this.selectedRequester === 'all'
+        };
 
-        const labels = response.data.data.map(({ requesterName }) => requesterName);
-        const data = response.data.data.map(({ totalNumberOfSales }) => totalNumberOfSales);
+        const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequester`, { params });
 
-        this.toprequestersbysales = {
-          labels,
-          datasets: [
-            {
-              label: 'Top Requesters by Request Count',
-              backgroundColor: '#f87979',
-              data
-            }
-          ]
+        if (this.selectedRequester === 'all') {
+          const labels = response.data.data.map(({ requesterName }) => requesterName);
+          const data = response.data.data.map(({ totalNumberOfSales }) => totalNumberOfSales);
+
+          this.combinedChartData = {
+            labels,
+            datasets: [
+              {
+                label: 'Request Count by Requester',
+                backgroundColor: '#f87979',
+                data
+              }
+            ]
+          };
+        } else {
+          const monthlySalesData = Array(12).fill(0);
+          response.data.data.forEach(salesData => {
+            const monthNumber = parseInt(salesData.month.split('-')[1], 10);
+            monthlySalesData[monthNumber - 1] = salesData.totalNumberOfSales;
+          });
+
+          this.combinedChartData = {
+            labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+            datasets: [
+              {
+                label: 'Monthly Request Count',
+                backgroundColor: '#f87979',
+                data: monthlySalesData
+              }
+            ]
+          };
         }
+
+        this.$nextTick(() => {
+          if (this.$refs.barChart && this.$refs.barChart.handleResize) {
+            this.$refs.barChart.handleResize();
+          }
+        });
       },
       async fetchtopproductsbyrevenue() {
         const monthParam = this.selectedMonth_productsByRevenue;
@@ -161,33 +180,12 @@
             }
           }
         };
-      },
-      async fetchmonthlysalesbyrequester() {
-        let response;
-        if (this.selectedRequester === 'all') {
-          response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequester?allRequester=true`);
-        } else {
-          response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequester?requesterId=${this.selectedRequester}`);
-        }
 
-        const monthlySalesData = Array(12).fill(0);
-
-        response.data.data.forEach(salesData => {
-          const monthNumber = parseInt(salesData.month.split('-')[1], 10);
-
-          monthlySalesData[monthNumber - 1] = salesData.totalNumberOfSales;
+        this.$nextTick(() => {
+          if (this.$refs.topProductsBarChart && this.$refs.topProductsBarChart.handleResize) {
+            this.$refs.topProductsBarChart.handleResize();
+          }
         });
-
-        this.monthlysalesbyrequester = {
-          labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-          datasets: [
-            {
-              label: 'Monthly Request Count',
-              backgroundColor: '#f87979',
-              data: monthlySalesData
-            }
-          ]
-        }
       }
     },
     components: {
@@ -196,18 +194,17 @@
   }
 </script>
 
-<style scoped>
+<style>
   .chart-container {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    flex-direction: column;
     gap: 20px;
     width: 90%;
     margin: 0 auto;
   }
 
   .card {
-    flex: 1 1 30%;
+    width: 100%;
     background-color: #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-radius: 4px;
@@ -218,7 +215,7 @@
     background-color: #f5f5f5;
     border-bottom: 1px solid #ddd;
     font-weight: bold;
-    text-align: center; 
+    text-align: center;
   }
 
   .card-body {
@@ -236,17 +233,13 @@
   }
 
   .bar-chart-container {
-    height: 380px;
+    height: 400px;
+    width: 100%;
   }
 
   @media (max-width: 768px) {
     .chart-container {
-      flex-direction: column; 
-    }
-
-    .card {
-      flex: 1 1 100%; 
-      margin-bottom: 20px; 
+      width: 100%;
     }
   }
 </style>
