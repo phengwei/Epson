@@ -129,22 +129,17 @@ namespace Epson.Factories
             {
                 foreach (var request in requests)
                 {
-                    var approverTask = request.ApprovedBy != null ? _userManager.FindByIdAsync(request.ApprovedBy) : Task.FromResult<ApplicationUser>(null);
-                    var creatorTask = request.CreatedById != null ? _userManager.FindByIdAsync(request.CreatedById) : Task.FromResult<ApplicationUser>(null);
-                    var approver = approverTask.Result;
-                    var creater = creatorTask.Result;
-
                     var requestModel = new RequestModel
                     {
                         Id = request.Id,
                         ApprovedBy = request.ApprovedBy,
-                        ApprovedByName = request.ApprovedBy != null ? approver?.UserName : null,
+                        ApprovedByName = request.ApprovedBy != null ? _userManager.FindByIdAsync(request.ApprovedBy).Result.UserName : null,
                         ApprovedTime = request.ApprovedTime,
                         AmendQuotationTime = request.AmendQuotationTime,
-                        CreatedBy = request.CreatedById != null ? creater?.UserName : null,
+                        CreatedBy = request.CreatedById != null ? _userManager.FindByIdAsync(request.CreatedById).Result.UserName : null,
                         CreatedById = request.CreatedById,
                         CreatedOnUTC = request.CreatedOnUTC,
-                        CreatedTeam = creater != null ? _teamRepository.GetById(creater.TeamId)?.Name : null,
+                        CreatedTeam = request.CreatedById != null ? _teamRepository.GetById(_userManager.FindByIdAsync(request.CreatedById).Result.TeamId)?.Name : null,
                         UpdatedById = request.UpdatedById,
                         UpdatedOnUTC = request.UpdatedOnUTC,
                         Segment = request.Segment,
