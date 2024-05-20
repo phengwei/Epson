@@ -34,7 +34,7 @@
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Products</nuxt-link>
 
             <!-- Admin Center Dropdown -->
-            <div class="relative group" @mouseover="showDropdown = true" @mouseleave="showDropdown = false">
+            <div v-if="loggedInUser.roles.includes('Admin')" class="relative group" @mouseover="showDropdown = true" @mouseleave="showDropdown = false">
               <span class="w-40 h-full flex justify-center items-center font-semibold transition duration-300 cursor-pointer">Admin Center</span>
               <div class="absolute left-0 mt-0 w-48 rounded-md shadow-lg py-1 bg-white text-black z-50" :class="{ 'hidden': !showDropdown }">
                 <nuxt-link to="/userManagement"

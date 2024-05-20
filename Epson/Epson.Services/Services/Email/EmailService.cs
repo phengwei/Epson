@@ -337,19 +337,23 @@ namespace Epson.Services.Services.Email
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
             var requesterTask = _userManager.FindByIdAsync(request.CreatedById);
             requesterTask.Wait();
-            var requester = requesterTask;
+            var requester = requesterTask.Result;
 
-            var salesHeadUsers = _userManager.GetUsersInRoleAsync("Sales Section Head");
-            salesHeadUsers.Wait();
+            var salesHeadUsersTask = _userManager.GetUsersInRoleAsync("Sales Section Head");
+            salesHeadUsersTask.Wait();
+            var salesHeadUsers = salesHeadUsersTask.Result;
 
-            bool isSalesHead = salesHeadUsers.Result.Any(user => user.Id == requester.Result.Id);
+            bool isSalesHead = salesHeadUsers.Any(user => user.Id == requester.Id);
 
             var approverTask = _userManager.FindByIdAsync(request.ApprovedBy);
+            approverTask.Wait();
             var approver = approverTask.Result;
 
-            var salesSectionHeadUser = _userService.GetUserSalesHead(requester.Result.TeamId, isSalesHead);
+            var salesSectionHeadUsersTask = _userService.GetUserSalesHead(requester.TeamId, request.CreatedById, isSalesHead);
+            salesSectionHeadUsersTask.Wait();
+            var salesSectionHeadUsers = salesSectionHeadUsersTask.Result.ToList();
 
-            if (salesSectionHeadUser.Result != null)
+            if (salesSectionHeadUsers.Count > 0)
             {
                 var productNames = requestProducts.Select(rp =>
                 {
@@ -360,108 +364,107 @@ namespace Epson.Services.Services.Email
                 var subject = $"Request {request.Id} has been approved";
 
                 var body = $@"
-                <!DOCTYPE html>
-                <html lang='en'>
-                <head>
-                    <meta charset='UTF-8'>
-                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-                    <style>
-                        body {{
-                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                            margin: 0;
-                            padding: 0;
-                            background-color: #f4f4f4;
-                        }}
-                        .email-container {{
-                            max-width: 600px;
-                            margin: auto;
-                            background: #ffffff;
-                            padding: 20px;
-                            border: 1px solid #dddddd;
-                        }}
-                        .email-header {{
-                            background-color: #004aad;
-                            color: white;
-                            padding: 10px 20px;
-                            text-align: center;
-                        }}
-                        .email-body {{
-                            padding: 20px;
-                            line-height: 1.5;
-                            color: #333333;
-                        }}
-                        .email-footer {{
-                            text-align: center;
-                            padding: 10px 20px;
-                            background-color: #004aad;
-                            color: white;
-                        }}
-                        table {{
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-top: 20px;
-                        }}
-                        th, td {{
-                            padding: 10px;
-                            border: 1px solid #dddddd;
-                            text-align: left;
-                        }}
-                        th {{
-                            background-color: #f2f2f2;
-                        }}
-                    </style>
-                </head>
-                <body>
-                    <div class='email-container'>
-                        <div class='email-header'>
-                            <h1>New Request</h1>
+                    <!DOCTYPE html>
+                    <html lang='en'>
+                    <head>
+                        <meta charset='UTF-8'>
+                        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                        <style>
+                            body {{
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                margin: 0;
+                                padding: 0;
+                                background-color: #f4f4f4;
+                            }}
+                            .email-container {{
+                                max-width: 600px;
+                                margin: auto;
+                                background: #ffffff;
+                                padding: 20px;
+                                border: 1px solid #dddddd;
+                            }}
+                            .email-header {{
+                                background-color: #004aad;
+                                color: white;
+                                padding: 10px 20px;
+                                text-align: center;
+                            }}
+                            .email-body {{
+                                padding: 20px;
+                                line-height: 1.5;
+                                color: #333333;
+                            }}
+                            .email-footer {{
+                                text-align: center;
+                                padding: 10px 20px;
+                                background-color: #004aad;
+                                color: white;
+                            }}
+                            table {{
+                                width: 100%;
+                                border-collapse: collapse;
+                                margin-top: 20px;
+                            }}
+                            th, td {{
+                                padding: 10px;
+                                border: 1px solid #dddddd;
+                                text-align: left;
+                            }}
+                            th {{
+                                background-color: #f2f2f2;
+                            }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class='email-container'>
+                            <div class='email-header'>
+                                <h1>New Request</h1>
+                            </div>
+                            <div class='email-body'>
+                                <p>A new request has been created with the following details:</p>
+                                <table>
+                                    <tr>
+                                        <th>Org</th>
+                                        <td>EMSB - {_userService.GetTeamById(requester.TeamId).Name}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Requester</th>
+                                        <td>{requester.UserName}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Total Budget</th>
+                                        <td>RM {request.TotalBudget}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>End User</th>
+                                        <td>{_ProjectInformationRepository.GetAll().FirstOrDefault(x => x.RequestId == request.Id)?.ProjectName}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Products</th>
+                                        <td>{string.Join(", ", productNames)}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class='email-footer'>
+                                <p>Thank you for your submission.</p>
+                            </div>
                         </div>
-                        <div class='email-body'>
-                            <p>A new request has been created with the following details:</p>
-                            <table>
-                                <tr>
-                                    <th>Org</th>
-                                    <td>EMSB - {_userService.GetTeamById(requester.Result.TeamId).Name}</td>
-                                </tr>
-                                <tr>
-                                    <th>Requester</th>
-                                    <td>{requester.Result.UserName}</td>
-                                </tr>
-                                <tr>
-                                    <th>Total Budget</th>
-                                    <td>RM {request.TotalBudget}</td>
-                                </tr>
-                                <tr>
-                                    <th>End User</th>
-                                    <td>{_ProjectInformationRepository.GetAll().Where(x => x.RequestId == request.Id).FirstOrDefault().ProjectName}</td>
-                                </tr>
-                                <tr>
-                                    <th>Products</th>
-                                    <td>{string.Join(", ", productNames)}</td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class='email-footer'>
-                            <p>Thank you for your submission.</p>
-                        </div>
-                    </div>
-                </body>
-                </html>";
-
+                    </body>
+                    </html>";
 
                 if (emailAccount == null)
                     return new List<EmailQueue>();
 
-
+                var salesSectionHeadEmails = string.Join(",", salesSectionHeadUsers.Select(u => u.Email));
 
                 var emailQueues = new List<EmailQueue>();
 
-                if (salesSectionHeadUser.Result.Email == approver.Email)
+                if (salesSectionHeadUsers.Any(u => u.Email == approver.Email))
                 {
                     var emailQueue = new EmailQueue
                     {
                         FromEmail = emailAccount.Username,
-                        ToEmail = salesSectionHeadUser.Result.Email,
+                        ToEmail = salesSectionHeadEmails,
                         Subject = subject,
                         Body = body,
                         ScheduleTime = DateTime.UtcNow,
@@ -482,12 +485,11 @@ namespace Epson.Services.Services.Email
                         ScheduleTime = DateTime.UtcNow,
                         SendAttempts = 0,
                         SentTime = null,
-                        Cc = salesSectionHeadUser.Result.Email,
+                        Cc = salesSectionHeadEmails,
                         EmailAccountId = emailAccount.Id
                     };
                     emailQueues.Add(emailQueue);
                 }
-
 
                 return emailQueues;
             }
@@ -496,6 +498,7 @@ namespace Epson.Services.Services.Email
                 return new List<EmailQueue>();
             }
         }
+
 
         public List<EmailQueue> NotifySalesOperationTeamsOnApprovedRequest(Request request, List<RequestProduct> requestProducts)
         {
@@ -817,9 +820,9 @@ namespace Epson.Services.Services.Email
 
             bool isSalesHead = salesHeadUsers.Result.Any(user => user.Id == requester.Result.Id);
 
-            var salesSectionHeadUser = _userService.GetUserSalesHead(requester.Result.TeamId, isSalesHead);
+            List<ApplicationUser> salesSectionHeadUsers = _userService.GetUserSalesHead(requester.Result.TeamId, request.CreatedById, isSalesHead).Result.ToList();
 
-            if (salesSectionHeadUser.Result != null)
+            if (salesSectionHeadUsers.Count > 0)
             {
                 var productNames = requestProducts.Select(rp =>
                 {
@@ -919,6 +922,8 @@ namespace Epson.Services.Services.Email
                 </html>";
 
 
+                var salesSectionHeadEmails = string.Join(",", salesSectionHeadUsers.Select(u => u.Email));
+
                 if (emailAccount == null)
                     return new List<EmailQueue>();
 
@@ -927,7 +932,7 @@ namespace Epson.Services.Services.Email
                 var emailQueue = new EmailQueue
                 {
                     FromEmail = emailAccount.Username,
-                    ToEmail = salesSectionHeadUser.Result.Email,
+                    ToEmail = salesSectionHeadEmails,
                     Subject = subject,
                     Body = body,
                     ScheduleTime = DateTime.UtcNow,
@@ -948,17 +953,20 @@ namespace Epson.Services.Services.Email
         public async Task<List<EmailQueue>> CreateReminderEmailQueue(RequestProduct requestProduct)
         {
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
-            var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
+            var fulfillerTask = _userManager.FindByIdAsync(requestProduct.FulfillerId);
             var product = _productService.GetProductById(requestProduct.ProductId);
             var productCategories = _productService.GetCategoryIdsByProductId(requestProduct.ProductId);
             List<string> backupFulfillerEmails = new List<string>();
 
             foreach (var pc in productCategories)
             {
-                var category = _categoryService.GetCategoryById(pc.CategoryId); 
+                var category = _categoryService.GetCategoryById(pc.CategoryId);
 
-                var backupFulfiller1 = await _userManager.FindByIdAsync(category.BackupFulfiller1);
-                var backupFulfiller2 = await _userManager.FindByIdAsync(category.BackupFulfiller2);
+                var backupFulfiller1Task = _userManager.FindByIdAsync(category.BackupFulfiller1);
+                var backupFulfiller2Task = _userManager.FindByIdAsync(category.BackupFulfiller2);
+
+                var backupFulfiller1 = await backupFulfiller1Task;
+                var backupFulfiller2 = await backupFulfiller2Task;
 
                 if (backupFulfiller1 != null)
                 {
@@ -969,132 +977,134 @@ namespace Epson.Services.Services.Email
                     backupFulfillerEmails.Add(backupFulfiller2.Email);
                 }
             }
+
             var requesterTask = _userManager.FindByIdAsync(_RequestRepository.GetById(requestProduct.RequestId).CreatedById);
-            requesterTask.Wait();
-            var requester = requesterTask;
+            var requester = await requesterTask;
 
             var subject = $"Request {requestProduct.RequestId} due soon!";
 
             var body = $@"
-            <!DOCTYPE html>
-            <html lang='en'>
-            <head>
-            <meta charset='UTF-8'>
-            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-            <style>
-                body {{
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    margin: 0;
-                    padding: 0;
-                    background-color: #f4f4f4;
-                }}
-                .email-container {{
-                    max-width: 600px;
-                    margin: auto;
-                    background: #ffffff;
-                    padding: 20px;
-                    border: 1px solid #dddddd;
-                }}
-                .email-header {{
-                    background-color: #004aad;
-                    color: white;
-                    padding: 10px 20px;
-                    text-align: center;
-                }}
-                .email-body {{
-                    padding: 20px;
-                    line-height: 1.5;
-                    color: #333333;
-                }}
-                .email-footer {{
-                    text-align: center;
-                    padding: 10px 20px;
-                    background-color: #004aad;
-                    color: white;
-                }}
-                table {{
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 20px;
-                }}
-                th, td {{
-                    padding: 10px;
-                    border: 1px solid #dddddd;
-                    text-align: left;
-                }}
-                th {{
-                    background-color: #f2f2f2;
-                }}
-            </style>
-            </head>
-            <body>
-                <div class='email-container'>
-                    <div class='email-header'>
-                        <h1>Reminder</h1>
+                <!DOCTYPE html>
+                <html lang='en'>
+                <head>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <style>
+                    body {{
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        margin: 0;
+                        padding: 0;
+                        background-color: #f4f4f4;
+                    }}
+                    .email-container {{
+                        max-width: 600px;
+                        margin: auto;
+                        background: #ffffff;
+                        padding: 20px;
+                        border: 1px solid #dddddd;
+                    }}
+                    .email-header {{
+                        background-color: #004aad;
+                        color: white;
+                        padding: 10px 20px;
+                        text-align: center;
+                    }}
+                    .email-body {{
+                        padding: 20px;
+                        line-height: 1.5;
+                        color: #333333;
+                    }}
+                    .email-footer {{
+                        text-align: center;
+                        padding: 10px 20px;
+                        background-color: #004aad;
+                        color: white;
+                    }}
+                    table {{
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }}
+                    th, td {{
+                        padding: 10px;
+                        border: 1px solid #dddddd;
+                        text-align: left;
+                    }}
+                    th {{
+                        background-color: #f2f2f2;
+                    }}
+                </style>
+                </head>
+                <body>
+                    <div class='email-container'>
+                        <div class='email-header'>
+                            <h1>Reminder</h1>
+                        </div>
+                        <div class='email-body'>
+                            <p><strong>Request {requestProduct.RequestId}</strong> is due soon with the following details:</p>
+                            <table>                    
+                                <tr>
+                                    <th>Org</th>
+                                    <td>EMSB - {_userService.GetTeamById(requester.TeamId).Name}</td>
+                                </tr>
+                                <tr>
+                                    <th>Requester</th>
+                                    <td>{requester.UserName}</td>
+                                </tr>
+                                <tr>
+                                    <th>Product</th>
+                                    <td>{product.Name}</td>
+                                </tr>
+                                <tr>
+                                    <th>Quantity</th>
+                                    <td>{requestProduct.Quantity}</td>
+                                </tr>
+                                <tr>
+                                    <th>End User Price</th>
+                                    <td>RM {requestProduct.EndUserPrice}</td>
+                                </tr>
+                                <tr>
+                                    <th>Request Created On</th>
+                                    <td>{requestProduct.CreatedOnUTC:MM/dd/yyyy HH:mm:ss}</td>
+                                </tr>
+                                <tr>
+                                    <th>End User</th>
+                                    <td>{_ProjectInformationRepository.GetAll().FirstOrDefault(x => x.RequestId == requestProduct.RequestId)?.ProjectName}</td>
+                                </tr>
+                            </table>
+                        </div>
                     </div>
-                    <div class='email-body'>
-                        <p><strong>Request {requestProduct.RequestId}</strong> is due soon with the following details:</p>
-                        <table>                    
-                            <tr>
-                                <th>Org</th>
-                                <td>EMSB - {_userService.GetTeamById(requester.Result.TeamId).Name}</td>
-                            </tr>
-                            <tr>
-                                <th>Requester</th>
-                                <td>{requester.Result.UserName}</td>
-                            </tr>
-                            <tr>
-                                <th>Product</th>
-                                <td>{product.Name}</td>
-                            </tr>
-                            <tr>
-                                <th>Quantity</th>
-                                <td>{requestProduct.Quantity}</td>
-                            </tr>
-                            <tr>
-                                <th>End User Price</th>
-                                <td>RM {requestProduct.EndUserPrice}</td>
-                            </tr>
-                            <tr>
-                                <th>Request Created On</th>
-                                <td>{requestProduct.CreatedOnUTC:MM/dd/yyyy HH:mm:ss}</td>
-                            </tr>
-                            <tr>
-                                <th>End User</th>
-                                <td>{_ProjectInformationRepository.GetAll().Where(x => x.RequestId == requestProduct.RequestId).FirstOrDefault().ProjectName}</td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </body>
-            </html>";
-
+                </body>
+                </html>";
 
             if (emailAccount == null)
                 return new List<EmailQueue>();
 
             List<EmailQueue> emailQueues = new List<EmailQueue>();
-            ApplicationUser ccSalesHead = await _userService.GetUserSalesHead(fulfiller.Result.TeamId);
+            List<ApplicationUser> ccSalesHead = await _userService.GetUserSalesHead(fulfillerTask.Result.TeamId, requester.Id);
 
-            HashSet<string> uniqueEmails = new HashSet<string>(backupFulfillerEmails); 
+            HashSet<string> uniqueEmails = new HashSet<string>(backupFulfillerEmails);
             uniqueEmails.Add("hanson.ong@emsb.epson.com.my");
 
-            if (uniqueEmails.Contains(fulfiller.Result.Email))
+            if (uniqueEmails.Contains(fulfillerTask.Result.Email))
             {
-                uniqueEmails.Remove(fulfiller.Result.Email);
+                uniqueEmails.Remove(fulfillerTask.Result.Email);
             }
 
-            if (ccSalesHead != null && !uniqueEmails.Contains(ccSalesHead.Email))
+            foreach (var user in ccSalesHead)
             {
-                uniqueEmails.Add(ccSalesHead.Email); 
+                if (!uniqueEmails.Contains(user.Email))
+                {
+                    uniqueEmails.Add(user.Email);
+                }
             }
 
-            string ccEmails = string.Join(" ", uniqueEmails);
+            string ccEmails = string.Join(",", uniqueEmails);
 
             var emailQueue = new EmailQueue
             {
                 FromEmail = emailAccount.Username,
-                ToEmail = fulfiller.Result.Email,
+                ToEmail = fulfillerTask.Result.Email,
                 Subject = subject,
                 Body = body,
                 ScheduleTime = DateTime.UtcNow,
@@ -1105,9 +1115,10 @@ namespace Epson.Services.Services.Email
             };
 
             emailQueues.Add(emailQueue);
-            
+
             return emailQueues;
         }
+
 
 
         public EmailQueue CreateFulfillEmailQueue(Request request, RequestProduct requestProduct, bool hasFulfillmentComplete)

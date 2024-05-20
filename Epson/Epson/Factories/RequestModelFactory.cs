@@ -129,27 +129,17 @@ namespace Epson.Factories
             {
                 foreach (var request in requests)
                 {
-                    var requestModel = new RequestModel
+                    var createdByUser = request.CreatedById != null ? _userManager.FindByIdAsync(request.CreatedById).Result : null;
+                    var approvedByUser = request.ApprovedBy != null ? _userManager.FindByIdAsync(request.ApprovedBy).Result : null;
+                    var createdTeam = createdByUser != null ? _teamRepository.GetById(createdByUser.TeamId) : null;
+
+                    var requestProductsModel = request.RequestProducts?.Select(rp =>
                     {
-                        Id = request.Id,
-                        ApprovedBy = request.ApprovedBy,
-                        ApprovedByName = request.ApprovedBy != null ? _userManager.FindByIdAsync(request.ApprovedBy).Result.UserName : null,
-                        ApprovedTime = request.ApprovedTime,
-                        AmendQuotationTime = request.AmendQuotationTime,
-                        CreatedBy = request.CreatedById != null ? _userManager.FindByIdAsync(request.CreatedById).Result.UserName : null,
-                        CreatedById = request.CreatedById,
-                        CreatedOnUTC = request.CreatedOnUTC,
-                        CreatedTeam = request.CreatedById != null ? _teamRepository.GetById(_userManager.FindByIdAsync(request.CreatedById).Result.TeamId)?.Name : null,
-                        UpdatedById = request.UpdatedById,
-                        UpdatedOnUTC = request.UpdatedOnUTC,
-                        Segment = request.Segment,
-                        TotalBudget = request.TotalBudget,
-                        ApprovalState = request.ApprovalState,
-                        ApprovalStateStr = ((ApprovalStateEnum)request.ApprovalState).GetDescription(),
-                        TotalPrice = request.TotalPrice,
-                        TimeToResolution = request.TimeToResolution,
-                        Comments = request.Comments,
-                        RequestProductsModel = request.RequestProducts.Select(rp => new RequestProductModel
+                        var fulfiller = rp.FulfillerId != null ? _userManager.FindByIdAsync(rp.FulfillerId).Result : null;
+                        var product = _productService.GetProductById(rp.ProductId);
+                        var productCategories = _productService.GetProductCategoriesByProductId(rp.ProductId);
+
+                        return new RequestProductModel
                         {
                             Id = rp.Id,
                             Breached = rp.Breached,
@@ -160,11 +150,11 @@ namespace Epson.Factories
                             RequestId = rp.RequestId,
                             ProductId = rp.ProductId,
                             Quantity = rp.Quantity,
-                            ProductName = _productService.GetProductById(rp.ProductId).Name,
+                            ProductName = product?.Name ?? "Unknown Product",
                             HasFulfilled = rp.HasFulfilled,
                             FulfilledDate = rp.FulfilledDate,
                             FulfillerId = rp.FulfillerId,
-                            FulfillerName = rp.FulfillerId != null ? _userManager.FindByIdAsync(rp.FulfillerId).Result?.UserName : null,
+                            FulfillerName = fulfiller?.UserName,
                             FulfilledPrice = rp.FulfilledPrice,
                             IsCoverplus = rp.IsCoverplus,
                             TimeToResolution = rp.TimeToResolution,
@@ -174,14 +164,37 @@ namespace Epson.Factories
                             AuthorizedToFulfill = rp.AuthorizedToFulfill,
                             WarrantyRequest = rp.WarrantyRequest,
                             WarrantyRequestPeriod = rp.WarrantyRequestPeriod,
-                            ProductCategory = _productService.GetProductCategoriesByProductId(rp.ProductId).Select(pc => new ProductCategoryModel
+                            ProductCategory = productCategories.Select(pc => new ProductCategoryModel
                             {
                                 ProductId = pc.ProductId,
                                 CategoryId = pc.CategoryId,
                                 CategoryName = _categoryService.GetCategoryById(pc.CategoryId).Name
                             }).FirstOrDefault()
-                        }).ToList(),
-                        CompetitorInformationModel = request.CompetitorInformations.Select(x => new CompetitorInformationModel
+                        };
+                    }).ToList();
+
+                    var requestModel = new RequestModel
+                    {
+                        Id = request.Id,
+                        ApprovedBy = request.ApprovedBy,
+                        ApprovedByName = approvedByUser?.UserName,
+                        ApprovedTime = request.ApprovedTime,
+                        AmendQuotationTime = request.AmendQuotationTime,
+                        CreatedBy = createdByUser?.UserName,
+                        CreatedById = request.CreatedById,
+                        CreatedOnUTC = request.CreatedOnUTC,
+                        CreatedTeam = createdTeam?.Name,
+                        UpdatedById = request.UpdatedById,
+                        UpdatedOnUTC = request.UpdatedOnUTC,
+                        Segment = request.Segment,
+                        TotalBudget = request.TotalBudget,
+                        ApprovalState = request.ApprovalState,
+                        ApprovalStateStr = ((ApprovalStateEnum)request.ApprovalState).GetDescription(),
+                        TotalPrice = request.TotalPrice,
+                        TimeToResolution = request.TimeToResolution,
+                        Comments = request.Comments,
+                        RequestProductsModel = requestProductsModel ?? new List<RequestProductModel>(),
+                        CompetitorInformationModel = request.CompetitorInformations?.Select(x => new CompetitorInformationModel
                         {
                             Id = x.Id,
                             RequestId = x.RequestId,
@@ -190,8 +203,8 @@ namespace Epson.Factories
                             DistyPrice = x.DistyPrice,
                             DealerPrice = x.DealerPrice,
                             EndUserPrice = x.EndUserPrice,
-                        }).ToList(),
-                        RequestSubmissionDetailModel = new RequestSubmissionDetailModel
+                        }).ToList() ?? new List<CompetitorInformationModel>(),
+                        RequestSubmissionDetailModel = request.RequestSubmissionDetail != null ? new RequestSubmissionDetailModel
                         {
                             Id = request.RequestSubmissionDetail.Id,
                             RequestId = request.Id,
@@ -204,7 +217,7 @@ namespace Epson.Factories
                             CreatedOnUTC = request.RequestSubmissionDetail.CreatedOnUTC,
                             CreatedBy = request.RequestSubmissionDetail.CreatedBy,
                             PreparedBy = request.RequestSubmissionDetail.CreatedBy != null ? _userManager.FindByIdAsync(request.RequestSubmissionDetail.CreatedBy).Result?.UserName : null,
-                        },
+                        } : null,
                         ProjectInformationModel = request.ProjectInformation,
                     };
 
@@ -218,6 +231,7 @@ namespace Epson.Factories
 
             return requestModels;
         }
+
 
     }
 }

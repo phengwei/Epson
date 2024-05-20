@@ -95,6 +95,7 @@ namespace Epson.Services.Services.Users
                     {"Vertical Biz (LFP)", "Channel Support"},
                     {"Area (City)", "Retail"},
                     {"Area - MDT / Chain Store / E Commerce", "Retail"},
+                    {"Retail", "Retail"},
                     {"Corporate Sales (West M'sia)", "Corporate Sales (West M'sia)" },
                     {"Corporate Sales (East M'sia)", "Corporate Sales (East M'sia)" }
                 };
@@ -113,6 +114,7 @@ namespace Epson.Services.Services.Users
                     {"Vertical Biz (LFP)", "Channel Support"},
                     {"Area (City)", "Retail"},
                     {"Area - MDT / Chain Store / E Commerce", "Retail"},
+                    {"Retail", "Retail"},
                     {"Corporate Sales (West M'sia)", "Corporate Sales (West M'sia)" },
                     {"Corporate Sales (East M'sia)", "Corporate Sales (East M'sia)" }
                 };
@@ -131,6 +133,7 @@ namespace Epson.Services.Services.Users
                     {"Vertical Biz (LFP)", "Channel Support"},
                     {"Area (City)", "Retail"},
                     {"Area - MDT / Chain Store / E Commerce", "Retail"},
+                    {"Retail", "Retail"},
                     {"Corporate Sales (West M'sia)", "Corp & Gov" },
                     {"Corporate Sales (East M'sia)", "Corp & Gov" }
                 };
@@ -155,7 +158,7 @@ namespace Epson.Services.Services.Users
         }
 
 
-        public async Task<ApplicationUser> GetUserSalesHead(int teamID, bool isSalesHead = false)
+        public async Task<List<ApplicationUser>> GetUserSalesHead(int teamID, string userId, bool isSalesHead = false)
         {
             string fulfillerTeamName = _TeamRepository.GetAll().Where(x => x.Id == teamID).FirstOrDefault().Name; 
             var teamHierarchy = InitializeTeamHierarchy(isSalesHead);
@@ -175,7 +178,7 @@ namespace Epson.Services.Services.Users
             }
 
             var salesUsers = await _userManager.GetUsersInRoleAsync("Sales Section Head");
-            var salesHeadUser = salesUsers.FirstOrDefault(x => x.TeamId == parentTeam.Id);
+            var salesHeadUser = salesUsers.Where(x => x.TeamId == parentTeam.Id && x.Id != userId).ToList();
 
             return salesHeadUser;
         }
