@@ -84,6 +84,7 @@ namespace Epson.Services.Services.Products
                 Id = x.Id,
                 Name = x.Name,
                 Price = x.Price,
+                DealerPrice = x.DealerPrice,
                 IsActive = x.IsActive,
                 CreatedById = x.CreatedById,
                 CreatedOnUTC = x.CreatedOnUTC,
@@ -176,13 +177,13 @@ namespace Epson.Services.Services.Products
                     InsertProductCategory(productCategory);
                 }
 
-                var actionDetails = $"Changed the following product details : ";
+                var actionDetails = $"Changed the details for { product.Name } : ";
 
                 if (product.Name != oldProduct.Name)
                     actionDetails += $"[Name] from '{oldProduct.Name}' to '{product.Name}' ";
 
                 if (product.Price != oldProduct.Price)
-                    actionDetails += $"[Price] from '{oldProduct.Price}' to '{product.Price}' ";
+                    actionDetails += $"[Bottom Price] from '{oldProduct.Price}' to '{product.Price}' ";
 
                 _auditTrailService.CreateAuditTrail(product.Id, Entity, DateTime.UtcNow, userId, actionDetails, "Update");
 

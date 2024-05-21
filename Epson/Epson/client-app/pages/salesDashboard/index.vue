@@ -1,25 +1,27 @@
 <template>
-  <main class="dashboard-header" v-if="loggedInUser.roles.includes('Sales')">
+  <main class="dashboard-header" v-if="loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Admin')">
     <div class="grid-container">
       <div class="row">
-        <div class="grid-item">
+        <div class="grid-item full-width request-table">
           <v-app>
             <ItemsPendingRequesterAction />
-          </v-app>
-        </div>
-        <div class="grid-item">
-          <v-app>
-            <ItemsPendingFulfillmentAsRequester />
           </v-app>
         </div>
       </div>
       <div class="row">
         <div class="grid-item full-width request-table">
           <v-app>
-            <SalesRequestSummary />
+            <ItemsPendingFulfillmentAsRequester />
           </v-app>
         </div>
       </div>
+      <!--<div class="row">
+        <div class="grid-item full-width request-table">
+          <v-app>
+            <SalesRequestSummary />
+          </v-app>
+        </div>
+      </div>-->
     </div>
   </main>
 </template>
@@ -28,7 +30,6 @@
   import { mapGetters } from 'vuex';
   import ItemsPendingRequesterAction from '~/components/ItemsPendingRequesterAction.vue';
   import ItemsPendingFulfillmentAsRequester from '~/components/ItemsPendingFulfillmentAsRequester.vue';
-  import SalesRequestSummary from '~/components/SalesRequestSummary.vue';
 
   export default {
     name: 'SalesDashboard',
@@ -41,8 +42,7 @@
     },
     components: {
       ItemsPendingRequesterAction,
-      ItemsPendingFulfillmentAsRequester,
-      SalesRequestSummary
+      ItemsPendingFulfillmentAsRequester
     }
   };
 </script>

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <bar-chart :key="chartKey" v-if="chartData" :chart-data="chartData" :options="chartOptions" />
+    <line-chart :key="chartKey" v-if="chartData" :chart-data="chartData" :options="chartOptions" />
 
     <div>
       <label>Start Date: <input type="date" v-model="startDate" /></label>
@@ -19,11 +19,11 @@
 </template>
 
 <script>
-  import BarChart from '~/components/BarChart.vue'
+  import LineChart from '~/components/BarChart.vue'
 
   export default {
     components: {
-      BarChart
+      LineChart
     },
     data() {
       return {
@@ -37,7 +37,8 @@
             data: [],
             backgroundColor: 'rgba(75,192,192,0.4)',
             borderColor: 'rgba(75,192,192,1)',
-            borderWidth: 1
+            borderWidth: 1,
+            fill: false
           }]
         },
         chartOptions: {

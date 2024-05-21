@@ -7,6 +7,7 @@ namespace Epson.Factories
     public interface ICategoryModelFactory
     {
         public CategoryModel PrepareCategoryModel(CategoryDTO category);
+        public List<CategoryModel> GetValidCategories(List<CategoryDTO> categories);
         public List<CategoryModel> PrepareCategoryModels(List<CategoryDTO> categories);
     }
 }

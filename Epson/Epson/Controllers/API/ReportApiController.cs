@@ -40,33 +40,34 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getmonthlysalesbyrequester")]
-        public async Task<IActionResult> MonthlySalesByRequester(string requesterId)
+        public async Task<IActionResult> MonthlySalesByRequester(string requesterId, int month = 0, bool allRequester = false)
         {
             var response = new GenericResponseModel<List<RequesterSales>>();
 
-            var monthlySalesByRequester = await _reportService.GetMonthlySalesByRequester(requesterId);
+            var monthlySalesByRequester = await _reportService.GetMonthlySalesByRequester(requesterId, month, allRequester);
 
             response.Data = monthlySalesByRequester;
             return Ok(response);
         }
-        
+
+
         [HttpGet("gettoprequestersbysales")]
-        public async Task<IActionResult> TopRequestersBySales()
+        public async Task<IActionResult> TopRequestersBySales(int month)
         {
             var response = new GenericResponseModel<List<RequesterSales>>();
 
-            var monthlySalesByRequester = await _reportService.GetTopRequestersBySales();
+            var monthlySalesByRequester = await _reportService.GetTopRequestersBySales(month);
 
             response.Data = monthlySalesByRequester;
             return Ok(response);
         }        
         
         [HttpGet("gettopproductsbyrevenue")]
-        public async Task<IActionResult> TopProductsByRevenue()
+        public async Task<IActionResult> TopProductsByRevenue(int month)
         {
             var response = new GenericResponseModel<List<ProductRevenue>>();
 
-            var topProductsByRevenue = await _reportService.GetTopProductsByRevenue();
+            var topProductsByRevenue = await _reportService.GetTopProductsByRevenue(month);
 
             response.Data = topProductsByRevenue;
             return Ok(response);

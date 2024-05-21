@@ -1,6 +1,6 @@
 <template>
   <div class="create-quotation-container">
-    <h1>Pricing Request</h1>
+    <h1 class="mb-4">Pricing Request</h1>
 
     <v-card class="mx-auto" width="800">
       <v-card-text>
@@ -40,7 +40,12 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(product, index) in productsToShow" :key="index">
+                <tr v-for="(product, index) in productsToShow" :key="index"
+                    :class="{
+                              'highlighted': currentRequestApprovalState === ApprovalStateEnum.Approved && product.breached,
+                              'not-approved': isFulfillMode && product.statusStr !== 'Approved',
+                              'approved': isAmendMode && product.statusStr === 'Approved'
+                            }">
                   <td>{{ product.category ? product.category.name : 'N/A' }}</td>
                   <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
                   <td>{{ product.quantity || 'N/A' }}</td>
@@ -48,7 +53,14 @@
                   <td>{{ product.dealerPrice || 'N/A' }}</td>
                   <td>{{ product.endUserPrice || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ product.remarks || 'N/A' }}</td>
-                  <td v-if="isViewMode">{{ product.statusStr || 'N/A' }}</td>
+                  <td v-if="isViewMode">
+                    <span v-if="product.statusStr === 'Approved'">
+                      Approved at RM {{ product.dealerPrice }}
+                    </span>
+                    <span v-else>
+                      {{ product.statusStr || 'N/A' }}
+                    </span>
+                  </td>
                   <td v-if="!isViewMode">
                     <v-btn small color="primary" @click="openEditProductDialog(product)">
                       <v-icon>mdi-pencil</v-icon>
@@ -78,13 +90,14 @@
             <table class="mb-5 mt-2">
               <thead>
                 <tr class="header-row">
-                  <th colspan="3"><h2>PROPOSED COVERPLUS</h2></th>
-                  <th colspan="7"><h2>PRICE EXPECTATION (RM)</h2></th>
+                  <th colspan="4"><h2>PROPOSED COVERPLUS</h2></th>
+                  <th colspan="8"><h2>PRICE EXPECTATION (RM)</h2></th>
                 </tr>
                 <tr>
                   <th>Category</th>
                   <th>Product</th>
                   <th>Quantity</th>
+                  <th>Warranty Details</th>
                   <th>Disty Price</th>
                   <th>Dealer Price</th>
                   <th>End User Price</th>
@@ -94,15 +107,31 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(coverplus, index) in coverplusesToShow" :key="index">
+                <tr v-for="(coverplus, index) in coverplusesToShow" :key="index"
+                    :class="{
+                            'highlighted': currentRequestApprovalState === ApprovalStateEnum.Approved && coverplus.breached,
+                            'not-approved': isFulfillMode && coverplus.statusStr !== 'Approved',
+                            'approved': isAmendMode && coverplus.statusStr === 'Approved'
+                          }">
                   <td>{{ coverplus.category ? coverplus.category.name : 'N/A' }}</td>
                   <td>{{ coverplus.productId ? findProductName(coverplus.productId) : coverplus.productName }}</td>
                   <td>{{ coverplus.quantity || 'N/A' }}</td>
+                  <td>
+                    {{ coverplus.warrantyRequest || 'N/A' }}
+                    <span v-if="coverplus.warrantyRequest"> {{ coverplus.warrantyRequestPeriod || "" }}</span>
+                  </td>
                   <td>{{ coverplus.distyPrice || 'N/A' }}</td>
                   <td>{{ coverplus.dealerPrice || 'N/A' }}</td>
                   <td>{{ coverplus.endUserPrice || 'N/A' }}</td>
                   <td v-if="isViewMode">{{ coverplus.remarks || 'N/A' }}</td>
-                  <td v-if="isViewMode">{{ coverplus.statusStr || 'N/A' }}</td>
+                  <td v-if="isViewMode">
+                    <span v-if="coverplus.statusStr === 'Approved'">
+                      Approved at RM {{ coverplus.dealerPrice }}
+                    </span>
+                    <span v-else>
+                      {{ coverplus.statusStr || 'N/A' }}
+                    </span>
+                  </td>
                   <td v-if="!isViewMode">
                     <v-btn small color="primary" @click="openEditCoverplusDialog(coverplus)">
                       <v-icon>mdi-pencil</v-icon>
@@ -176,7 +205,17 @@
                 <tr>
                   <td>Request Date</td>
                   <td>:</td>
-                  <td><input type="datetime-local" v-model="submissionDetail.createdOnUTC" class="border-input" readonly></td>
+                  <td>
+                    <input v-if="isViewMode"
+                           type="text"
+                           v-model="formattedRequestDate"
+                           class="border-input"
+                           readonly />
+                    <input v-else
+                           type="datetime-local"
+                           v-model="submissionDetail.createdOnUTC"
+                           class="border-input" readonly />
+                  </td>
                 </tr>
                 <tr>
                   <td>Distributor Name</td>
@@ -200,7 +239,7 @@
                   <td><input type="text" v-model="submissionDetail.contactPersonName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
                 <tr>
-                  <td>Telephone No</td>
+                  <td>Telephone No <span class="required-asterisk">*</span></td>
                   <td>:</td>
                   <td><input type="text" v-model="submissionDetail.telephoneNo" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
@@ -210,9 +249,31 @@
                   <td><input type="text" v-model="submissionDetail.faxNo" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
                 <tr>
-                  <td>Email</td>
+                  <td>Email <span class="required-asterisk">*</span></td>
                   <td>:</td>
                   <td><input type="text" v-model="submissionDetail.email" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr v-if="currentRequestApprovalState === ApprovalStateEnum.Approved">
+                  <td>Approved By</td>
+                  <td>:</td>
+                  <td>
+                    <input v-if="isViewMode"
+                           type="text"
+                           v-model="this.approvedByName"
+                           class="border-input"
+                           readonly />
+                  </td>
+                </tr>
+                <tr v-if="currentRequestApprovalState === ApprovalStateEnum.Approved">
+                  <td>Approved Time</td>
+                  <td>:</td>
+                  <td>
+                    <input v-if="isViewMode"
+                           type="text"
+                           v-model="formattedApprovedTime"
+                           class="border-input"
+                           readonly />
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -253,7 +314,7 @@
                   <td><input type="text" v-model="projectInformation.contactPersonName" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
                 <tr>
-                  <td>Telephone No</td>
+                  <td>Telephone No <span class="required-asterisk">*</span></td>
                   <td>:</td>
                   <td><input type="text" v-model="projectInformation.telephoneNo" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
@@ -263,7 +324,7 @@
                   <td><input type="text" v-model="projectInformation.email" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
                 </tr>
                 <tr>
-                  <td>Type</td>
+                  <td>Type <span class="required-asterisk">*</span></td>
                   <td>:</td>
                   <td>
                     <div class="form-check">
@@ -296,16 +357,49 @@
                   </td>
                 </tr>
                 <tr>
-                  <td>Closing Date</td>
+                  <td>Closing Date <span class="required-asterisk">*</span></td>
                   <td>:</td>
-                  <td><input type="datetime-local" v-model="projectInformation.closingDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                  <td>
+                    <input v-if="isViewMode"
+                           type="text"
+                           v-model="formattedClosingDate"
+                           class="border-input"
+                           readonly />
+                    <input v-else
+                           type="datetime-local"
+                           v-model="projectInformation.closingDate"
+                           class="border-input" />
+                  </td>
                 </tr>
                 <tr>
-                  <td>Delivery Date</td>
+                  <td>Delivery Date <span class="required-asterisk">*</span></td>
                   <td>:</td>
-                  <td><input type="datetime-local" v-model="projectInformation.deliveryDate" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                  <td>
+                    <input v-if="isViewMode"
+                           type="text"
+                           v-model="formattedDeliveryDate"
+                           class="border-input"
+                           readonly />
+                    <input v-else
+                           type="datetime-local"
+                           v-model="projectInformation.deliveryDate"
+                           class="border-input" />
+                  </td>
                 </tr>
-              <td>Key Customer Requirements</td>
+
+                <tr>
+                  <td>If Staggered Delivery, please select the month</td>
+                  <td>:</td>
+                  <td>
+                    <select v-model="projectInformation.staggeredMonth" class="border-input" :class="{'readonly-field': isViewMode}" :disabled="isViewMode">
+                      <option v-for="month in months" :key="month" class="form-check-label" :value="month">{{ month }}</option>
+                    </select>
+                    <div class="mt-2" v-if="projectInformation.staggeredMonth && projectInformation.staggeredMonth != 'None'">
+                      <input type="text" v-model="projectInformation.staggeredComments" placeholder="Enter Reason" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+                    </div>
+                  </td>
+                </tr>
+              <td>Key Customer Requirements <span class="required-asterisk">*</span></td>
               <td>:</td>
               <td><input type="text" v-model="projectInformation.requirements" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
               </tr>
@@ -315,21 +409,9 @@
                 <td><input type="text" v-model="projectInformation.customerApplications" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
               </tr>
               <tr>
-                <td>Customer's Budget for this purchase'</td>
+                <td>Customer's Budget for this purchase <span class="required-asterisk">*</span></td>
                 <td>:</td>
                 <td><input type="number" min="1" v-model="projectInformation.budget" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
-              </tr>
-              <tr>
-                <td>If Staggered Delivery, please select the month</td>
-                <td>:</td>
-                <td>
-                  <select v-model="projectInformation.staggeredMonth" class="border-input" :class="{'readonly-field': isViewMode}" :disabled="isViewMode">
-                    <option v-for="month in months" :key="month" class="form-check-label" :value="month">{{ month }}</option>
-                  </select>
-                  <div class="mt-2" v-if="projectInformation.staggeredMonth && projectInformation.staggeredMonth != 'None'">
-                    <input type="text" v-model="projectInformation.staggeredComments" placeholder="Enter Reason" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
-                  </div>
-                </td>
               </tr>
               <tr>
                 <td>Other Information</td>
@@ -340,23 +422,26 @@
             </table>
           </v-card-text>
         </v-card>
-        <div class="form-group" v-if="comments != ''">
-          <label>Comments</label>
-          <textarea v-model="comments" class="border-input"></textarea>
-        </div>
+        <!--<div class="form-group" v-if="comments != ''">
+    <label>Comments</label>
+    <textarea v-model="comments" class="border-input"></textarea>
+  </div>-->
         <button type="submit" @click="submitQuotation" v-if="isMode('create')">Submit</button>
-        <!--<button type="submit" @click="saveDraft" v-if="isMode('create')">Save Draft</button>-->
+        <button type="submit" @click="saveDraft" v-if="isMode('create')">Save Draft</button>
+        <button type="submit" @click="saveDraft" v-if="loggedInUser.roles.includes('Sales') && !isMode('create')">Copy Form</button>
+        <button type="submit" @click="loadDraft" v-if="isMode('create')">Load Form</button>
         <button type="submit" @click="submitQuotation" v-if="isMode('editable')">Amend Request</button>
         <button type="submit" @click="acceptDeal" v-if="isMode('dealable')">Accept Deal</button>
         <button type="submit" @click="rejectDeal" v-if="isMode('dealable')">Reject Deal</button>
-        <button type="submit" @click="exitDeal" v-if="isMode('amendable')">Close Deal</button>
+        <button type="submit" @click="exitDeal" v-if="isMode('amendable')">Exit Deal</button>
         <button type="submit" @click="fulfillNonCoverplusItem" v-if="isMode('isFulfill')">Fulfill Request</button>
         <button type="submit" @click="fulfillCoverplusItem" v-if="isMode('isFulfillCoverplus')">Fulfill Coverplus Request</button>
         <button type="submit" @click="approveRequest" v-if="isMode('isFinalApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadFinalAction">Approve Request</button>
         <button type="submit" @click="confirmAmmendQuotation" v-if="isMode('amendable')">Set Request to Amend</button>
         <button type="submit" @click="approveQuotation()" v-if="isMode('isApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadAction">Approve Quotation</button>
+        <button type="submit" @click="rejectQuotation()" v-if="isMode('isApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadAction">Reject Quotation</button>
         <button type="submit" @click="redirectToRequest" v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head')">
-          Return to Request
+          Return to request list
         </button>
         <button type="submit" @click="exportToExcel" v-if="isMode('view')">
           Export
@@ -376,6 +461,20 @@
 </script>
 
 <style scoped>
+  .not-approved {
+    border-left: 4px solid red;
+    background-color: #ffcccc;
+  }
+
+  .approved {
+    border-left: 4px solid green;
+    background-color: #90EE90;
+  }
+
+  .highlighted {
+    background-color: #ffcccc;
+  }
+
   .products-title {
     font-size: 2em;
     text-align: center;
@@ -392,6 +491,7 @@
   .header-row {
     background-color: #C0C0C0;
   }
+
     .header-row th {
       text-align: center;
       vertical-align: middle;
@@ -407,6 +507,11 @@
     border: 1px solid #ddd;
     padding: 8px;
     text-align: left;
+  }
+
+  .required-asterisk {
+    color: red;
+    margin-left: 2px;
   }
 
   h1 {

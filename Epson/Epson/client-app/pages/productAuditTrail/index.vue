@@ -32,7 +32,7 @@
         ],
         auditTrails: [],
         options: {},
-        loading: false,
+        loading: true,
       };
     },
     created() {

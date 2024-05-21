@@ -8,10 +8,11 @@ using Epson.Services.Interface.Categories;
 using Epson.Model.Categories;
 using Epson.Core.Domain.Categories;
 using Epson.Services.Interface.Products;
+using Microsoft.IdentityModel.Abstractions;
 
 namespace Epson.Controllers.API
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin,Coverplus,Sales Section Head")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin,Coverplus,Sales Section Head,Sales Operation")]
     [Route("api/category")]
     public class CategoryApiController : BaseApiController
     {
@@ -72,14 +73,7 @@ namespace Epson.Controllers.API
             var response = new GenericResponseModel<List<CategoryModel>>();
 
             var categories = _categoryService.GetCategories();
-
-            var categoryModels = _categoryModelFactory.PrepareCategoryModels(categories);
-
-            categoryModels = categoryModels
-                .Where(cm => _productService.GetProductsByCategory(cm.Id).Any())
-                .ToList();
-
-            response.Data = categoryModels;
+            response.Data = _categoryModelFactory.GetValidCategories(categories);
 
             return Ok(response);
         }
@@ -100,7 +94,8 @@ namespace Epson.Controllers.API
             {
                 Name = model.Name,
                 BackupFulfiller1 = model.BackupFulfiller1,
-                BackupFulfiller2 = model.BackupFulfiller2
+                BackupFulfiller2 = model.BackupFulfiller2,
+                EscalationFulfiller = model.EscalationFulfiller
             };
 
             if (_categoryService.InsertCategory(category, user.Id))
@@ -132,7 +127,8 @@ namespace Epson.Controllers.API
                 Id = category.Id,
                 Name = model.Name,
                 BackupFulfiller1 = model.BackupFulfiller1,
-                BackupFulfiller2 = model.BackupFulfiller2
+                BackupFulfiller2 = model.BackupFulfiller2,
+                EscalationFulfiller =  model.EscalationFulfiller
             };
 
             if (_categoryService.UpdateCategory(updatedCategory, user.Id))

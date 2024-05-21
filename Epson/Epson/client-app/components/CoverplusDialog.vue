@@ -2,7 +2,7 @@
   <v-dialog v-model="localDialogCoverplus" max-width="500px">
     <v-card>
       <v-card-title>
-        <span class="headline">{{ isEditMode ? 'Edit Coverplus' : 'Add Coverplus' }}</span>
+        <span class="headline">{{ isEditMode ? 'Coverplus' : 'Coverplus' }}</span>
       </v-card-title>
       <v-card-text>
         <div class="form-group">
@@ -16,6 +16,25 @@
           </select>
           <label>Quantity</label>
           <input v-model="localCoverplus.quantity" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+          <div class="flex-row">
+            <div class="flex-column">
+              <label>Warranty Request</label>
+              <select v-model="localCoverplus.warrantyRequest" class="border-input">
+                <option v-for="warrantyRequest in warrantyRequests" :key="warrantyRequest" :value="warrantyRequest">
+                  {{ warrantyRequest }}
+                </option>
+              </select>
+            </div>
+
+            <div class="flex-column" v-if="localCoverplus.warrantyRequest && localCoverplus.warrantyRequest != 'None'">
+              <label>Warranty Request Period</label>
+              <select v-model="localCoverplus.warrantyRequestPeriod" class="border-input">
+                <option v-for="warrantyRequestPeriod in warrantyRequestPeriods" :key="warrantyRequestPeriod" :value="warrantyRequestPeriod">
+                  {{ warrantyRequestPeriod }}
+                </option>
+              </select>
+            </div>
+          </div>
           <label>Disty Price</label>
           <input v-model="localCoverplus.distyPrice" class="border-input" type="number" min="1" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
           <label>Dealer Price</label>
@@ -48,6 +67,8 @@
         localCoverplus: { ...this.coverplus },
         localCoverplusOptions: [],
         categories: [],
+        warrantyRequests: ['None', 'Carry-in', 'On-site'],
+        warrantyRequestPeriods: ['None', '+1', '+2', '+3', '+4'],
         isEditMode: false
       };
     },
@@ -102,6 +123,7 @@
       setEditMode(isEdit, coverplus) {
         this.isEditMode = isEdit;
         this.localCoverplus = { ...coverplus };
+        this.localCoverplus.status = 0;
         if (coverplus.productId != null) {
           this.localCoverplus.category = coverplus.category;
           this.updateCoverplusOptions();
@@ -128,7 +150,7 @@
       validateCoverplus() {
         return this.localCoverplus.category && this.localCoverplus.productId
           && this.localCoverplus.quantity && this.localCoverplus.dealerPrice
-          && this.localCoverplus.endUserPrice;
+          && this.localCoverplus.endUserPrice && this.localCoverplus.warrantyRequest;
       },
       resetLocalCoverplus() {
         this.localCoverplus = {
@@ -138,6 +160,8 @@
           distyPrice: null,
           dealerPrice: null,
           endUserPrice: null,
+          warrantyRequest: null,
+          warrantyRequestPeriod: null
         };
       },
       onCancel() {
@@ -157,6 +181,23 @@
 </script>
 
 <style scoped>
+  .flex-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1em; 
+  }
+
+  .flex-column {
+    display: flex;
+    flex-direction: column;
+    flex: 1; 
+    margin-right: 16px; 
+  }
+
+    .flex-column:last-child {
+      margin-right: 0; 
+    }
+
   .products-title {
     font-size: 2em;
     text-align: center;

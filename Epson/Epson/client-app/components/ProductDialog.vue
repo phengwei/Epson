@@ -2,7 +2,7 @@
   <v-dialog v-model="localDialogProduct" max-width="500px">
     <v-card>
       <v-card-title>
-        <span class="headline">{{ isEditMode ? 'Edit Main Unit' : 'Add Main Unit' }}</span>
+        <span class="headline">{{ isEditMode ? 'Main Unit' : 'Main Unit' }}</span>
       </v-card-title>
       <v-card-text>
         <div class="form-group">
@@ -64,7 +64,6 @@
       product: {
         immediate: true,
         handler(newVal) {
-          console.log("Product prop updated in ProductDialog:", newVal);
           this.localProduct = { ...newVal };
           this.isEditMode = newVal && newVal.id != null;
         },
@@ -103,14 +102,13 @@
       setEditMode(isEdit, product) {
         this.isEditMode = isEdit;
         this.localProduct = { ...product };
-        console.log("edited product", product);
+        this.localProduct.status = 0;
         if (product.productId != null) {
           this.localProduct.category = product.category;
           this.updateProductOptions();
         }
       },
       onEditProduct() {
-        console.log("edit");
         if (this.validateProduct()) {
           this.$emit('edit-product', this.localProduct);
           this.resetLocalProduct();

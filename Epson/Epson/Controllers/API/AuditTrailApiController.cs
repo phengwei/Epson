@@ -38,7 +38,7 @@ namespace Epson.Controllers.API
         {
             var response = new GenericResponseModel<List<AuditTrail>>();
 
-            var auditTrails = _auditTrailService.GetProductAuditTrails();
+            var auditTrails = _auditTrailService.GetProductAuditTrails().OrderByDescending(x => x.CreatedOnUTC).ToList();
 
             response.Data = auditTrails;
             return Ok(response);

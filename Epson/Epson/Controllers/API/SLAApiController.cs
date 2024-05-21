@@ -17,10 +17,16 @@ using System;
 using System.IO;
 using Microsoft.Extensions.Hosting;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
+using Epson.Core.Domain.Users;
+using Epson.Services.Interface.Users;
+using Epson.Data;
+using Epson.Core.Domain.Enum;
+using Epson.Services.DTO.Requests;
 
 namespace Epson.Controllers.API
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin, Sales, Product")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin, Sales, Product, Sales Section Head")]
     [Route("api/sla")]
     public class SLAApiController : BaseApiController
     {
@@ -30,6 +36,10 @@ namespace Epson.Controllers.API
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _hostEnvironment;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserService _userService;
+        private readonly IRequestService _requestService;
+        private readonly IRepository<Team> _teamRepository;
 
 
         public SLAApiController(
@@ -38,7 +48,11 @@ namespace Epson.Controllers.API
             IWorkContext workContext,
             IMapper mapper,
             IConfiguration configuration,
-            IWebHostEnvironment hostEnvironment)
+            IWebHostEnvironment hostEnvironment,
+            UserManager<ApplicationUser> userManager,
+            IUserService userService,
+            IRequestService requestService,
+            IRepository<Team> teamRepository)
         {
             _slaService = slaService;
             _slaModelFactory = slaModelFactory;
@@ -46,6 +60,10 @@ namespace Epson.Controllers.API
             _mapper = mapper;
             _configuration = configuration;
             _hostEnvironment = hostEnvironment;
+            _userManager = userManager;
+            _userService = userService;
+            _requestService = requestService;
+            _teamRepository = teamRepository;
         }
 
         [HttpGet("getslaholidays")]
@@ -209,15 +227,50 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getslametrics")]
-        public async Task<IActionResult> GetSLAMetricsModel()
+        public async Task<IActionResult> GetSLAMetricsModel(int month)
         {
-            var currentUserId = _workContext.CurrentUser.Id;
+            var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser.Id);
+            var salesUsers = await _userManager.GetUsersInRoleAsync("Sales Section Head");
+
+            bool isAdminUser = false;
+            bool isSalesSectionHeadUser = false;
+            if (salesUsers.Where(x => x.Equals(currentUser)).Count() > 0)
+                isSalesSectionHeadUser = true;
+
+            Dictionary<string, string> teamHierarchy = new Dictionary<string, string>();
+            List<int> relevantTeamIds = new List<int>();
+            List<string> usersInRelevantTeams = new List<string>();
+            List<RequestDTO> requests = new List<RequestDTO>();
+
+
+            if ((await _userManager.IsInRoleAsync(currentUser, RoleEnum.Admin.ToString())))
+            {
+                isAdminUser = true;
+            }
+            if (isSalesSectionHeadUser)
+            {
+                teamHierarchy = _userService.InitializeTeamHierarchy();
+                relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUser.TeamId, _teamRepository);
+                relevantTeamIds.Add(currentUser.TeamId);
+
+                usersInRelevantTeams = _userManager.Users
+                                                       .Where(u => relevantTeamIds.Contains(u.TeamId))
+                                                       .Select(u => u.Id)
+                                                       .ToList();
+
+                requests = _requestService.GetRequests()
+                    .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
+                                x.RequestProducts.Any(rp => usersInRelevantTeams.Contains(rp.FulfillerId)))
+
+                    .ToList();
+            }
+
             var response = new GenericResponseModel<SLAMetricsModel>();
 
-            response.Data.AverageTimeToResolutionInHours = _slaService.GetAverageTimeToResolutionInHours(currentUserId);
-            response.Data.TotalTickets = _slaService.GetTotalTicketCount(currentUserId);
-            response.Data.BreachedTickets = _slaService.GetBreachedTicketCount(currentUserId);
-            response.Data.SuccessRate = _slaService.GetSuccessRateOfTickets(currentUserId);
+            response.Data.AverageTimeToResolutionInHours = _slaService.GetAverageTimeToResolutionInHours(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
+            response.Data.TotalTickets = _slaService.GetTotalTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
+            response.Data.BreachedTickets = _slaService.GetBreachedTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
+            response.Data.SuccessRate = _slaService.GetSuccessRateOfTickets(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
 
             return Ok(response);
         }

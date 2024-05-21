@@ -8,6 +8,7 @@ namespace Epson.Services.DTO.Requests
         public DateTime ApprovedTime { get; set; }
         public string ApprovedBy { get; set; }
         public string Segment { get; set; }
+        public DateTime? AmendQuotationTime { get; set; }
         public decimal TotalBudget { get; set; }
         public int ApprovalState { get; set; }
         public Decimal TotalPrice { get; set; }

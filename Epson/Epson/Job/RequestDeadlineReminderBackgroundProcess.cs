@@ -3,9 +3,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Epson.Core.Domain.Email;
+using Epson.Core.Domain.Enum;
 using Epson.Core.Domain.Requests;
 using Epson.Data;
 using Epson.Data.Context;
+using Epson.Extensions;
 using Epson.Services.Interface.Email;
 using Epson.Services.Interface.Requests;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +33,7 @@ namespace Epson.Job
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.Information("[{0}] Begin executing process.", "RequestDeadlineReminderBackgroundProcess");
-            //_timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromHours(24));
+            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromHours(24));
             _logger.Information("[{0}] Finished executing process.", "RequestDeadlineReminderBackgroundProcess");
             return Task.CompletedTask;
         }
@@ -41,15 +43,32 @@ namespace Epson.Job
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<EpsonDbContext>();
             var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
-            var targetDate = DateTime.UtcNow.Date.AddDays(3);
             var requestProductRepository = scope.ServiceProvider.GetRequiredService<IRepository<RequestProduct>>();
 
-            var requestProductsToNotify = await dbContext.RequestProduct
+            var requestProducts = await dbContext.RequestProduct
                 .Where(rp => !rp.HasFulfilled
-                            && !rp.HasReminded
-                            && dbContext.Request.Any(r => r.Id == rp.RequestId
-                                && dbContext.ProjectInformation.Any(p => p.RequestId == r.Id && p.ClosingDate.Date < targetDate)))
+                             && !rp.HasReminded
+                             && rp.Status != (int)RequestProductStatusEnum.Cancelled
+                             && dbContext.Request.Any(r => r.Id == rp.RequestId
+                                 && dbContext.ProjectInformation.Any(p => p.RequestId == r.Id)))
                 .ToListAsync();
+
+            List<RequestProduct> requestProductsToNotify = new List<RequestProduct>();
+
+            foreach (var rp in requestProducts)
+            {
+                var request = await dbContext.Request.Where(x => x.Id == rp.RequestId).FirstAsync();
+
+                if (request != null)
+                {
+                    var referenceTime = request.AmendQuotationTime ?? request.ApprovedTime;
+                    if (referenceTime != DateTime.MinValue && referenceTime.AddWorkingDays(3) <= DateTime.UtcNow)
+                    {
+                        requestProductsToNotify.Add(rp);
+                    }
+                }
+            }
+
 
             List<EmailQueue> emailQueues = new List<EmailQueue>();
 

@@ -8,6 +8,8 @@ namespace Epson.Model.Request
         public int Id { get; set; }
         public DateTime? ApprovedTime { get; set; }
         public string? ApprovedBy { get; set; }
+        public string? ApprovedByName { get; set; }
+        public DateTime? AmendQuotationTime { get; set; }
         public string Segment { get; set; }
         public decimal TotalBudget { get; set; }
         public int ApprovalState { get; set; }
@@ -21,6 +23,7 @@ namespace Epson.Model.Request
         public string? CreatedById { get; set; }
         public string? UpdatedById { get; set; }
         public string? Comments { get; set; }
+        public string? CreatedTeam { get; set; }
         public List<RequestProduct> RequestProducts { get; set; } = new List<RequestProduct>();
         public List<CompetitorInformation> CompetitorInformations { get; set; } = new List<CompetitorInformation>();
         public RequestSubmissionDetail RequestSubmissionDetail { get; set; } = new RequestSubmissionDetail();

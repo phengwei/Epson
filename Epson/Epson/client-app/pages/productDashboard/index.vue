@@ -1,25 +1,27 @@
 <template>
-  <main class="dashboard-header"  v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus')">
+  <main class="dashboard-header" v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Admin')">
     <div class="grid-container">
       <div class="row">
-        <div class="grid-item">
+        <div class="grid-item full-width request-table">
           <v-app>
             <ItemsPendingFulfilmentTable />
-          </v-app>
-        </div>
-        <div class="grid-item">
-          <v-app>
-            <FulfilledRequestAsFulfiller />
           </v-app>
         </div>
       </div>
       <div class="row">
         <div class="grid-item full-width request-table">
           <v-app>
-            <FulfillmentRequestSummary />
-          </v-app>-
+            <FulfilledRequestAsFulfiller />
+          </v-app>
         </div>
       </div>
+      <!--<div class="row">
+        <div class="grid-item full-width request-table">
+          <v-app>
+            <FulfillmentRequestSummary />
+          </v-app>
+        </div>
+      </div>-->
     </div>
   </main>
 </template>
@@ -27,7 +29,6 @@
 <script>
   import { mapGetters } from 'vuex';
   import ItemsPendingFulfilmentTable from '~/components/ItemsPendingFulfilmentTable.vue';
-  import FulfillmentRequestSummary from '~/components/FulfillmentRequestSummary.vue';
   import FulfilledRequestAsFulfiller from '~/components/FulfilledRequestAsFulfiller.vue';
 
   export default {
@@ -41,7 +42,6 @@
     },
     components: {
       ItemsPendingFulfilmentTable,
-      FulfillmentRequestSummary,
       FulfilledRequestAsFulfiller
     }
   };
@@ -52,8 +52,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 90%; 
-    margin: 0 auto; 
+    width: 90%;
+    margin: 0 auto;
   }
 
   .row {

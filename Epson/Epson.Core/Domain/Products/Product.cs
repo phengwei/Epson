@@ -11,6 +11,7 @@ namespace Epson.Core.Domain.Products
     {
         public string Name { get; set; }
         public decimal Price { get; set; }
+        public decimal DealerPrice { get; set; }
         public bool IsActive { get; set; }
     }
 }

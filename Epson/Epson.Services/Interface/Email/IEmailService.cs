@@ -15,11 +15,15 @@ namespace Epson.Services.Interface.Email
         public EmailAccountDTO GetEmailAccountByUserName(string username);
         public List<EmailQueue> NotifySalesSectionHeadUsers(Request request, List<RequestProduct> requestProducts);
         public Task<List<EmailQueue>> CreateReminderEmailQueue(RequestProduct requestProduct);
+        public Task<List<EmailQueue>> NotifyFulfillers(Request request);
         public List<EmailQueueDTO> GetUnsentEmailQueues();
         public bool InsertEmailQueue(EmailQueue emailQueue);
         public void SendEmailBatch();
         public EmailQueue CreateRequestEmailQueue(Request request, List<RequestProduct> requestProducts);
         public EmailQueue CreateFulfillEmailQueue(Request request, RequestProduct requestProduct, bool hasFulfillmentComplete);
+        public List<EmailQueue> NotifySalesSectionHeadUsersOnApprovedRequest(Request request, List<RequestProduct> requestProducts);
+        public List<EmailQueue> NotifySalesOperationTeamsOnApprovedRequest(Request request, List<RequestProduct> requestProducts);
+        public EmailQueue CreateApprovedEmailQueue(Request request, List<RequestProduct> requestProducts);
         public EmailQueue CreateAmendQuotationEmailQueue(Request request, RequestProduct requestProduct);
         public EmailQueue CreateCancellationEmailQueue(Request request, RequestProduct requestProduct);
     }

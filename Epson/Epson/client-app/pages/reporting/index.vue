@@ -2,25 +2,31 @@
   <div>
     <div class="chart-container">
       <div class="card">
-        <div class="card-header">Monthly Sales by Requester</div>
+        <div class="card-header">Top Requester & Monthly Request Count</div>
         <div class="card-body">
-          <select v-model="selectedRequester" @change="fetchmonthlysalesbyrequester">
-            <option value="">Select Requester</option>
+          <select v-model="selectedRequester" @change="fetchCombinedChartData">
+            <option value="all">All Requesters</option>
             <option v-for="requester in requesters" :value="requester.id" :key="requester.id">{{ requester.userName }}</option>
           </select>
-          <bar-chart :chart-data="monthlysalesbyrequester" :options="options"></bar-chart>
+          <select v-model="selectedMonth_requesterBySales" @change="fetchCombinedChartData">
+            <option value="0">All Months</option>
+            <option v-for="month in months" :value="month.value" :key="month.value">{{ month.text }}</option>
+          </select>
+          <div class="bar-chart-container">
+            <bar-chart :chart-data="combinedChartData" :options="options" ref="barChart"></bar-chart>
+          </div>
         </div>
       </div>
       <div class="card">
-        <div class="card-header">Top 10 Requesters by Sales</div>
+        <div class="card-header">Top 10 Products By Request Count</div>
         <div class="card-body">
-          <bar-chart :chart-data="toprequestersbysales" :options="options"></bar-chart>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">Top 10 Products By Revenue</div>
-        <div class="card-body">
-          <bar-chart :chart-data="topproductsbyrevenue" :options="options"></bar-chart>
+          <select v-model="selectedMonth_productsByRevenue" @change="fetchtopproductsbyrevenue">
+            <option value="0">All Months</option>
+            <option v-for="month in months" :value="month.value" :key="month.value">{{ month.text }}</option>
+          </select>
+          <div class="bar-chart-container">
+            <bar-chart :chart-data="topproductsbyrevenue" :options="options" ref="topProductsBarChart"></bar-chart>
+          </div>
         </div>
       </div>
     </div>
@@ -28,16 +34,14 @@
 </template>
 
 <script>
-  import BarChart from '~/components/BarChart.vue'
+  import BarChart from '~/components/BarChart.vue';
 
   export default {
     name: 'ReportingDashboard',
     data() {
       return {
-        monthlysalesbyrequester: null,
-        toprequestersbysales: null,
+        combinedChartData: null,
         topproductsbyrevenue: null,
-        datacollection: null,
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -49,14 +53,29 @@
             }]
           }
         },
-        selectedRequester: '',
-        requesters: []
+        selectedRequester: 'all',
+        selectedMonth_requesterBySales: '0',
+        selectedMonth_productsByRevenue: '0',
+        requesters: [],
+        months: [
+          { text: 'January', value: '1' },
+          { text: 'February', value: '2' },
+          { text: 'March', value: '3' },
+          { text: 'April', value: '4' },
+          { text: 'May', value: '5' },
+          { text: 'June', value: '6' },
+          { text: 'July', value: '7' },
+          { text: 'August', value: '8' },
+          { text: 'September', value: '9' },
+          { text: 'October', value: '10' },
+          { text: 'November', value: '11' },
+          { text: 'December', value: '12' }
+        ]
       }
     },
     async created() {
       await this.fetchRequesters();
-      await this.fetchmonthlysalesbyrequester();
-      await this.fetchtoprequestersbysales();
+      await this.fetchCombinedChartData();
       await this.fetchtopproductsbyrevenue();
     },
     methods: {
@@ -64,63 +83,109 @@
         const response = await this.$axios.get(`${this.$config.restUrl}/api/customer/getallrequesters`);
         this.requesters = response.data.data;
       },
-      async fetchtoprequestersbysales() {
-        const response = await this.$axios.get(`${this.$config.restUrl}/api/report/gettoprequestersbysales`);
+      async fetchCombinedChartData() {
+        const params = {
+          requesterId: this.selectedRequester === 'all' ? '' : this.selectedRequester,
+          month: this.selectedMonth_requesterBySales,
+          allRequester: this.selectedRequester === 'all'
+        };
 
-        const labels = response.data.data.map(({ requesterName }) => requesterName);
-        const data = response.data.data.map(({ totalSales }) => totalSales);
+        const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequester`, { params });
 
-        this.toprequestersbysales = {
-          labels,
-          datasets: [
-            {
-              label: 'Top Requesters by Sales',
-              backgroundColor: '#f87979',
-              data
-            }
-          ]
+        if (this.selectedRequester === 'all') {
+          const labels = response.data.data.map(({ requesterName }) => requesterName);
+          const data = response.data.data.map(({ totalNumberOfSales }) => totalNumberOfSales);
+
+          this.combinedChartData = {
+            labels,
+            datasets: [
+              {
+                label: 'Request Count by Requester',
+                backgroundColor: '#f87979',
+                data
+              }
+            ]
+          };
+        } else {
+          const monthlySalesData = Array(12).fill(0);
+          response.data.data.forEach(salesData => {
+            const monthNumber = parseInt(salesData.month.split('-')[1], 10);
+            monthlySalesData[monthNumber - 1] = salesData.totalNumberOfSales;
+          });
+
+          this.combinedChartData = {
+            labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+            datasets: [
+              {
+                label: 'Monthly Request Count',
+                backgroundColor: '#f87979',
+                data: monthlySalesData
+              }
+            ]
+          };
         }
+
+        this.$nextTick(() => {
+          if (this.$refs.barChart && this.$refs.barChart.handleResize) {
+            this.$refs.barChart.handleResize();
+          }
+        });
       },
       async fetchtopproductsbyrevenue() {
-        const response = await this.$axios.get(`${this.$config.restUrl}/api/report/gettopproductsbyrevenue`);
+        const monthParam = this.selectedMonth_productsByRevenue;
+        const response = await this.$axios.get(`${this.$config.restUrl}/api/report/gettopproductsbyrevenue?month=${monthParam}`);
 
-        const labels = response.data.data.map(({ productName }) => productName);
-        const data = response.data.data.map(({ totalRevenue }) => totalRevenue);
+        const abbreviateProductName = (name) => {
+          if (name.length > 6) {
+            return name.slice(0, 5) + '...';
+          }
+          return name;
+        };
+
+        const productNamesMap = {};
+        const labels = response.data.data.map(({ productName }) => {
+          const abbreviated = abbreviateProductName(productName);
+          productNamesMap[abbreviated] = productName;
+          return abbreviated;
+        });
+        const data = response.data.data.map(({ totalNoOfSales }) => totalNoOfSales);
 
         this.topproductsbyrevenue = {
           labels,
           datasets: [
             {
-              label: 'Top Products by Revenue',
+              label: 'Top Products by Request',
               backgroundColor: '#f87979',
               data
             }
           ]
-        }
-      },
-      async fetchmonthlysalesbyrequester() {
-        if (this.selectedRequester) {
-          const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequester?requesterId=${this.selectedRequester}`);
+        };
 
-          const monthlySalesData = Array(12).fill(0);
-
-          response.data.data.forEach(salesData => {
-            const monthNumber = parseInt(salesData.month.split('-')[1], 10);
-
-            monthlySalesData[monthNumber - 1] = salesData.monthlySales;
-          });
-
-          this.monthlysalesbyrequester = {
-            labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-            datasets: [
-              {
-                label: 'Monthly Sales',
-                backgroundColor: '#f87979',
-                data: monthlySalesData
+        this.options = {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            yAxes: [{
+              ticks: {
+                beginAtZero: true
               }
-            ]
+            }]
+          },
+          tooltips: {
+            callbacks: {
+              title: (tooltipItems) => {
+                const abbreviatedName = tooltipItems[0].label;
+                return productNamesMap[abbreviatedName] || abbreviatedName;
+              }
+            }
           }
-        }
+        };
+
+        this.$nextTick(() => {
+          if (this.$refs.topProductsBarChart && this.$refs.topProductsBarChart.handleResize) {
+            this.$refs.topProductsBarChart.handleResize();
+          }
+        });
       }
     },
     components: {
@@ -129,15 +194,17 @@
   }
 </script>
 
-<style scoped>
+<style>
   .chart-container {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     gap: 20px;
+    width: 90%;
+    margin: 0 auto;
   }
 
   .card {
-    width: 300px;
+    width: 100%;
     background-color: #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-radius: 4px;
@@ -148,6 +215,7 @@
     background-color: #f5f5f5;
     border-bottom: 1px solid #ddd;
     font-weight: bold;
+    text-align: center;
   }
 
   .card-body {
@@ -165,6 +233,13 @@
   }
 
   .bar-chart-container {
-    height: 300px;
+    height: 400px;
+    width: 100%;
+  }
+
+  @media (max-width: 768px) {
+    .chart-container {
+      width: 100%;
+    }
   }
 </style>

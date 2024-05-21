@@ -14,6 +14,8 @@
       const userRoles = this.$auth.user.data.roles;
       if (userRoles.includes('Admin')) {
         this.$router.push('/userManagement');
+      } else if (userRoles.includes('Sales Operation')) {
+        this.$router.push('/request');
       } else if (userRoles.includes('Product') || userRoles.includes('Coverplus')) {
         this.$router.push('/productDashboard');
       } else if (userRoles.includes('Sales')) {

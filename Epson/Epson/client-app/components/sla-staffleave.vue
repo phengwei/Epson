@@ -1,7 +1,7 @@
 <template>
   <div class="sla-staff-leaves-management">
     <h1>SLA - Staff Leaves Management</h1>
-    <form class="form-container">
+    <form class="form-container" @submit.prevent="validateAndSaveSLAStaffLeave">
       <div class="form-group">
         <label for="staff">Staff:</label>
         <select id="staff" v-model="selectedStaff" required class="border-input">
@@ -20,10 +20,11 @@
         <label for="reason">Reason:</label>
         <textarea id="reason" v-model="reason" required></textarea>
       </div>
-      <button type="submit" @click="validateAndSaveSLAStaffLeave">Add Staff Leave</button>
+      <button type="submit">Add Staff Leave</button>
     </form>
   </div>
 </template>
+
 <script>
   import Swal from 'sweetalert2';
 
@@ -105,18 +106,10 @@
       },
       async getAllStaffs() {
         try {
-          const response = await fetch('api/customer/getallstaff');
-          const { data } = await response.json();
-          this.staffMembers = data;
+          const response = await fetch('/api/customer/getallstaff');
+          const data = await response.json();
+          this.staffMembers = data.data || [];
 
-          const t = [
-            "2023-04-29T16:00:00.000Z",
-            "2023-05-04T16:00:00.000Z",
-            "2023-05-03T16:00:00.000Z",
-            "2023-05-09T16:00:00.000Z"
-          ];
-
-          console.log("staff", t);
         } catch (error) {
           console.error('There was a problem fetching the staff:', error);
         }
@@ -124,12 +117,10 @@
       async saveSLAStaffLeave() {
         try {
           await this.$axios.post(`${this.$config.restUrl}/api/sla/addslastaffleave`, {
-            data: {
-              startDate: this.startDate,
-              endDate: this.endDate,
-              reason: this.reason,
-              staffId: this.selectedStaff
-            }
+            startDate: this.startDate,
+            endDate: this.endDate,
+            reason: this.reason,
+            staffId: this.selectedStaff
           });
           Swal.fire({
             title: 'Success!',
@@ -147,14 +138,13 @@
       },
       async getSLAStaffLeavesByStaff(staffId) {
         try {
-          const { data } = await this.$axios.get(`${this.$config.restUrl}/api/sla/getslastaffleavesbystaff`, {
+          const response = await this.$axios.get(`${this.$config.restUrl}/api/sla/getslastaffleavesbystaff`, {
             params: {
               staffId
             }
           });
-          const staffLeaves = data;
+          this.staffLeaves = response.data.data || [];
 
-          console.log('SLA staff leaves:', staffLeaves);
         } catch (error) {
           console.error('There was a problem fetching SLA staff leaves:', error);
         }

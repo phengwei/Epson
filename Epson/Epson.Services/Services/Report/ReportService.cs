@@ -1,4 +1,5 @@
-﻿using Epson.Core.Domain.Products;
+﻿using Epson.Core.Domain.Enum;
+using Epson.Core.Domain.Products;
 using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.Users;
 using Epson.Data;
@@ -28,10 +29,28 @@ namespace Epson.Services.Services.Report
             _userManager = userManager;
         }
 
-        public async Task<List<RequesterSales>> GetMonthlySalesByRequester(string requesterId)
+        public async Task<List<RequesterSales>> GetMonthlySalesByRequester(string requesterId, int month = 0, bool allRequester = false)
         {
-            var monthlySales = _requestRepository.Table
-                .Where(r => r.ApprovalState == 30 && r.CreatedById == requesterId)
+            if (allRequester)
+            {
+                return await GetTopRequestersBySales(month);
+            }
+
+            List<RequesterSales> monthlySales = new List<RequesterSales>();
+
+            var query = _requestRepository.Table.AsQueryable();
+
+            if (month != 0)
+            {
+                query = query.Where(r => r.CreatedOnUTC.Month == month);
+            }
+
+            if (!allRequester)
+            {
+                query = query.Where(r => r.CreatedById == requesterId);
+            }
+
+            monthlySales = query
                 .GroupBy(r => new
                 {
                     Month = r.CreatedOnUTC.ToString("yyyy-MM"),
@@ -40,27 +59,37 @@ namespace Epson.Services.Services.Report
                 .Select(g => new RequesterSales
                 {
                     Month = g.Key.Month,
-                    RequesterName = g.Key.Requester,
-                    MonthlySales = g.Sum(r => r.TotalPrice)
+                    RequesterName = _userManager.FindByIdAsync(g.Key.Requester).Result.UserName,
+                    MonthlySales = g.Sum(r => r.TotalBudget),
+                    TotalNumberOfSales = g.Count()
                 })
+                .OrderByDescending(x => x.TotalNumberOfSales)
                 .ToList();
 
             return monthlySales;
         }
 
-        public async Task<List<RequesterSales>> GetTopRequestersBySales()
+
+        public async Task<List<RequesterSales>> GetTopRequestersBySales(int month)
         {
-            var topRequesters = _requestRepository.Table
-                .Where(r => r.ApprovalState == 30)
+            var query = _requestRepository.Table
+                .Where(r => r.ApprovalState == (int)ApprovalStateEnum.Approved);
+
+            if (month != 0)
+            {
+                query = query.Where(r => r.CreatedOnUTC.Month == month && r.CreatedOnUTC.Year == DateTime.UtcNow.Year);
+            }
+
+            var topRequesters = query
                 .GroupBy(r => r.CreatedById)
                 .Select(g => new RequesterSales
                 {
                     RequesterId = g.Key,
                     TotalNumberOfSales = g.Count(),
-                    TotalSales = g.Sum(r => r.TotalPrice)
+                    TotalSales = g.Sum(r => r.TotalBudget)
                 })
-                .OrderByDescending(x => x.TotalSales)
-                .Take(10)
+                .OrderByDescending(x => x.TotalNumberOfSales)
+                .Take(25)
                 .ToList();
 
             foreach (var requester in topRequesters)
@@ -72,10 +101,17 @@ namespace Epson.Services.Services.Report
             return topRequesters;
         }
 
-        public async Task<List<ProductRevenue>> GetTopProductsByRevenue()
+        public async Task<List<ProductRevenue>> GetTopProductsByRevenue(int month)
         {
-            var topProducts = _requestRepository.Table
-                .Where(r => r.ApprovalState == 30)
+            var query = _requestRepository.Table
+                .Where(r => r.ApprovalState == (int)ApprovalStateEnum.Approved);
+
+            if (month != 0)
+            {
+                query = query.Where(r => r.CreatedOnUTC.Month == month && r.CreatedOnUTC.Year == DateTime.UtcNow.Year);
+            }
+
+            var topProducts = query
                 .Join(
                     _requestProductRepository.Table,
                     r => r.Id,
@@ -86,23 +122,22 @@ namespace Epson.Services.Services.Report
                     _productRepository.Table,
                     j => j.RequestProduct.ProductId,
                     p => p.Id,
-                    (j, p) => new { ProductName = p.Name, TotalRevenue = j.RequestProduct.Quantity * j.RequestProduct.FulfilledPrice }
+                    (j, p) => new { ProductName = p.Name, TotalRevenue = j.RequestProduct.Quantity * j.RequestProduct.DealerPrice, Quantity = j.RequestProduct.Quantity }
                 )
                 .GroupBy(
                     j => j.ProductName,
                     (key, group) => new ProductRevenue
                     {
                         ProductName = key,
-                        TotalRevenue = group.Sum(x => x.TotalRevenue)
+                        TotalRevenue = group.Sum(x => x.TotalRevenue),
+                        TotalNoOfSales = group.Sum(x => x.Quantity)
                     }
                 )
-                .OrderByDescending(x => x.TotalRevenue)
+                .OrderByDescending(x => x.TotalNoOfSales)
                 .Take(10)
                 .ToList();
 
             return topProducts;
         }
-
-
     }
 }

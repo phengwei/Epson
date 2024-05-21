@@ -9,8 +9,8 @@ namespace Epson.Services.Interface.Report
 {
     public interface IReportService
     {
-        public Task<List<RequesterSales>> GetMonthlySalesByRequester(string requesterId);
-        public Task<List<RequesterSales>> GetTopRequestersBySales();
-        public Task<List<ProductRevenue>> GetTopProductsByRevenue();
+        public Task<List<RequesterSales>> GetMonthlySalesByRequester(string requesterId, int month = 0, bool allRequester = false);
+        public Task<List<RequesterSales>> GetTopRequestersBySales(int month);
+        public Task<List<ProductRevenue>> GetTopProductsByRevenue(int month);
     }
 }

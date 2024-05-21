@@ -27,5 +27,7 @@ namespace Epson.Core.Domain.Requests
         public DateTime? UpdatedOnUTC { get; set; }
         public bool IsCoverplus { get; set; }
         public bool HasReminded { get; set; }
+        public string? WarrantyRequest { get; set; }
+        public string? WarrantyRequestPeriod { get; set; }
     }
 }

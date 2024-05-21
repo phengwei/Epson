@@ -19,6 +19,8 @@ using Epson.Services.Interface.Users;
 using Epson.Services.DTO.Products;
 using Epson.Model.Products;
 using OfficeOpenXml;
+using System.Drawing.Imaging;
+using System.Drawing.Printing;
 
 namespace Epson.Controllers.API
 {
@@ -306,6 +308,11 @@ namespace Epson.Controllers.API
             cell.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
             cell.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
             cell.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+        }
+
+        public class HtmlContentModel
+        {
+            public string Html { get; set; }
         }
     }
 }

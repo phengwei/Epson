@@ -161,7 +161,6 @@ export default {
                     method: 'GET',
                     responseType: 'blob',
         })
-        // this.$axios.get(`${this.$config.restUrl}/api/contests/receipt?fileKey=${fileKey}`)
         .then((response) => {
                      const fileURL = window.URL.createObjectURL(new Blob([response.data]));
                      const fileLink = document.createElement('a');

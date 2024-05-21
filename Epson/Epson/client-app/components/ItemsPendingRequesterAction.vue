@@ -1,66 +1,70 @@
 <template>
   <v-app>
-    <div class="table-container">
-      <v-data-table :headers="headers"
-                    :items="requests"
-                    :options.sync="options"
-                    :items-per-page="5"
-                    :loading="loading"
-                    class="elevation-1">
-        <template v-slot:top>
-          <v-toolbar flat>
-            <v-toolbar-title>Request Responded</v-toolbar-title>
-            <v-divider class="mx-4" inset vertical></v-divider>
-            <v-spacer></v-spacer>
-          </v-toolbar>
-        </template>
-        <template v-slot:item.actions="{ item }">
-          <v-btn @click="viewRequest(item)">Action</v-btn>
-        </template>
-      </v-data-table>
+    <v-data-table :headers="headers"
+                  :items="filteredRequests"
+                  :options.sync="options"
+                  :items-per-page="10"
+                  :loading="loading"
+                  class="elevation-1">
+      <template v-slot:top>
+        <v-toolbar flat>
+          <v-toolbar-title>Request Responded</v-toolbar-title>
+          <v-divider class="mx-4" inset vertical></v-divider>
+          <v-text-field v-model="search"
+                        class="search-input"
+                        append-icon="mdi-magnify"
+                        label="Search by end user or request #"
+                        single-line
+                        hide-details></v-text-field>
+          <v-spacer></v-spacer>
+        </v-toolbar>
+      </template>
+      <template v-slot:item.actions="{ item }">
+        <v-btn @click="viewRequest(item)">Action</v-btn>
+      </template>
+    </v-data-table>
 
-      <v-dialog v-model="dialog" max-width="800px">
-        <v-card>
-          <v-card-title>
-            <span class="text-h5">{{ formTitle }}</span>
-          </v-card-title>
-          <v-card-text>
-            <div class="form-group">
-              <label>Created On</label>
-              <input v-model="editedItem.createdOnUTC" class="border-input readonly-field" label="Date" disabled></input>
-            </div>
-            <div class="form-group">
-              <label>Customer's Expected Pricing'</label>
-              <input v-model="editedItem.totalPrice" class="border-input readonly-field" label="Price" disabled></input>
-            </div>
-            <div class="form-group">
-              <label>Project Budget</label>
-              <input v-model="editedItem.totalBudget" class="border-input readonly-field" label="Budget" disabled></input>
-            </div>
-            <div class="form-group">
-              <label>Comments (if any)</label>
-              <textarea v-model="editedItem.comments" class="border-input"></textarea>
-            </div>
-            <div class="table-container">
-              <v-data-table :headers="productHeaders"
-                            :items="editedItem.requestProductsModel"
-                            :items-per-page="5"
-                            class="elevation-1">
-                <template v-slot:top>
-                  <v-toolbar flat>
-                    <v-toolbar-title>Requested Product Details</v-toolbar-title>
-                  </v-toolbar>
-                </template>
-              </v-data-table>
-            </div>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="close">Save</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-    </div>
+    <v-dialog v-model="dialog" max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">{{ formTitle }}</span>
+        </v-card-title>
+        <v-card-text>
+          <div class="form-group">
+            <label>Created On</label>
+            <input v-model="editedItem.createdOnUTC" class="border-input readonly-field" label="Date" disabled></input>
+          </div>
+          <div class="form-group">
+            <label>Customer's Expected Pricing</label>
+            <input v-model="editedItem.totalPrice" class="border-input readonly-field" label="Price" disabled></input>
+          </div>
+          <div class="form-group">
+            <label>Project Budget</label>
+            <input v-model="editedItem.totalBudget" class="border-input readonly-field" label="Budget" disabled></input>
+          </div>
+          <div class="form-group">
+            <label>Comments (if any)</label>
+            <textarea v-model="editedItem.comments" class="border-input"></textarea>
+          </div>
+          <div class="table-container">
+            <v-data-table :headers="productHeaders"
+                          :items="editedItem.requestProductsModel"
+                          :items-per-page="5"
+                          class="elevation-1">
+              <template v-slot:top>
+                <v-toolbar flat>
+                  <v-toolbar-title>Requested Product Details</v-toolbar-title>
+                </v-toolbar>
+              </template>
+            </v-data-table>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="close">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
@@ -83,6 +87,11 @@
             value: 'id',
           },
           {
+            text: 'End User',
+            align: 'start',
+            value: 'endUserName',
+          },
+          {
             text: 'Created Time',
             align: 'start',
             value: 'createdOnUTC',
@@ -91,6 +100,11 @@
             text: 'Total Budget',
             align: 'start',
             value: 'totalBudget',
+          },
+          {
+            text: 'Approval State',
+            align: 'start',
+            value: 'approvalStateStr',
           },
           { text: 'Record', value: 'actions', sortable: false },
         ],
@@ -106,8 +120,9 @@
         ],
         options: {},
         requests: [],
-        loading: false,
+        loading: true,
         editedIndex: -1,
+        search: '',
         editedItem: {
           id: 0,
           name: '',
@@ -120,7 +135,19 @@
     computed: {
       formTitle() {
         return 'Request'
-      }
+      },
+      filteredRequests() {
+        if (this.search.trim() === '') {
+          return this.requests;
+        }
+        return this.requests.filter(request => {
+          const requestIdMatch = String(request.id).toLowerCase().includes(this.search.toLowerCase());
+          const projectNameMatch = request.projectInformationModel &&
+            request.projectInformationModel.projectName &&
+            request.projectInformationModel.projectName.toLowerCase().includes(this.search.toLowerCase());
+          return requestIdMatch || projectNameMatch;
+        });
+      },
     },
     watch: {
       options: {
@@ -132,7 +159,6 @@
     },
     methods: {
       viewRequest(request) {
-        console.log("req", request);
         let queryParameters = { view: true, request: JSON.stringify(request) };
 
         if (request.approvalState === ApprovalStateEnum.PendingRequesterAction) {
@@ -149,12 +175,15 @@
       getPendingRequesterItem() {
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingrequesteritem`).then(result => {
-          for (const requests in result.data.data) {
-            result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('DD MMM YY HH:mm');
-          }
-          this.requests = result.data.data
-          this.loading = false
-        })
+          this.requests = result.data.data.map(request => {
+            return {
+              ...request,
+              endUserName: request.projectInformationModel.projectName || 'N/A',
+              createdOnUTC: moment(request.createdOnUTC).format('DD MMM YY HH:mm')
+            };
+          });
+          this.loading = false;
+        });
       },
       editItem(item) {
         this.editedIndex = this.requests.indexOf(item)
@@ -267,5 +296,12 @@
 
   .readonly-field {
     background-color: #ddd;
+  }
+
+  .search-input {
+    flex-grow: 1;
+    margin-left: 16px;
+    margin-right: 16px;
+    width: 5%;
   }
 </style>

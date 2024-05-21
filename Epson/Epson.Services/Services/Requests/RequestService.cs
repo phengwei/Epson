@@ -10,6 +10,7 @@ using Epson.Data;
 using Epson.Services.DTO.Report;
 using Epson.Services.DTO.Requests;
 using Epson.Services.DTO.SLA;
+using Epson.Services.Extensions;
 using Epson.Services.Interface.Email;
 using Epson.Services.Interface.Products;
 using Epson.Services.Interface.Requests;
@@ -99,10 +100,11 @@ namespace Epson.Services.Services.Requests
                 {
                     Id = x.Id,
                     ApprovedBy = x.ApprovedBy,
-                    ApprovedTime = x.ApprovedTime,
+                    ApprovedTime = x.ApprovedTime.AddHours(8),
+                    AmendQuotationTime = x.AmendQuotationTime,
                     CompetitorInformations = _CompetitorInformationRepository.Table.Where(p => p.RequestId == x.Id).ToList(),
                     CreatedById = x.CreatedById,
-                    CreatedOnUTC = x.CreatedOnUTC,
+                    CreatedOnUTC = x.CreatedOnUTC.AddHours(8),
                     UpdatedById = x.UpdatedById,
                     UpdatedOnUTC = x.UpdatedOnUTC,
                     Segment = x.Segment,
@@ -148,9 +150,9 @@ namespace Epson.Services.Services.Requests
 
         public List<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
         {
-            var requests = GetRequests();
+            var requests = GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction);
 
-            return requests
+            var r = requests
                 .Select(x =>
                 {
                     foreach (var rp in x.RequestProducts)
@@ -160,8 +162,9 @@ namespace Epson.Services.Services.Requests
 
                     return x;
                 })
-                .Where(x => x.RequestProducts.Any(rp => rp.AuthorizedToFulfill) && x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
+                .Where(x => x.RequestProducts.Any(rp => rp.AuthorizedToFulfill))
                 .ToList();
+            return r;
         }
 
         private bool DetermineAuthorization(RequestProductDTO rp, ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
@@ -254,6 +257,14 @@ namespace Epson.Services.Services.Requests
                     InsertCompetitorInformation(competitorInformation);
                 }
 
+                var projectInformationId = _ProjectInformationRepository.Add(projectInformation);
+
+                foreach (var projectInformationReason in projectInformationDTO.ProjectInformationReasons)
+                {
+                    projectInformationReason.ProjectInformationId = projectInformationId;
+                    _ProjectInformationReasonRepository.Add(projectInformationReason);
+                }
+
                 List<EmailQueue> emailQueues = _emailService.NotifySalesSectionHeadUsers(request, requestProducts);
 
                 emailQueues.Add(_emailService.CreateRequestEmailQueue(request, requestProducts));
@@ -261,14 +272,6 @@ namespace Epson.Services.Services.Requests
                 foreach (var emailQueue in emailQueues)
                 {
                     _emailService.InsertEmailQueue(emailQueue);
-                }
-
-                var projectInformationId = _ProjectInformationRepository.Add(projectInformation);
-
-                foreach (var projectInformationReason in projectInformationDTO.ProjectInformationReasons)
-                {
-                    projectInformationReason.ProjectInformationId = projectInformationId;
-                    _ProjectInformationReasonRepository.Add(projectInformationReason);
                 }
 
                 requestSubmissionDetail.CreatedBy = request.CreatedById;
@@ -297,12 +300,25 @@ namespace Epson.Services.Services.Requests
             if (GetRequestById(request.Id) == null)
                 throw new ArgumentNullException(nameof(request));
 
+            var existingRequest = _RequestRepository.GetById(request.Id);
             var projectInformation = _mapper.Map<ProjectInformation>(projectInformationDTO);
 
             try
             {
-                request.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => (decimal)rp.EndUserPrice);
-                _RequestRepository.Update(request);
+                existingRequest.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => (decimal)rp.EndUserPrice);
+                existingRequest.UpdatedOnUTC = DateTime.UtcNow;
+                existingRequest.Comments = request.Comments;
+                existingRequest.Segment = request.Segment;
+                existingRequest.UpdatedById = request.UpdatedById;
+                if (existingRequest.ApprovedBy == null)
+                {
+                    existingRequest.ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction;
+                }
+                else
+                {
+                    existingRequest.ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction;
+                }
+                _RequestRepository.Update(existingRequest);
                 _logger.Information("Updating request {id}", request.Id);
 
                 DeleteRequestProductOfRequest(request.Id);
@@ -316,9 +332,15 @@ namespace Epson.Services.Services.Requests
                     requestProduct.CreatedOnUTC = request.CreatedOnUTC;
                     requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
                     if (requestProduct.Status == (int)RequestProductStatusEnum.Approved)
+                    {
                         requestProduct.Status = (int)RequestProductStatusEnum.Approved;
+                        requestProduct.HasFulfilled = true;
+                    }
                     else
+                    {
                         requestProduct.Status = (int)RequestProductStatusEnum.Pending;
+                        requestProduct.HasFulfilled = false;
+                    }
 
                     InsertRequestProduct(requestProduct);
                 }
@@ -498,7 +520,7 @@ namespace Epson.Services.Services.Requests
             var projectInformation = _ProjectInformationRepository.GetAll()
                 .FirstOrDefault(x => x.RequestId == request.Id) ?? new ProjectInformation { ClosingDate = DateTime.MinValue };
 
-            if (DateTime.UtcNow > projectInformation.ClosingDate)
+            if (DateTime.UtcNow > request.CreatedOnUTC.AddWorkingDays(5))
                 request.Breached = true;
 
             request.ApprovalState = (int)ApprovalStateEnum.Approved;
@@ -545,7 +567,7 @@ namespace Epson.Services.Services.Requests
             request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
             request.Comments = comments;
 
-            if (DateTime.UtcNow > projectInformation.ClosingDate)
+            if (DateTime.UtcNow > request.CreatedOnUTC.AddWorkingDays(5))
                 request.Breached = true;
 
             try
@@ -585,7 +607,7 @@ namespace Epson.Services.Services.Requests
             request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
             request.Comments = comments;
 
-            if (DateTime.UtcNow > projectInformation.ClosingDate)
+            if (DateTime.UtcNow > request.CreatedOnUTC.AddWorkingDays(5))
                 request.Breached = true;
 
             try
@@ -624,11 +646,14 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.HasFulfilled = true;
             requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
             requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;
-            requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate, requestProductToFulfill.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
+            requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate,
+                                                                               existingRequest.AmendQuotationTime ?? existingRequest.ApprovedTime,
+                                                                               _slaService.GetSLAStaffLeavesByStaffId(user.Id),
+                                                                               _slaService.GetSLAHolidays()); 
             requestProductToFulfill.Remarks = remarks;
             requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
 
-            if (DateTime.UtcNow > projectInformation.ClosingDate)
+            if (DateTime.UtcNow > requestProductToFulfill.CreatedOnUTC.AddWorkingDays(5))
                 requestProductToFulfill.Breached = true;
 
             try
@@ -644,7 +669,23 @@ namespace Epson.Services.Services.Requests
                 bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled == true);
 
                 if (allProductsFulfilled)
-                    existingRequest.ApprovalState = (int)ApprovalStateEnum.PendingRequesterAction;
+                {
+                    existingRequest.ApprovalState = (int)ApprovalStateEnum.Approved;
+                    //existingRequest.ApprovedTime = DateTime.UtcNow;
+
+                    var request = _RequestRepository.GetById(requestProduct.RequestId);
+                    List<RequestProduct> rps = _RequestProductRepository.GetAll().Where(x => x.RequestId == requestProduct.RequestId).ToList();
+
+                    List<EmailQueue> emailQueues = _emailService.NotifySalesSectionHeadUsersOnApprovedRequest(request, rps);
+
+                    emailQueues.AddRange(_emailService.NotifySalesOperationTeamsOnApprovedRequest(request, rps));
+                    emailQueues.Add(_emailService.CreateApprovedEmailQueue(request, rps));
+
+                    foreach (var emailQueue in emailQueues)
+                    {
+                        _emailService.InsertEmailQueue(emailQueue);
+                    }
+                }
 
                 _RequestRepository.Update(_mapper.Map<Request>(existingRequest));
 
@@ -669,6 +710,8 @@ namespace Epson.Services.Services.Requests
                 throw new Exception("Invalid request.");
 
             request.ApprovalState = (int)ApprovalStateEnum.AmendQuotation;
+            request.AmendQuotationTime = DateTime.UtcNow;
+            request.UpdatedOnUTC = DateTime.UtcNow;
 
             List<RequestProduct> requestProducts = _RequestProductRepository.Table.Where(x => x.RequestId == req.Id).ToList();
 
@@ -679,14 +722,8 @@ namespace Epson.Services.Services.Requests
 
                 foreach (var requestProduct in requestProducts)
                 {
-                    if (requestProduct.HasFulfilled == true)
-                    {
-                        var amendQuotationEmailQueue = _emailService.CreateAmendQuotationEmailQueue(request, requestProduct);
-                        _emailService.InsertEmailQueue(amendQuotationEmailQueue);
-                        requestProduct.HasFulfilled = false;
-                        requestProduct.FulfilledDate = DateTime.MinValue;
-                        requestProduct.FulfillerId = string.Empty;
-                    }
+                    var amendQuotationEmailQueue = _emailService.CreateAmendQuotationEmailQueue(request, requestProduct);
+                    _emailService.InsertEmailQueue(amendQuotationEmailQueue);
                 }
                 return true;
             }
@@ -697,7 +734,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool ApproveFirstLevelRequest(Request request)
+        public async Task<bool> ApproveFirstLevelRequest(string userId, Request request)
         {
             var req = GetRequestById(request.Id);
 
@@ -705,6 +742,40 @@ namespace Epson.Services.Services.Requests
                 throw new Exception("Invalid request.");
 
             request.ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction;
+            request.ApprovedTime = DateTime.UtcNow;
+            request.ApprovedBy = userId;
+
+            try
+            {
+                _RequestRepository.Update(request);
+                _logger.Information("Completing first level approval for request {id}", request.Id);
+
+                List<RequestProductDTO> requestProducts = GetRequestProducts();
+
+                List<EmailQueue> emailQueues = await _emailService.NotifyFulfillers(request);
+
+                foreach (var emailQueue in emailQueues)
+                {
+                    _emailService.InsertEmailQueue(emailQueue);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error completing first level approval for request {id}", request.Id);
+                return false;
+            }
+        }
+
+        public bool RejectFirstLevelRequest(Request request)
+        {
+            var req = GetRequestById(request.Id);
+
+            if (req == null)
+                throw new Exception("Invalid request.");
+
+            request.ApprovalState = (int)ApprovalStateEnum.RejectedBySalesSectionHead;
 
             try
             {
@@ -816,7 +887,7 @@ namespace Epson.Services.Services.Requests
                 bool allRejected = requestProducts.All(rp => rp.Status == (int)RequestProductStatusEnum.Rejected);
                 bool allFulfilled = requestProducts.All(rp => rp.HasFulfilled == true);
 
-                if (DateTime.UtcNow > projectInformation.ClosingDate)
+                if (DateTime.UtcNow > requestProduct.CreatedOnUTC.AddWorkingDays(5))
                     requestProduct.Breached = true;
 
                 //if all products in a request is rejected, set status of request to reject
@@ -826,7 +897,7 @@ namespace Epson.Services.Services.Requests
                     _RequestRepository.Update(_mapper.Map<Request>(request));
                 }else if (allFulfilled)
                 {
-                    request.ApprovalState = (int)ApprovalStateEnum.PendingRequesterAction;
+                    request.ApprovalState = (int)ApprovalStateEnum.Approved;
                     _RequestRepository.Update(_mapper.Map<Request>(request));
                 }
 

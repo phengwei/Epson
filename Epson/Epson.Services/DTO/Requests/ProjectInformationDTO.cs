@@ -22,7 +22,7 @@ namespace Epson.Services.DTO.Requests
         public string? TelephoneNo { get; set; }
         public string? Email { get; set; }
         public string Requirements { get; set; }
-        public string CustomerApplications { get; set; }
+        public string? CustomerApplications { get; set; }
         public decimal Budget { get; set; }
         public string? StaggeredComments { get; set; }
         public string? StaggeredMonth { get; set; }

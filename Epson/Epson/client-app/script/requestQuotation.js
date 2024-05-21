@@ -1,18 +1,17 @@
 import { mapGetters } from 'vuex';
+import moment from 'moment';
 import Swal from 'sweetalert2';
-import ProductDialog from '~/components/ProductDialog.vue';
-import CompetitorInformationDialog from '~/components/CompetitorInformationDialog.vue';
-import CoverplusDialog from '~/components/CoverplusDialog.vue';
-import ProductFulfillmentDialog from '~/components/ProductFulfillmentDialog.vue';
+import JsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
 
 export default {
   name: "request-quotation",
   components: {
-    ProductDialog,
-    CompetitorInformationDialog,
-    CoverplusDialog,
-    ProductFulfillmentDialog
+    ProductDialog: () => import('~/components/ProductDialog.vue'),
+    CompetitorInformationDialog: () => import('~/components/CompetitorInformationDialog.vue'),
+    CoverplusDialog: () => import('~/components/CoverplusDialog.vue'),
+    ProductFulfillmentDialog: () => import('~/components/ProductFulfillmentDialog.vue'),
   },
   watch: {
     reasons: {
@@ -38,7 +37,7 @@ export default {
       months: ['None', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
       product: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null, remarks: null },
       products: [],
-      coverplus: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
+      coverplus: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null , remarks: null, warrantyRequest: null, warrantyRequestPeriod: null },
       coverpluses: [],
       competitor: { model: null, brand: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
       competitors: [],
@@ -71,7 +70,7 @@ export default {
           { value: 3, label: 'Low' }
         ]
       },
-      distributors: ['Servex', 'Ingram', 'VSTech', 'Etech IT', 'GOS', 'EDAP'],
+      distributors: ['Servex', 'Ingram', 'VSTECs', 'Etech IT', 'GOS', 'EDAP'],
       quantity: {},
       budget: {},
       fulfilledPrice: {},
@@ -104,17 +103,32 @@ export default {
       const request = JSON.parse(this.$route.query.request);
       this.populateForm(request);
     }
-    else {
-      await this.loadDraft();
-    }
   },
   computed: {
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
+    formattedRequestDate() {
+      return moment(this.submissionDetail.createdOnUTC).format('DD/MM/YYYY hh:mm A');
+    },
+    formattedApprovedTime() {
+      return moment(this.approvedTime).format('DD/MM/YYYY hh:mm A');
+    },
+    formattedClosingDate() {
+      return moment(this.projectInformation.closingDate).format('DD/MM/YYYY hh:mm A');
+    },
+    formattedDeliveryDate() {
+      return moment(this.projectInformation.deliveryDate).format('DD/MM/YYYY hh:mm A');
+    },
     isCommentEditable() {
       return this.isViewMode && !this.isMode('dealable');
     },
     isViewMode() {
       return this.$route.query.view === 'true';
+    },
+    isAmendMode() {
+      return this.$route.query.editable === 'true';
+    },
+    isFulfillMode() {
+      return this.$route.query.isFulfill === 'true' || this.$route.query.isFulfillCoverplus === 'true';
     },
     currentRequestApprovalState() {
       return this.currentRequest ? this.currentRequest.approvalState : null;
@@ -148,18 +162,14 @@ export default {
       });
     },
     editProductRow(editedProduct) {
-      console.log("product", editedProduct);
-      const index = this.productsToShow.findIndex(product => product.id === editedProduct.id);
-      
+      const index = this.productsToShow.findIndex(product => product.productId === editedProduct.productId);
       if (index !== -1) {
         const updatedProduct = { ...editedProduct };
         updatedProduct.distyPrice = updatedProduct.distyPrice || 0;
         updatedProduct.dealerPrice = updatedProduct.dealerPrice || 0;
         updatedProduct.endUserPrice = updatedProduct.endUserPrice || 0;
         
-        this.$set(this.products, index, updatedProduct);
-        
-        this.showUpdatedProducts(updatedProduct);
+        this.$set(this.productsToShow, index, updatedProduct);
       } else {
         console.error("Product not found for editing.");
       }
@@ -231,6 +241,32 @@ export default {
             }).catch(error => {
               console.log('error', error);
               Swal.fire('Error', 'Failed to approve quotation', 'error');
+            });
+        }
+      });
+    },
+    rejectQuotation() {
+      Swal.fire({
+        title: 'Confirmation',
+        text: 'Are you sure you want to reject the quotation?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'No'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.$axios.post(`${this.$config.restUrl}/api/request/rejectfirstlevelrequest?requestId=${this.currentRequest.id}`)
+            .then(response => {
+              this.closeDialogProductFulfillment();
+              Swal.fire('Approved!', 'Quotation is successfully rejected.', 'success')
+                .then(() => {
+                  this.$router.push('/request');
+                });
+            }).catch(error => {
+              console.log('error', error);
+              Swal.fire('Error', 'Failed to reject quotation', 'error');
             });
         }
       });
@@ -329,7 +365,6 @@ export default {
       this.dialogCoverplus = true;
     },
     openEditCoverplusDialog(coverplus) {
-      console.log("awd", coverplus);
       this.selectedCoverplus = { ...coverplus };
       this.$nextTick(() => {
         this.dialogCoverplus = true;
@@ -344,10 +379,10 @@ export default {
         updatedCoverplus.distyPrice = updatedCoverplus.distyPrice || 0;
         updatedCoverplus.dealerPrice = updatedCoverplus.dealerPrice || 0;
         updatedCoverplus.endUserPrice = updatedCoverplus.endUserPrice || 0;
+        updatedCoverplus.warrantyRequest = updatedCoverplus.warrantyRequest || '';
+        updatedCoverplus.warrantyRequestPeriod = updatedCoverplus.warrantyRequestPeriod || '';
 
-        this.$set(this.coverplus, index, updatedCoverplus);
-
-        this.showUpdatedCoverplus(updatedCoverplus);
+        this.$set(this.coverplusesToShow, index, updatedCoverplus);
       } else {
         console.error("Product not found for editing.");
       }
@@ -359,6 +394,8 @@ export default {
       newCoverplus.distyPrice = newCoverplus.distyPrice || 0;
       newCoverplus.dealerPrice = newCoverplus.dealerPrice || 0;
       newCoverplus.endUserPrice = newCoverplus.endUserPrice || 0;
+      newCoverplus.warrantyRequest = newCoverplus.warrantyRequest || 0;
+      newCoverplus.warrantyRequestPeriod = newCoverplus.warrantyRequestPeriod || 0;
       this.coverpluses.push(newCoverplus);
       this.showAddedCoverpluses(newCoverplus);
       this.product.category = null;
@@ -367,6 +404,8 @@ export default {
       this.product.distyPrice = null;
       this.product.dealerPrice = null;
       this.product.endUserPrice = null;
+      this.product.warrantyRequest = null;
+      this.product.warrantyRequestPeriod = null;
       this.dialogCoverplus = false;
     },
     removeCoverplus(index) {
@@ -407,14 +446,12 @@ export default {
       }
       return 'N/A';
     },
-    async populateForm(requestData) {
-      console.log("re", requestData);
+    populateForm(requestData) {
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProductsModel) {
         const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
         if (categoryFound) {
           this.selectedCategories.push(categoryFound);
-          await this.fetchProductsForCategory(categoryFound);
           const newItem = {
             ...requestData,
             ...productModel,
@@ -438,10 +475,13 @@ export default {
             dealerPrice: productModel.dealerPrice,
             endUserPrice: productModel.endUserPrice,
             productName: productModel.productName,
-            remarks: productModel.remarks || 'n/a',
+            remarks: (productModel.remarks === null || productModel.remarks === "null") ? 'N/A' : productModel.remarks,
             status: productModel.status,
             statusStr: productModel.statusStr,
-            fulfilledPrice: productModel.fulfilledPrice
+            fulfilledPrice: productModel.fulfilledPrice,
+            warrantyRequest: productModel.warrantyRequest,
+            warrantyRequestPeriod: productModel.warrantyRequestPeriod,
+            breached: productModel.breached
           };
           if (productModel.isCoverplus === true) {
             this.coverplusesToShow.push(p);
@@ -460,6 +500,8 @@ export default {
         };
         this.competitorsToShow.push(c);
       }
+      this.approvedByName = requestData.approvedByName;
+      this.approvedTime = requestData.approvedTime;
       this.submissionDetail = requestData.requestSubmissionDetailModel;
       this.projectInformation = requestData.projectInformationModel;
       this.approvalStateStr = requestData.approvalStateStr;
@@ -484,9 +526,7 @@ export default {
       try {
         const response = await this.$axios.get(`${this.$config.restUrl}/api/category/getvalidcategories`);
         this.categories = response.data.data;
-        for (const category of this.categories) {
-          await this.fetchProductsForCategory(category);
-        }
+
       } catch (error) {
         console.error(error);
       }
@@ -518,32 +558,42 @@ export default {
     },
     loadDraft() {
       try {
-        this.selectedCategories = [];
-        this.productsToShow = [];
-
+        this.selectedCategories = JSON.parse(localStorage.getItem("savedItem-selectedCategories")) || [];
         this.productsToShow = JSON.parse(localStorage.getItem("savedItem-productsToShowList")) || [];
         this.competitorsToShow = JSON.parse(localStorage.getItem("savedItem-competitorsToShowList")) || [];
-        this.customerName = localStorage.getItem("savedItem-customerName", this.customerName) || "";
-        this.priority.value = localStorage.getItem("savedItem-priority", this.priority.value);
-        this.dealJustification = localStorage.getItem("savedItem-dealJustification", this.dealJustification) || "";
-        this.deadline = localStorage.getItem("savedItem-deadline", this.deadline);
-
+        this.coverplusesToShow = JSON.parse(localStorage.getItem("savedItem-coverplusesToShowList")) || [];
+        this.submissionDetail = JSON.parse(localStorage.getItem("savedItem-submissionDetail")) || this.submissionDetail;
+        this.projectInformation = JSON.parse(localStorage.getItem("savedItem-projectInformation")) || this.projectInformation;
+        this.projectInformationReasonsToInsert = JSON.parse(localStorage.getItem("savedItem-projectInformationReasonsToInsert")) || [];
+        this.reasons = JSON.parse(localStorage.getItem("savedItem-reasons")) || this.reasons;
+        this.priority = JSON.parse(localStorage.getItem("savedItem-priority")) || this.priority;
+        this.comments = localStorage.getItem("savedItem-comments") || this.comments;
+        this.customerName = localStorage.getItem("savedItem-customerName") || this.customerName;
+        this.dealJustification = localStorage.getItem("savedItem-dealJustification") || this.dealJustification;
+        this.deadline = localStorage.getItem("savedItem-deadline") || this.deadline;
       } catch (error) {
         console.error(error);
       }
     },
     saveDraft() {
-
-      localStorage.clear();
-
-      localStorage.setItem("savedItem-productsToShowList", JSON.stringify(this.productsToShow));
-      localStorage.setItem("savedItem-competitorsToShowList", JSON.stringify(this.competitorsToShow));
-      localStorage.setItem("savedItem-customerName", this.customerName);
-      localStorage.setItem("savedItem-priority", this.priority.value);
-      localStorage.setItem("savedItem-dealJustification", this.dealJustification);
-      localStorage.setItem("savedItem-deadline", this.deadline);
-      this.$swal('Request draft saved');
-
+      try {
+        localStorage.setItem("savedItem-selectedCategories", JSON.stringify(this.selectedCategories));
+        localStorage.setItem("savedItem-productsToShowList", JSON.stringify(this.productsToShow));
+        localStorage.setItem("savedItem-competitorsToShowList", JSON.stringify(this.competitorsToShow));
+        localStorage.setItem("savedItem-coverplusesToShowList", JSON.stringify(this.coverplusesToShow));
+        localStorage.setItem("savedItem-submissionDetail", JSON.stringify(this.submissionDetail));
+        localStorage.setItem("savedItem-projectInformation", JSON.stringify(this.projectInformation));
+        localStorage.setItem("savedItem-projectInformationReasonsToInsert", JSON.stringify(this.projectInformationReasonsToInsert));
+        localStorage.setItem("savedItem-reasons", JSON.stringify(this.reasons));
+        localStorage.setItem("savedItem-priority", JSON.stringify(this.priority));
+        localStorage.setItem("savedItem-comments", this.comments);
+        localStorage.setItem("savedItem-customerName", this.customerName);
+        localStorage.setItem("savedItem-dealJustification", this.dealJustification);
+        localStorage.setItem("savedItem-deadline", this.deadline);
+        this.$swal('Form saved');
+      } catch (error) {
+        console.error(error);
+      }
     },
     async submitForm(selectedCategory) {
       if (selectedCategory.id != null) {
@@ -640,10 +690,12 @@ export default {
         return "Customer's requirements must not be empty!";
       } else if (this.productsToShow.length > 0 && this.competitorsToShow.length === 0) {
         return "At least one competitor is required!";
-      } else if (!emailRegex.test(this.submissionDetail.email) || !emailRegex.test(this.projectInformation.email)) {
+      } else if (!emailRegex.test(this.submissionDetail.email)) {
         return "Invalid email format!";
-      } else if (!phoneRegex.test(this.submissionDetail.telephoneNo) || !phoneRegex.test(this.projectInformation.telephoneNo) || !phoneRegex.test(this.submissionDetail.faxNo)) {
-        return "Invalid phone / fax no. format!";
+      } else if (this.projectInformation.email != null && !emailRegex.test(this.projectInformation.email)) {
+        return "Invalid email format!";
+      } else if (!phoneRegex.test(this.submissionDetail.telephoneNo) || !phoneRegex.test(this.projectInformation.telephoneNo)) {
+        return "Invalid phone no. format!";
       } else if (this.projectInformation.closingDate == null) {
           return "Closing Date must not be empty!";
       } else if (this.projectInformation.deliveryDate == null) {
@@ -653,29 +705,40 @@ export default {
       }
     },
     exportToExcel() {
-      this.$axios.get('/api/export/toExcel', {
-        params: { requestId: this.projectInformation.requestId },
-        responseType: 'blob'
-      })
-        .then(response => {
-          const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-          const url = URL.createObjectURL(blob);
+      const navBar = document.querySelector('.ums-header');
+      const originalDisplayStyle = navBar.style.display;
+      navBar.style.display = 'none';
 
-          Swal.fire({
-            title: 'Exported!',
-            html: `<a href="${url}" download="request.xlsx">Click here to download</a>`,
-            confirmButtonText: 'Close',
-            onClose: () => {
-              URL.revokeObjectURL(url);
-            }
-          });
-        })
-        .catch(error => {
-          console.error('Error exporting to Excel:', error);
-          Swal.fire('Error', 'Failed to generate Excel file', 'error');
+      html2canvas(document.body, {
+        x: 0,
+        y: navBar.offsetHeight,
+        width: document.body.offsetWidth,
+        height: document.body.offsetHeight - navBar.offsetHeight,
+        useCORS: true
+      }).then(canvas => {
+        navBar.style.display = originalDisplayStyle;
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
+        const pdf = new JsPDF({
+          orientation: 'portrait',
+          unit: 'px',
+          format: [canvas.width, canvas.height],
         });
-    },
 
+        pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+
+        // Get the request ID from the currentRequest object
+        const requestId = this.currentRequest.id;
+        const fileName = `request_${requestId}.pdf`;
+
+        pdf.save(fileName);
+
+      }).catch(error => {
+        navBar.style.display = originalDisplayStyle;
+        console.error('Error exporting to PDF:', error);
+        Swal.fire('Error', 'Failed to generate PDF file', 'error');
+      });
+    },
     processQuotation() {
       const quotationData = {
         ApprovalState: 20,
@@ -718,6 +781,9 @@ export default {
           distyPrice: this.coverplusesToShow[coverplus].distyPrice,
           dealerPrice: this.coverplusesToShow[coverplus].dealerPrice,
           endUserPrice: this.coverplusesToShow[coverplus].endUserPrice,
+          warrantyRequest: this.coverplusesToShow[coverplus].warrantyRequest,
+          warrantyRequestPeriod: this.coverplusesToShow[coverplus].warrantyRequestPeriod,
+          status: this.coverplusesToShow[coverplus].status,
           isCoverplus: true
         };
         quotationData.requestProducts.push(coverplusToInsert);

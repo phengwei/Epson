@@ -1,25 +1,27 @@
 <template>
-  <main class="dashboard-header" v-if="loggedInUser.roles.includes('Sales Section Head')">
+  <main class="dashboard-header" v-if="loggedInUser.roles.includes('Sales Section Head') || loggedInUser.roles.includes('Admin')">
     <div class="grid-container">
       <div class="row">
-        <div class="grid-item full-width margin">
+        <div class="grid-item full-width sales-head-table">
           <v-app>
             <ItemsPendingSalesSectionHeadAction />
           </v-app>
         </div>
       </div>
       <div class="row">
-        <div class="grid-item">
+        <div class="grid-item full-width sales-head-table">
           <v-app>
-            <PendingRequestSummary />
-          </v-app>
-        </div>
-        <div class="grid-item">
-          <v-app>
-            <CompletedRequestSummary />
+            <ItemsPendingSalesSectionHeadDepartment />
           </v-app>
         </div>
       </div>
+      <!--<div class="row">
+        <div class="grid-item full-width sales-head-table">
+          <v-app>
+            <SalesSectionRequestSummary />
+          </v-app>
+        </div>
+      </div>-->
     </div>
   </main>
 </template>
@@ -27,8 +29,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import ItemsPendingSalesSectionHeadAction from '~/components/ItemsPendingSalesSectionHeadAction.vue';
-  import PendingRequestSummary from '~/components/PendingRequestSummary.vue';
-  import CompletedRequestSummary from '~/components/CompletedRequestSummary.vue';
+  import ItemsPendingSalesSectionHeadDepartment from '~/components/ItemsPendingSalesSectionHeadDepartment.vue';
 
   export default {
     name: 'SHDashboard',
@@ -41,8 +42,7 @@
     },
     components: {
       ItemsPendingSalesSectionHeadAction,
-      PendingRequestSummary,
-      CompletedRequestSummary
+      ItemsPendingSalesSectionHeadDepartment
     }
   };
 </script>
@@ -74,10 +74,6 @@
     width: 100%;
   }
 
-  .margin{
-      margin-bottom: 5%;
-      margin-top: 1%;
-  }
   .v-application--wrap {
     min-height: 20vh !important;
   }
@@ -86,7 +82,7 @@
     margin-top: 7rem;
   }
 
-  .request-table {
+  .sales-head-table {
     margin-top: 5rem;
     margin-bottom: 5rem;
   }

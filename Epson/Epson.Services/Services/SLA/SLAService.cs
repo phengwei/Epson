@@ -14,6 +14,11 @@ using System.Text;
 using Microsoft.Identity.Client;
 using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.Enum;
+using Microsoft.AspNetCore.Identity;
+using Epson.Services.Interface.Users;
+using Epson.Core.Domain.Users;
+using Epson.Services.Interface.Requests;
+using Epson.Services.DTO.Requests;
 
 namespace Epson.Services.Services.SLA
 {
@@ -24,28 +29,36 @@ namespace Epson.Services.Services.SLA
         private readonly IRepository<SLAStaffLeave> _SLAStaffLeaveRepository;
         private readonly IRepository<Request> _requestRepository;
         private readonly IRepository<RequestProduct> _requestProductRepository;
+        private readonly IRepository<Team> _teamRepository;
         private readonly ILogger _logger;
         private readonly IOptions<SLASetting> _slaSetting;
         private readonly IConfiguration _configuration;
-
+        private readonly IUserService _userService;
+        private readonly UserManager<ApplicationUser> _userManager;
         public SLAService
             (IMapper mapper,
             IRepository<SLAHoliday> slaHolidayRepository,
             IRepository<SLAStaffLeave> slaStaffLeaveRepository,
             IRepository<Request> requestRepository,
             IRepository<RequestProduct> requestProductRepository,
+            IRepository<Team> teamRepository,
             ILogger logger,
             IOptions<SLASetting> slaSetting,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IUserService userService,
+            UserManager<ApplicationUser> userManager)
         {
             _mapper = mapper;
             _SLAHolidayRepository = slaHolidayRepository;
             _SLAStaffLeaveRepository = slaStaffLeaveRepository;
             _requestRepository = requestRepository;
             _requestProductRepository = requestProductRepository;
+            _teamRepository = teamRepository;
             _logger = logger;
             _slaSetting = slaSetting;
             _configuration = configuration;
+            _userService = userService;
+            _userManager = userManager;
         }
 
         public SLAHolidayDTO GetSLAHolidayById(int id)
@@ -171,22 +184,35 @@ namespace Epson.Services.Services.SLA
             return _mapper.Map<SLASettingDTO>(_slaSetting.Value);
         }
 
-        public decimal GetAverageTimeToResolutionInHours(string userId)
+        public decimal GetAverageTimeToResolutionInHours(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {
-            //var ticketsResolved = _requestRepository.Table
-            //    .Where(x => x.CreatedById == userId 
-            //    && x.ApprovalState == (int)ApprovalStateEnum.Approved)
-            //    .ToList();
+            List<RequestProduct> ticketsResolved = new List<RequestProduct>();
 
-            var ticketsResolved = _requestProductRepository.Table
-                .Where(x => x.FulfillerId == userId &&
-                x.HasFulfilled == true)
-                .ToList();
+            if (isAdminUser)
+            {
+                ticketsResolved = _requestProductRepository.Table
+                    .Where(x => x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
+            else if (isSalesHeadUser)
+            {
+                ticketsResolved = _requestProductRepository.Table
+                    .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
+            else
+            {
+                ticketsResolved = _requestProductRepository.Table
+                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
 
             TimeSpan totalResolutionTime = TimeSpan.Zero;
 
             foreach (var ticket in ticketsResolved)
+            {
                 totalResolutionTime += ticket.TimeToResolution;
+            }
 
             decimal averageTimeToResolution = (decimal)totalResolutionTime.TotalHours / ticketsResolved.Count;
             averageTimeToResolution = Math.Round(averageTimeToResolution, 2);
@@ -194,76 +220,118 @@ namespace Epson.Services.Services.SLA
             return averageTimeToResolution;
         }
 
-        public int GetBreachedTicketCount(string userId)
+        public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {
-            // get breached ticket using approver as metric
-            //var ticketsBreached = _requestRepository.Table
-            //    .Where(x => x.Breached &&
-            //                x.CreatedById == userId &&
-            //                x.ApprovalState == (int)ApprovalStateEnum.Approved)
-            //    .ToList();
+            List<RequestProduct> ticketsBreached = new List<RequestProduct>();
 
-            var ticketsBreached = _requestProductRepository.Table
-                .Where(x => x.Breached &&
-                            x.FulfillerId == userId)
-                .ToList();
+            if (isAdminUser)
+            {
+                ticketsBreached = _requestProductRepository.Table
+                    .Where(x => x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
+            else if (isSalesHeadUser)
+            {
+                ticketsBreached = _requestProductRepository.Table
+                    .Where(x => users.Contains(x.FulfillerId) && x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
+            else
+            {
+                ticketsBreached = _requestProductRepository.Table
+                    .Where(x => x.FulfillerId == user.Id && x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
 
             return ticketsBreached.Count;
         }
 
-        public int GetTotalTicketCount(string userId)
+        public int GetTotalTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {
-            //ticket count of requester
-            //var totalTickets = _requestRepository.Table
-            //    .Where(x => x.CreatedById == userId)
-            //    .ToList();
+            List<RequestProduct> totalTickets = new List<RequestProduct>();
 
-            var totalTickets = _requestProductRepository.Table
-                .Where (x => x.FulfillerId == userId)
-                .ToList();
+            if (isAdminUser)
+            {
+                totalTickets = _requestProductRepository.Table
+                    .Where(x => month == 0 || x.CreatedOnUTC.Month == month)
+                    .ToList();
+            }
+            else if (isSalesHeadUser)
+            {
+                totalTickets = _requestProductRepository.Table
+                    .Where(x => users.Contains(x.FulfillerId) && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
+            else
+            {
+                totalTickets = _requestProductRepository.Table
+                    .Where(x => x.FulfillerId == user.Id && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
 
             return totalTickets.Count;
         }
 
-        public int GetApprovedTickets(string userId)
+        private int GetApprovedTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {
-            //var approvedTickets = _requestRepository.Table
-            //    .Where(x => x.CreatedById == userId &&
-            //                x.ApprovalState == (int)ApprovalStateEnum.Approved)
-            //    .ToList();
+            List<RequestProduct> approvedTickets = new List<RequestProduct>();
 
-            var approvedTickets = _requestProductRepository.Table
-                .Where(x => x.FulfillerId == userId &&
-                            x.HasFulfilled == true)
-                .ToList();
+            if (isAdminUser)
+            {
+                approvedTickets = _requestProductRepository.Table
+                    .Where(x => x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
+            else if (isSalesHeadUser)
+            {
+                approvedTickets = _requestProductRepository.Table
+                    .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
+            else
+            {
+                approvedTickets = _requestProductRepository.Table
+                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
 
             return approvedTickets.Count;
         }
 
-        public decimal GetSuccessRateOfTickets(string userId)
+        public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {
-            //var successTickets = _requestRepository.Table
-            //    .Where(x => x.CreatedById == userId &&
-            //                !x.Breached &&
-            //                x.ApprovalState == (int)ApprovalStateEnum.Approved)
-            //    .ToList();
+            List<RequestProduct> successTickets = new List<RequestProduct>();
 
-            var successTickets = _requestProductRepository.Table
-                .Where(x => x.FulfillerId == userId &&
-                            x.HasFulfilled == true &&
-                            !x.Breached)
-                .ToList();
+            if (isAdminUser)
+            {
+                successTickets = _requestProductRepository.Table
+                    .Where(x => x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
+            else if (isSalesHeadUser)
+            {
+                successTickets = _requestProductRepository.Table
+                    .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
+            else
+            {
+                successTickets = _requestProductRepository.Table
+                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .ToList();
+            }
 
-            var totalTickets = GetApprovedTickets(userId);
+            var totalTickets = GetApprovedTickets(user, isSalesHeadUser, users, requests, isAdminUser, month);
 
             decimal successRate = 0;
             if (totalTickets > 0)
             {
                 successRate = (decimal)successTickets.Count / totalTickets;
-                successRate = Math.Round(successRate * 100, 2); 
+                successRate = Math.Round(successRate * 100, 2);
             }
 
             return successRate;
         }
+
     }
 }

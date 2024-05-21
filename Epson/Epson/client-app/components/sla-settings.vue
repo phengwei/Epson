@@ -79,7 +79,6 @@
               WorkingEndMinute: parseInt(this.workingHoursEnd.split(':')[1])
             }
           }).then(response => {
-            console.log('SLA holiday added successfully');
           })
         } catch (error) {
           console.error('There was a problem updating SLA settings');

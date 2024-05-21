@@ -14,6 +14,10 @@
           <input v-model="localEditedItem.productName" class="border-input readonly-field" label="Product" readonly></input>
         </div>
         <div class="form-group">
+          <label>Disty Price</label>
+          <input v-model="localEditedItem.distyPrice" class="border-input readonly-field" label="Disty Price" readonly></input>
+        </div>
+        <div class="form-group">
           <label>Dealer Price</label>
           <input v-model="localEditedItem.dealerPrice" class="border-input readonly-field" label="Dealer Price" readonly></input>
         </div>
@@ -72,6 +76,7 @@
       editedItem: {
         handler(newValue) {
           this.localEditedItem = { ...newValue };
+          
         },
         immediate: true,
       },

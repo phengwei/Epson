@@ -1,14 +1,20 @@
 <template>
   <v-data-table :headers="headers"
-                :items="requests"
+                :items="filteredRequests"
                 :options.sync="options"
-                :items-per-page="5"
+                :items-per-page="10"
                 :loading="loading"
                 class="elevation-1">
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title>Pending</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
+        <v-text-field v-model="search"
+                      class="search-input"
+                      append-icon="mdi-magnify"
+                      label="Search by end user or request #"
+                      single-line
+                      hide-details></v-text-field>
         <v-spacer></v-spacer>
         <v-dialog v-model="dialog" max-width="500px">
           <v-card>
@@ -227,6 +233,11 @@
             value: 'id',
           },
           {
+            text: 'End User',
+            align: 'start',
+            value: 'endUserName',
+          },
+          {
             text: 'Created Time',
             align: 'start',
             value: 'createdOnUTC',
@@ -240,7 +251,7 @@
         ],
         options: {},
         requests: [],
-        loading: false,
+        loading: true,
         quotationDialog: false,
         editedIndex: -1,
         editedItem: {
@@ -261,6 +272,7 @@
         selectedProducts: {},
         quantity: {},
         budget: {},
+        search: '',
         priority: {
           value: 1,
           options: [
@@ -285,7 +297,19 @@
       formTitle() {
         return 'Request'
       },
-
+      filteredRequests() {
+        if (this.search.trim() === '') {
+          return this.requests;
+        }
+        return this.requests.filter(request => {
+          const requestIdMatch = String(request.id).toLowerCase().includes(this.search.toLowerCase());
+          const projectNameMatch = request.projectInformationModel &&
+            request.projectInformationModel.projectName &&
+            request.projectInformationModel.projectName.toLowerCase().includes(this.search.toLowerCase());
+          return requestIdMatch || projectNameMatch;
+        });
+      },
+      
     },
     watch: {
       options: {
@@ -306,7 +330,7 @@
 
         if (request.approvalState === ApprovalStateEnum.AmendQuotation) {
           queryParameters = { ...queryParameters, editable: true };
-        } else if (request.approvalState === ApprovalStateEnum.PendingFulfillerAction) {
+        } else {
           queryParameters = { ...queryParameters, view: true };
         }
 
@@ -382,12 +406,15 @@
       getPendingFulfillmentAsRequester() {
         this.loading = true
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfillmentasrequester`).then(result => {
-          for (const requests in result.data.data) {
-            result.data.data[requests].createdOnUTC = moment(this.editedItem.createdOnUTC).format('DD MMM YY HH:mm');
-          }
-          this.requests = result.data.data
-          this.loading = false
-        })
+          this.requests = result.data.data.map(request => {
+            return {
+              ...request,
+              endUserName: request.projectInformationModel.projectName || 'N/A',
+              createdOnUTC: moment(request.createdOnUTC).format('DD MMM YY HH:mm')
+            };
+          });
+          this.loading = false;
+        });
       },
       checkboxChanged(selectedCategory) {
         if (selectedCategory) {
@@ -649,5 +676,12 @@
     width: 1.2em;
     height: 1.2em;
     margin-left: 5%
+  }
+
+  .search-input {
+    flex-grow: 1;
+    margin-left: 16px;
+    margin-right: 16px;
+    width: 5%;
   }
 </style>
