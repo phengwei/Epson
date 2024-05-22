@@ -165,8 +165,8 @@ export default {
 
   
   publicRuntimeConfig: {
-    restUrl: 'https://ums.epson.com.my',
-    baseURL: 'https://ums.epson.com.my',
+    restUrl: 'https://69ca7343.azurewebsites.net',
+    baseURL: 'https://69ca7343.azurewebsites.net',
   },
   privateRuntimeConfig: {
     myPrivateToken: process.env.PRIVATE_TOKEN,
@@ -178,7 +178,7 @@ export default {
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    baseURL: 'https://ums.epson.com.my',
+    baseURL: 'https://69ca7343.azurewebsites.net',
     https: true,
   },
   // PWA module configuration: https://go.nuxtjs.dev/pwa

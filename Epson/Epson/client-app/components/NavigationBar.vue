@@ -59,14 +59,6 @@
           </div>
         </div>
 
-        <!-- Website Logo -->
-        <div class="flex items-center">
-          <nuxt-link to="/" class="py-4 px-2 w-[150px]">
-            <img class="w-[150px] h-14 object-contain"
-                 src="/images/svg/epson-logo.png"
-                 alt="Epson" />
-          </nuxt-link>
-        </div>
 
         <!-- Mobile menu button -->
         <!--<div class="md:hidden flex items-center">

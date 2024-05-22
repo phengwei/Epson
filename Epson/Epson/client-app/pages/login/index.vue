@@ -1,13 +1,6 @@
 <template>
   <main class="w-full h-full flex items-center justify-center">
     <div class="absolute top-0 w-full h-full bg-gray-900"></div>
-    <div class="absolute top-0 right-0 mr-4 mt-4">
-      <nuxt-link to="/" class="flex items-center py-4 px-2">
-        <img class="w-[150px] h-14 object-contain"
-             src="/images/svg/navbar/epson-logo.png"
-             alt="Epson" />
-      </nuxt-link>
-    </div>
     <div class="container mx-auto px-4 h-full">
       <div class="flex content-center items-center justify-center h-full">
         <div class="w-full lg:w-4/12 px-4">

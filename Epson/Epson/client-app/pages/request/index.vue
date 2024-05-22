@@ -10,9 +10,16 @@
                         label="Search by end user or request #"
                         single-line
                         hide-details></v-text-field>
-          <v-select v-model="selectedMonth" :items="months" @change="getRequests" class="month-select"></v-select>
+          <v-select v-model="selectedMonth"
+                    :items="months"
+                    @change="getRequests"
+                    class="month-select"></v-select>
         </div>
-        <v-btn v-if="loggedInUser && loggedInUser.roles.includes('Sales')" class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
+        <v-btn v-if="loggedInUser && loggedInUser.roles.includes('Sales')"
+               class="request-btn"
+               @click="redirectToCreateQuotation">
+          Create Quotation
+        </v-btn>
       </v-card-title>
       <v-card-text>
         <v-data-table :headers="headers"
@@ -29,6 +36,7 @@
     </v-card>
   </div>
 </template>
+
 <script>
   import { mapGetters } from 'vuex';
   import moment from 'moment';
@@ -42,22 +50,29 @@
       filteredRequests() {
         let filtered = this.requests;
         if (this.search.trim() !== '') {
-          filtered = filtered.filter(request => {
-            const requestIdMatch = String(request.id).toLowerCase().includes(this.search.toLowerCase());
-            const projectNameMatch = request.projectInformationModel &&
+          filtered = filtered.filter((request) => {
+            const requestIdMatch = String(request.id)
+              .toLowerCase()
+              .includes(this.search.toLowerCase());
+            const projectNameMatch =
+              request.projectInformationModel &&
               request.projectInformationModel.projectName &&
-              request.projectInformationModel.projectName.toLowerCase().includes(this.search.toLowerCase());
+              request.projectInformationModel.projectName
+                .toLowerCase()
+                .includes(this.search.toLowerCase());
             return requestIdMatch || projectNameMatch;
           });
         }
         if (this.selectedMonth !== null) {
-          filtered = filtered.filter(request => {
+          filtered = filtered.filter((request) => {
             const requestMonth = moment(request.createdOnUTC).month() + 1; // months are 0-indexed
-            return this.selectedMonth === 0 || requestMonth === this.selectedMonth;
+            return (
+              this.selectedMonth === 0 || requestMonth === this.selectedMonth
+            );
           });
         }
         return filtered;
-      }
+      },
     },
     data() {
       return {
@@ -70,7 +85,7 @@
           { text: 'Created By', value: 'createdBy' },
           { text: 'Approved Time', value: 'approvedTime' },
           { text: 'Requester Team', value: 'createdByTeam' },
-          { text: 'Actions', value: 'action' }
+          { text: 'Actions', value: 'action' },
         ],
         requests: [],
         options: {},
@@ -91,7 +106,7 @@
           { value: 9, text: 'September' },
           { value: 10, text: 'October' },
           { value: 11, text: 'November' },
-          { value: 12, text: 'December' }
+          { value: 12, text: 'December' },
         ],
         ApprovalStateEnum,
         RequestProductStatusEnum,
@@ -99,70 +114,126 @@
     },
     created() {
       this.breached = this.$route.query.breached === 'true';
-      this.selectedMonth = this.$route.query.month ? parseInt(this.$route.query.month) : new Date().getMonth() + 1;
+      this.selectedMonth = this.$route.query.month
+        ? parseInt(this.$route.query.month)
+        : new Date().getMonth() + 1;
       this.getRequests();
     },
     methods: {
       getRequests() {
+        this.loading = true; // Start loading
         const params = { breached: this.breached };
-        this.$axios.get(`${this.$config.restUrl}/api/request/getrequests`, { params })
-          .then(response => {
-            this.requests = response.data.data.map(item => {
-              const isApproved = item.approvalState === this.ApprovalStateEnum.Approved;
-              const approvedTime = isApproved ? moment(item.approvedTime).add(8, 'hours').format('DD MMM YY HH:mm') : 'N/A';
-              return {
-                ...item,
-                endUserName: item.projectInformationModel.projectName || 'N/A',
-                createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm'),
-                approvedTime,
-                createdByTeam: item.createdTeam || 'N/A'
-              };
-            });
+        this.$axios
+          .get(`${this.$config.restUrl}/api/request/getrequests`, { params })
+          .then((response) => {
+            if (response.data && response.data.data) {
+              this.requests = response.data.data.map((item) => {
+                const isApproved = item.approvalState === this.ApprovalStateEnum.Approved;
+                const approvedTime = isApproved
+                  ? moment(item.approvedTime).add(8, 'hours').format('DD MMM YY HH:mm')
+                  : 'N/A';
+                return {
+                  ...item,
+                  endUserName: item.projectInformationModel.projectName || 'N/A',
+                  createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm'),
+                  approvedTime,
+                  createdByTeam: item.createdTeam || 'N/A',
+                };
+              });
+            } else {
+              this.requests = [];
+            }
           })
-          .catch(error => {
+          .catch((error) => {
             console.error('Error fetching requests:', error);
+            this.requests = [];
+          })
+          .finally(() => {
+            this.loading = false; // End loading
           });
       },
       redirectToCreateQuotation() {
         this.$router.push('/createquotation?create=true');
       },
       viewRequest(request) {
-        const anyProductRejected = request.requestProductsModel.some(product =>
-          product.status === this.RequestProductStatusEnum.Rejected
+        const anyProductRejected = request.requestProductsModel.some(
+          (product) =>
+            product.status === this.RequestProductStatusEnum.Rejected
         );
-        let queryParameters = { request: JSON.stringify(request), month: this.selectedMonth };
-        if (this.loggedInUser && this.loggedInUser.roles.includes('Sales Section Head')
-          && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadAction
-          && request.createdById !== this.loggedInUser.id) {
+        let queryParameters = {
+          request: JSON.stringify(request),
+          month: this.selectedMonth,
+        };
+        if (
+          this.loggedInUser &&
+          this.loggedInUser.roles.includes('Sales Section Head') &&
+          request.approvalState ===
+          this.ApprovalStateEnum.PendingSalesSectionHeadAction &&
+          request.createdById !== this.loggedInUser.id
+        ) {
           queryParameters = { ...queryParameters, isApprove: true, view: true };
-        } else if (this.loggedInUser && this.loggedInUser.roles.includes('Sales Section Head')
-          && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadFinalAction) {
-          queryParameters = { ...queryParameters, isFinalApprove: true, view: true };
-        } else if (this.loggedInUser && this.loggedInUser.id === request.createdById
-          && request.approvalState === this.ApprovalStateEnum.PendingRequesterAction) {
-          queryParameters = { ...queryParameters, dealable: true, view: true, amendable: true };
-        } else if (this.loggedInUser && this.loggedInUser.id === request.createdById
-          && request.approvalState === this.ApprovalStateEnum.PendingFulfillerAction
-          && anyProductRejected) {
-          queryParameters = { ...queryParameters, amendable: true, view: true };
-        } else if (this.loggedInUser && this.loggedInUser.id === request.createdById
-          && request.approvalState === this.ApprovalStateEnum.AmendQuotation) {
+        } else if (
+          this.loggedInUser &&
+          this.loggedInUser.roles.includes('Sales Section Head') &&
+          request.approvalState ===
+          this.ApprovalStateEnum.PendingSalesSectionHeadFinalAction
+        ) {
+          queryParameters = {
+            ...queryParameters,
+            isFinalApprove: true,
+            view: true,
+          };
+        } else if (
+          this.loggedInUser &&
+          this.loggedInUser.id === request.createdById &&
+          request.approvalState === this.ApprovalStateEnum.PendingRequesterAction
+        ) {
+          queryParameters = {
+            ...queryParameters,
+            dealable: true,
+            view: true,
+            amendable: true,
+          };
+        } else if (
+          this.loggedInUser &&
+          this.loggedInUser.id === request.createdById &&
+          request.approvalState === this.ApprovalStateEnum.PendingFulfillerAction &&
+          anyProductRejected
+        ) {
+          queryParameters = {
+            ...queryParameters,
+            amendable: true,
+            view: true,
+          };
+        } else if (
+          this.loggedInUser &&
+          this.loggedInUser.id === request.createdById &&
+          request.approvalState === this.ApprovalStateEnum.AmendQuotation
+        ) {
           queryParameters = { ...queryParameters, editable: true };
-        } else if (this.loggedInUser && this.loggedInUser.id === request.createdById
-          && request.approvalState === this.ApprovalStateEnum.RejectedByFulfiller) {
-          queryParameters = { ...queryParameters, amendable: true, view: true };
+        } else if (
+          this.loggedInUser &&
+          this.loggedInUser.id === request.createdById &&
+          request.approvalState === this.ApprovalStateEnum.RejectedByFulfiller
+        ) {
+          queryParameters = {
+            ...queryParameters,
+            amendable: true,
+            view: true,
+          };
         } else {
           queryParameters = { ...queryParameters, view: true };
         }
 
         this.$router.push({
           path: '/createquotation',
-          query: queryParameters
+          query: queryParameters,
         });
       },
     },
   };
 </script>
+
 <style scoped>
   .vh-100 {
     height: 100vh;

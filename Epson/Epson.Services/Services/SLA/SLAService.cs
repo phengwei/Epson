@@ -210,11 +210,13 @@ namespace Epson.Services.Services.SLA
             TimeSpan totalResolutionTime = TimeSpan.Zero;
 
             foreach (var ticket in ticketsResolved)
-            {
                 totalResolutionTime += ticket.TimeToResolution;
-            }
 
-            decimal averageTimeToResolution = (decimal)totalResolutionTime.TotalHours / ticketsResolved.Count;
+            decimal averageTimeToResolution = 0.0m;
+
+            if (totalResolutionTime != TimeSpan.Zero)
+                averageTimeToResolution = (decimal)totalResolutionTime.TotalHours / ticketsResolved.Count;
+
             averageTimeToResolution = Math.Round(averageTimeToResolution, 2);
 
             return averageTimeToResolution;
