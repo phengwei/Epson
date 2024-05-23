@@ -2,87 +2,66 @@
   <div class="d-flex justify-content-center align-items-center vh-100" data-app="true" v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Admin')">
     <v-card class="mx-auto" style="width: 90%">
       <v-card-title class="d-flex justify-content-between align-items-center">
+        <span style="flex-grow: 1;">Products</span>
+        <div class="d-flex align-items-center">
+          <v-text-field v-model="search"
+                        class="search-input"
+                        append-icon="mdi-magnify"
+                        label="Search by product name"
+                        single-line
+                        hide-details></v-text-field>
+        </div>
+        <v-dialog v-model="dialog" max-width="500px">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">New Product</v-btn>
+          </template>
+
+          <v-card>
+            <v-card-title>
+              <span class="text-h5">{{ formTitle }}</span>
+            </v-card-title>
+            <v-card-text>
+              <label>Product Category</label>
+              <div v-for="category in categories" :key="category.id">
+                <div class="blue-checkbox">
+                  <input type="checkbox" v-model="selectedCategories" :value="category">
+                  <label class="category-name">{{ category.name }}</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Product Name</label>
+                <input v-model="editedItem.name" class="border-input" label="Product name" required></input>
+              </div>
+              <div class="form-group">
+                <label>Bottom Price</label>
+                <input type="number" v-model="editedItem.price" class="border-input" label="Bottom Price" required></input>
+              </div>
+              <div class="form-group">
+                <label>Dealer Price</label>
+                <input type="number" v-model="editedItem.dealerPrice" class="border-input" label="Dealer Price" required></input>
+              </div>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
+              <v-btn color="blue darken-1" text @click="save">Save</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </v-card-title>
       <v-card-text>
         <v-data-table :headers="headers"
-                      :items="products"
+                      :items="filteredProducts"
                       :options.sync="options"
                       :items-per-page="5"
                       :loading="loading"
                       class="elevation-1">
-          <template v-slot:top>
-            <v-toolbar flat>
-              <v-toolbar-title>Products</v-toolbar-title>
-              <v-divider class="mx-4"
-                         inset
-                         vertical></v-divider>
-              <v-spacer></v-spacer>
-              <v-dialog v-model="dialog"
-                        max-width="500px">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn color="primary"
-                         dark
-                         class="mb-2"
-                         v-bind="attrs"
-                         v-on="on">
-                    New Product
-                  </v-btn>
-                </template>
-
-                <v-card>
-                  <v-card-title>
-                    <span class="text-h5">{{ formTitle }}</span>
-                  </v-card-title>
-                  <v-card-text>
-                    <label>Product Category</label>
-                    <div v-for="category in categories" :key="category.id">
-                      <style>
-                      </style>
-                      <div class="blue-checkbox">
-                        <input type="checkbox" v-model="selectedCategories" :value="category">
-                        <label class="category-name">{{ category.name }}</label>
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label>Product Name</label>
-                      <input v-model="editedItem.name" class="border-input" label="Product name" required></input>
-                    </div>
-                    <div class="form-group">
-                      <label>Bottom Price</label>
-                      <input type="number" v-model="editedItem.price" class="border-input" label="Bottom Price" required></input>
-                    </div>
-                    <div class="form-group">
-                      <label>Dealer Price</label>
-                      <input type="number" v-model="editedItem.dealerPrice" class="border-input" label="Dealer Price" required></input>
-                    </div>
-
-                    <v-card-actions>
-                      <v-spacer></v-spacer>
-                      <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
-                      <v-btn color="blue darken-1" text @click="save">Save</v-btn>
-                    </v-card-actions>
-                  </v-card-text>
-                </v-card>
-              </v-dialog>
-            </v-toolbar>
-          </template>
           <template v-slot:item.actions="{ item }">
-            <v-icon small
-                    class="mr-2"
-                    @click="editItem(item)">
-              mdi-pencil
-            </v-icon>
-            <v-icon small v-if="item.isActive"
-                    @click="deactivateItemConfirm(item)">
-              mdi-eye-off
-            </v-icon>
-            <v-icon small v-if="!item.isActive"
-                    @click="reactivateItemConfirm(item)">
-              mdi-eye
-            </v-icon>
+            <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
+            <v-icon small v-if="item.isActive" @click="deactivateItemConfirm(item)">mdi-eye-off</v-icon>
+            <v-icon small v-if="!item.isActive" @click="reactivateItemConfirm(item)">mdi-eye</v-icon>
           </template>
         </v-data-table>
-
       </v-card-text>
     </v-card>
   </div>
@@ -103,6 +82,15 @@
       },
       selectedCategoryList() {
         return this.categories.filter((category) => this.selectedCategories.includes(category.id));
+      },
+      filteredProducts() {
+        let filtered = this.products;
+        if (this.search.trim() !== '') {
+          filtered = filtered.filter(product => {
+            return product.name.toLowerCase().includes(this.search.toLowerCase());
+          });
+        }
+        return filtered;
       }
     },
     data() {
@@ -131,6 +119,7 @@
         products: [],
         categories: [],
         loading: true,
+        search: '',
         selectedCategories: [],
         totalProducts: 0,
         editedIndex: -1,
@@ -163,6 +152,7 @@
     },
     created() {
       this.getCategoryFromApi();
+      this.getProducts();
     },
     methods: {
       getProducts() {
@@ -172,10 +162,10 @@
             return {
               ...product,
               createdOnUTC: moment(product.createdOnUTC).format('DD MMM YY HH:mm')
+
             };
           }).sort((a, b) => moment(b.createdOnUTC, 'DD MMM YY HH:mm').valueOf() - moment(a.createdOnUTC, 'DD MMM YY HH:mm').valueOf());
 
-          this.loading = false;
         });
       },
       async getCategoryFromApi() {
@@ -354,7 +344,8 @@
     },
   }
 </script>
-<style>
+
+<style scoped>
   .form-group {
     margin-bottom: 1rem;
     display: flex;
@@ -394,5 +385,16 @@
     width: 1.2em;
     height: 1.2em;
     margin-left: 5%
+  }
+
+  .vh-100 {
+    height: 100vh;
+  }
+
+  .search-input {
+    flex-grow: 1;
+    margin-left: 16px;
+    margin-right: 16px;
+    width: auto;
   }
 </style>

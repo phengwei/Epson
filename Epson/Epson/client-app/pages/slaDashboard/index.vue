@@ -34,9 +34,6 @@
   export default {
     name: 'SLA-Dashboard',
     middleware: 'auth',
-    computed: {
-      ...mapGetters(['isAuthenticated', 'loggedInUser'])
-    },
     data() {
       return {
         AverageTimeToResolutionInHours: 0,
@@ -62,10 +59,16 @@
         loading: false
       };
     },
+    computed: {
+      ...mapGetters(['isAuthenticated', 'loggedInUser'])
+    },
     watch: {
       selectedMonth(newMonth) {
         this.getSLAMetrics(newMonth);
       }
+    },
+    mounted() {
+      this.getSLAMetrics();
     },
     methods: {
       async getSLAMetrics(month = this.selectedMonth) {
@@ -80,6 +83,7 @@
             this.BreachedTickets = result.data.data.breachedTickets || 0;
             this.TotalTickets = result.data.data.totalTickets || 0;
             this.SuccessRate = result.data.data.successRate || 0;
+            this.$forceUpdate()
           } else {
             this.resetMetrics();
           }
@@ -95,19 +99,17 @@
         this.BreachedTickets = 0;
         this.TotalTickets = 0;
         this.SuccessRate = 0;
+        console.log('Metrics reset.');
       },
       goToBreachedTickets() {
         this.$router.push({ path: '/request', query: { breached: true, month: this.selectedMonth } });
       }
-    },
-    mounted() {
-      this.getSLAMetrics();
     }
   };
 </script>
 
 
-<style>
+<style scoped>
   .page {
     display: flex;
     flex-direction: column;

@@ -103,6 +103,11 @@ namespace Epson.Services.Services.Products
             return _ProductCategoryRepository.GetAll().Where(x => x.ProductId == productId).ToList();
         }
 
+        public List<ProductCategory> GetProductCategoriesByProductIds(List<int> productIds)
+        {
+            return _ProductCategoryRepository.GetAll().Where(x => productIds.Contains(x.ProductId)).ToList();
+        }
+
         public bool InsertProduct(Product product, List<ProductCategory> productCategories, string userId)
         {
             if (product == null)

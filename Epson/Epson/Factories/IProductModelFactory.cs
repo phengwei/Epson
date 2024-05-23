@@ -8,5 +8,6 @@ namespace Epson.Factories
     {
         public ProductModel PrepareProductModel(ProductDTO product);
         public List<ProductModel> PrepareProductModels(List<ProductDTO> products);
+        public List<ProductModel> PrepareAllProductModels(List<ProductDTO> products);
     }
 }

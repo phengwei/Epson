@@ -81,5 +81,36 @@ namespace Epson.Factories
 
             return productModels;
         }
+
+        public List<ProductModel> PrepareAllProductModels(List<ProductDTO> products)
+        {
+            if (products == null || products.Count == 0)
+                return new List<ProductModel>();
+
+            var productIds = products.Select(p => p.Id).ToList();
+            var productCategories = _productService.GetProductCategoriesByProductIds(productIds);
+
+            var productCategoriesGrouped = productCategories.GroupBy(pc => pc.ProductId).ToDictionary(g => g.Key, g => g.ToList());
+
+            return products.Select(product => new ProductModel
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Price = product.Price,
+                DealerPrice = product.DealerPrice,
+                IsActive = product.IsActive,
+                Status = product.IsActive ? "Active" : "Inactive",
+                UpdatedById = product.UpdatedById,
+                CreatedById = product.CreatedById,
+                CreatedOnUTC = product.CreatedOnUTC,
+                UpdatedOnUTC = product.UpdatedOnUTC,
+                ProductCategoriess = productCategoriesGrouped.ContainsKey(product.Id) ? productCategoriesGrouped[product.Id].Select(pc => new ProductCategoryModel
+                {
+                    ProductId = pc.ProductId,
+                    CategoryId = pc.CategoryId
+                }).ToList() : new List<ProductCategoryModel>()
+            }).ToList();
+        }
+
     }
 }

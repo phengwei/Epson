@@ -79,7 +79,7 @@ namespace Epson.Controllers.API
             else
                 products = _productService.GetProducts().Where(x => x.CreatedById == currentUser.Id).ToList();
 
-            var productModels = _productModelFactory.PrepareProductModels(products);
+            var productModels = _productModelFactory.PrepareAllProductModels(products);
 
             response.Data = productModels;
 
