@@ -90,7 +90,7 @@ namespace Epson.Factories
                 });
             }
 
-            return categoryModels.Where(cm => cm.Products.Any()).ToList();
+            return categoryModels.ToList();
         }
 
     }
