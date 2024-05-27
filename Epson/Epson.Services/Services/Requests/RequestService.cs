@@ -265,14 +265,14 @@ namespace Epson.Services.Services.Requests
                     _ProjectInformationReasonRepository.Add(projectInformationReason);
                 }
 
-                List<EmailQueue> emailQueues = _emailService.NotifySalesSectionHeadUsers(request, requestProducts);
+                //List<EmailQueue> emailQueues = _emailService.NotifySalesSectionHeadUsers(request, requestProducts);
 
-                emailQueues.Add(_emailService.CreateRequestEmailQueue(request, requestProducts));
+                //emailQueues.Add(_emailService.CreateRequestEmailQueue(request, requestProducts));
 
-                foreach (var emailQueue in emailQueues)
-                {
-                    _emailService.InsertEmailQueue(emailQueue);
-                }
+                //foreach (var emailQueue in emailQueues)
+                //{
+                //    _emailService.InsertEmailQueue(emailQueue);
+                //}
 
                 requestSubmissionDetail.CreatedBy = request.CreatedById;
                 _RequestSubmissionDetailRepository.Add(requestSubmissionDetail);
@@ -676,22 +676,22 @@ namespace Epson.Services.Services.Requests
                     var request = _RequestRepository.GetById(requestProduct.RequestId);
                     List<RequestProduct> rps = _RequestProductRepository.GetAll().Where(x => x.RequestId == requestProduct.RequestId).ToList();
 
-                    List<EmailQueue> emailQueues = _emailService.NotifySalesSectionHeadUsersOnApprovedRequest(request, rps);
+                //    List<EmailQueue> emailQueues = _emailService.NotifySalesSectionHeadUsersOnApprovedRequest(request, rps);
 
-                    emailQueues.AddRange(_emailService.NotifySalesOperationTeamsOnApprovedRequest(request, rps));
-                    emailQueues.Add(_emailService.CreateApprovedEmailQueue(request, rps));
+                //    emailQueues.AddRange(_emailService.NotifySalesOperationTeamsOnApprovedRequest(request, rps));
+                //    emailQueues.Add(_emailService.CreateApprovedEmailQueue(request, rps));
 
-                    foreach (var emailQueue in emailQueues)
-                    {
-                        _emailService.InsertEmailQueue(emailQueue);
-                    }
+                //    foreach (var emailQueue in emailQueues)
+                //    {
+                //        _emailService.InsertEmailQueue(emailQueue);
+                //    }
                 }
 
                 _RequestRepository.Update(_mapper.Map<Request>(existingRequest));
 
                 var updatedRequest = _mapper.Map<Request>(GetRequestById(existingRequest.Id));
-                var fulfillRequestQueue = _emailService.CreateFulfillEmailQueue(updatedRequest, requestProductToFulfill, allProductsFulfilled);
-                _emailService.InsertEmailQueue(fulfillRequestQueue);
+                //var fulfillRequestQueue = _emailService.CreateFulfillEmailQueue(updatedRequest, requestProductToFulfill, allProductsFulfilled);
+                //_emailService.InsertEmailQueue(fulfillRequestQueue);
 
                 return true;
             }
@@ -720,11 +720,11 @@ namespace Epson.Services.Services.Requests
                 _RequestRepository.Update(request);
                 _logger.Information("Setting Approval state to amend quotation of request {id}", request.Id);
 
-                foreach (var requestProduct in requestProducts)
-                {
-                    var amendQuotationEmailQueue = _emailService.CreateAmendQuotationEmailQueue(request, requestProduct);
-                    _emailService.InsertEmailQueue(amendQuotationEmailQueue);
-                }
+                //foreach (var requestProduct in requestProducts)
+                //{
+                //    var amendQuotationEmailQueue = _emailService.CreateAmendQuotationEmailQueue(request, requestProduct);
+                //    _emailService.InsertEmailQueue(amendQuotationEmailQueue);
+                //}
                 return true;
             }
             catch (Exception ex)
@@ -752,12 +752,12 @@ namespace Epson.Services.Services.Requests
 
                 List<RequestProductDTO> requestProducts = GetRequestProducts();
 
-                List<EmailQueue> emailQueues = await _emailService.NotifyFulfillers(request);
+                //List<EmailQueue> emailQueues = await _emailService.NotifyFulfillers(request);
 
-                foreach (var emailQueue in emailQueues)
-                {
-                    _emailService.InsertEmailQueue(emailQueue);
-                }
+                //foreach (var emailQueue in emailQueues)
+                //{
+                //    _emailService.InsertEmailQueue(emailQueue);
+                //}
 
                 return true;
             }
@@ -838,8 +838,8 @@ namespace Epson.Services.Services.Requests
                 {
                     if (requestProduct.HasFulfilled == true)
                     {
-                        var cancellationEmailQueue = _emailService.CreateCancellationEmailQueue(request, requestProduct);
-                        _emailService.InsertEmailQueue(cancellationEmailQueue);
+                        //var cancellationEmailQueue = _emailService.CreateCancellationEmailQueue(request, requestProduct);
+                        //_emailService.InsertEmailQueue(cancellationEmailQueue);
                         requestProduct.HasFulfilled = false;
                         requestProduct.FulfilledDate = DateTime.MinValue;
                         requestProduct.FulfillerId = string.Empty;

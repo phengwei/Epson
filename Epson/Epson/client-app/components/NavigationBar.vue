@@ -24,7 +24,7 @@
                        :to="homeRoute"
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Home</nuxt-link>
 
-            <nuxt-link v-if="loggedInUser.roles.includes('Admin')" to="/reporting"
+            <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Sales Section Head')" to="/reporting"
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">Report</nuxt-link>
             <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Sales Section Head')" to="/slaDashboard"
                        class="w-40 h-full hover:bg-[#003399] flex justify-center items-center font-semibold transition duration-300">SLA Overview</nuxt-link>
@@ -59,6 +59,10 @@
           </div>
         </div>
 
+        <!-- Placeholder for Website Logo to maintain height -->
+        <div class="flex items-center">
+          <div class="py-4 px-2 w-[150px] h-20"></div>
+        </div>
 
         <!-- Mobile menu button -->
         <!--<div class="md:hidden flex items-center">

@@ -198,7 +198,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td>Prepared By (EMSB)</td>
+                  <td>Prepared By</td>
                   <td>:</td>
                   <td><input type="text" v-model="submissionDetail.preparedBy" class="border-input" readonly></td>
                 </tr>

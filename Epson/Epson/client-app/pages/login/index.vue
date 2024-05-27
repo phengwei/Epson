@@ -72,7 +72,7 @@
     },
     head() {
       return {
-        title: "Epson Unity Management Login"
+        title: "Quotation Manager Login"
       }
     },
     beforeMount() {

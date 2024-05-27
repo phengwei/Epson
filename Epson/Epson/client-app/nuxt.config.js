@@ -165,8 +165,8 @@ export default {
 
   
   publicRuntimeConfig: {
-    restUrl: 'https://69ca7343.azurewebsites.net',
-    baseURL: 'https://69ca7343.azurewebsites.net',
+    restUrl: 'https://cd1900c85c7c4899aee717fdfe147862.azurewebsites.net',
+    baseURL: 'https://cd1900c85c7c4899aee717fdfe147862.azurewebsites.net',
   },
   privateRuntimeConfig: {
     myPrivateToken: process.env.PRIVATE_TOKEN,
@@ -178,7 +178,7 @@ export default {
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    baseURL: 'https://69ca7343.azurewebsites.net',
+    baseURL: 'https://cd1900c85c7c4899aee717fdfe147862.azurewebsites.net',
     https: true,
   },
   // PWA module configuration: https://go.nuxtjs.dev/pwa
