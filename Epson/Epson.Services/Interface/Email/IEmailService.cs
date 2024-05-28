@@ -1,6 +1,7 @@
 ﻿using Epson.Core.Domain.Email;
 using Epson.Core.Domain.Requests;
 using Epson.Services.DTO.Email;
+using Epson.Services.DTO.Requests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,13 +14,13 @@ namespace Epson.Services.Interface.Email
     {
         public EmailAccountDTO GetEmailAccountById(int id);
         public EmailAccountDTO GetEmailAccountByUserName(string username);
-        public List<EmailQueue> NotifySalesSectionHeadUsers(Request request, List<RequestProduct> requestProducts);
+        public List<EmailQueue> NotifySalesSectionHeadUsers(RequestDTO request, List<RequestProductDTO> requestProducts);
         public Task<List<EmailQueue>> CreateReminderEmailQueue(RequestProduct requestProduct);
         public Task<List<EmailQueue>> NotifyFulfillers(Request request);
         public List<EmailQueueDTO> GetUnsentEmailQueues();
         public bool InsertEmailQueue(EmailQueue emailQueue);
         public void SendEmailBatch();
-        public EmailQueue CreateRequestEmailQueue(Request request, List<RequestProduct> requestProducts);
+        public EmailQueue CreateRequestEmailQueue(RequestDTO request, List<RequestProductDTO> requestProducts);
         public EmailQueue CreateFulfillEmailQueue(Request request, RequestProduct requestProduct, bool hasFulfillmentComplete);
         public List<EmailQueue> NotifySalesSectionHeadUsersOnApprovedRequest(Request request, List<RequestProduct> requestProducts);
         public List<EmailQueue> NotifySalesOperationTeamsOnApprovedRequest(Request request, List<RequestProduct> requestProducts);

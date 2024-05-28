@@ -49,6 +49,8 @@ namespace Epson.Services.DTO
             CreateMap<ProjectInformationDTO, ProjectInformation>();
             CreateMap<ProjectInformationReason, ProjectInformationReasonDTO>();
             CreateMap<ProjectInformationReasonDTO, ProjectInformationReason>();
+            CreateMap<CompetitorInformation, CompetitorInformationDTO>();
+            CreateMap<CompetitorInformationDTO, CompetitorInformation>();
             #endregion
 
             #region SLA

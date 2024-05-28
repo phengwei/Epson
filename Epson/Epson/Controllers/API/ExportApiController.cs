@@ -59,24 +59,25 @@ namespace Epson.Controllers.API
         [HttpGet("toExcel")]
         public async Task<IActionResult> ExportToExcel([FromQuery] int requestId)
         {
-            var request = _requestService.GetRequestById(requestId) as RequestDTO;
+            return Ok();
+            //var request = _requestService.GetRequestById(requestId) as RequestDTO;
 
-            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
-            using var package = new ExcelPackage();
+            //ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+            //using var package = new ExcelPackage();
 
-            await PopulateRequestWorksheet(package.Workbook.Worksheets.Add("Request"), request);
-            await PopulateRequestProductWorksheet(package.Workbook.Worksheets.Add("Request Products"), request.RequestProducts);
-            PopulateCompetitorInformationWorksheet(package.Workbook.Worksheets.Add("Competitor Informations"), request.CompetitorInformations);
-            PopulateRequestSubmissionDetailWorksheet(package.Workbook.Worksheets.Add("Request Submission Detail"), request.RequestSubmissionDetail);
-            PopulateProjectInformationWorksheet(package.Workbook.Worksheets.Add("Project Information"), request.ProjectInformation);
+            //await PopulateRequestWorksheet(package.Workbook.Worksheets.Add("Request"), request);
+            //await PopulateRequestProductWorksheet(package.Workbook.Worksheets.Add("Request Products"), request.RequestProducts);
+            //PopulateCompetitorInformationWorksheet(package.Workbook.Worksheets.Add("Competitor Informations"), request.CompetitorInformations);
+            //PopulateRequestSubmissionDetailWorksheet(package.Workbook.Worksheets.Add("Request Submission Detail"), request.RequestSubmissionDetail);
+            //PopulateProjectInformationWorksheet(package.Workbook.Worksheets.Add("Project Information"), request.ProjectInformation);
 
-            var stream = new MemoryStream();
-            await package.SaveAsAsync(stream);
+            //var stream = new MemoryStream();
+            //await package.SaveAsAsync(stream);
 
-            string fileName = "request.xlsx";
-            string fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-            stream.Position = 0;
-            return File(stream, fileType, fileName);
+            //string fileName = "request.xlsx";
+            //string fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            //stream.Position = 0;
+            //return File(stream, fileType, fileName);
         }
 
         private async Task PopulateRequestWorksheet(ExcelWorksheet ws, RequestDTO request)

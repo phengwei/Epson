@@ -83,8 +83,8 @@ namespace Epson.Services.Services.Requests
             var requestDTO = _mapper.Map<RequestDTO>(_RequestRepository.GetById(id));
 
             requestDTO.RequestProducts = _mapper.Map<List<RequestProductDTO>>(_RequestProductRepository.GetAll().Where(x => x.RequestId == id).ToList());
-            requestDTO.CompetitorInformations = _CompetitorInformationRepository.GetAll().Where(x => x.RequestId == id).ToList();
-            requestDTO.RequestSubmissionDetail = _RequestSubmissionDetailRepository.GetAll().Where(x => x.RequestId == id).FirstOrDefault();
+            requestDTO.CompetitorInformations = _mapper.Map<List<CompetitorInformationDTO>>(_CompetitorInformationRepository.GetAll().Where(x => x.RequestId == id).ToList());
+            requestDTO.RequestSubmissionDetail = _mapper.Map<RequestSubmissionDetailDTO>(_RequestSubmissionDetailRepository.GetAll().Where(x => x.RequestId == id).FirstOrDefault());
             requestDTO.ProjectInformation = _mapper.Map<List<ProjectInformationDTO>>(_ProjectInformationRepository.GetAll().Where(x => x.RequestId == id)).FirstOrDefault();
 
             return requestDTO;
@@ -106,7 +106,7 @@ namespace Epson.Services.Services.Requests
                     ApprovedBy = x.ApprovedBy,
                     ApprovedTime = x.ApprovedTime.AddHours(8),
                     AmendQuotationTime = x.AmendQuotationTime,
-                    CompetitorInformations = _CompetitorInformationRepository.Table.Where(p => p.RequestId == x.Id).ToList(),
+                    CompetitorInformations = _mapper.Map<List<CompetitorInformationDTO>>(_CompetitorInformationRepository.Table.Where(p => p.RequestId == x.Id).ToList()),
                     CreatedById = x.CreatedById,
                     CreatedOnUTC = x.CreatedOnUTC.AddHours(8),
                     UpdatedById = x.UpdatedById,
@@ -118,7 +118,7 @@ namespace Epson.Services.Services.Requests
                     TimeToResolution = x.TimeToResolution,
                     Comments = x.Comments,
                     RequestProducts = _mapper.Map<List<RequestProductDTO>>(_RequestProductRepository.GetAll().Where(p => p.RequestId == x.Id).ToList()),
-                    RequestSubmissionDetail = _RequestSubmissionDetailRepository.Table.Where(d => d.RequestId == x.Id).FirstOrDefault(),
+                    RequestSubmissionDetail = _mapper.Map<RequestSubmissionDetailDTO>(_RequestSubmissionDetailRepository.Table.Where(d => d.RequestId == x.Id).FirstOrDefault()),
                     ProjectInformation = new ProjectInformationDTO
                     {
                         Id = projectInformation.Id,
@@ -139,10 +139,10 @@ namespace Epson.Services.Services.Requests
                         StaggeredComments = projectInformation.StaggeredComments,
                         StaggeredMonth = projectInformation.StaggeredMonth,
                         OtherInformation = projectInformation.OtherInformation,
-                        ProjectInformationReasons = _ProjectInformationReasonRepository
+                        ProjectInformationReasons = _mapper.Map<List<ProjectInformationReasonDTO>>(_ProjectInformationReasonRepository
                                                     .Table
                                                     .Where(r => r.ProjectInformationId == projectInformation.Id)
-                                                    .ToList(),
+                                                    .ToList()),
                     }
                 };
             })
@@ -222,10 +222,10 @@ namespace Epson.Services.Services.Requests
             return requestProductDTOs;
         }
 
-        public bool InsertRequest(Request request,
-            List<RequestProduct> requestProducts,
-            List<CompetitorInformation> competitorInformations,
-            RequestSubmissionDetail requestSubmissionDetail,
+        public bool InsertRequest(RequestDTO request,
+            List<RequestProductDTO> requestProducts,
+            List<CompetitorInformationDTO> competitorInformations,
+            RequestSubmissionDetailDTO requestSubmissionDetail,
             ProjectInformationDTO projectInformationDTO)
         {
             if (request == null)
@@ -239,7 +239,9 @@ namespace Epson.Services.Services.Requests
             try
             {
                 request.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => (decimal)rp.EndUserPrice);
-                request.Id = _RequestRepository.Add(request);
+                var requestToInsert = _mapper.Map<Request>(request);
+
+                request.Id = _RequestRepository.Add(requestToInsert);
                 requestSubmissionDetail.RequestId = request.Id;
                 projectInformation.RequestId = request.Id;
 
@@ -252,13 +254,17 @@ namespace Epson.Services.Services.Requests
                     requestProduct.CreatedOnUTC = request.CreatedOnUTC;
                     requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
                     requestProduct.RequestId = request.Id;
-                    InsertRequestProduct(requestProduct);
+                    requestProduct.Status = (int)RequestProductStatusEnum.Pending;
+
+                    var requestProductToInsert = _mapper.Map<RequestProduct>(requestProduct);
+                    InsertRequestProduct(requestProductToInsert);
                 }
 
                 foreach (var competitorInformation in competitorInformations)
                 {
                     competitorInformation.RequestId = request.Id;
-                    InsertCompetitorInformation(competitorInformation);
+                    var competitorInformationToInsert = _mapper.Map<CompetitorInformation>(competitorInformation);
+                    InsertCompetitorInformation(competitorInformationToInsert);
                 }
 
                 var projectInformationId = _ProjectInformationRepository.Add(projectInformation);
@@ -266,7 +272,8 @@ namespace Epson.Services.Services.Requests
                 foreach (var projectInformationReason in projectInformationDTO.ProjectInformationReasons)
                 {
                     projectInformationReason.ProjectInformationId = projectInformationId;
-                    _ProjectInformationReasonRepository.Add(projectInformationReason);
+                    var projectInformationReasonToInsert = _mapper.Map<ProjectInformationReason>(projectInformationReason);
+                    _ProjectInformationReasonRepository.Add(projectInformationReasonToInsert);
                 }
 
                 List<EmailQueue> emailQueues = _emailService.NotifySalesSectionHeadUsers(request, requestProducts);
@@ -279,7 +286,9 @@ namespace Epson.Services.Services.Requests
                 }
 
                 requestSubmissionDetail.CreatedBy = request.CreatedById;
-                _RequestSubmissionDetailRepository.Add(requestSubmissionDetail);
+
+                var requestSubmissionDetailToInsert = _mapper.Map<RequestSubmissionDetail>(requestSubmissionDetail);
+                _RequestSubmissionDetailRepository.Add(requestSubmissionDetailToInsert);
                 _logger.Information("Successfully created request {id}", request.Id);
 
                 return true;
@@ -292,10 +301,10 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool UpdateRequest(Request request,
-           List<RequestProduct> requestProducts,
-           List<CompetitorInformation> competitorInformations,
-           RequestSubmissionDetail requestSubmissionDetail,
+        public bool UpdateRequest(RequestDTO request,
+           List<RequestProductDTO> requestProducts,
+           List<CompetitorInformationDTO> competitorInformations,
+           RequestSubmissionDetailDTO requestSubmissionDetail,
            ProjectInformationDTO projectInformationDTO)
         {
             if (request == null)
@@ -346,7 +355,8 @@ namespace Epson.Services.Services.Requests
                         requestProduct.HasFulfilled = false;
                     }
 
-                    InsertRequestProduct(requestProduct);
+                    var requestProductToInsert = _mapper.Map<RequestProduct>(requestProduct);
+                    InsertRequestProduct(requestProductToInsert);
                 }
 
                 DeleteCompetitorInformationOfRequest(request.Id);
@@ -355,7 +365,8 @@ namespace Epson.Services.Services.Requests
                 {
                     competitorInformation.RequestId = request.Id;
 
-                    InsertCompetitorInformation(competitorInformation);
+                    var competitorInformationToInsert = _mapper.Map<CompetitorInformation>(competitorInformation);
+                    InsertCompetitorInformation(competitorInformationToInsert);
                 }
 
                 var projectInfo = _ProjectInformationRepository.Table.FirstOrDefault(x => x.RequestId == request.Id);
@@ -370,7 +381,9 @@ namespace Epson.Services.Services.Requests
                 foreach (var projectInformationReason in projectInformationDTO.ProjectInformationReasons)
                 {
                     projectInformationReason.ProjectInformationId = projectInformation.Id;
-                    _ProjectInformationReasonRepository.Add(projectInformationReason);
+
+                    var projectInformationReasonToInsert = _mapper.Map<ProjectInformationReason>(projectInformationReason);
+                    _ProjectInformationReasonRepository.Add(projectInformationReasonToInsert);
                 }
 
                 requestSubmissionDetail.RequestId = request.Id;
@@ -380,7 +393,9 @@ namespace Epson.Services.Services.Requests
                     requestSubmissionDetail.Id = capturedRequestSubmissionDetail.Id;
                     requestSubmissionDetail.CreatedBy = capturedRequestSubmissionDetail.CreatedBy;
                 }
-                _RequestSubmissionDetailRepository.Update(requestSubmissionDetail);
+
+                var requestSubmissionDetailToInsert = _mapper.Map<RequestSubmissionDetail>(requestSubmissionDetail);
+                _RequestSubmissionDetailRepository.Update(requestSubmissionDetailToInsert);
 
                 _logger.Information("Successfully created request {id}", request.Id);
 
@@ -394,7 +409,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        private decimal GetTotalPriceOfRequestProducts(List<RequestProduct> requestProducts, Func<RequestProduct, decimal> selector)
+        private decimal GetTotalPriceOfRequestProducts(List<RequestProductDTO> requestProducts, Func<RequestProductDTO, decimal> selector)
         {
             decimal totalPrice = 0;
 
@@ -651,7 +666,7 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
             requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;
             requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate,
-                                                                               existingRequest.AmendQuotationTime ?? existingRequest.ApprovedTime,
+                                                                               existingRequest.AmendQuotationTime ?? (DateTime)existingRequest.ApprovedTime,
                                                                                _slaService.GetSLAStaffLeavesByStaffId(user.Id),
                                                                                _slaService.GetSLAHolidays());
             requestProductToFulfill.Remarks = remarks;

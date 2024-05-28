@@ -846,7 +846,7 @@ export default {
             RequestProducts: quotationData.requestProducts,
             CompetitorInformations: quotationData.competitorInformations,
             requestSubmissionDetail: quotationData.submissionDetail,
-            ProjectInformationModel: quotationData.projectInformation,
+            ProjectInformation: quotationData.projectInformation,
             Id: quotationData.id,
             comments: quotationData.comments
           }

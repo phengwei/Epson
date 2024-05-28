@@ -166,16 +166,18 @@ namespace Epson.Controllers.API
 
         [HttpPost("createrequest")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Sales Section Head")]
-        public async Task<IActionResult> CreateRequest([FromBody] BaseQueryModel<RequestModel> queryModel)
+        public async Task<IActionResult> CreateRequest([FromBody] BaseQueryModel<RequestDTO> queryModel)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (queryModel == null || queryModel.Data == null)
+            {
+                return BadRequest("Invalid request.");
+            }
 
             var model = queryModel.Data;
 
             var user = _workContext.CurrentUser;
 
-            var request = new Request
+            var request = new RequestDTO
             {
                 CreatedOnUTC = DateTime.UtcNow,
                 UpdatedOnUTC = DateTime.UtcNow,
@@ -185,7 +187,7 @@ namespace Epson.Controllers.API
                 ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction,
             };
 
-            if (_requestService.InsertRequest(request, model.RequestProducts, model.CompetitorInformations, model.RequestSubmissionDetail, model.ProjectInformationModel))
+            if (_requestService.InsertRequest(request, model.RequestProducts, model.CompetitorInformations, model.RequestSubmissionDetail, model.ProjectInformation))
                 return Ok();
             else
                 return BadRequest("Failed to create request");
@@ -193,11 +195,12 @@ namespace Epson.Controllers.API
 
         [HttpPost("editrequest")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
-        public async Task<IActionResult> EditRequest([FromBody] BaseQueryModel<RequestModel> queryModel)
+        public async Task<IActionResult> EditRequest([FromBody] BaseQueryModel<RequestDTO> queryModel)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
+            if (queryModel == null || queryModel.Data == null)
+            {
+                return BadRequest("Invalid request.");
+            }
             var model = queryModel.Data;
 
             if (model.Id == 0 || model.Id == null)
@@ -212,7 +215,7 @@ namespace Epson.Controllers.API
             if (request.ApprovalState != (int)ApprovalStateEnum.AmendQuotation)
                 return BadRequest("Request is not in the state of approval!");
 
-            var updatedRequest = new Request
+            var updatedRequest = new RequestDTO
             {
                 Id = request.Id,
                 ApprovedBy = request.ApprovedBy,
@@ -227,7 +230,7 @@ namespace Epson.Controllers.API
                 Comments = request.Comments,
             };
 
-            if (_requestService.UpdateRequest(updatedRequest, model.RequestProducts, model.CompetitorInformations, model.RequestSubmissionDetail, model.ProjectInformationModel))
+            if (_requestService.UpdateRequest(updatedRequest, model.RequestProducts, model.CompetitorInformations, model.RequestSubmissionDetail, model.ProjectInformation))
                 return Ok();
             else
                 return BadRequest("Failed to update request");

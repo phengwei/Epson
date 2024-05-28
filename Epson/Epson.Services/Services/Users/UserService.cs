@@ -167,14 +167,14 @@ namespace Epson.Services.Services.Users
             if (parentTeamName == null)
             {
                 _logger.Information($"No parent team found for team {fulfillerTeamName}");
-                return null;
+                return new List<ApplicationUser>();
             }
 
             var parentTeam = _TeamRepository.Table.FirstOrDefault(t => t.Name == parentTeamName);
             if (parentTeam == null)
             {
                 _logger.Information($"Parent team {parentTeamName} not found in the repository.");
-                return null;
+                return new List<ApplicationUser>();
             }
 
             var salesUsers = await _userManager.GetUsersInRoleAsync("Sales Section Head");

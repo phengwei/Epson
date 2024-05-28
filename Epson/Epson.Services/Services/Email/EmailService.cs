@@ -22,6 +22,7 @@ using Epson.Core.Domain.Products;
 using Epson.Services.Interface.Users;
 using Epson.Services.Interface.Categories;
 using Epson.Core.Domain.Categories;
+using Epson.Services.DTO.Requests;
 
 namespace Epson.Services.Services.Email
 {
@@ -110,7 +111,7 @@ namespace Epson.Services.Services.Email
             }
         }
 
-        public EmailQueue CreateRequestEmailQueue(Request request, List<RequestProduct> requestProducts)
+        public EmailQueue CreateRequestEmailQueue(RequestDTO request, List<RequestProductDTO> requestProducts)
         {
             //todo: configure to capture from user / request
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
@@ -808,7 +809,7 @@ namespace Epson.Services.Services.Email
             return emailQueues;
         }
 
-        public List<EmailQueue> NotifySalesSectionHeadUsers(Request request, List<RequestProduct> requestProducts)
+        public List<EmailQueue> NotifySalesSectionHeadUsers(RequestDTO request, List<RequestProductDTO> requestProducts)
         {
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
             var requesterTask = _userManager.FindByIdAsync(request.CreatedById);
@@ -1388,7 +1389,6 @@ namespace Epson.Services.Services.Email
 
         public EmailQueue CreateCancellationEmailQueue(Request request, RequestProduct requestProduct)
         {
-            //todo: configure to capture from user / request
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
             if (emailAccount == null)
                 return new EmailQueue();

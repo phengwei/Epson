@@ -10,7 +10,7 @@ namespace Epson.Core.Domain.Base
         public string CreatedById { get; set; }
         public string UpdatedById { get; set; }
         public DateTime CreatedOnUTC { get; set; }
-        public DateTime? UpdatedOnUTC { get; set; }
+        public DateTime UpdatedOnUTC { get; set; }
 
 
         public void CreateAudit(string actorId)

@@ -45,6 +45,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using Org.BouncyCastle.Asn1.Cmp;
 using Org.BouncyCastle.Asn1.X509;
+using Newtonsoft.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -178,7 +179,10 @@ builder.Services.AddDbContext<EpsonDbContext>(options =>
 ));
 #endregion
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson(options =>
+{
+    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+});
 builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();
 

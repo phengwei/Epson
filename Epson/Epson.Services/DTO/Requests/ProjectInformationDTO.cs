@@ -27,7 +27,7 @@ namespace Epson.Services.DTO.Requests
         public string? StaggeredComments { get; set; }
         public string? StaggeredMonth { get; set; }
         public string? OtherInformation { get; set; }
-        public List<ProjectInformationReason> ProjectInformationReasons { get; set; } = new List<ProjectInformationReason>();
+        public List<ProjectInformationReasonDTO> ProjectInformationReasons { get; set; } = new List<ProjectInformationReasonDTO>();
 
     }
 }

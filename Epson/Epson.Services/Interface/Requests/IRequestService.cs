@@ -13,8 +13,8 @@ namespace Epson.Services.Interface.Requests
         public List<RequestDTO> GetRequests();
         public List<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser);
         public List<RequestProductDTO> GetRequestProducts();
-        public bool InsertRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations, RequestSubmissionDetail requestSubmissionDetail, ProjectInformationDTO projectInformationDTO);
-        public bool UpdateRequest(Request request, List<RequestProduct> requestProducts, List<CompetitorInformation> competitorInformations, RequestSubmissionDetail requestSubmissionDetail, ProjectInformationDTO projectInformationDTO);
+        public bool InsertRequest(RequestDTO request, List<RequestProductDTO> requestProducts, List<CompetitorInformationDTO> competitorInformations, RequestSubmissionDetailDTO requestSubmissionDetail, ProjectInformationDTO projectInformationDTO);
+        public bool UpdateRequest(RequestDTO request, List<RequestProductDTO> requestProducts, List<CompetitorInformationDTO> competitorInformations, RequestSubmissionDetailDTO requestSubmissionDetail, ProjectInformationDTO projectInformationDTO);
         public bool AcceptDeal(ApplicationUser user, Request request, string comments);
         public bool RejectDeal(ApplicationUser user, Request request, string comments);
         public bool ExitDeal(ApplicationUser user, Request request, string comments);
