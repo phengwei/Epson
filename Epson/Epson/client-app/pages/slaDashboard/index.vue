@@ -13,11 +13,11 @@
       </div>
       <div class="card total-tickets-card">
         <h3 class="number">{{ TotalTickets }}</h3>
-        <p>Total Tickets</p>
+        <p>Total Requests</p>
       </div>
       <div class="card breached-card">
         <h3 class="number">{{ BreachedTickets }}</h3>
-        <p>Breached Ticket</p>
+        <p>Breached Requests</p>
         <button @click="goToBreachedTickets" class="breached-button">Go to Breached Tickets</button>
       </div>
       <div class="card success-rate-card">

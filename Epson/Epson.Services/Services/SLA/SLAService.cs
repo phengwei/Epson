@@ -250,29 +250,33 @@ namespace Epson.Services.Services.SLA
 
         public int GetTotalTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {
-            List<RequestProduct> totalTickets = new List<RequestProduct>();
+            List<Request> totalTickets = new List<Request>();
 
             if (isAdminUser)
             {
-                totalTickets = _requestProductRepository.Table
+                totalTickets = _requestRepository.Table
                     .Where(x => month == 0 || x.CreatedOnUTC.Month == month)
-                    .ToList();
-            }
-            else if (isSalesHeadUser)
-            {
-                totalTickets = _requestProductRepository.Table
-                    .Where(x => users.Contains(x.FulfillerId) && (month == 0 || x.CreatedOnUTC.Month == month))
                     .ToList();
             }
             else
             {
-                totalTickets = _requestProductRepository.Table
-                    .Where(x => x.FulfillerId == user.Id && (month == 0 || x.CreatedOnUTC.Month == month))
+                var relevantRequestProductIds = _requestProductRepository.Table
+                    .Where(rp => (isSalesHeadUser && users.Contains(rp.FulfillerId)) ||
+                                 (!isSalesHeadUser && rp.FulfillerId == user.Id))
+                    .Select(rp => rp.RequestId)
+                    .Distinct()
+                    .ToList();
+
+                totalTickets = _requestRepository.Table
+                    .Where(x => relevantRequestProductIds.Contains(x.Id) &&
+                                (month == 0 || x.CreatedOnUTC.Month == month))
                     .ToList();
             }
 
             return totalTickets.Count;
         }
+
+
 
         private int GetApprovedTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {

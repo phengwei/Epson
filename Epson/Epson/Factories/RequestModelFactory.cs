@@ -12,7 +12,9 @@ using Epson.Services.DTO.Requests;
 using Epson.Services.Interface.Categories;
 using Epson.Services.Interface.Products;
 using Epson.Services.Interface.Requests;
+using LinqToDB;
 using Microsoft.AspNetCore.Identity;
+using System.Linq;
 
 namespace Epson.Factories
 {
@@ -38,31 +40,6 @@ namespace Epson.Factories
             _requestService = requestService;
             _teamRepository = teamRepository;
             _userManager = userManager;
-        }
-        public RequestModel PrepareRequestModel(RequestDTO request)
-        {
-            if (request != null)
-            {
-                var requestModel = new RequestModel();
-
-                requestModel.Id = request.Id;
-                requestModel.ApprovedBy = request.ApprovedBy;
-                requestModel.ApprovedTime = request.ApprovedTime;
-                requestModel.CreatedById = request.CreatedById;
-                requestModel.CreatedOnUTC = request.CreatedOnUTC;
-                requestModel.UpdatedById = request.UpdatedById;
-                requestModel.UpdatedOnUTC = request.UpdatedOnUTC;
-                requestModel.Segment = request.Segment;
-                requestModel.TotalBudget = request.TotalBudget;
-                requestModel.ApprovalState = request.ApprovalState;
-                requestModel.TotalPrice = request.TotalPrice;
-                requestModel.TimeToResolution = request.TimeToResolution;
-                requestModel.RequestProducts = _mapper.Map<List<RequestProduct>>(request.RequestProducts);
-
-                return requestModel;
-            }
-
-            return new RequestModel();
         }
 
         public List<RequestProductModel> PrepareRequestProductModel(List<RequestProductDTO> requestProducts)
@@ -118,119 +95,127 @@ namespace Epson.Factories
 
             return requestProductModels;
         }
-        public List<RequestModel> PrepareRequestModels(List<RequestDTO> requests)
+        public async Task<List<RequestModel>> PrepareRequestModelsAsync(List<RequestDTO> requests)
         {
             if (requests == null || requests.Count == 0)
                 return new List<RequestModel>();
 
-            List<RequestModel> requestModels = new List<RequestModel>();
+            var requestModels = new List<RequestModel>();
 
-            try
+            var userIds = requests.Select(r => r.CreatedById).Where(id => id != null).Distinct().ToList();
+            var approverIds = requests.Select(r => r.ApprovedBy).Where(id => id != null).Distinct().ToList();
+            var fulfillerIds = requests.SelectMany(r => r.RequestProducts.Select(rp => rp.FulfillerId)).Where(id => id != null).Distinct().ToList();
+            var allUserIds = userIds.Concat(approverIds).Concat(fulfillerIds).Distinct().ToList();
+
+            var users = await _userManager.Users.Where(u => allUserIds.Contains(u.Id)).ToListAsync();
+            var userDictionary = users.ToDictionary(u => u.Id, u => u);
+
+            var teamIds = users.Select(u => u.TeamId).Distinct().ToList();
+
+            var teams = await _teamRepository.Table.Where(t => teamIds.Contains(t.Id)).ToListAsync();
+            var teamDictionary = teams.ToDictionary(t => t.Id, t => t);
+
+            foreach (var request in requests)
             {
-                foreach (var request in requests)
+                var createdByUser = request.CreatedById != null && userDictionary.ContainsKey(request.CreatedById) ? userDictionary[request.CreatedById] : null;
+                var approvedByUser = request.ApprovedBy != null && userDictionary.ContainsKey(request.ApprovedBy) ? userDictionary[request.ApprovedBy] : null;
+                var createdTeam = createdByUser != null && createdByUser.TeamId != null && teamDictionary.ContainsKey(createdByUser.TeamId) ? teamDictionary[createdByUser.TeamId] : null;
+
+                var requestProductsModel = request.RequestProducts?.Select(rp =>
                 {
-                    var createdByUser = request.CreatedById != null ? _userManager.FindByIdAsync(request.CreatedById).Result : null;
-                    var approvedByUser = request.ApprovedBy != null ? _userManager.FindByIdAsync(request.ApprovedBy).Result : null;
-                    var createdTeam = createdByUser != null ? _teamRepository.GetById(createdByUser.TeamId) : null;
+                    var fulfiller = rp.FulfillerId != null && userDictionary.ContainsKey(rp.FulfillerId) ? userDictionary[rp.FulfillerId] : null;
+                    var product = _productService.GetProductById(rp.ProductId);
+                    var productCategories = _productService.GetProductCategoriesByProductId(rp.ProductId);
 
-                    var requestProductsModel = request.RequestProducts?.Select(rp =>
+                    return new RequestProductModel
                     {
-                        var fulfiller = rp.FulfillerId != null ? _userManager.FindByIdAsync(rp.FulfillerId).Result : null;
-                        var product = _productService.GetProductById(rp.ProductId);
-                        var productCategories = _productService.GetProductCategoriesByProductId(rp.ProductId);
-
-                        return new RequestProductModel
+                        Id = rp.Id,
+                        Breached = rp.Breached,
+                        CreatedOnUTC = rp.CreatedOnUTC,
+                        DistyPrice = rp.DistyPrice,
+                        DealerPrice = rp.DealerPrice,
+                        EndUserPrice = rp.EndUserPrice,
+                        RequestId = rp.RequestId,
+                        ProductId = rp.ProductId,
+                        Quantity = rp.Quantity,
+                        ProductName = product?.Name ?? "Unknown Product",
+                        HasFulfilled = rp.HasFulfilled,
+                        FulfilledDate = rp.FulfilledDate,
+                        FulfillerId = rp.FulfillerId,
+                        FulfillerName = fulfiller?.UserName,
+                        FulfilledPrice = rp.FulfilledPrice,
+                        IsCoverplus = rp.IsCoverplus,
+                        TimeToResolution = rp.TimeToResolution,
+                        Status = rp.Status,
+                        StatusStr = ((RequestProductStatusEnum)rp.Status).GetDescription(),
+                        Remarks = rp.Remarks,
+                        AuthorizedToFulfill = rp.AuthorizedToFulfill,
+                        WarrantyRequest = rp.WarrantyRequest,
+                        WarrantyRequestPeriod = rp.WarrantyRequestPeriod,
+                        ProductCategory = productCategories.Select(pc => new ProductCategoryModel
                         {
-                            Id = rp.Id,
-                            Breached = rp.Breached,
-                            CreatedOnUTC = rp.CreatedOnUTC,
-                            DistyPrice = rp.DistyPrice,
-                            DealerPrice = rp.DealerPrice,
-                            EndUserPrice = rp.EndUserPrice,
-                            RequestId = rp.RequestId,
-                            ProductId = rp.ProductId,
-                            Quantity = rp.Quantity,
-                            ProductName = product?.Name ?? "Unknown Product",
-                            HasFulfilled = rp.HasFulfilled,
-                            FulfilledDate = rp.FulfilledDate,
-                            FulfillerId = rp.FulfillerId,
-                            FulfillerName = fulfiller?.UserName,
-                            FulfilledPrice = rp.FulfilledPrice,
-                            IsCoverplus = rp.IsCoverplus,
-                            TimeToResolution = rp.TimeToResolution,
-                            Status = rp.Status,
-                            StatusStr = ((RequestProductStatusEnum)rp.Status).GetDescription(),
-                            Remarks = rp.Remarks,
-                            AuthorizedToFulfill = rp.AuthorizedToFulfill,
-                            WarrantyRequest = rp.WarrantyRequest,
-                            WarrantyRequestPeriod = rp.WarrantyRequestPeriod,
-                            ProductCategory = productCategories.Select(pc => new ProductCategoryModel
-                            {
-                                ProductId = pc.ProductId,
-                                CategoryId = pc.CategoryId,
-                                CategoryName = _categoryService.GetCategoryById(pc.CategoryId).Name
-                            }).FirstOrDefault()
-                        };
-                    }).ToList();
-
-                    var requestModel = new RequestModel
-                    {
-                        Id = request.Id,
-                        ApprovedBy = request.ApprovedBy,
-                        ApprovedByName = approvedByUser?.UserName,
-                        ApprovedTime = request.ApprovedTime,
-                        AmendQuotationTime = request.AmendQuotationTime,
-                        CreatedBy = createdByUser?.UserName,
-                        CreatedById = request.CreatedById,
-                        CreatedOnUTC = request.CreatedOnUTC,
-                        CreatedTeam = createdTeam?.Name,
-                        UpdatedById = request.UpdatedById,
-                        UpdatedOnUTC = request.UpdatedOnUTC,
-                        Segment = request.Segment,
-                        TotalBudget = request.TotalBudget,
-                        ApprovalState = request.ApprovalState,
-                        ApprovalStateStr = ((ApprovalStateEnum)request.ApprovalState).GetDescription(),
-                        TotalPrice = request.TotalPrice,
-                        TimeToResolution = request.TimeToResolution,
-                        Comments = request.Comments,
-                        RequestProductsModel = requestProductsModel ?? new List<RequestProductModel>(),
-                        CompetitorInformationModel = request.CompetitorInformations?.Select(x => new CompetitorInformationModel
-                        {
-                            Id = x.Id,
-                            RequestId = x.RequestId,
-                            Model = x.Model,
-                            Brand = x.Brand,
-                            DistyPrice = x.DistyPrice,
-                            DealerPrice = x.DealerPrice,
-                            EndUserPrice = x.EndUserPrice,
-                        }).ToList() ?? new List<CompetitorInformationModel>(),
-                        RequestSubmissionDetailModel = request.RequestSubmissionDetail != null ? new RequestSubmissionDetailModel
-                        {
-                            Id = request.RequestSubmissionDetail.Id,
-                            RequestId = request.Id,
-                            DistributorName = request.RequestSubmissionDetail.DistributorName,
-                            ResellerName = request.RequestSubmissionDetail.ResellerName,
-                            ContactPersonName = request.RequestSubmissionDetail.ContactPersonName,
-                            TelephoneNo = request.RequestSubmissionDetail.TelephoneNo,
-                            FaxNo = request.RequestSubmissionDetail.FaxNo,
-                            Email = request.RequestSubmissionDetail.Email,
-                            CreatedOnUTC = request.RequestSubmissionDetail.CreatedOnUTC,
-                            CreatedBy = request.RequestSubmissionDetail.CreatedBy,
-                            PreparedBy = request.RequestSubmissionDetail.CreatedBy != null ? _userManager.FindByIdAsync(request.RequestSubmissionDetail.CreatedBy).Result?.UserName : null,
-                        } : null,
-                        ProjectInformationModel = request.ProjectInformation,
+                            ProductId = pc.ProductId,
+                            CategoryId = pc.CategoryId,
+                            CategoryName = _categoryService.GetCategoryById(pc.CategoryId).Name
+                        }).FirstOrDefault()
                     };
+                }).ToList();
 
-                    requestModels.Add(requestModel);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
+                var requestModel = new RequestModel
+                {
+                    Id = request.Id,
+                    ApprovedBy = request.ApprovedBy,
+                    ApprovedByName = approvedByUser?.UserName,
+                    ApprovedTime = request.ApprovedTime,
+                    AmendQuotationTime = request.AmendQuotationTime,
+                    CreatedBy = createdByUser?.UserName,
+                    CreatedById = request.CreatedById,
+                    CreatedOnUTC = request.CreatedOnUTC,
+                    CreatedTeam = createdTeam?.Name,
+                    UpdatedById = request.UpdatedById,
+                    UpdatedOnUTC = request.UpdatedOnUTC,
+                    Segment = request.Segment,
+                    TotalBudget = request.TotalBudget,
+                    ApprovalState = request.ApprovalState,
+                    ApprovalStateStr = ((ApprovalStateEnum)request.ApprovalState).GetDescription(),
+                    TotalPrice = request.TotalPrice,
+                    TimeToResolution = request.TimeToResolution,
+                    Comments = request.Comments,
+                    RequestProductsModel = requestProductsModel ?? new List<RequestProductModel>(),
+                    CompetitorInformationModel = request.CompetitorInformations?.Select(x => new CompetitorInformationModel
+                    {
+                        Id = x.Id,
+                        RequestId = x.RequestId,
+                        Model = x.Model,
+                        Brand = x.Brand,
+                        DistyPrice = x.DistyPrice,
+                        DealerPrice = x.DealerPrice,
+                        EndUserPrice = x.EndUserPrice,
+                    }).ToList() ?? new List<CompetitorInformationModel>(),
+                    RequestSubmissionDetailModel = request.RequestSubmissionDetail != null ? new RequestSubmissionDetailModel
+                    {
+                        Id = request.RequestSubmissionDetail.Id,
+                        RequestId = request.Id,
+                        DistributorName = request.RequestSubmissionDetail.DistributorName,
+                        ResellerName = request.RequestSubmissionDetail.ResellerName,
+                        ContactPersonName = request.RequestSubmissionDetail.ContactPersonName,
+                        TelephoneNo = request.RequestSubmissionDetail.TelephoneNo,
+                        FaxNo = request.RequestSubmissionDetail.FaxNo,
+                        Email = request.RequestSubmissionDetail.Email,
+                        CreatedOnUTC = request.RequestSubmissionDetail.CreatedOnUTC,
+                        CreatedBy = request.RequestSubmissionDetail.CreatedBy,
+                        PreparedBy = request.RequestSubmissionDetail.CreatedBy != null ? userDictionary[request.RequestSubmissionDetail.CreatedBy]?.UserName : null,
+                    } : null,
+                    ProjectInformationModel = request.ProjectInformation,
+                };
+
+                requestModels.Add(requestModel);
             }
 
             return requestModels;
         }
+
+
 
 
     }

@@ -20,6 +20,7 @@ using Epson.Services.DTO.Products;
 using Microsoft.EntityFrameworkCore;
 using Epson.Data;
 using System.Web.Razor.Generator;
+using Newtonsoft.Json;
 
 namespace Epson.Controllers.API
 {
@@ -66,11 +67,12 @@ namespace Epson.Controllers.API
             if (id == null || id == 0)
                 return BadRequest("Id must not be empty");
 
-            var request = _requestService.GetRequestById(id);
+            List<RequestDTO> request = new List<RequestDTO>(); 
+            request.Add(_requestService.GetRequestById(id));
 
-            var requestModel = _requestModelFactory.PrepareRequestModel(request);
+            var requestModel = await _requestModelFactory.PrepareRequestModelsAsync(request);
 
-            response.Data = requestModel;
+            response.Data = requestModel.First();
             return Ok(response);
         }
 
@@ -78,6 +80,7 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation")]
         public async Task<IActionResult> GetRequests(bool breached = false)
         {
+
             var response = new GenericResponseModel<List<RequestModel>>();
             var currentUser = _workContext.CurrentUser;
             var currentUserDetail = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
@@ -92,7 +95,7 @@ namespace Epson.Controllers.API
             if (currentUser.Roles.Contains("Sales Operation"))
             {
                 requestSet.UnionWith(_requestService.GetRequests()
-                                                     .Where(x => x.ApprovalState == (int)ApprovalStateEnum.Approved));
+                                                        .Where(x => x.ApprovalState == (int)ApprovalStateEnum.Approved));
             }
 
             if (currentUser.Roles.Contains("Sales Section Head"))
@@ -105,30 +108,30 @@ namespace Epson.Controllers.API
                 relevantTeamIds.Add(currentUserDetail.TeamId);
 
                 var usersInRelevantTeams = _userManager.Users
-                                                       .Where(u => relevantTeamIds.Contains(u.TeamId))
-                                                       .Select(u => u.Id)
-                                                       .ToList();
+                                                        .Where(u => relevantTeamIds.Contains(u.TeamId))
+                                                        .Select(u => u.Id)
+                                                        .ToList();
 
                 requestSet.UnionWith(_requestService.GetRequests()
                                                     .Where(x => usersInRelevantTeams.Contains(x.CreatedById) &&
-                                                           x.CreatedById != currentUser.Id));
+                                                            x.CreatedById != currentUser.Id));
             }
 
             if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus"))
             {
                 requestSet.UnionWith(_requestService.GetRequests()
-                                             .Where(x => x.RequestProducts.Any(rp => rp.FulfillerId == currentUser.Id)));
+                                                .Where(x => x.RequestProducts.Any(rp => rp.FulfillerId == currentUser.Id)));
             }
 
             if (currentUser.Roles.Contains("Sales"))
             {
                 requestSet.UnionWith(_requestService.GetRequests()
-                                                     .Where(x => x.CreatedById == currentUser.Id));
+                                                        .Where(x => x.CreatedById == currentUser.Id));
             }
 
             var requests = requestSet.ToList().Distinct(new RequestDTOComparer()).ToList();
 
-            var requestModels = _requestModelFactory.PrepareRequestModels(requests.OrderByDescending(x => x.CreatedOnUTC).ToList());
+            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests.OrderByDescending(x => x.CreatedOnUTC).ToList());
 
             if (breached)
             {
@@ -138,6 +141,7 @@ namespace Epson.Controllers.API
             }
 
             response.Data = requestModels;
+
 
             return Ok(response);
         }
@@ -468,7 +472,7 @@ namespace Epson.Controllers.API
                                                   || x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller)
                                                 .ToList();
 
-            var requestModels = _requestModelFactory.PrepareRequestModels(approvedRequests);
+            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(approvedRequests);
 
             response.Data = requestModels;
 
@@ -476,7 +480,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getfulfilledrequestasfulfiller")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin")]
         public async Task<IActionResult> GetFulfilledRequestAsFulfiller()
         {
             var response = new GenericResponseModel<List<RequestProductModel>>();
@@ -534,7 +538,7 @@ namespace Epson.Controllers.API
                                           .ToList();
             }
 
-            var requestModels = _requestModelFactory.PrepareRequestModels(requests);
+            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
 
             response.Data = requestModels;
 
@@ -573,25 +577,27 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getpendingfulfilleritem")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin")]
         public async Task<IActionResult> GetPendingFulfillerItem()
         {
             var response = new GenericResponseModel<List<RequestModel>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-            var isCoverplusUser = await _userManager.IsInRoleAsync(user, RoleEnum.Coverplus.ToString());
-            var isProductUser = await _userManager.IsInRoleAsync(user, RoleEnum.Product.ToString());
-            var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString());
+            var roles = await _userManager.GetRolesAsync(user);
+            var isCoverplusUser = roles.Contains(RoleEnum.Coverplus.ToString());
+            var isProductUser = roles.Contains(RoleEnum.Product.ToString());
+            var isAdminUser = roles.Contains(RoleEnum.Admin.ToString());
 
             var requests = _requestService.GetUnfulfilledRequests(user, isCoverplusUser, isProductUser, isAdminUser);
 
-            var requestModels = _requestModelFactory.PrepareRequestModels(requests);
+            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
 
             response.Data = requestModels;
 
             return Ok(response);
         }
+
 
         [HttpGet("getpendingsalessectionheaditem")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
@@ -638,7 +644,7 @@ namespace Epson.Controllers.API
 
             var filteredRequests = filteredRequestsQuery.ToList();
 
-            var requestModels = _requestModelFactory.PrepareRequestModels(filteredRequests);
+            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(filteredRequests);
 
             response.Data = requestModels;
 
@@ -668,7 +674,7 @@ namespace Epson.Controllers.API
                             x.RequestProducts.Any(rp => usersInRelevantTeams.Contains(rp.FulfillerId)))
                 .ToList();
 
-            var requestModels = _requestModelFactory.PrepareRequestModels(requests);
+            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
 
             response.Data = requestModels;
 
@@ -689,7 +695,7 @@ namespace Epson.Controllers.API
             var requests = _requestService.GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.Approved)
                                                                     .ToList();
 
-            var requestModels = _requestModelFactory.PrepareRequestModels(requests);
+            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
 
             response.Data = requestModels;
 

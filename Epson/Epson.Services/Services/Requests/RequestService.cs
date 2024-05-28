@@ -7,6 +7,7 @@ using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.SLA;
 using Epson.Core.Domain.Users;
 using Epson.Data;
+using Epson.Data.Context;
 using Epson.Services.DTO.Report;
 using Epson.Services.DTO.Requests;
 using Epson.Services.DTO.SLA;
@@ -25,6 +26,7 @@ namespace Epson.Services.Services.Requests
     public class RequestService : IRequestService
     {
         private readonly IMapper _mapper;
+        private readonly EpsonDbContext _context;
         private readonly IRepository<Request> _RequestRepository;
         private readonly IRepository<RequestProduct> _RequestProductRepository;
         private readonly IRepository<CompetitorInformation> _CompetitorInformationRepository;
@@ -41,6 +43,7 @@ namespace Epson.Services.Services.Requests
 
         public RequestService
             (IMapper mapper,
+            EpsonDbContext dbContext,
             IRepository<Request> requestRepository,
             IRepository<RequestProduct> requestProductRepository,
             IRepository<CompetitorInformation> competitorInformationRepository,
@@ -56,6 +59,7 @@ namespace Epson.Services.Services.Requests
             IOptions<SLASetting> slaSetting)
         {
             _mapper = mapper;
+            _context = dbContext;
             _RequestRepository = requestRepository;
             _RequestProductRepository = requestProductRepository;
             _CompetitorInformationRepository = competitorInformationRepository;
@@ -82,7 +86,7 @@ namespace Epson.Services.Services.Requests
             requestDTO.CompetitorInformations = _CompetitorInformationRepository.GetAll().Where(x => x.RequestId == id).ToList();
             requestDTO.RequestSubmissionDetail = _RequestSubmissionDetailRepository.GetAll().Where(x => x.RequestId == id).FirstOrDefault();
             requestDTO.ProjectInformation = _mapper.Map<List<ProjectInformationDTO>>(_ProjectInformationRepository.GetAll().Where(x => x.RequestId == id)).FirstOrDefault();
-            
+
             return requestDTO;
         }
 
@@ -148,24 +152,24 @@ namespace Epson.Services.Services.Requests
             return requestDTOs;
         }
 
+
         public List<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
         {
-            var requests = GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction);
+            var requests = GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction).ToList();
 
-            var r = requests
-                .Select(x =>
+            foreach (var request in requests)
+            {
+                foreach (var rp in request.RequestProducts)
                 {
-                    foreach (var rp in x.RequestProducts)
-                    {
-                        rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isCoverplusUser, isProductUser, isAdminUser);
-                    }
+                    rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isCoverplusUser, isProductUser, isAdminUser);
+                }
+            }
 
-                    return x;
-                })
+            return requests
                 .Where(x => x.RequestProducts.Any(rp => rp.AuthorizedToFulfill))
                 .ToList();
-            return r;
         }
+
 
         private bool DetermineAuthorization(RequestProductDTO rp, ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
         {
@@ -219,8 +223,8 @@ namespace Epson.Services.Services.Requests
         }
 
         public bool InsertRequest(Request request,
-            List<RequestProduct> requestProducts, 
-            List<CompetitorInformation> competitorInformations, 
+            List<RequestProduct> requestProducts,
+            List<CompetitorInformation> competitorInformations,
             RequestSubmissionDetail requestSubmissionDetail,
             ProjectInformationDTO projectInformationDTO)
         {
@@ -238,7 +242,7 @@ namespace Epson.Services.Services.Requests
                 request.Id = _RequestRepository.Add(request);
                 requestSubmissionDetail.RequestId = request.Id;
                 projectInformation.RequestId = request.Id;
-                
+
                 _logger.Information("Creating request {id}", request.Id);
 
                 foreach (var requestProduct in requestProducts)
@@ -538,7 +542,7 @@ namespace Epson.Services.Services.Requests
 
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.Error(ex, "Error accepting deal of request {requestid}", request.Id);
                 return false;
@@ -649,7 +653,7 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate,
                                                                                existingRequest.AmendQuotationTime ?? existingRequest.ApprovedTime,
                                                                                _slaService.GetSLAStaffLeavesByStaffId(user.Id),
-                                                                               _slaService.GetSLAHolidays()); 
+                                                                               _slaService.GetSLAHolidays());
             requestProductToFulfill.Remarks = remarks;
             requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
 
@@ -848,7 +852,7 @@ namespace Epson.Services.Services.Requests
                     requestProduct.Status = (int)RequestProductStatusEnum.Cancelled;
                     _RequestProductRepository.Update(requestProduct);
                 }
-                
+
                 return true;
             }
             catch (Exception ex)
@@ -865,7 +869,7 @@ namespace Epson.Services.Services.Requests
             if (reqProduct == null)
                 throw new Exception("Invalid request.");
 
-            
+
             var request = GetRequestById(requestProduct.RequestId);
             var projectInformation = _ProjectInformationRepository.GetAll()
                 .FirstOrDefault(x => x.RequestId == request.Id) ?? new ProjectInformation { ClosingDate = DateTime.MinValue };
@@ -895,7 +899,8 @@ namespace Epson.Services.Services.Requests
                 {
                     request.ApprovalState = (int)ApprovalStateEnum.RejectedByFulfiller;
                     _RequestRepository.Update(_mapper.Map<Request>(request));
-                }else if (allFulfilled)
+                }
+                else if (allFulfilled)
                 {
                     request.ApprovalState = (int)ApprovalStateEnum.Approved;
                     _RequestRepository.Update(_mapper.Map<Request>(request));
@@ -914,8 +919,8 @@ namespace Epson.Services.Services.Requests
         public List<FulfillmentSummary> GetFulfillmentSummary(DateTime startDate, DateTime endDate, string granularity, string userId)
         {
             var requestProducts = _RequestProductRepository.Table.
-                Where(rp => rp.FulfilledDate != DateTime.MinValue 
-                && rp.FulfilledDate >= startDate 
+                Where(rp => rp.FulfilledDate != DateTime.MinValue
+                && rp.FulfilledDate >= startDate
                 && rp.FulfilledDate <= endDate
                 && rp.FulfillerId == userId);
 
@@ -958,7 +963,7 @@ namespace Epson.Services.Services.Requests
         {
             var requests = GetRequests();
             var filteredRequests = requests.
-                Where(r => r.CreatedOnUTC >= startDate 
+                Where(r => r.CreatedOnUTC >= startDate
                 && r.CreatedOnUTC <= endDate
                 && r.CreatedById == userId);
 
