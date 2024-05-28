@@ -15,5 +15,7 @@ namespace Epson.Core.Domain.Requests
         public decimal? DistyPrice { get; set; }
         public decimal? DealerPrice { get; set; }
         public decimal? EndUserPrice { get; set; }
+
+        public virtual Request Request { get; set; }
     }
 }

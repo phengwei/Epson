@@ -517,35 +517,42 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
         public async Task<IActionResult> GetPendingFulfillmentAsRequester()
         {
-            var response = new GenericResponseModel<List<RequestModel>>();
-
-            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
-            var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString());
-
-            List<RequestDTO> requests;
-
-            if (isAdminUser)
+            try
             {
-                requests = _requestService.GetRequests()
-                                          .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction ||
-                                                      x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation)
-                                          .ToList();
-            }
-            else
+                var response = new GenericResponseModel<List<RequestModel>>();
+
+                var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+                var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString());
+
+                List<RequestDTO> requests;
+
+                if (isAdminUser)
+                {
+                    requests = _requestService.GetRequests()
+                                              .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction ||
+                                                          x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation)
+                                              .ToList();
+                }
+                else
+                {
+                    requests = _requestService.GetRequests()
+                                              .Where(x => (x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction ||
+                                                           x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction ||
+                                                           x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation) &&
+                                                           x.CreatedById == user.Id)
+                                              .ToList();
+                }
+
+                var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
+
+                response.Data = requestModels;
+
+                return Ok(response);
+            }catch(Exception ex)
             {
-                requests = _requestService.GetRequests()
-                                          .Where(x => (x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction ||
-                                                       x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction ||
-                                                       x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation) &&
-                                                       x.CreatedById == user.Id)
-                                          .ToList();
+                return Ok();
             }
-
-            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
-
-            response.Data = requestModels;
-
-            return Ok(response);
+            
         }
 
 

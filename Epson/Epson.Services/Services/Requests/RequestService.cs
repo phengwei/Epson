@@ -92,21 +92,23 @@ namespace Epson.Services.Services.Requests
 
         public List<RequestDTO> GetRequests()
         {
-            var requests = _RequestRepository.GetAll();
+            var requests = _context.Request
+                .Include(x => x.CompetitorInformations)
+                .Include(x => x.RequestProducts)
+                .Include(x => x.RequestSubmissionDetail)
+                .Include(x => x.ProjectInformation)
+                .ThenInclude(pi => pi.ProjectInformationReasons)
+                .ToList();
+
             var requestDTOs = requests.Select(x =>
             {
-                var projectInformation = _ProjectInformationRepository
-                .Table
-                .Where(a => a.RequestId == x.Id)
-                .FirstOrDefault();
-
                 return new RequestDTO
                 {
                     Id = x.Id,
                     ApprovedBy = x.ApprovedBy,
                     ApprovedTime = x.ApprovedTime.AddHours(8),
                     AmendQuotationTime = x.AmendQuotationTime,
-                    CompetitorInformations = _mapper.Map<List<CompetitorInformationDTO>>(_CompetitorInformationRepository.Table.Where(p => p.RequestId == x.Id).ToList()),
+                    CompetitorInformations = _mapper.Map<List<CompetitorInformationDTO>>(x.CompetitorInformations.ToList()),
                     CreatedById = x.CreatedById,
                     CreatedOnUTC = x.CreatedOnUTC.AddHours(8),
                     UpdatedById = x.UpdatedById,
@@ -117,40 +119,37 @@ namespace Epson.Services.Services.Requests
                     TotalPrice = x.TotalPrice,
                     TimeToResolution = x.TimeToResolution,
                     Comments = x.Comments,
-                    RequestProducts = _mapper.Map<List<RequestProductDTO>>(_RequestProductRepository.GetAll().Where(p => p.RequestId == x.Id).ToList()),
-                    RequestSubmissionDetail = _mapper.Map<RequestSubmissionDetailDTO>(_RequestSubmissionDetailRepository.Table.Where(d => d.RequestId == x.Id).FirstOrDefault()),
-                    ProjectInformation = new ProjectInformationDTO
+                    TeamId = x.TeamId,
+                    RequestProducts = _mapper.Map<List<RequestProductDTO>>(x.RequestProducts.ToList()),
+                    RequestSubmissionDetail = _mapper.Map<RequestSubmissionDetailDTO>(x.RequestSubmissionDetail),
+                    ProjectInformation = x.ProjectInformation != null ? new ProjectInformationDTO
                     {
-                        Id = projectInformation.Id,
+                        Id = x.ProjectInformation.Id,
                         RequestId = x.Id,
-                        ProjectName = projectInformation.ProjectName,
-                        ProjectId = projectInformation.ProjectId,
-                        Industry = projectInformation.Industry,
-                        Type = projectInformation.Type,
-                        ClosingDate = projectInformation.ClosingDate,
-                        DeliveryDate = projectInformation.DeliveryDate,
-                        CompanyAddress = projectInformation.CompanyAddress,
-                        ContactPersonName = projectInformation.ContactPersonName,
-                        TelephoneNo = projectInformation.TelephoneNo,
-                        Email = projectInformation.Email,
-                        Requirements = projectInformation.Requirements,
-                        CustomerApplications = projectInformation.CustomerApplications,
-                        Budget = projectInformation.Budget,
-                        StaggeredComments = projectInformation.StaggeredComments,
-                        StaggeredMonth = projectInformation.StaggeredMonth,
-                        OtherInformation = projectInformation.OtherInformation,
-                        ProjectInformationReasons = _mapper.Map<List<ProjectInformationReasonDTO>>(_ProjectInformationReasonRepository
-                                                    .Table
-                                                    .Where(r => r.ProjectInformationId == projectInformation.Id)
-                                                    .ToList()),
-                    }
+                        ProjectName = x.ProjectInformation.ProjectName,
+                        ProjectId = x.ProjectInformation.ProjectId,
+                        Industry = x.ProjectInformation.Industry,
+                        Type = x.ProjectInformation.Type,
+                        ClosingDate = x.ProjectInformation.ClosingDate,
+                        DeliveryDate = x.ProjectInformation.DeliveryDate,
+                        CompanyAddress = x.ProjectInformation.CompanyAddress,
+                        ContactPersonName = x.ProjectInformation.ContactPersonName,
+                        TelephoneNo = x.ProjectInformation.TelephoneNo,
+                        Email = x.ProjectInformation.Email,
+                        Requirements = x.ProjectInformation.Requirements,
+                        CustomerApplications = x.ProjectInformation.CustomerApplications,
+                        Budget = x.ProjectInformation.Budget,
+                        StaggeredComments = x.ProjectInformation.StaggeredComments,
+                        StaggeredMonth = x.ProjectInformation.StaggeredMonth,
+                        OtherInformation = x.ProjectInformation.OtherInformation,
+                        ProjectInformationReasons = _mapper.Map<List<ProjectInformationReasonDTO>>(x.ProjectInformation.ProjectInformationReasons.ToList())
+                    } : null
                 };
-            })
-            .OrderBy(x => x.CreatedOnUTC)
-            .ToList();
+            }).OrderByDescending(x => x.CreatedOnUTC).ToList();
 
             return requestDTOs;
         }
+
 
 
         public List<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)

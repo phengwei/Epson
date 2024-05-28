@@ -110,22 +110,36 @@ namespace Epson.Factories
             var users = await _userManager.Users.Where(u => allUserIds.Contains(u.Id)).ToListAsync();
             var userDictionary = users.ToDictionary(u => u.Id, u => u);
 
-            var teamIds = users.Select(u => u.TeamId).Distinct().ToList();
-
+            var teamIds = requests.Select(r => r.TeamId).Distinct().ToList();
             var teams = await _teamRepository.Table.Where(t => teamIds.Contains(t.Id)).ToListAsync();
-            var teamDictionary = teams.ToDictionary(t => t.Id, t => t);
+            var teamDictionary = teams.ToDictionary(t => t.Id, t => t.Name);
+
+            var productIds = requests.SelectMany(r => r.RequestProducts.Select(rp => rp.ProductId)).Distinct().ToList();
+            var products = _productService.GetProductsByIds(productIds);
+            var productCategories = _productService.GetProductCategoriesByProductIds(productIds);
+
+            var productDictionary = products.ToDictionary(p => p.Id, p => p);
+            var productCategoryDictionary = productCategories.GroupBy(pc => pc.ProductId)
+                                                             .ToDictionary(g => g.Key, g => g.ToList());
 
             foreach (var request in requests)
             {
                 var createdByUser = request.CreatedById != null && userDictionary.ContainsKey(request.CreatedById) ? userDictionary[request.CreatedById] : null;
                 var approvedByUser = request.ApprovedBy != null && userDictionary.ContainsKey(request.ApprovedBy) ? userDictionary[request.ApprovedBy] : null;
-                var createdTeam = createdByUser != null && createdByUser.TeamId != null && teamDictionary.ContainsKey(createdByUser.TeamId) ? teamDictionary[createdByUser.TeamId] : null;
+                var createdTeamName = request.TeamId != null && teamDictionary.ContainsKey(request.TeamId) ? teamDictionary[request.TeamId] : null;
 
                 var requestProductsModel = request.RequestProducts?.Select(rp =>
                 {
                     var fulfiller = rp.FulfillerId != null && userDictionary.ContainsKey(rp.FulfillerId) ? userDictionary[rp.FulfillerId] : null;
-                    var product = _productService.GetProductById(rp.ProductId);
-                    var productCategories = _productService.GetProductCategoriesByProductId(rp.ProductId);
+                    var product = productDictionary.ContainsKey(rp.ProductId) ? productDictionary[rp.ProductId] : null;
+                    var productCategoryModels = productCategoryDictionary.ContainsKey(rp.ProductId)
+                        ? productCategoryDictionary[rp.ProductId].Select(pc => new ProductCategoryModel
+                        {
+                            ProductId = pc.ProductId,
+                            CategoryId = pc.CategoryId,
+                            CategoryName = _categoryService.GetCategoryById(pc.CategoryId).Name
+                        }).ToList()
+                        : new List<ProductCategoryModel>();
 
                     return new RequestProductModel
                     {
@@ -152,12 +166,7 @@ namespace Epson.Factories
                         AuthorizedToFulfill = rp.AuthorizedToFulfill,
                         WarrantyRequest = rp.WarrantyRequest,
                         WarrantyRequestPeriod = rp.WarrantyRequestPeriod,
-                        ProductCategory = productCategories.Select(pc => new ProductCategoryModel
-                        {
-                            ProductId = pc.ProductId,
-                            CategoryId = pc.CategoryId,
-                            CategoryName = _categoryService.GetCategoryById(pc.CategoryId).Name
-                        }).FirstOrDefault()
+                        ProductCategory = productCategoryModels.FirstOrDefault()
                     };
                 }).ToList();
 
@@ -171,7 +180,7 @@ namespace Epson.Factories
                     CreatedBy = createdByUser?.UserName,
                     CreatedById = request.CreatedById,
                     CreatedOnUTC = request.CreatedOnUTC,
-                    CreatedTeam = createdTeam?.Name,
+                    CreatedTeam = createdTeamName,
                     UpdatedById = request.UpdatedById,
                     UpdatedOnUTC = request.UpdatedOnUTC,
                     Segment = request.Segment,
@@ -214,8 +223,6 @@ namespace Epson.Factories
 
             return requestModels;
         }
-
-
 
 
     }

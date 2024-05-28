@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Reflection.Emit;
 
 namespace Epson.Data.Context
 {
@@ -38,21 +39,70 @@ namespace Epson.Data.Context
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
             builder.Entity<ApplicationUser>(entity => { entity.ToTable("AspNetUsers"); });
             builder.Entity<Role>(entity => { entity.ToTable("AspNetRoles"); });
-            builder.Entity<IdentityUserRole<string>>(entity => { 
-                entity.ToTable("AspNetUserRoles"); 
+            builder.Entity<IdentityUserRole<string>>(entity => {
+                entity.ToTable("AspNetUserRoles");
                 entity.HasKey(ur => new { ur.UserId, ur.RoleId });
             });
             builder.Entity<IdentityUserClaim<string>>(entity => { entity.ToTable("AspNetUserClaims"); });
-            builder.Entity<IdentityUserLogin<string>>(entity => { 
+            builder.Entity<IdentityUserLogin<string>>(entity => {
                 entity.ToTable("AspNetUserLogins");
                 entity.HasKey(e => new { e.LoginProvider, e.ProviderKey });
             });
             builder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable("AspNetRoleClaims"); });
-            builder.Entity<IdentityUserToken<string>>(entity => { 
-                entity.ToTable("AspNetUserTokens"); 
+            builder.Entity<IdentityUserToken<string>>(entity => {
+                entity.ToTable("AspNetUserTokens");
                 entity.HasKey(e => new { e.UserId, e.LoginProvider, e.Name });
+            });
+
+            builder.Entity<Request>(entity =>
+            {
+                entity.ToTable("Request");
+                entity.HasMany(r => r.CompetitorInformations)
+                    .WithOne(ci => ci.Request)
+                    .HasForeignKey(ci => ci.RequestId);
+
+                entity.HasMany(r => r.RequestProducts)
+                    .WithOne(rp => rp.Request)
+                    .HasForeignKey(rp => rp.RequestId);
+
+                entity.HasOne(r => r.RequestSubmissionDetail)
+                    .WithOne(rs => rs.Request)
+                    .HasForeignKey<RequestSubmissionDetail>(rs => rs.RequestId);
+
+                entity.HasOne(r => r.ProjectInformation)
+                    .WithOne(pi => pi.Request)
+                    .HasForeignKey<ProjectInformation>(pi => pi.RequestId);
+            });
+
+            builder.Entity<RequestProduct>(entity =>
+            {
+                entity.ToTable("RequestProduct");
+            });
+
+            builder.Entity<CompetitorInformation>(entity =>
+            {
+                entity.ToTable("CompetitorInformation");
+            });
+
+            builder.Entity<RequestSubmissionDetail>(entity =>
+            {
+                entity.ToTable("RequestSubmissionDetail");
+            });
+
+            builder.Entity<ProjectInformation>(entity =>
+            {
+                entity.ToTable("ProjectInformation");
+                entity.HasMany(pi => pi.ProjectInformationReasons)
+                    .WithOne(pir => pir.ProjectInformation)
+                    .HasForeignKey(pir => pir.ProjectInformationId);
+            });
+
+            builder.Entity<ProjectInformationReason>(entity =>
+            {
+                entity.ToTable("ProjectInformationReason");
             });
         }
 

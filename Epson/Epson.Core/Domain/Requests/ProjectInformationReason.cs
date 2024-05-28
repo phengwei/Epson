@@ -12,5 +12,6 @@ namespace Epson.Core.Domain.Requests
         public int ProjectInformationId { get; set; }
         public string? SelectedReason { get; set; }
         public string? AdditionalInfo { get; set; }
+        public virtual ProjectInformation ProjectInformation { get; set; }
     }
 }

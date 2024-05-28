@@ -27,5 +27,8 @@ namespace Epson.Core.Domain.Requests
         public string StaggeredMonth { get; set; }
         public string OtherInformation { get; set; }
 
+
+        public virtual Request Request { get; set; }
+        public virtual ICollection<ProjectInformationReason> ProjectInformationReasons { get; set; }
     }
 }
