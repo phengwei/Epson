@@ -74,7 +74,7 @@
         ],
         requests: [],
         options: {},
-        loading: true,
+        loading: false,
         search: '',
         breached: false,
         selectedMonth: new Date().getMonth() + 1,

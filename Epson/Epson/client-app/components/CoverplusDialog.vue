@@ -143,14 +143,24 @@
           this.$emit('add-coverplus', this.localCoverplus);
           this.resetLocalCoverplus();
           this.localDialogCoverplus = false;
-        } else {
-          this.$swal('Error', 'Please fill out all coverplus fields', 'error');
         }
       },
       validateCoverplus() {
-        return this.localCoverplus.category && this.localCoverplus.productId
-          && this.localCoverplus.quantity && this.localCoverplus.dealerPrice
-          && this.localCoverplus.endUserPrice && this.localCoverplus.warrantyRequest;
+        if (!this.localCoverplus.category || !this.localCoverplus.productId ||
+          !this.localCoverplus.quantity || !this.localCoverplus.dealerPrice ||
+          !this.localCoverplus.endUserPrice || !this.localCoverplus.warrantyRequest) {
+          this.$swal('Error', 'Please fill out all coverplus fields', 'error');
+          return false;
+        }
+
+        const distyPrice = Number(this.localCoverplus.distyPrice);
+        const dealerPrice = Number(this.localCoverplus.dealerPrice);
+
+        if (distyPrice > dealerPrice) {
+          this.$swal('Error', 'Disty price must be lower or equal to dealer price', 'error');
+          return false;
+        }
+        return true;
       },
       resetLocalCoverplus() {
         this.localCoverplus = {

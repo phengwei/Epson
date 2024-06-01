@@ -176,6 +176,7 @@ namespace Epson.Controllers.API
             var model = queryModel.Data;
 
             var user = _workContext.CurrentUser;
+            var dbUser = await _userManager.FindByIdAsync(user.Id);
 
             var request = new RequestDTO
             {
@@ -185,6 +186,7 @@ namespace Epson.Controllers.API
                 UpdatedById = user.Id,
                 Segment = model.Segment,
                 ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction,
+                TeamId = dbUser.TeamId
             };
 
             if (_requestService.InsertRequest(request, model.RequestProducts, model.CompetitorInformations, model.RequestSubmissionDetail, model.ProjectInformation))

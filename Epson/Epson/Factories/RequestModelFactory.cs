@@ -52,7 +52,7 @@ namespace Epson.Factories
             {
                 var request = _requestService.GetRequestById(requestProduct.RequestId);
 
-                var overallRequestStatusStr = "Pending";
+                var overallRequestStatusStr = "Pending amendment";
 
                 if (request.ApprovalState == (int)ApprovalStateEnum.Approved)
                 {
@@ -61,6 +61,10 @@ namespace Epson.Factories
                 else if ((request.ApprovalState >= (int)ApprovalStateEnum.RejectedByFulfiller) && (request.ApprovalState <= (int)ApprovalStateEnum.DealExited))
                 {
                     overallRequestStatusStr = "Failed";
+                }
+                else if (request.ApprovalState == (int)ApprovalStateEnum.AmendQuotation)
+                {
+                    overallRequestStatusStr = "Pending amendment";
                 }
 
                 var requestProductModel = new RequestProductModel

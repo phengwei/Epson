@@ -44,35 +44,42 @@ namespace Epson.Data
         {
             using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
 
-            var props = typeof(T).GetProperties();
+            var props = typeof(T).GetProperties()
+                .Where(p =>
+                    !typeof(IEnumerable<object>).IsAssignableFrom(p.PropertyType) && 
+                    (!p.PropertyType.IsClass || p.PropertyType == typeof(string)))  
+                .ToArray();
+
             var query = $"INSERT INTO {typeof(T).Name} ({string.Join(",", props.Select(p => p.Name))}) VALUES ({string.Join(",", props.Select(p => "@" + p.Name))}); SELECT LAST_INSERT_ID();";
 
-            return db.ExecuteScalar<int>(query, entity);
+            var parameters = new DynamicParameters();
+            foreach (var prop in props)
+            {
+                parameters.Add("@" + prop.Name, prop.GetValue(entity));
+            }
+
+            return db.ExecuteScalar<int>(query, parameters);
         }
+
 
         public int Update(T entity)
         {
             using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
 
-            var properties = entity.GetType().GetProperties();
+            var properties = entity.GetType().GetProperties()
+                                    .Where(p => p.PropertyType.IsValueType || p.PropertyType == typeof(string))
+                                    .Where(p => !p.Name.Equals("id", StringComparison.OrdinalIgnoreCase)) 
+                                    .ToArray();
+
             var query = new StringBuilder($"UPDATE {typeof(T).Name} SET ");
 
             for (int i = 0; i < properties.Length; i++)
             {
                 var property = properties[i];
-
-                if (property.Name.Equals("id", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
                 query.Append($"{property.Name} = @{property.Name}");
 
                 if (i < properties.Length - 1)
                     query.Append(", ");
-            }
-
-            if (query.ToString().EndsWith(", "))
-            {
-                query.Remove(query.Length - 2, 2);
             }
 
             query.Append(" WHERE id = @id");
@@ -80,6 +87,7 @@ namespace Epson.Data
             _logger.Information("Executing query {querystring}", query.ToString());
             return db.Execute(query.ToString(), entity);
         }
+
 
         public int Delete(int id)
         {

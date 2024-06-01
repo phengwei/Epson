@@ -122,14 +122,24 @@
           this.$emit('add-product', this.localProduct);
           this.resetLocalProduct();
           this.localDialogProduct = false;
-        } else {
-          this.$swal('Error', 'Please fill out all product fields', 'error');
-        }
+        } 
       },
       validateProduct() {
-        return this.localProduct.category && this.localProduct.productId &&
-          this.localProduct.quantity && this.localProduct.dealerPrice &&
-          this.localProduct.endUserPrice;
+        if (!this.localProduct.category || !this.localProduct.productId ||
+          !this.localProduct.quantity || !this.localProduct.dealerPrice ||
+          !this.localProduct.endUserPrice) {
+          this.$swal('Error', 'Please fill out all product fields', 'error');
+          return false;
+        }
+
+        const distyPrice = Number(this.localProduct.distyPrice);
+        const dealerPrice = Number(this.localProduct.dealerPrice);
+
+        if (distyPrice > dealerPrice) {
+          this.$swal('Error', 'Disty price must be lower or equal to dealer price', 'error');
+          return false;
+        }
+        return true;
       },
       resetLocalProduct() {
         this.localProduct = {
