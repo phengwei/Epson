@@ -12,6 +12,7 @@ using Epson.Services.DTO.Report;
 using Epson.Services.DTO.Requests;
 using Epson.Services.DTO.SLA;
 using Epson.Services.Extensions;
+using Epson.Services.Interface.AuditTrails;
 using Epson.Services.Interface.Email;
 using Epson.Services.Interface.Products;
 using Epson.Services.Interface.Requests;
@@ -36,6 +37,7 @@ namespace Epson.Services.Services.Requests
         private readonly IRepository<ProductCategory> _ProductCategoryRepository;
         private readonly IRepository<Category> _CategoryRepository;
         private readonly IProductService _productService;
+        private readonly IAuditTrailService _auditTrailService;
         private readonly IEmailService _emailService;
         private readonly ILogger _logger;
         private readonly ISLAService _slaService;
@@ -53,6 +55,7 @@ namespace Epson.Services.Services.Requests
             IRepository<ProductCategory> productCategoryRepository,
             IRepository<Category> categoryRepository,
             IProductService productService,
+            IAuditTrailService auditTrailService,
             IEmailService emailService,
             ILogger logger,
             ISLAService slaService,
@@ -69,12 +72,14 @@ namespace Epson.Services.Services.Requests
             _ProductCategoryRepository = productCategoryRepository;
             _CategoryRepository = categoryRepository;
             _productService = productService;
+            _auditTrailService = auditTrailService;
             _emailService = emailService;
             _logger = logger;
             _slaService = slaService;
             _slaSetting = slaSetting;
         }
 
+        public const string Entity = "Request";
         public RequestDTO GetRequestById(int id)
         {
             if (id == 0 || id == null)
@@ -900,6 +905,12 @@ namespace Epson.Services.Services.Requests
             {
                 _RequestProductRepository.Update(requestProduct);
                 _logger.Information("Rejected request product {id}", reqProduct.Id);
+
+                string productName = _productService.GetProductById(requestProduct.ProductId).Name;
+
+                string actionDetails = $"{user.UserName} Rejected request {request.Id} of {productName} with remark of {requestProduct.Remarks}";
+                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, user.Id, actionDetails, "Reject");
+
 
                 List<RequestProduct> requestProducts = _RequestProductRepository.Table.Where(x => x.RequestId == requestProduct.RequestId).ToList();
                 bool allRejected = requestProducts.All(rp => rp.Status == (int)RequestProductStatusEnum.Rejected);

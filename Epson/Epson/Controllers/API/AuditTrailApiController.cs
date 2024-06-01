@@ -43,5 +43,16 @@ namespace Epson.Controllers.API
             response.Data = auditTrails;
             return Ok(response);
         }
+
+        [HttpGet("getrejectionaudittrail")]
+        public async Task<IActionResult> GetRejectionAuditTrails()
+        {
+            var response = new GenericResponseModel<List<AuditTrail>>();
+
+            var auditTrails = _auditTrailService.GetRejectionAuditTrails().OrderByDescending(x => x.CreatedOnUTC).ToList();
+
+            response.Data = auditTrails;
+            return Ok(response);
+        }
     }
 }

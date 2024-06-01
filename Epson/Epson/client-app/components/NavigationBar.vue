@@ -43,6 +43,8 @@
                            class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Manage Product Categories</nuxt-link>
                 <nuxt-link to="/sla"
                            class="block px-4 py-2 hover:bg-[#003399] hover:text-white">SLA Configuration</nuxt-link>
+                <nuxt-link to="/requestRejectionAuditTrail"
+                           class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Rejection Audit Trail</nuxt-link>
                 <nuxt-link to="/productAuditTrail"
                            class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Product Audit Trail</nuxt-link>
                 <nuxt-link to="/productDashboard"

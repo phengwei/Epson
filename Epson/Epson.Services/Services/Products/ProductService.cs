@@ -77,6 +77,7 @@ namespace Epson.Services.Services.Products
                 Id = x.Id,
                 Name = x.Name,
                 Price = x.Price,
+                DealerPrice = x.DealerPrice,
                 IsActive = x.IsActive,
                 CreatedById = x.CreatedById,
                 CreatedOnUTC = x.CreatedOnUTC, 

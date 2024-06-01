@@ -34,5 +34,10 @@ namespace Epson.Services.Services.AuditTrails
         {
             return _auditTrailRepository.Table.Where(x => x.Entity == "Product").ToList();
         }
+
+        public List<AuditTrail> GetRejectionAuditTrails()
+        {
+            return _auditTrailRepository.Table.Where(x => x.Entity == "Request").ToList();
+        }
     }
 }
