@@ -688,6 +688,8 @@ export default {
         return "Type must not be empty!";
       } else if (this.projectInformation.requirements == null) {
         return "Customer's requirements must not be empty!";
+      } else if (this.coverplusesToShow.length === 0 || this.productsToShow.length === 0) {
+        return "Main Unit / Coverplus must not be empty!";
       } else if (this.productsToShow.length > 0 && this.competitorsToShow.length === 0) {
         return "At least one competitor is required!";
       } else if (!emailRegex.test(this.submissionDetail.email)) {
