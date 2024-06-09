@@ -449,7 +449,10 @@ export default {
     populateForm(requestData) {
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProductsModel) {
-        const categoryFound = this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId);
+        const categoryFound = productModel.productCategory && productModel.productCategory.categoryId
+          ? this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId)
+          : null;
+
         if (categoryFound) {
           this.selectedCategories.push(categoryFound);
           const newItem = {
@@ -483,6 +486,7 @@ export default {
             warrantyRequestPeriod: productModel.warrantyRequestPeriod,
             breached: productModel.breached
           };
+
           if (productModel.isCoverplus === true) {
             this.coverplusesToShow.push(p);
           } else {
@@ -522,6 +526,7 @@ export default {
         });
       });
     },
+
     async fetchCategories() {
       try {
         const response = await this.$axios.get(`${this.$config.restUrl}/api/category/getvalidcategories`);
@@ -688,7 +693,7 @@ export default {
         return "Type must not be empty!";
       } else if (this.projectInformation.requirements == null) {
         return "Customer's requirements must not be empty!";
-      } else if (this.coverplusesToShow.length === 0 || this.productsToShow.length === 0) {
+      } else if (this.coverplusesToShow.length === 0 && this.productsToShow.length === 0) {
         return "Main Unit / Coverplus must not be empty!";
       } else if (this.productsToShow.length > 0 && this.competitorsToShow.length === 0) {
         return "At least one competitor is required!";
