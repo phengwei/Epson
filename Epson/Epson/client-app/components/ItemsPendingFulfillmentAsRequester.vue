@@ -7,15 +7,16 @@
                 class="elevation-1">
     <template v-slot:top>
       <v-toolbar flat>
-        <v-toolbar-title>Pending</v-toolbar-title>
-        <v-divider class="mx-4" inset vertical></v-divider>
-        <v-text-field v-model="search"
-                      class="search-input"
-                      append-icon="mdi-magnify"
-                      label="Search by end user or request #"
-                      single-line
-                      hide-details></v-text-field>
+        <v-toolbar-title class="blue-text big-bold">PENDING</v-toolbar-title>
         <v-spacer></v-spacer>
+        <v-text-field v-model="search"
+                      prepend-inner-icon="mdi-magnify"
+                      placeholder="Search by end user or request #"
+                      solo
+                      hide-details
+                      flat
+                      dense
+                      class="search-bar"></v-text-field>
         <v-dialog v-model="dialog" max-width="500px">
           <v-card>
             <v-card-title>
@@ -612,76 +613,6 @@
     },
   }
 </script>
-<style>
-  .mini-table {
-    width: 100%;
-    margin-top: 2rem;
-    border-collapse: collapse;
-  }
-
-    .mini-table th, .mini-table td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-
-    .mini-table tr:nth-child(even) {
-      background-color: #f2f2f2;
-    }
-
-  .form-group {
-    margin-bottom: 1rem;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-  }
-
-  label {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    color: black;
-  }
-
-  .border-input {
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 0.5rem;
-    width: 100%;
-  }
-
-  .blue-checkbox {
-    margin-bottom: 1rem;
-  }
-
-  .dialog-button {
-    padding: 0.5rem 1rem;
-    background-color: #003399 !important;
-    color: #fff !important;
-    border: none;
-    cursor: pointer;
-  }
-
-    .blue-checkbox input[type="checkbox"]:checked {
-      background-color: #4285f4;
-      border-color: #4285f4;
-    }
-
-  input[type="checkbox"] {
-    margin-right: 0.5rem;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    border-radius: 3px;
-    border: 2px solid #ccc;
-    width: 1.2em;
-    height: 1.2em;
-    margin-left: 5%
-  }
-
-  .search-input {
-    flex-grow: 1;
-    margin-left: 16px;
-    margin-right: 16px;
-    width: 5%;
-  }
+<style scoped>
+  @import '~@/../wwwroot/css/general-table.css';
 </style>

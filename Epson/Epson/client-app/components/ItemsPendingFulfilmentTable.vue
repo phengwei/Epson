@@ -5,15 +5,16 @@
                 class="elevation-1">
     <template v-slot:top>
       <v-toolbar flat>
-        <v-toolbar-title>New Request</v-toolbar-title>
-        <v-divider class="mx-4" inset vertical></v-divider>
-        <v-text-field v-model="search"
-                      class="search-input"
-                      append-icon="mdi-magnify"
-                      label="Search by end user or request #"
-                      single-line
-                      hide-details></v-text-field>
+        <v-toolbar-title class="blue-text big-bold">NEW REQUEST</v-toolbar-title>
         <v-spacer></v-spacer>
+        <v-text-field v-model="search"
+                      prepend-inner-icon="mdi-magnify"
+                      placeholder="Search by end user or request #"
+                      solo
+                      hide-details
+                      flat
+                      dense
+                      class="search-bar"></v-text-field>
       </v-toolbar>
     </template>
 
@@ -144,11 +145,6 @@
   }
 </script>
 
-<style>
-  .search-input {
-    flex-grow: 1;
-    margin-left: 16px;
-    margin-right: 16px;
-    width: 5%;
-  }
+<style scoped>
+  @import '~@/../wwwroot/css/general-table.css';
 </style>

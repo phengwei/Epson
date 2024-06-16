@@ -1,30 +1,41 @@
 <template>
   <div class="d-flex justify-content-center align-items-center vh-100" data-app="true" v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Admin')">
-    <v-card class="mx-auto" style="width: 90%">
+    <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
       <v-card-title class="d-flex justify-content-between align-items-center">
-        <span style="flex-grow: 1;">Products</span>
-        <div class="d-flex align-items-center">
+        <v-toolbar flat>
+          <v-toolbar-title><h2 class="blue-text big-bold">PRODUCTS</h2></v-toolbar-title>
+          <v-spacer></v-spacer>
           <v-text-field v-model="search"
-                        class="search-input"
-                        append-icon="mdi-magnify"
-                        label="Search by product name"
-                        single-line
-                        hide-details></v-text-field>
-        </div>
-        <v-dialog v-model="dialog" max-width="500px">
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">New Product</v-btn>
-          </template>
+                        prepend-inner-icon="mdi-magnify"
+                        placeholder="Search by product name"
+                        solo
+                        hide-details
+                        flat
+                        dense
+                        class="search-bar"></v-text-field>
+        </v-toolbar>
 
+        <v-tabs class="mt-4" v-model="tab" background-color="white">
+          <v-tab v-for="(item, index) in tabItems" :key="index" :class="{'blue-text--active': tab === index}">
+            {{ item }}
+          </v-tab>
+          <v-spacer></v-spacer>
+          <v-btn class="mr-5 blue-button" color="primary" dark @click="dialog = true">
+            <v-icon left>mdi-plus</v-icon>
+            ADD PRODUCT
+          </v-btn>
+        </v-tabs>
+
+        <v-dialog v-model="dialog" max-width="500px">
           <v-card>
             <v-card-title>
-              <span class="text-h5">{{ formTitle }}</span>
+              <span class="text-h5 blue-text big-bold">{{ formTitle }}</span>
             </v-card-title>
             <v-card-text>
               <label>Product Category</label>
-              <div v-for="category in categories" :key="category.id">
+              <div v-for="category in categories" :key="category.id" class="role-checkbox">
                 <div class="blue-checkbox">
-                  <input type="checkbox" v-model="selectedCategories" :value="category">
+                  <input type="checkbox" v-model="selectedCategories" :value="category" class="styled-checkbox">
                   <label class="category-name">{{ category.name }}</label>
                 </div>
               </div>
@@ -78,7 +89,7 @@
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser']),
       formTitle() {
-        return this.editedIndex === -1 ? 'New Product' : 'Edit Product'
+        return this.editedIndex === -1 ? 'ADD PRODUCT' : 'EDIT PRODUCT'
       },
       selectedCategoryList() {
         return this.categories.filter((category) => this.selectedCategories.includes(category.id));
@@ -346,55 +357,5 @@
 </script>
 
 <style scoped>
-  .form-group {
-    margin-bottom: 1rem;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-  }
-
-  label {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    color: black;
-  }
-
-  .border-input {
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 0.5rem;
-    width: 100%;
-  }
-
-  .blue-checkbox {
-    margin-bottom: 1rem;
-  }
-
-    .blue-checkbox input[type="checkbox"]:checked {
-      background-color: #4285f4;
-      border-color: #4285f4;
-    }
-
-  input[type="checkbox"] {
-    margin-right: 0.5rem;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    border-radius: 3px;
-    border: 2px solid #ccc;
-    width: 1.2em;
-    height: 1.2em;
-    margin-left: 5%
-  }
-
-  .vh-100 {
-    height: 100vh;
-  }
-
-  .search-input {
-    flex-grow: 1;
-    margin-left: 16px;
-    margin-right: 16px;
-    width: auto;
-  }
+  @import '~@/../wwwroot/css/general-table.css';
 </style>

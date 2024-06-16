@@ -62,4 +62,7 @@
 
 <style scoped>
   @import '~@/../wwwroot/css/general-table.css';
+  .theme--light.v-data-table > .v-data-table__wrapper > table > thead > tr:last-child > th {
+    color: #d3d3d3 !important;
+  }
 </style>
