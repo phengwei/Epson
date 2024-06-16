@@ -14,24 +14,29 @@
         <!-- Primary Navbar items -->
         <div class="flex items-center space-x-7">
           <nuxt-link to="/dashboard"
-                     class="hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">Dashboard</nuxt-link>
+                     exact-active-class="nav-link-active"
+                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">Dashboard</nuxt-link>
           <nuxt-link to="/reporting"
-                     class="hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">Reports</nuxt-link>
+                     exact-active-class="nav-link-active"
+                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">Reports</nuxt-link>
           <nuxt-link to="/slaDashboard"
-                     class="hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">SLA Overview</nuxt-link>
+                     exact-active-class="nav-link-active"
+                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">SLA Overview</nuxt-link>
           <nuxt-link to="/request"
-                     class="hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">Requests</nuxt-link>
+                     exact-active-class="nav-link-active"
+                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">Requests</nuxt-link>
           <nuxt-link to="/product"
-                     class="hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">Products</nuxt-link>
+                     exact-active-class="nav-link-active"
+                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">Products</nuxt-link>
         </div>
 
         <!-- User Dropdown -->
-        <div class="relative group ml-auto">
-          <span class="px-3 py-2 font-semibold transition duration-300 cursor-pointer flex items-center italic">
+        <div class="relative ml-auto" ref="dropdown">
+          <span @click="toggleDropdown" class="px-3 py-2 font-semibold transition duration-300 cursor-pointer flex items-center italic">
             {{ loggedInUser.userName }}
             <span class="ml-4">&#x25BC;</span>
           </span>
-          <div class="absolute right-0 mt-1 w-48 rounded-md shadow-lg py-1 bg-white text-black z-50 admin-center-dropdown">
+          <div v-show="showDropdown" class="dropdown-menu absolute right-0 mt-1 w-48 rounded-md shadow-lg py-1 bg-white text-black z-50">
             <nuxt-link to="/change-password"
                        class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Change Password</nuxt-link>
             <a class="block px-4 py-2 hover:bg-[#003399] hover:text-white cursor-pointer"
@@ -47,10 +52,24 @@
 
   export default {
     name: 'HeaderNav',
+    data() {
+      return {
+        showDropdown: false
+      };
+    },
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser']),
     },
     methods: {
+      toggleDropdown() {
+        this.showDropdown = !this.showDropdown;
+        console.log('Dropdown toggled:', this.showDropdown);
+      },
+      closeDropdown(event) {
+        if (!this.$refs.dropdown.contains(event.target)) {
+          this.showDropdown = false;
+        }
+      },
       logout() {
         this.$auth.logout().then(() => {
           localStorage.clear();
@@ -58,21 +77,40 @@
           this.$router.go(0);
         });
       }
+    },
+    mounted() {
+      document.addEventListener('click', this.closeDropdown);
+    },
+    beforeDestroy() {
+      document.removeEventListener('click', this.closeDropdown);
     }
   };
 </script>
-<style>
+<style scoped>
   .ums-header {
     background-color: #003399;
   }
 
-  .group:hover .admin-center-dropdown,
-  .group:focus-within .admin-center-dropdown {
-    display: block !important;
+  .nav-link {
+    position: relative;
   }
 
-  .admin-center-dropdown {
-    display: none;
+  .nav-link-active {
+    color: #ffffff !important;
+  }
+
+    .nav-link-active::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background-color: #ffffff;
+      left: 0;
+      bottom: -2px;
+    }
+
+  .dropdown-menu {
+    display: block; /* Ensure the dropdown is shown */
   }
 
   .homeHeader {
@@ -97,7 +135,7 @@
 
   .homePageIsActiveMobile {
     background-color: #003399;
-    color: white
+    color: white;
   }
 
   .stop-scrolling {
