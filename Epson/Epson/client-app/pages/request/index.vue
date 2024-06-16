@@ -1,19 +1,26 @@
 <template>
   <div class="d-flex justify-content-center align-items-center vh-100" data-app="true">
-    <v-card class="mx-auto" style="width: 90%">
-      <v-card-title class="d-flex justify-content-between align-items-center">
-        <span style="flex-grow: 1;">{{ breached ? 'Breached Request' : 'Request' }}</span>
-        <div class="d-flex align-items-center">
-          <v-text-field v-model="search"
-                        class="search-input"
-                        append-icon="mdi-magnify"
-                        label="Search by end user or request #"
-                        single-line
-                        hide-details></v-text-field>
+    <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
+      <v-toolbar flat>
+        <v-toolbar-title><h2 class="blue-text big-bold">{{ breached ? 'BREACHED REQUESTS' : 'REQUESTS' }}</h2></v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-text-field v-model="search"
+                      prepend-inner-icon="mdi-magnify"
+                      placeholder="Search"
+                      solo
+                      hide-details
+                      flat
+                      dense
+                      class="search-bar"></v-text-field>
+      </v-toolbar>
+      <div class="filter-container">
+        <div class="month-selector">
           <v-select v-model="selectedMonth" :items="months" @change="getRequests" class="month-select"></v-select>
         </div>
-        <v-btn v-if="loggedInUser && loggedInUser.roles.includes('Sales')" class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
-      </v-card-title>
+        <div class="create-quotation">
+          <v-btn v-if="loggedInUser && loggedInUser.roles.includes('Sales')" class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
+        </div>
+      </div>
       <v-card-text>
         <v-data-table :headers="headers"
                       :items="filteredRequests"
@@ -29,6 +36,7 @@
     </v-card>
   </div>
 </template>
+
 <script>
   import { mapGetters } from 'vuex';
   import moment from 'moment';
@@ -163,36 +171,23 @@
     },
   };
 </script>
+
 <style scoped>
-  .vh-100 {
-    height: 100vh;
-  }
-
-  .request-btn {
-    background-color: #272727 !important;
-    color: white !important;
-    border: none;
-    margin-left: 16px;
-    padding: 10px 16px;
-    font-size: 14px;
-    border-radius: 4px;
-  }
-
-  .search-input {
-    flex-grow: 1;
-    margin-left: 16px;
-    margin-right: 16px;
-    width: auto;
-  }
+  @import '~@/../wwwroot/css/general-table.css';
 
   .filter-container {
     display: flex;
     align-items: center;
-    margin-right: 16px;
+    justify-content: space-between;
+    margin-bottom: 16px;
   }
 
-  .month-select {
-    margin-left: 16px;
+  .month-selector {
+    width: 20%;
     min-width: 150px;
+  }
+
+  .create-quotation {
+    margin-left: 16px;
   }
 </style>

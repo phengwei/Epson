@@ -44,11 +44,11 @@
                 <input v-model="editedItem.name" class="border-input" label="Product name" required></input>
               </div>
               <div class="form-group">
-                <label>Bottom Price</label>
+                <label>Bottom Price (RM)</label>
                 <input type="number" v-model="editedItem.price" class="border-input" label="Bottom Price" required></input>
               </div>
               <div class="form-group">
-                <label>Dealer Price</label>
+                <label>Dealer Price (RM)</label>
                 <input type="number" v-model="editedItem.dealerPrice" class="border-input" label="Dealer Price" required></input>
               </div>
             </v-card-text>
@@ -137,13 +137,13 @@
         editedItem: {
           id: 0,
           name: '',
-          price: 0,
-          dealerPrice: 0
+          price: null,
+          dealerPrice: null
         },
         defaultItem: {
           name: '',
-          price: 0,
-          dealerPrice: 0
+          price: null,
+          dealerPrice: null
         },
       }
     },
@@ -286,7 +286,7 @@
         if (!this.editedItem.price || isNaN(this.editedItem.price)) {
           Swal.fire(
             'Error!',
-            'Price is required.',
+            'Bottom Price is required.',
             'error'
           );
           return;
