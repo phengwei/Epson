@@ -1,9 +1,9 @@
 <template>
   <div class="d-flex justify-content-center align-items-center vh-100" data-app="true">
-    <v-card class="mx-auto" style="width: 90%">
-      <v-card-title>
-        Request Rejection Audit Trail
-      </v-card-title>
+    <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
+      <v-toolbar flat>
+        <v-toolbar-title><h2 class="blue-text big-bold">REJECTION AUDIT TRAIL</h2></v-toolbar-title>
+      </v-toolbar>
       <v-card-text>
         <v-data-table :headers="headers"
                       :items="auditTrails"
@@ -61,7 +61,5 @@
 </script>
 
 <style scoped>
-  .vh-100 {
-    height: 100vh;
-  }
+  @import '~@/../wwwroot/css/general-table.css';
 </style>

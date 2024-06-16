@@ -2,7 +2,7 @@
   <div class="d-flex justify-content-center align-items-center vh-100" data-app="true">
     <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
       <v-toolbar flat>
-        <v-toolbar-title><h2 class="blue-text big-bold">Users</h2></v-toolbar-title>
+        <v-toolbar-title><h2 class="blue-text big-bold">USERS</h2></v-toolbar-title>
         <v-spacer></v-spacer>
         <v-text-field v-model="search"
                       prepend-inner-icon="mdi-magnify"
