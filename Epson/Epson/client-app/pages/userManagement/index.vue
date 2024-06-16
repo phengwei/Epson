@@ -1,23 +1,55 @@
 <template>
   <div class="d-flex justify-content-center align-items-center vh-100" data-app="true">
-    <v-card class="mx-auto" style="width: 90%">
-      <v-card-title>
-        Manage Users
+    <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
+      <v-toolbar flat>
+        <v-toolbar-title><h2 class="blue-text big-bold">Users</h2></v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn color="primary" dark @click="initializeUser, dialog = true">New User</v-btn>
-      </v-card-title>
+        <v-text-field v-model="search"
+                      prepend-inner-icon="mdi-magnify"
+                      placeholder="Search"
+                      solo
+                      hide-details
+                      flat
+                      dense
+                      class="search-bar"></v-text-field>
+      </v-toolbar>
+
+      <v-tabs class="mt-4" v-model="tab" background-color="white">
+        <v-tab v-for="(item, index) in tabItems" :key="index" :class="{'blue-text--active': tab === index}">
+          {{ item }}
+        </v-tab>
+        <v-spacer></v-spacer>
+        <v-btn class="mr-5 blue-button" color="primary" dark @click="initializeUser, dialog = true">
+          <v-icon left>mdi-plus</v-icon>
+          Add User
+        </v-btn>
+      </v-tabs>
+
+      <v-card-text>
+        <v-tabs-items v-model="tab">
+          <v-tab-item v-for="(item, index) in tabItems" :key="index">
+            <v-data-table :headers="headers" :items="filteredUsers(item)" class="elevation-1 table-padding">
+              <template v-slot:item.actions="{ item }">
+                <v-icon small class="mr-2" @click="editUser(item)">mdi-pencil</v-icon>
+                <v-icon small class="mr-2" @click="changePassword(item)">mdi-lock-reset</v-icon>
+                <v-icon small v-if="item.lockoutEnd != null" class="mr-2" @click="reactivateAccountConfirmation(item)">mdi-account-reactivate</v-icon>
+              </template>
+            </v-data-table>
+          </v-tab-item>
+        </v-tabs-items>
+      </v-card-text>
 
       <v-dialog v-model="dialog" max-width="500px">
         <v-card>
           <v-card-title>
-            <span class="headline">{{ formTitle }}</span>
+            <span class="headline blue-text big-bold">{{ formTitle }}</span>
           </v-card-title>
           <v-card-text>
             <v-col cols="12">
               <div class="form-group">
                 <label>Roles</label>
-                <div v-for="role in roles" :key="role.Id">
-                  <input type="checkbox" :value="role" :checked="newUser.selectedRoles.includes(role)" @change="toggleRole(role)">
+                <div v-for="role in roles" :key="role.Id" class="role-checkbox">
+                  <input type="checkbox" :value="role" :checked="newUser.selectedRoles.includes(role)" @change="toggleRole(role)" class="styled-checkbox">
                   <label class="role-name">{{ role.name }}</label>
                 </div>
               </div>
@@ -71,26 +103,6 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-
-      <v-tabs v-model="tab" background-color="white">
-        <v-tab v-for="(item, index) in tabItems" :key="index">{{ item }}</v-tab>
-      </v-tabs>
-
-      <v-card-text>
-        <v-tabs-items v-model="tab">
-          <v-tab-item v-for="(item, index) in tabItems" :key="index">
-            <v-data-table :headers="headers" :items="filteredUsers(item)" class="elevation-1">
-              <template v-slot:item.actions="{ item }">
-                <v-icon small class="mr-2" @click="editUser(item)">mdi-pencil</v-icon>
-                <!--<v-icon small class="mr-2" @click="deleteUserConfirmation(item)">mdi-delete</v-icon>-->
-                <v-icon small class="mr-2" @click="changePassword(item)">mdi-lock-reset</v-icon>
-                <v-icon small v-if="item.lockoutEnd != null" class="mr-2" @click="reactivateAccountConfirmation(item)">mdi-account-reactivate</v-icon>
-              </template>
-            </v-data-table>
-          </v-tab-item>
-        </v-tabs-items>
-      </v-card-text>
-
     </v-card>
   </div>
 </template>
@@ -111,6 +123,7 @@
           selectedRoles: []
         },
         password: '',
+        search: '',
         roles: [],
         headers: [
           { text: 'User Name', value: 'userName' },
@@ -119,7 +132,7 @@
           { text: 'Actions', value: 'actions', sortable: false },
         ],
         tabItems: ['Sales', 'Product', 'Coverplus', 'Sales Section Head', 'Sales Operation'],
-        tab: null,
+        tab: 0,
         users: [],
         teams: [],
         isEditing: false,
@@ -127,7 +140,7 @@
     },
     computed: {
       formTitle() {
-        return this.editedIndex === -1 ? 'New User' : 'Edit User'
+        return this.editedIndex === -1 ? 'ADD USER' : 'EDIT USER'
       },
     },
     created() {
@@ -235,7 +248,7 @@
         const errorMessage = this.getUserNameValidationError();
         if (errorMessage) {
           this.$swal('Validation Error', errorMessage, 'error');
-          return;  
+          return;
         }
         this.$axios.post(`${this.$config.restUrl}/api/customer/addnewuser`, {
           data: {
@@ -319,7 +332,7 @@
             console.error('Error changing user password:', error);
             this.$swal('Failed to change user password', error.response.data.message, 'error');
           });
-        } 
+        }
       },
       validatePassword(password) {
         const hasUppercase = /[A-Z]/.test(password);
@@ -408,16 +421,87 @@
 
   .border-input {
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 10px;
     padding: 0.5rem;
     width: 100%;
   }
 
   .role-checkbox {
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    margin-right: 0.5rem;
-    width: 1.2em;
-    height: 1.2em;
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+    .role-checkbox input[type="checkbox"] {
+      margin-right: 0.5rem;
+    }
+
+      .role-checkbox input[type="checkbox"].styled-checkbox {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 1px solid #003399;
+        border-radius: 4px;
+        position: relative;
+        cursor: pointer;
+      }
+
+        .role-checkbox input[type="checkbox"].styled-checkbox:checked::before {
+          content: '✔';
+          font-size: 12px;
+          color: #003399;
+          position: absolute;
+          top: 1px;
+          left: 2px;
+        }
+
+  .search-bar {
+    width: 150px;
+    border-radius: 20px;
+    padding: 5px 10px;
+    border-width: medium;
+  }
+
+    .search-bar .v-input__control {
+      background-color: #d3d3d3;
+    }
+
+  .theme--light.v-text-field--solo > .v-input__control > .v-input__slot {
+    background-color: #d3d3d3 !important;
+  }
+
+  .search-bar .v-field__append-inner,
+  .search-bar .v-field__prepend-inner {
+    margin-top: 0;
+  }
+
+  .search-bar .v-input__control {
+    border: none;
+  }
+
+  .blue-button {
+    background-color: #003399 !important;
+    color: white !important;
+  }
+
+  .blue-text {
+    color: #003399 !important;
+  }
+
+  .blue-text--active {
+    color: #003399 !important;
+  }
+
+  .big-bold {
+    font-size: 24px;
+    font-weight: bold;
+  }
+
+  .card-round {
+    border-radius: 20px !important;
+  }
+
+  .table-padding {
+    padding: 20px;
   }
 </style>

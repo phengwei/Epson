@@ -66,7 +66,7 @@
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    transition: transform 0.2s ease-in-out;
+    transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
     text-align: center;
     text-decoration: none;
     color: inherit;
@@ -74,6 +74,8 @@
 
     .dashboard-card:hover {
       transform: translateY(-10px);
+      background-color: #003399;
+      color: white;
     }
 
   .card-content {
