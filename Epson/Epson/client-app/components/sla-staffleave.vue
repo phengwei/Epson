@@ -1,27 +1,36 @@
 <template>
-  <div class="sla-staff-leaves-management">
-    <h1>SLA - Staff Leaves Management</h1>
-    <form class="form-container" @submit.prevent="validateAndSaveSLAStaffLeave">
-      <div class="form-group">
-        <label for="staff">Staff:</label>
-        <select id="staff" v-model="selectedStaff" required class="border-input">
-          <option v-for="staff in staffMembers" :value="staff.id" :key="staff.id">{{ staff.userName }}</option>
-        </select>
+  <div class="sla-staff-leaves-container">
+    <div class="sla-staff-leaves-card">
+      <div class="slastaff-header">
+        <h4>STAFF LEAVE MANAGEMENT</h4>
       </div>
-      <div class="form-group">
-        <label for="startDate">Start Date:</label>
-        <input type="date" id="startDate" v-model="startDate" :min="minLeaveDate" required class="border-input">
-      </div>
-      <div class="form-group">
-        <label for="endDate">End Date:</label>
-        <input type="date" id="endDate" v-model="endDate" :min="startDate" :max="maxEndDate" required class="border-input" :disabled="!startDate">
-      </div>
-      <div class="form-group">
-        <label for="reason">Reason:</label>
-        <textarea id="reason" v-model="reason" required></textarea>
-      </div>
-      <button type="submit">Add Staff Leave</button>
-    </form>
+      <v-card-text>
+        <form class="form-container" @submit.prevent="validateAndSaveSLAStaffLeave">
+          <div class="form-group">
+            <label for="staff">Staff:</label>
+            <select id="staff" v-model="selectedStaff" required class="border-input">
+              <option v-for="staff in staffMembers" :value="staff.id" :key="staff.id">{{ staff.userName }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="startDate">Start Date:</label>
+            <input type="date" id="startDate" v-model="startDate" :min="minLeaveDate" required class="border-input">
+          </div>
+          <div class="form-group">
+            <label for="endDate">End Date:</label>
+            <input type="date" id="endDate" v-model="endDate" :min="startDate" :max="maxEndDate" required class="border-input" :disabled="!startDate">
+          </div>
+          <div class="form-group">
+            <label for="reason">Description:</label>
+            <textarea id="reason" v-model="reason" required class="border-input"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="save-button">Save</button>
+            <button type="button" @click="resetForm" class="cancel-button">Cancel</button>
+          </div>
+        </form>
+      </v-card-text>
+    </div>
   </div>
 </template>
 
@@ -104,6 +113,12 @@
           this.saveSLAStaffLeave();
         }
       },
+      resetForm() {
+        this.startDate = null;
+        this.endDate = null;
+        this.reason = '';
+        this.selectedStaff = '';
+      },
       async getAllStaffs() {
         try {
           const response = await fetch('/api/customer/getallstaff');
@@ -154,25 +169,40 @@
 </script>
 
 <style scoped>
-  .sla-staff-leaves-management {
+  .sla-staff-leaves-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
     flex-direction: column;
+    height: 100%;
   }
+
+  .sla-staff-leaves-card {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .slastaff-header {
+    width: 100%;
+    text-align: left;
+    margin-bottom: 1rem;
+  }
+
+    .slastaff-header h4 {
+      color: #003399;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin: 0;
+    }
 
   .form-container {
-    max-width: 400px;
-    padding: 2rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-
-  .border-input {
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 0.5rem;
     width: 100%;
   }
 
@@ -181,9 +211,14 @@
   }
 
   label {
-    display: block;
     font-weight: bold;
-    margin-bottom: 0.5rem;
+  }
+
+  .border-input {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 0.5rem;
+    width: 100%;
   }
 
   textarea {
@@ -194,22 +229,26 @@
     border-radius: 4px;
   }
 
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+  }
+
   button {
     padding: 0.5rem 1rem;
-    background-color: #003399;
-    color: #fff;
     border: none;
+    border-radius: 5px;
     cursor: pointer;
   }
 
-  #leaveCalendar {
-    margin-top: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+  .save-button {
+    background-color: #003399;
+    color: white;
   }
 
-  .vdp-datepicker__calendar .cell.highlighted {
-    background-color: #ffc107;
+  .cancel-button {
+    background-color: #ccc;
   }
 </style>
-

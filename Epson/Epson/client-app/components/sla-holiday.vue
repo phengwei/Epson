@@ -1,25 +1,27 @@
 <template>
-  <div class="sla-holiday-management">
-    <h1>SLA - Holiday Calendar Management</h1>
-    <form class="form-container">
-      <div class="form-group">
-        <label for="calendar">Holiday Calendar:</label>
-        <holidaydatepicker :existing-holidays="existingHolidays" :is-editable="false"></holidaydatepicker>
+  <div class="sla-holiday-container">
+    <div class="sla-holiday-card">
+      <div class="slacard-header">
+        <h4>HOLIDAY CALENDAR</h4>
       </div>
-      <div class="form-group">
-        <label for="holidayDate">Holiday Date:</label>
-        <input type="date" id="holidayDate" v-model="holidayDate" required class="border-input">
+      <div class="holiday-calendar">
+        <holidaydatepicker :existing-holidays="existingHolidays" :is-editable="false" class="full-width-datepicker"></holidaydatepicker>
       </div>
-      <div class="form-group">
-        <label for="description">Description:</label>
-        <input type="text" id="description" v-model="description" required class="border-input">
-      </div>
-      <div class="form-group">
-        <label for="isAdhoc">Is Adhoc:</label>
-        <input type="checkbox" id="isAdhoc" v-model="isAdhoc">
-      </div>
-      <button type="submit" @click.prevent="saveSLAHoliday">Add Holiday</button>
-    </form>
+      <form class="form-container">
+        <div class="form-group">
+          <label for="description">Description</label>
+          <input type="text" id="description" v-model="description" required class="border-input">
+        </div>
+        <div class="form-actions">
+          <div class="checkbox-group">
+            <input type="checkbox" id="isAdhoc" v-model="isAdhoc">
+            <label for="isAdhoc">Adhoc</label>
+          </div>
+          <button type="button" @click.prevent="saveSLAHoliday" class="save-button">Save</button>
+          <button type="button" @click.prevent="resetForm" class="cancel-button">Cancel</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -44,6 +46,10 @@
       };
     },
     methods: {
+      resetForm() {
+        this.description = '';
+        this.isAdhoc = false;
+      },
       async saveSLAHoliday() {
         try {
           const holidayDateString = new Date(this.holidayDate).toISOString();
@@ -119,26 +125,64 @@
   };
 </script>
 
-
-<style scoped>
-  .sla-holiday-management {
+<style>
+  .sla-holiday-container {
     display: flex;
-    justify-content: flex-end;
-    align-items: flex-start;
+    justify-content: center;
+    align-items: center;
     flex-direction: column;
-    margin: 10rem;
+    height: 100%;
   }
 
+  .sla-holiday-card {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .slacard-header {
+    width: 100%;
+    text-align: left;
+    margin-bottom: 1rem;
+  }
+
+    .slacard-header h4 {
+      color: #003399;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin: 0;
+    }
+
+  .holiday-calendar {
+    margin-bottom: 20px;
+  }
+
+  .full-width-datepicker .vdp-datepicker__calendar {
+    width: 100% !important;
+  }
+
+
   .form-container {
-    max-width: 400px;
-    padding: 2rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    width: 100%;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  label {
+    font-weight: bold;
   }
 
   .border-input {
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 5px;
     padding: 0.5rem;
     width: 100%;
   }
@@ -152,7 +196,6 @@
     border: 2px solid #ccc;
     width: 1.2em;
     height: 1.2em;
-    margin-left: 5%
   }
 
     input[type="checkbox"]:checked {
@@ -160,22 +203,26 @@
       border-color: #4285f4;
     }
 
-  .form-group {
-    margin-bottom: 1rem;
-  }
-
-  label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
   }
 
   button {
     padding: 0.5rem 1rem;
-    background-color: #003399;
-    color: #fff;
     border: none;
+    border-radius: 5px;
     cursor: pointer;
   }
 
+  .save-button {
+    background-color: #003399;
+    color: white;
+  }
+
+  .cancel-button {
+    background-color: #ccc;
+  }
 </style>

@@ -1,16 +1,34 @@
 <template>
   <div class="d-flex justify-content-center align-items-center vh-100" data-app="true">
-    <v-card class="mx-auto" style="width: 90%">
-      <v-card-title>
-        Manage Product Categories
+    <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
+      <v-toolbar flat>
+        <v-toolbar-title><h2 class="blue-text big-bold">PRODUCT CATEGORIES</h2></v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn color="primary" dark @click="initializeCategory, dialog = true">New Category</v-btn>
-      </v-card-title>
+        <v-text-field v-model="search"
+                      prepend-inner-icon="mdi-magnify"
+                      placeholder="Search"
+                      solo
+                      hide-details
+                      flat
+                      dense
+                      class="search-bar"></v-text-field>
+      </v-toolbar>
+
+      <v-tabs class="mt-4" v-model="tab" background-color="white">
+        <v-tab v-for="(item, index) in tabItems" :key="index" :class="{'blue-text--active': tab === index}">
+          {{ item }}
+        </v-tab>
+        <v-spacer></v-spacer>
+        <v-btn class="mr-5 blue-button" color="primary" dark @click="initializeUser, dialog = true">
+          <v-icon left>mdi-plus</v-icon>
+          ADD CATEGORY
+        </v-btn>
+      </v-tabs>
 
       <v-dialog v-model="dialog" max-width="500px">
         <v-card>
           <v-card-title>
-            <span class="headline">{{ formTitle }}</span>
+            <span class="headline blue-text big-bold">{{ formTitle }}</span>
           </v-card-title>
           <v-card-text>
             <v-col cols="12">
@@ -80,7 +98,7 @@
           products: [],
           backupFulfiller1: '',
           backupFulfiller2: '',
-          escalationFulfiller:  ''
+          escalationFulfiller: ''
         },
         users: [],
         salesHeadUsers: [],
@@ -93,24 +111,24 @@
           { text: 'Actions', value: 'actions', sortable: false },
         ],
         isEditing: false,
-        tab: null, 
+        tab: null,
       };
     },
     computed: {
       formTitle() {
-        return this.editedIndex === -1 ? 'New Category' : 'Edit Category'
+        return this.editedIndex === -1 ? 'ADD CATEGORY' : 'EDIT CATEGORY'
       },
       availableUsersForFulfiller1() {
         return this.users.filter(user => user.id !== this.newCategory.backupFulfiller2 &&
-                                                  user.id !== this.newCategory.escalationFulfiller);
+          user.id !== this.newCategory.escalationFulfiller);
       },
       availableUsersForFulfiller2() {
         return this.users.filter(user => user.id !== this.newCategory.backupFulfiller1 &&
-                                                  user.id !== this.newCategory.escalationFulfiller);
+          user.id !== this.newCategory.escalationFulfiller);
       },
       availableUsersForEscalationFulfiller() {
         return this.users.filter(user => user.id !== this.newCategory.backupFulfiller1 &&
-                                                  user.id !== this.newCategory.backupFulfiller2);
+          user.id !== this.newCategory.backupFulfiller2);
       },
     },
     created() {
@@ -260,35 +278,5 @@
 </script>
 
 <style scoped>
-  .vh-100 {
-    height: 100vh;
-  }
-
-  .form-group {
-    margin-bottom: 1rem;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-  }
-
-  label {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    color: black;
-  }
-
-  .border-input {
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 0.5rem;
-    width: 100%;
-  }
-
-  .role-checkbox {
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    margin-right: 0.5rem;
-    width: 1.2em;
-    height: 1.2em;
-  }
+  @import '~@/../wwwroot/css/general-table.css';
 </style>

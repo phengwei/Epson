@@ -21,7 +21,7 @@
         <v-spacer></v-spacer>
         <v-btn class="mr-5 blue-button" color="primary" dark @click="initializeUser, dialog = true">
           <v-icon left>mdi-plus</v-icon>
-          Add User
+          ADD USER
         </v-btn>
       </v-tabs>
 

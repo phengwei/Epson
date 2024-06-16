@@ -1,43 +1,109 @@
 <template>
-  <div class="sla-management" v-if="loggedInUser.roles.includes('Admin')">
-    <h1>SLA Management</h1>
+  <div class="sla-management-container" v-if="loggedInUser.roles.includes('Admin')">
+    <v-card class="sla-card">
+      <v-row>
+        <v-col cols="12">
+          <h2 class="blue-text">SLA CONFIGURATION</h2>
+        </v-col>
+        <v-col cols="12">
+          <sla-settings />
+        </v-col>
+        <v-col cols="12" md="6">
+          <sla-holiday />
+        </v-col>
+        <v-col cols="12" md="6">
+          <sla-staffLeaves />
+        </v-col>
+      </v-row>
+    </v-card>
+  </div>
+</template>
 
-    <form>
-      <div class="checkbox-group">
-        <label>
-          <input type="checkbox" v-model="workingHours">
-          Include working hours
-        </label>
+<script>
+  import { mapGetters } from 'vuex';
+  import slaStaffLeaves from '~/components/sla-staffleave.vue';
+  import slaSettings from '~/components/sla-settings.vue';
+  import slaHoliday from '~/components/sla-holiday.vue';
 
-        <div class="working-hours" v-if="workingHours">
-          <div>
+  export default {
+    name: 'SLA',
+    middleware: 'auth',
+    computed: {
+      ...mapGetters(['isAuthenticated', 'loggedInUser'])
+    },
+    components: {
+      slaSettings,
+      slaHoliday,
+      slaStaffLeaves
+    }
+  };
+</script>
+
+<style scoped>
+  .sla-management-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .sla-card {
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+
+  .blue-text {
+    color: #003399;
+  }
+
+  .v-row {
+    margin: 0;
+  }
+</style>
+
+<!-- sla-settings.vue -->
+<template>
+  <div class="sla-settings-container">
+    <div class="card">
+      <form>
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" v-model="workingHours">
+            Include Working Hours
+          </label>
+
+          <div class="working-hours" v-if="workingHours">
             <label for="workingHoursStart">Start:</label>
             <input type="time" id="workingHoursStart" v-model="workingHoursStart">
             <label for="workingHoursEnd">End:</label>
             <input type="time" id="workingHoursEnd" v-model="workingHoursEnd">
           </div>
         </div>
-      </div>
 
-      <div class="checkbox-group">
-        <label>
-          <input type="checkbox" id="holidays" v-model="holidays">
-          Include holidays
-        </label>
-      </div>
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="holidays" v-model="holidays">
+            Include Holidays
+          </label>
+        </div>
 
-      <div class="checkbox-group">
-        <label>
-          <input type="checkbox" id="staffLeaves" v-model="staffLeaves">
-          Include staff leaves
-        </label>
-      </div>
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="staffLeaves" v-model="staffLeaves">
+            Include Staff Leaves
+          </label>
+        </div>
 
-      <div class="form-actions">
-        <button type="submit" @click="saveSLASettings">Save</button>
-        <button type="button" @click="resetForm">Reset</button>
-      </div>
-    </form>
+        <div class="form-actions">
+          <button type="submit" class="save-btn" @click="saveSLASettings">SAVE</button>
+          <button type="button" class="cancel-btn" @click="resetForm">CANCEL</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -115,29 +181,38 @@
 </script>
 
 <style scoped>
-  .sla-management {
+  .sla-settings-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    height: 100vh;
+    justify-content: flex-start;
+    padding: 2rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+    color: #003399;
+    margin-bottom: 1rem;
+  }
+
+  .card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    max-width: 1200px;
+    width: 100%;
   }
 
   form {
-    max-width: 500px;
-    padding: 2rem;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-  }
-
-  h1 {
-    margin-top: 0;
-    font-size: 2rem;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
   }
 
   .checkbox-group {
+    display: flex;
+    align-items: center;
     margin-bottom: 1rem;
   }
 
@@ -145,7 +220,7 @@
     display: flex;
     align-items: center;
     font-weight: bold;
-    margin-bottom: 0.5rem;
+    margin-right: 1rem;
   }
 
   input[type="checkbox"] {
@@ -157,70 +232,55 @@
     border: 2px solid #ccc;
     width: 1.2em;
     height: 1.2em;
-    margin-left: 5%
   }
 
     input[type="checkbox"]:checked {
-      background-color: #4285f4;
-      border-color: #4285f4;
+      background-color: #003399;
+      border-color: #003399;
     }
 
-  input[type="time"],
-  input[type="number"] {
-    margin-left: 0.5rem;
+  .working-hours {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  input[type="time"] {
     padding: 0.25rem;
     border: 1px solid #ccc;
     border-radius: 0.25rem;
   }
 
-  .working-hours {
-    margin-left: 2rem;
-    display: flex;
-    align-items: center;
-  }
-
-  .deadline {
-    margin-left: 2rem;
-    display: flex;
-    align-items: center;
-  }
-
   .form-actions {
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
+    gap: 1rem;
     margin-top: 1rem;
   }
 
-  button {
-    margin: 0 0.5rem;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    font-weight: bold;
+  .save-btn {
+    background-color: #003399;
     color: #fff;
-    background-color: #4285f4;
     border: none;
-    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s;
   }
 
-    button:hover {
-      background-color: #3367d6;
-    }
+  .cancel-btn {
+    background-color: #ccc;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+  }
 
-  @media (max-width: 768px) {
-    form {
-      max-width: 300px;
-      padding: 1rem;
-    }
+  .save-btn:hover {
+    background-color: #002366;
+  }
 
-    h1 {
-      font-size: 1.5rem;
-    }
-
-    .working-hours,
-    .deadline {
-      margin-left: 0;
-    }
+  .cancel-btn:hover {
+    background-color: #999;
   }
 </style>
