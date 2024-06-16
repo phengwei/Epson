@@ -15,19 +15,19 @@
         <div class="flex items-center space-x-7">
           <nuxt-link to="/dashboard"
                      exact-active-class="nav-link-active"
-                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">Dashboard</nuxt-link>
+                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">DASHBOARD</nuxt-link>
           <nuxt-link to="/reporting"
                      exact-active-class="nav-link-active"
-                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">Reports</nuxt-link>
+                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">REPORTS</nuxt-link>
           <nuxt-link to="/slaDashboard"
                      exact-active-class="nav-link-active"
-                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">SLA Overview</nuxt-link>
+                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">SLA OVERVIEW</nuxt-link>
           <nuxt-link to="/request"
                      exact-active-class="nav-link-active"
-                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">Requests</nuxt-link>
+                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">REQUESTS</nuxt-link>
           <nuxt-link to="/product"
                      exact-active-class="nav-link-active"
-                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">Products</nuxt-link>
+                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">PRODUCTS</nuxt-link>
         </div>
 
         <!-- User Dropdown -->
@@ -38,9 +38,9 @@
           </span>
           <div v-show="showDropdown" class="dropdown-menu absolute right-0 mt-1 w-48 rounded-md shadow-lg py-1 bg-white text-black z-50">
             <nuxt-link to="/change-password"
-                       class="block px-4 py-2 hover:bg-[#003399] hover:text-white">Change Password</nuxt-link>
+                       class="block px-4 py-2 hover:bg-[#003399] hover:text-white">CHANGE PASSWORD</nuxt-link>
             <a class="block px-4 py-2 hover:bg-[#003399] hover:text-white cursor-pointer"
-               @click="logout">Log Out</a>
+               @click="logout">LOG OUT</a>
           </div>
         </div>
       </div>

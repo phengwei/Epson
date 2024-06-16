@@ -22,24 +22,24 @@
         const links = [];
         if (this.loggedInUser.roles.includes('Admin')) {
           links.push(
-            { route: '/userManagement', label: 'Manage Users', icon: '👥' },
-            { route: '/categoryManagement', label: 'Manage Product Categories', icon: '📚' },
-            { route: '/sla', label: 'SLA Configuration', icon: '⚙️' },
-            { route: '/requestRejectionAuditTrail', label: 'Rejection Audit Trail', icon: '📋' },
-            { route: '/productAuditTrail', label: 'Product Audit Trail', icon: '📝' },
-            { route: '/productDashboard', label: 'Fulfiller Dashboard', icon: '📦' },
-            { route: '/salesDashboard', label: 'Requester Dashboard', icon: '📊' },
-            { route: '/shDashboard', label: 'Sales Head Dashboard', icon: '🏷️' }
+            { route: '/userManagement', label: 'MANAGE USERS', icon: '👥' },
+            { route: '/categoryManagement', label: 'MANAGE PRODUCT CATEGORIES', icon: '📚' },
+            { route: '/sla', label: 'SLA CONFIGURATION', icon: '⚙️' },
+            { route: '/requestRejectionAuditTrail', label: 'REJECTION AUDIT TRAIL', icon: '📋' },
+            { route: '/productAuditTrail', label: 'PRODUCT AUDIT TRAIL', icon: '📝' },
+            { route: '/productDashboard', label: 'FULFILLER DASHBOARD', icon: '📦' },
+            { route: '/salesDashboard', label: 'REQUESTER DASHBOARD', icon: '📊' },
+            { route: '/shDashboard', label: 'SALES HEAD DASHBOARD', icon: '🏷️' }
           );
         } else {
           if (this.loggedInUser.roles.includes('Sales')) {
-            links.push({ route: '/salesDashboard', label: 'Sales Home', icon: '📊' });
+            links.push({ route: '/salesDashboard', label: 'REQUESTER DASHBOARD', icon: '📊' });
           }
           if (this.loggedInUser.roles.includes('Product') || this.loggedInUser.roles.includes('Coverplus')) {
-            links.push({ route: '/productDashboard', label: 'Product Home', icon: '📦' });
+            links.push({ route: '/productDashboard', label: 'FULFILLER DASHBOARD', icon: '📦' });
           }
           if (this.loggedInUser.roles.includes('Sales Section Head')) {
-            links.push({ route: '/shDashboard', label: 'Sales Head Home', icon: '🏷️' });
+            links.push({ route: '/shDashboard', label: 'SALES HEAD DASHBOARD', icon: '🏷️' });
           }
         }
         return links;
