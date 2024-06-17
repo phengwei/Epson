@@ -47,11 +47,11 @@
               </v-row>
             </v-radio-group>
           </v-card-text>
-          <div class="donut-chart-container mt-4">
-            <donut-chart :chart-data="donutChartData" :options="donutOptions" ref="donutChart"></donut-chart>
-          </div>
-          <div class="bar-chart-container">
+          <div v-if="showCharts && selectedOption === 'requester'" class="bar-chart-container">
             <bar-chart :chart-data="combinedChartData" :options="options" ref="barChart"></bar-chart>
+          </div>
+          <div v-if="showCharts && (selectedOption === 'all_requesters_in' || selectedOption === 'all_requesters_from')" class="donut-chart-container mt-4">
+            <donut-chart :chart-data="donutChartData" :options="donutOptions" ref="donutChart"></donut-chart>
           </div>
         </v-card>
       </div>
@@ -83,7 +83,7 @@
             }
           ]
         },
-        topproductsbyrevenue: null,
+        showCharts: false,
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -106,8 +106,7 @@
             }],
             yAxes: [{
               ticks: {
-                beginAtZero: true,
-                callback: value => Math.floor(value)
+                beginAtZero: true
               },
               gridLines: {
                 display: true
@@ -116,7 +115,9 @@
           },
           tooltips: {
             callbacks: {
-              label: tooltipItem => 'Request Count: ' + tooltipItem.yLabel
+              label: (tooltipItem) => {
+                return 'Request Count: ' + tooltipItem.yLabel;
+              }
             }
           },
           legend: {
@@ -173,26 +174,38 @@
         selectedMonth_requesterBySales: '0',
         selectedMonth_productsByRevenue: '0',
         requesters: [],
-        months: [
-          { text: 'January', value: '1' },
-          { text: 'February', value: '2' },
-          { text: 'March', value: '3' },
-          { text: 'April', value: '4' },
-          { text: 'May', value: '5' },
-          { text: 'June', value: '6' },
-          { text: 'July', value: '7' },
-          { text: 'August', value: '8' },
-          { text: 'September', value: '9' },
-          { text: 'October', value: '10' },
-          { text: 'November', value: '11' },
-          { text: 'December', value: '12' }
-        ]
+        months: this.generateMonths().reverse()
       };
     },
     async created() {
       await this.fetchRequesters();
     },
     methods: {
+      generateMonths() {
+        const months = [];
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1; // Months are zero-based
+
+        for (let year = currentYear - 1; year <= currentYear; year++) {
+          for (let month = 1; month <= 12; month++) {
+            if (year === currentYear && month > currentMonth) {
+              break;
+            }
+            const monthName = new Date(year, month - 1).toLocaleString('en-US', { month: 'long' });
+            months.push({ text: `${monthName} ${year}`, value: new Date(year, month - 1, 1).toISOString() });
+          }
+        }
+
+        return months;
+      },
+      getStartOfMonth(dateString) {
+        const date = new Date(dateString);
+        return new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
+      },
+      getEndOfMonth(dateString) {
+        const date = new Date(dateString);
+        return new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString();
+      },
       async fetchRequesters() {
         try {
           const response = await this.$axios.get(`${this.$config.restUrl}/api/customer/getallrequesters`);
@@ -207,6 +220,7 @@
         }
       },
       async fetchReport() {
+        this.showCharts = true;
         let selectedValues = {};
 
         if (this.selectedOption === 'requester') {
@@ -219,7 +233,6 @@
             const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequester`, { params: selectedValues });
             const data = response.data.data;
 
-            // Ensure the date is correctly parsed
             const labels = data.map(item => new Date(item.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
             const values = data.map(item => item.totalNumberOfSales);
             this.combinedChartData = {
@@ -229,7 +242,7 @@
                   label: 'Monthly Request Count',
                   backgroundColor: 'transparent',
                   borderColor: '#003399',
-                  pointBackgroundColor: '##003399',
+                  pointBackgroundColor: '#003399',
                   pointBorderColor: '#fff',
                   pointHoverBackgroundColor: '#fff',
                   pointHoverBorderColor: '#003399',
@@ -244,8 +257,8 @@
           }
         } else if (this.selectedOption === 'all_requesters_in') {
           selectedValues = {
-            fromMonth: this.month,
-            toMonth: this.month,
+            fromMonth: this.getStartOfMonth(this.month),
+            toMonth: this.getEndOfMonth(this.month),
             allRequester: true
           };
           try {
@@ -268,8 +281,8 @@
           }
         } else if (this.selectedOption === 'all_requesters_from') {
           selectedValues = {
-            fromMonth: this.fromMonth,
-            toMonth: this.toMonth,
+            fromMonth: this.getStartOfMonth(this.fromMonth),
+            toMonth: this.getEndOfMonth(this.toMonth),
             allRequester: true
           };
           try {
@@ -299,7 +312,6 @@
     }
   };
 </script>
-
 <style>
   .report-container {
     display: flex;
