@@ -2,7 +2,7 @@
   <v-dialog v-model="localDialogCompetitor" max-width="500px">
     <v-card>
       <v-card-title>
-        <span class="headline">Competitor Information</span>
+        <span class="headline big-bold blue-text">COMPETITOR INFORMATION</span>
       </v-card-title>
       <v-card-text>
         <div class="form-group">
@@ -79,6 +79,8 @@
 </script>
 
 <style scoped>
+  @import '~@/../wwwroot/css/general-table.css';
+
   .products-title {
     font-size: 2em;
     text-align: center;

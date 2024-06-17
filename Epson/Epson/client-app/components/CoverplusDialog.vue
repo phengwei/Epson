@@ -2,7 +2,7 @@
   <v-dialog v-model="localDialogCoverplus" max-width="500px">
     <v-card>
       <v-card-title>
-        <span class="headline">{{ isEditMode ? 'Coverplus' : 'Coverplus' }}</span>
+        <span class="headline big-bold blue-text">{{ isEditMode ? 'COVERPLUS' : 'COVERPLUS' }}</span>
       </v-card-title>
       <v-card-text>
         <div class="form-group">
@@ -191,6 +191,8 @@
 </script>
 
 <style scoped>
+  @import '~@/../wwwroot/css/general-table.css';
+
   .flex-row {
     display: flex;
     justify-content: space-between;

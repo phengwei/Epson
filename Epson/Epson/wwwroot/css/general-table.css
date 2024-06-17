@@ -92,6 +92,11 @@ label {
     font-weight: bold;
 }
 
+.small-bold {
+    font-size: 16px;
+    font-weight: bold;
+}
+
 .card-round {
     border-radius: 20px !important;
 }

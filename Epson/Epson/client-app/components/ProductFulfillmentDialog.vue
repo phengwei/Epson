@@ -2,7 +2,7 @@
   <v-dialog v-model="localDialogProductFulfillment" max-width="800px">
     <v-card>
       <v-card-title>
-        <span class="text-h5">RESPONDENT - Product Managers</span>
+        <span class="text-h5 big-bold blue-text">RESPONDENT - PRODUCT MANAGERS</span>
       </v-card-title>
       <v-card-text>
         <div class="form-group">
@@ -156,6 +156,8 @@
 </script>
 
 <style scoped>
+  @import '~@/../wwwroot/css/general-table.css';
+
   .mini-table {
     width: 100%;
     margin-top: 2rem;

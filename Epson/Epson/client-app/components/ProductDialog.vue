@@ -2,7 +2,7 @@
   <v-dialog v-model="localDialogProduct" max-width="500px">
     <v-card>
       <v-card-title>
-        <span class="headline">{{ isEditMode ? 'Main Unit' : 'Main Unit' }}</span>
+        <span class="headline blue-text big-bold">{{ isEditMode ? 'MAIN UNIT' : 'MAIN UNIT' }}</span>
       </v-card-title>
       <v-card-text>
         <div class="form-group">
@@ -165,6 +165,7 @@
 </script>
 
 <style scoped>
+  @import '~@/../wwwroot/css/general-table.css';
   .products-title {
     font-size: 2em;
     text-align: center;
