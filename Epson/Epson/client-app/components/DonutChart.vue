@@ -5,10 +5,10 @@
 </template>
 
 <script>
-  import { Line, mixins } from 'vue-chartjs'
+  import { Doughnut, mixins } from 'vue-chartjs'
 
   export default {
-    extends: Line,
+    extends: Doughnut,
     mixins: [mixins.reactiveProp],
     props: ['chartData', 'options'],
     mounted() {
@@ -32,7 +32,6 @@
       }
     }
   }
-
 </script>
 
 <style scoped>

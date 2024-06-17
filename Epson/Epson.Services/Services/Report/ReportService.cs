@@ -31,43 +31,59 @@ namespace Epson.Services.Services.Report
 
         public async Task<List<RequesterSales>> GetMonthlySalesByRequester(string requesterId, int month = 0, bool allRequester = false)
         {
-            if (allRequester)
+            try
             {
-                return await GetTopRequestersBySales(month);
-            }
-
-            List<RequesterSales> monthlySales = new List<RequesterSales>();
-
-            var query = _requestRepository.Table.AsQueryable();
-
-            if (month != 0)
-            {
-                query = query.Where(r => r.CreatedOnUTC.Month == month);
-            }
-
-            if (!allRequester)
-            {
-                query = query.Where(r => r.CreatedById == requesterId);
-            }
-
-            monthlySales = query
-                .GroupBy(r => new
+                var last12Months = new List<DateTime>();
+                for (int i = 0; i < 12; i++)
                 {
-                    Month = r.CreatedOnUTC.ToString("yyyy-MM"),
-                    Requester = r.CreatedById
-                })
-                .Select(g => new RequesterSales
-                {
-                    Month = g.Key.Month,
-                    RequesterName = _userManager.FindByIdAsync(g.Key.Requester).Result.UserName,
-                    MonthlySales = g.Sum(r => r.TotalBudget),
-                    TotalNumberOfSales = g.Count()
-                })
-                .OrderByDescending(x => x.TotalNumberOfSales)
-                .ToList();
+                    last12Months.Add(DateTime.UtcNow.AddMonths(-i));
+                }
+                last12Months = last12Months.Select(d => new DateTime(d.Year, d.Month, 1)).OrderBy(d => d).ToList();
 
-            return monthlySales;
+                var query = _requestRepository.Table.AsQueryable();
+
+                if (month != 0)
+                {
+                    query = query.Where(r => r.CreatedOnUTC.Month == month);
+                }
+
+                if (!allRequester)
+                {
+                    query = query.Where(r => r.CreatedById == requesterId);
+                }
+
+                var salesData = query
+                    .GroupBy(r => new
+                    {
+                        YearMonth = new DateTime(r.CreatedOnUTC.Year, r.CreatedOnUTC.Month, 1),
+                        Requester = r.CreatedById
+                    })
+                    .Select(g => new RequesterSales
+                    {
+                        Date = g.Key.YearMonth,
+                        RequesterName = _userManager.FindByIdAsync(g.Key.Requester).Result.UserName,
+                        MonthlySales = g.Sum(r => r.TotalBudget),
+                        TotalNumberOfSales = g.Count()
+                    })
+                    .OrderBy(x => x.Date)
+                    .ToList();
+
+                var result = last12Months.Select(m => new RequesterSales
+                {
+                    Date = m,
+                    RequesterName = salesData.FirstOrDefault(s => s.Date == m)?.RequesterName ?? "",
+                    MonthlySales = salesData.FirstOrDefault(s => s.Date == m)?.MonthlySales ?? 0,
+                    TotalNumberOfSales = salesData.FirstOrDefault(s => s.Date == m)?.TotalNumberOfSales ?? 0
+                }).ToList();
+
+                return await Task.FromResult(result);
+            }catch(Exception ex)
+            {
+                return new List<RequesterSales>();
+            }
+            
         }
+
 
 
         public async Task<List<RequesterSales>> GetTopRequestersBySales(int month)
@@ -81,12 +97,13 @@ namespace Epson.Services.Services.Report
             }
 
             var topRequesters = query
-                .GroupBy(r => r.CreatedById)
+                .GroupBy(r => new { r.CreatedById, YearMonth = new DateTime(r.CreatedOnUTC.Year, r.CreatedOnUTC.Month, 1) })
                 .Select(g => new RequesterSales
                 {
-                    RequesterId = g.Key,
+                    RequesterId = g.Key.CreatedById,
                     TotalNumberOfSales = g.Count(),
-                    TotalSales = g.Sum(r => r.TotalBudget)
+                    TotalSales = g.Sum(r => r.TotalBudget),
+                    Date = g.Key.YearMonth
                 })
                 .OrderByDescending(x => x.TotalNumberOfSales)
                 .Take(25)
@@ -100,6 +117,7 @@ namespace Epson.Services.Services.Report
 
             return topRequesters;
         }
+
 
         public async Task<List<ProductRevenue>> GetTopProductsByRevenue(int month)
         {
