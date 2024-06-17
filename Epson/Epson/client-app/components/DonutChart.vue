@@ -5,13 +5,15 @@
 </template>
 
 <script>
-  import { Doughnut, mixins } from 'vue-chartjs'
+  import { Doughnut, mixins } from 'vue-chartjs';
+  import ChartDataLabels from 'chartjs-plugin-datalabels';
 
   export default {
     extends: Doughnut,
     mixins: [mixins.reactiveProp],
     props: ['chartData', 'options'],
     mounted() {
+      this.addPlugin(ChartDataLabels);
       this.renderChart(this.chartData, this.options);
       window.addEventListener('resize', this.handleResize);
     },
@@ -31,7 +33,7 @@
         this.handleResize();
       }
     }
-  }
+  };
 </script>
 
 <style scoped>

@@ -47,6 +47,9 @@
               </v-row>
             </v-radio-group>
           </v-card-text>
+          <div class="donut-chart-container mt-4">
+            <donut-chart :chart-data="donutChartData" :options="donutOptions" ref="donutChart"></donut-chart>
+          </div>
           <div class="bar-chart-container">
             <bar-chart :chart-data="combinedChartData" :options="options" ref="barChart"></bar-chart>
           </div>
@@ -57,6 +60,7 @@
 </template>
 
 <script>
+  import DonutChart from '~/components/DonutChart.vue';
   import BarChart from '~/components/BarChart.vue';
 
   export default {
@@ -69,6 +73,16 @@
         fromMonth: null,
         toMonth: null,
         combinedChartData: null,
+        donutChartData: {
+          labels: [],
+          datasets: [
+            {
+              data: [],
+              backgroundColor: ['#003399', '#0044CC', '#0066FF', '#0088FF', '#00AAFF', '#00CCFF', '#00EEFF', '#00FFFF', '#33FFFF', '#66FFFF'],
+              hoverBackgroundColor: ['#003399', '#0044CC', '#0066FF', '#0088FF', '#00AAFF', '#00CCFF', '#00EEFF', '#00FFFF', '#33FFFF', '#66FFFF']
+            }
+          ]
+        },
         topproductsbyrevenue: null,
         options: {
           responsive: true,
@@ -102,9 +116,7 @@
           },
           tooltips: {
             callbacks: {
-              label: (tooltipItem) => {
-                return 'Request Count: ' + tooltipItem.yLabel;
-              }
+              label: tooltipItem => 'Request Count: ' + tooltipItem.yLabel
             }
           },
           legend: {
@@ -112,6 +124,48 @@
             position: 'top',
             labels: {
               boxWidth: 20
+            }
+          }
+        },
+        donutOptions: {
+          responsive: true,
+          maintainAspectRatio: false,
+          legend: {
+            display: true,
+            position: 'right',
+            labels: {
+              generateLabels: chart => {
+                const data = chart.data;
+                if (!data || !data.labels || !data.datasets[0] || !data.datasets[0].data) return [];
+                return data.labels.map((label, i) => {
+                  const value = data.datasets[0].data[i];
+                  return {
+                    text: `${label}: ${value}`,
+                    fillStyle: data.datasets[0].backgroundColor[i],
+                    hidden: isNaN(value) || value <= 0,
+                    lineCap: data.datasets[0].borderCapStyle,
+                    lineDash: data.datasets[0].borderDash,
+                    lineDashOffset: data.datasets[0].borderDashOffset,
+                    lineJoin: data.datasets[0].borderJoinStyle,
+                    strokeStyle: data.datasets[0].borderColor ? data.datasets[0].borderColor[i] : 'rgba(0,0,0,0)',
+                    pointStyle: data.datasets[0].pointStyle ? data.datasets[0].pointStyle[i] : 'circle',
+                    datasetIndex: 0
+                  };
+                });
+              }
+            }
+          },
+          plugins: {
+            datalabels: {
+              formatter: (value, context) => {
+                const total = context.chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
+                const percentage = Math.round((value / total) * 100);
+                return `${percentage}%`;
+              },
+              color: '#fff',
+              font: {
+                weight: 'bold'
+              }
             }
           }
         },
@@ -161,48 +215,87 @@
             month: 0,
             allRequester: false
           };
+          try {
+            const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequester`, { params: selectedValues });
+            const data = response.data.data;
+
+            // Ensure the date is correctly parsed
+            const labels = data.map(item => new Date(item.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
+            const values = data.map(item => item.totalNumberOfSales);
+            this.combinedChartData = {
+              labels,
+              datasets: [
+                {
+                  label: 'Monthly Request Count',
+                  backgroundColor: 'transparent',
+                  borderColor: '#003399',
+                  pointBackgroundColor: '##003399',
+                  pointBorderColor: '#fff',
+                  pointHoverBackgroundColor: '#fff',
+                  pointHoverBorderColor: '#003399',
+                  data: values,
+                  fill: false,
+                  borderWidth: 1
+                }
+              ]
+            };
+          } catch (error) {
+            console.error('Error fetching report:', error);
+          }
         } else if (this.selectedOption === 'all_requesters_in') {
           selectedValues = {
-            month: this.month
+            fromMonth: this.month,
+            toMonth: this.month,
+            allRequester: true
           };
+          try {
+            const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequesterbydonut`, { params: selectedValues });
+            const data = response.data.data;
+            const labels = data.map(item => item.requesterName);
+            const values = data.map(item => item.totalNumberOfSales);
+            this.donutChartData = {
+              labels,
+              datasets: [
+                {
+                  data: values,
+                  backgroundColor: ['#003399', '#0044CC', '#0066FF', '#0088FF', '#00AAFF', '#00CCFF', '#00EEFF', '#00FFFF', '#33FFFF', '#66FFFF'],
+                  hoverBackgroundColor: ['#003399', '#0044CC', '#0066FF', '#0088FF', '#00AAFF', '#00CCFF', '#00EEFF', '#00FFFF', '#33FFFF', '#66FFFF']
+                }
+              ]
+            };
+          } catch (error) {
+            console.error('Error fetching report:', error);
+          }
         } else if (this.selectedOption === 'all_requesters_from') {
           selectedValues = {
             fromMonth: this.fromMonth,
-            toMonth: this.toMonth
+            toMonth: this.toMonth,
+            allRequester: true
           };
-        }
-
-        try {
-          const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequester`, { params: selectedValues });
-          const data = response.data.data;
-
-          // Ensure the date is correctly parsed
-          const labels = data.map(item => new Date(item.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
-          const values = data.map(item => item.totalNumberOfSales);
-          this.combinedChartData = {
-            labels,
-            datasets: [
-              {
-                label: 'Monthly Request Count',
-                backgroundColor: 'transparent',
-                borderColor: '#003399',
-                pointBackgroundColor: '##003399',
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: '#003399',
-                data: values,
-                fill: false,
-                borderWidth: 1
-              }
-            ]
-          };
-        } catch (error) {
-          console.error('Error fetching report:', error);
+          try {
+            const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequesterbydonut`, { params: selectedValues });
+            const data = response.data.data;
+            const labels = data.map(item => item.requesterName);
+            const values = data.map(item => item.totalNumberOfSales);
+            this.donutChartData = {
+              labels,
+              datasets: [
+                {
+                  data: values,
+                  backgroundColor: ['#003399', '#0044CC', '#0066FF', '#0088FF', '#00AAFF', '#00CCFF', '#00EEFF', '#00FFFF', '#33FFFF', '#66FFFF'],
+                  hoverBackgroundColor: ['#003399', '#0044CC', '#0066FF', '#0088FF', '#00AAFF', '#00CCFF', '#00EEFF', '#00FFFF', '#33FFFF', '#66FFFF']
+                }
+              ]
+            };
+          } catch (error) {
+            console.error('Error fetching report:', error);
+          }
         }
       }
     },
     components: {
-      BarChart
+      BarChart,
+      DonutChart
     }
   };
 </script>
@@ -297,6 +390,11 @@
       }
 
   .bar-chart-container {
+    height: 400px;
+    width: 100%;
+  }
+
+  .donut-chart-container {
     height: 400px;
     width: 100%;
   }
