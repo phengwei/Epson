@@ -684,7 +684,6 @@ export default {
     },
     validateForm() {
       const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-
       const phoneRegex = /^[\d-]{8,12}$/;
 
       if (this.projectInformation.budget == null || this.projectInformation.budget === "0" || this.projectInformation.budget === "") {
@@ -697,16 +696,16 @@ export default {
         return "Main Unit / Coverplus must not be empty!";
       } else if (this.productsToShow.length > 0 && this.competitorsToShow.length === 0) {
         return "At least one competitor is required!";
-      } else if (!emailRegex.test(this.submissionDetail.email)) {
+      } else if (!emailRegex.test(this.submissionDetail.email.trim())) {
         return "Invalid email format!";
-      } else if (this.projectInformation.email != null && !emailRegex.test(this.projectInformation.email)) {
+      } else if (this.projectInformation.email != null && !emailRegex.test(this.projectInformation.email.trim())) {
         return "Invalid email format!";
       } else if (!phoneRegex.test(this.submissionDetail.telephoneNo) || !phoneRegex.test(this.projectInformation.telephoneNo)) {
         return "Invalid phone no. format!";
       } else if (this.projectInformation.closingDate == null) {
-          return "Closing Date must not be empty!";
+        return "Closing Date must not be empty!";
       } else if (this.projectInformation.deliveryDate == null) {
-          return "Delivery Date must not be empty!";
+        return "Delivery Date must not be empty!";
       } else {
         return "";
       }
