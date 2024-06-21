@@ -104,7 +104,7 @@ export default {
             this.showDropdown = false
             document.body.classList.remove('stop-scrolling')
             EventBus.$emit('CLOSE_MOBILE_HEADER', this.showPopup)
-            this.$router.push('/reporting');
+            this.$router.push('/report');
         },
         toSLAOverview(){
             this.showPopup = false

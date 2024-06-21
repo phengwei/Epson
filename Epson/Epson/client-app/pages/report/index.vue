@@ -4,55 +4,118 @@
       <div class="report-container">
         <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
           <v-toolbar flat>
-            <v-toolbar-title><h1 class="blue-text big-bold">Report</h1></v-toolbar-title>
+            <v-toolbar-title>
+              <h1 class="blue-text big-bold">REPORT</h1>
+            </v-toolbar-title>
           </v-toolbar>
           <v-card-text>
             <div class="filter-container mb-4">
-              <span class="blue-text small-bold">Requester Performance</span>
-            </div>
-            <v-radio-group v-model="selectedOption">
-              <v-row class="compact-row">
-                <v-col cols="3">
-                  <v-radio label="Requester" value="requester"></v-radio>
-                </v-col>
-                <v-col cols="3">
-                  <v-select v-model="requester" :items="requesters" item-text="text" item-value="value" dense outlined></v-select>
-                </v-col>
-              </v-row>
-              <v-row class="compact-row">
-                <v-col cols="3">
-                  <v-radio label="All Requesters in" value="all_requesters_in"></v-radio>
-                </v-col>
-                <v-col cols="3">
-                  <v-select v-model="month" :items="months" item-text="text" item-value="value" label="All Requesters in" dense outlined></v-select>
-                </v-col>
-              </v-row>
-              <v-row class="compact-row">
-                <v-col cols="3">
-                  <v-radio label="All Requesters from" value="all_requesters_from"></v-radio>
-                </v-col>
-                <v-col cols="3">
-                  <v-select v-model="fromMonth" :items="months" item-text="text" item-value="value" label="From" dense outlined></v-select>
-                </v-col>
-                <v-col cols="3">
-                  <v-select v-model="toMonth" :items="months" item-text="text" item-value="value" label="To" dense outlined></v-select>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="3">
-                  <v-btn class="blue-button" color="primary" @click="fetchReport">
-                    CONFIRM
+              <v-menu offset-y>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn color="primary" dark v-bind="attrs" v-on="on">
+                    {{ selectedTab === 'requester' ? 'Requester Performance' : 'Product Performance' }}
+                    <v-icon right>mdi-menu-down</v-icon>
                   </v-btn>
-                </v-col>
-              </v-row>
-            </v-radio-group>
+                </template>
+                <v-list>
+                  <v-list-item @click="selectedTab = 'requester'">
+                    <v-list-item-title>Requester Performance</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="selectedTab = 'product'">
+                    <v-list-item-title>Product Performance</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+            </div>
+            <v-card-text v-if="selectedTab === 'requester'">
+              <v-radio-group v-model="selectedOption">
+                <v-row class="compact-row">
+                  <v-col cols="3">
+                    <v-radio label="Requester" value="requester"></v-radio>
+                  </v-col>
+                  <v-col cols="3">
+                    <v-select v-model="requester" :items="requesters" item-text="text" item-value="value" dense outlined></v-select>
+                  </v-col>
+                </v-row>
+                <v-row class="compact-row">
+                  <v-col cols="3">
+                    <v-radio label="All Requesters in" value="all_requesters_in"></v-radio>
+                  </v-col>
+                  <v-col cols="3">
+                    <v-select v-model="month" :items="months" item-text="text" item-value="value" label="All Requesters in" dense outlined></v-select>
+                  </v-col>
+                </v-row>
+                <v-row class="compact-row">
+                  <v-col cols="3">
+                    <v-radio label="All Requesters from" value="all_requesters_from"></v-radio>
+                  </v-col>
+                  <v-col cols="3">
+                    <v-select v-model="fromMonth" :items="months" item-text="text" item-value="value" label="From" dense outlined></v-select>
+                  </v-col>
+                  <v-col cols="3">
+                    <v-select v-model="toMonth" :items="months" item-text="text" item-value="value" label="To" dense outlined></v-select>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="3">
+                    <v-btn class="blue-button" color="primary" @click="fetchReport">
+                      CONFIRM
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </v-radio-group>
+              <div v-if="showCharts && selectedOption === 'requester'" class="bar-chart-container">
+                <bar-chart :chart-data="combinedChartData" :options="options" ref="barChart"></bar-chart>
+              </div>
+              <div v-if="showCharts && (selectedOption === 'all_requesters_in' || selectedOption === 'all_requesters_from')" class="donut-chart-container mt-4">
+                <donut-chart :chart-data="donutChartData" :options="donutOptions" ref="donutChart"></donut-chart>
+              </div>
+            </v-card-text>
+            <v-card-text v-else>
+              <v-radio-group v-model="selectedOption">
+                <v-row class="compact-row">
+                  <v-col cols="3">
+                    <v-radio label="Product" value="product"></v-radio>
+                  </v-col>
+                  <v-col cols="3">
+                    <v-select v-model="product" :items="products" item-text="text" item-value="value" dense outlined></v-select>
+                  </v-col>
+                </v-row>
+                <v-row class="compact-row">
+                  <v-col cols="3">
+                    <v-radio label="All Products in" value="all_products_in"></v-radio>
+                  </v-col>
+                  <v-col cols="3">
+                    <v-select v-model="productMonth" :items="months" item-text="text" item-value="value" label="All Products in" dense outlined></v-select>
+                  </v-col>
+                </v-row>
+                <v-row class="compact-row">
+                  <v-col cols="3">
+                    <v-radio label="All Products from" value="all_products_from"></v-radio>
+                  </v-col>
+                  <v-col cols="3">
+                    <v-select v-model="productFromMonth" :items="months" item-text="text" item-value="value" label="From" dense outlined></v-select>
+                  </v-col>
+                  <v-col cols="3">
+                    <v-select v-model="productToMonth" :items="months" item-text="text" item-value="value" label="To" dense outlined></v-select>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="3">
+                    <v-btn class="blue-button" color="primary" @click="fetchProductReport">
+                      CONFIRM
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </v-radio-group>
+              <div v-if="showProductCharts && selectedOption === 'product'" class="bar-chart-container">
+                <bar-chart :chart-data="productChartData" :options="options" ref="barChart"></bar-chart>
+              </div>
+              <div v-if="showProductCharts && (selectedOption === 'all_products_in' || selectedOption === 'all_products_from')" class="donut-chart-container mt-4">
+                <donut-chart :chart-data="productDonutChartData" :options="donutOptions" ref="donutChart"></donut-chart>
+              </div>
+            </v-card-text>
           </v-card-text>
-          <div v-if="showCharts && selectedOption === 'requester'" class="bar-chart-container">
-            <bar-chart :chart-data="combinedChartData" :options="options" ref="barChart"></bar-chart>
-          </div>
-          <div v-if="showCharts && (selectedOption === 'all_requesters_in' || selectedOption === 'all_requesters_from')" class="donut-chart-container mt-4">
-            <donut-chart :chart-data="donutChartData" :options="donutOptions" ref="donutChart"></donut-chart>
-          </div>
         </v-card>
       </div>
     </v-main>
@@ -67,11 +130,16 @@
     name: 'ReportingDashboard',
     data() {
       return {
+        selectedTab: 'requester',
         selectedOption: 'requester',
         requester: null,
         month: null,
         fromMonth: null,
         toMonth: null,
+        product: null,
+        productMonth: null,
+        productFromMonth: null,
+        productToMonth: null,
         combinedChartData: null,
         donutChartData: {
           labels: [],
@@ -83,7 +151,19 @@
             }
           ]
         },
+        productChartData: null,
+        productDonutChartData: {
+          labels: [],
+          datasets: [
+            {
+              data: [],
+              backgroundColor: ['#003399', '#0044CC', '#0066FF', '#0088FF', '#00AAFF', '#00CCFF', '#00EEFF', '#00FFFF', '#33FFFF', '#66FFFF'],
+              hoverBackgroundColor: ['#003399', '#0044CC', '#0066FF', '#0088FF', '#00AAFF', '#00CCFF', '#00EEFF', '#00FFFF', '#33FFFF', '#66FFFF']
+            }
+          ]
+        },
         showCharts: false,
+        showProductCharts: false,
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -179,6 +259,7 @@
     },
     async created() {
       await this.fetchRequesters();
+      await this.fetchproducts();
     },
     methods: {
       generateMonths() {
@@ -205,6 +286,19 @@
       getEndOfMonth(dateString) {
         const date = new Date(dateString);
         return new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString();
+      },
+      async fetchproducts() {
+        try {
+          const response = await this.$axios.get(`${this.$config.restUrl}/api/product/getproducts`);
+          const rawData = response.data.data;
+          const formattedProducts = rawData.map(item => ({
+            text: item.name,
+            value: item.id
+          }));
+          this.products = formattedProducts;
+        } catch (error) {
+          console.error('Error fetching requesters:', error);
+        }
       },
       async fetchRequesters() {
         try {
@@ -304,6 +398,91 @@
             console.error('Error fetching report:', error);
           }
         }
+      },
+      async fetchProductReport() {
+        this.showProductCharts = true;
+        let selectedValues = {};
+
+        if (this.selectedOption === 'product') {
+          selectedValues = {
+            productId: this.product,
+            month: 0
+          };
+          try {
+            const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyproduct`, { params: selectedValues });
+            const data = response.data.data;
+
+            const labels = data.map(item => new Date(item.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
+            const values = data.map(item => item.totalNumberOfSales);
+            this.productChartData = {
+              labels,
+              datasets: [
+                {
+                  label: 'Monthly Product Sales',
+                  backgroundColor: 'transparent',
+                  borderColor: '#003399',
+                  pointBackgroundColor: '#003399',
+                  pointBorderColor: '#fff',
+                  pointHoverBackgroundColor: '#fff',
+                  pointHoverBorderColor: '#003399',
+                  data: values,
+                  fill: false,
+                  borderWidth: 1
+                }
+              ]
+            };
+          } catch (error) {
+            console.error('Error fetching product report:', error);
+          }
+        } else if (this.selectedOption === 'all_products_in') {
+          selectedValues = {
+            fromMonth: this.getStartOfMonth(this.productMonth),
+            toMonth: this.getEndOfMonth(this.productMonth),
+            allProduct: true
+          };
+          try {
+            const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyproductbydonut`, { params: selectedValues });
+            const data = response.data.data;
+            const labels = data.map(item => item.productName);
+            const values = data.map(item => item.totalNumberOfSales);
+            this.productDonutChartData = {
+              labels,
+              datasets: [
+                {
+                  data: values,
+                  backgroundColor: ['#003399', '#0044CC', '#0066FF', '#0088FF', '#00AAFF', '#00CCFF', '#00EEFF', '#00FFFF', '#33FFFF', '#66FFFF'],
+                  hoverBackgroundColor: ['#003399', '#0044CC', '#0066FF', '#0088FF', '#00AAFF', '#00CCFF', '#00EEFF', '#00FFFF', '#33FFFF', '#66FFFF']
+                }
+              ]
+            };
+          } catch (error) {
+            console.error('Error fetching product report:', error);
+          }
+        } else if (this.selectedOption === 'all_products_from') {
+          selectedValues = {
+            fromMonth: this.getStartOfMonth(this.productFromMonth),
+            toMonth: this.getEndOfMonth(this.productToMonth),
+            allProduct: true
+          };
+          try {
+            const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyproductbydonut`, { params: selectedValues });
+            const data = response.data.data;
+            const labels = data.map(item => item.productName);
+            const values = data.map(item => item.totalNumberOfSales);
+            this.productDonutChartData = {
+              labels,
+              datasets: [
+                {
+                  data: values,
+                  backgroundColor: ['#003399', '#0044CC', '#0066FF', '#0088FF', '#00AAFF', '#00CCFF', '#00EEFF', '#00FFFF', '#33FFFF', '#66FFFF'],
+                  hoverBackgroundColor: ['#003399', '#0044CC', '#0066FF', '#0088FF', '#00AAFF', '#00CCFF', '#00EEFF', '#00FFFF', '#33FFFF', '#66FFFF']
+                }
+              ]
+            };
+          } catch (error) {
+            console.error('Error fetching product report:', error);
+          }
+        }
       }
     },
     components: {
@@ -312,6 +491,7 @@
     }
   };
 </script>
+
 <style>
   .report-container {
     display: flex;

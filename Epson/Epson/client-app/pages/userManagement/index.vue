@@ -131,7 +131,7 @@
           { text: 'Team', value: 'teams' },
           { text: 'Actions', value: 'actions', sortable: false },
         ],
-        tabItems: ['Sales', 'Product', 'Coverplus', 'Sales Section Head', 'Sales Operation'],
+        tabItems: ['Sales', 'Product', 'Coverplus', 'Sales Section Head', 'Sales Operation', 'Director'],
         tab: 0,
         users: [],
         teams: [],
@@ -284,6 +284,7 @@
         this.dialog = true
       },
       saveUser() {
+        console.log("awd", this.newUser);
         if (this.editedIndex > -1) {
           this.$axios.post(`${this.$config.restUrl}/api/customer/edituser`, {
             data: {

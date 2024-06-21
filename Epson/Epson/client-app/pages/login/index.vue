@@ -76,7 +76,7 @@
     },
     beforeMount() {
       if (this.$auth.loggedIn) {
-        this.$router.push('/reporting');
+        this.$router.push('/report');
       }
     },
     mounted() { },

@@ -59,7 +59,7 @@ namespace Epson.Controllers.API
             _configuration = configuration;
         }
         [HttpGet("getrequestbyid")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin,Director")]
         public async Task<IActionResult> RequestById(int id)
         {
             var response = new GenericResponseModel<RequestModel>();
@@ -77,7 +77,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getrequests")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
         public async Task<IActionResult> GetRequests(bool breached = false)
         {
 
@@ -87,7 +87,7 @@ namespace Epson.Controllers.API
 
             HashSet<RequestDTO> requestSet = new HashSet<RequestDTO>(new RequestDTOComparer());
 
-            if (currentUser.Roles.Contains("Admin"))
+            if (currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Director"))
             {
                 requestSet.UnionWith(_requestService.GetRequests());
             }
@@ -334,7 +334,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("approvefirstlevelrequest")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head,Director")]
         public async Task<IActionResult> ApproveFirstLevelRequest(int requestId)
         {
             if (requestId == 0)
@@ -357,7 +357,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("rejectfirstlevelrequest")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head,Director")]
         public async Task<IActionResult> RejectFirstLevelRequest(int requestId)
         {
             if (requestId == 0)
@@ -450,7 +450,7 @@ namespace Epson.Controllers.API
 
 
         [HttpGet("getpendingrequesteritem")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin,Director")]
         public async Task<IActionResult> GetPendingRequesterItem()
         {
             var response = new GenericResponseModel<List<RequestModel>>();
@@ -485,7 +485,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getfulfilledrequestasfulfiller")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin,Director")]
         public async Task<IActionResult> GetFulfilledRequestAsFulfiller()
         {
             var response = new GenericResponseModel<List<RequestProductModel>>();
@@ -589,7 +589,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getpendingfulfilleritem")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin,Director")]
         public async Task<IActionResult> GetPendingFulfillerItem()
         {
             var response = new GenericResponseModel<List<RequestModel>>();
@@ -612,7 +612,7 @@ namespace Epson.Controllers.API
 
 
         [HttpGet("getpendingsalessectionheaditem")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin,Director")]
         public async Task<IActionResult> GetPendingSalesSectionHeadItem()
         {
             var response = new GenericResponseModel<List<RequestModel>>();
@@ -664,7 +664,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getpendingsalessectionheaddepartmentrequests")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin,Director")]
         public async Task<IActionResult> GetPendingSalesSectionHeadDepartmentItems()
         {
             var response = new GenericResponseModel<List<RequestModel>>();
@@ -695,7 +695,7 @@ namespace Epson.Controllers.API
 
 
         [HttpGet("getcompletedrequests")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin,Director")]
         public async Task<IActionResult> GetCompletedRequests()
         {
             var response = new GenericResponseModel<List<RequestModel>>();

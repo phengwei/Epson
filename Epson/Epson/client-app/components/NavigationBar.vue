@@ -16,7 +16,7 @@
           <nuxt-link to="/dashboard"
                      exact-active-class="nav-link-active"
                      class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">DASHBOARD</nuxt-link>
-          <nuxt-link to="/reporting"
+          <nuxt-link to="/report"
                      exact-active-class="nav-link-active"
                      class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">REPORTS</nuxt-link>
           <nuxt-link to="/slaDashboard"

@@ -438,13 +438,14 @@ namespace Epson.Controllers.API
             foreach (var user in users)
             {
                 var roles = await _userManager.GetRolesAsync(user);
+                var filteredRoles = roles.Where(role => !role.Equals("admin", StringComparison.OrdinalIgnoreCase)).ToList();
 
                 var userModel = new UserModel
                 {
                     Id = user.Id,
                     UserName = user.UserName,
                     Email = user.Email,
-                    Roles = roles.ToList(),
+                    Roles = filteredRoles,
                     Phone = user.PhoneNumber,
                     TeamId = user.TeamId,
                     Teams = _mapper.Map<Team>(_userService.GetTeamById(user.TeamId)).Name,
@@ -458,6 +459,7 @@ namespace Epson.Controllers.API
 
             return Ok(response);
         }
+
 
         [HttpPost("unlockAccount")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]

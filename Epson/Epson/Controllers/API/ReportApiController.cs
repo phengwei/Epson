@@ -50,6 +50,18 @@ namespace Epson.Controllers.API
             return Ok(response);
         }
 
+        [HttpGet("getmonthlysalesbyproduct")]
+        public async Task<IActionResult> GetMonthlySalesByProduct(int productId, int month = 0)
+        {
+            var response = new GenericResponseModel<List<ProductRevenue>>();
+
+            var monthlySalesByProduct = await _reportService.GetMonthlySalesByProduct(productId, month);
+
+            response.Data = monthlySalesByProduct;
+            return Ok(response);
+        }
+
+
         [HttpGet("getmonthlysalesbyrequesterbydonut")]
         public async Task<IActionResult> MonthlySalesByRequesterByDonut(DateTime fromMonth, DateTime toMonth)
         {
@@ -71,18 +83,19 @@ namespace Epson.Controllers.API
 
             response.Data = monthlySalesByRequester;
             return Ok(response);
-        }        
-        
-        [HttpGet("gettopproductsbyrevenue")]
-        public async Task<IActionResult> TopProductsByRevenue(int month)
+        }
+
+        [HttpGet("getmonthlysalesbyproductbydonut")]
+        public async Task<IActionResult> MonthlySalesByProductByDonut(DateTime fromMonth, DateTime toMonth)
         {
             var response = new GenericResponseModel<List<ProductRevenue>>();
 
-            var topProductsByRevenue = await _reportService.GetTopProductsByRevenue(month);
+            var monthlySalesByProduct = await _reportService.GetMonthlySalesByProductByDonut(fromMonth, toMonth);
 
-            response.Data = topProductsByRevenue;
+            response.Data = monthlySalesByProduct;
             return Ok(response);
         }
+
 
 
     }

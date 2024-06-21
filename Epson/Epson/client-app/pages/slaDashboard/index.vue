@@ -1,39 +1,83 @@
 <template>
-  <div class="page">
-    <div class="filter-bar">
-      <label for="month-select">Select Month:</label>
-      <select v-model="selectedMonth" id="month-select">
-        <option v-for="month in months" :key="month.value" :value="month.value">{{ month.text }}</option>
-      </select>
+  <v-app>
+    <div class="page">
+      <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
+        <v-toolbar flat>
+          <v-toolbar-title>
+            <h2 class="blue-text big-bold">SLA OVERVIEW</h2>
+          </v-toolbar-title>
+        </v-toolbar>
+        <v-card-text>
+          <div class="filter-bar">
+            <label for="month-select">Select Month:</label>
+            <v-select v-model="selectedMonth"
+                      :items="months"
+                      item-text="text"
+                      item-value="value"
+                      label="Select Month"
+                      outlined
+                      dense
+                      class="month-select"></v-select>
+          </div>
+          <div class="container">
+            <div class="card average-time-card">
+              <div class="card-content">
+                <v-icon class="top-center-icon">mdi-clock-outline</v-icon>
+                <h2 class="number">{{ AverageTimeToResolutionInHours }}</h2>
+                <p class="bottom-center-text">Hours Average Time To Resolution</p>
+                <div class="bottom-reserved-space"></div>
+              </div>
+            </div>
+            <div class="card total-tickets-card">
+              <div class="card-content">
+                <v-icon class="top-center-icon">mdi-ticket-outline</v-icon>
+                <h2 class="number">{{ TotalTickets }}</h2>
+                <p class="bottom-center-text">Total Tickets</p>
+                <div class="bottom-reserved-space"></div>
+              </div>
+            </div>
+            <div class="card breached-card">
+              <div class="card-content">
+                <v-icon class="top-center-icon">mdi-alert-circle-outline</v-icon>
+                <h2 class="number">{{ BreachedTickets }}</h2>
+                <p class="bottom-center-text">Breached Tickets</p>
+                <div class="bottom-reserved-space">
+                  <v-btn class="navigate-button" @click="goToBreachedTickets">
+                    Navigate
+                    <v-icon right>mdi-arrow-right-circle-outline</v-icon>
+                  </v-btn>
+                </div>
+              </div>
+            </div>
+            <div class="card success-rate-card">
+              <div class="card-content">
+                <v-icon class="top-center-icon">mdi-trophy-outline</v-icon>
+                <h2 class="number">{{ SuccessRate }}%</h2>
+                <p class="bottom-center-text">Success Rate</p>
+                <div class="bottom-reserved-space"></div>
+              </div>
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
     </div>
-    <div class="container">
-      <div class="card average-time-card">
-        <h3 class="number">{{ AverageTimeToResolutionInHours }}</h3>
-        <p>Average time to resolution in hours</p>
-      </div>
-      <div class="card total-tickets-card">
-        <h3 class="number">{{ TotalTickets }}</h3>
-        <p>Total Requests</p>
-      </div>
-      <div class="card breached-card">
-        <h3 class="number">{{ BreachedTickets }}</h3>
-        <p>Breached Requests</p>
-        <button @click="goToBreachedTickets" class="breached-button">Go to Breached Tickets</button>
-      </div>
-      <div class="card success-rate-card">
-        <h3 class="number">{{ SuccessRate }}%</h3>
-        <p>Success Rate</p>
-      </div>
-    </div>
-  </div>
+  </v-app>
 </template>
 
 <script>
-  import { mapGetters } from 'vuex';
+  import { VIcon, VSelect, VBtn, VCard, VToolbar, VToolbarTitle, VCardText } from 'vuetify/lib';
 
   export default {
     name: 'SLA-Dashboard',
-    middleware: 'auth',
+    components: {
+      VIcon,
+      VSelect,
+      VBtn,
+      VCard,
+      VToolbar,
+      VToolbarTitle,
+      VCardText,
+    },
     data() {
       return {
         AverageTimeToResolutionInHours: 0,
@@ -54,18 +98,14 @@
           { value: 9, text: 'September' },
           { value: 10, text: 'October' },
           { value: 11, text: 'November' },
-          { value: 12, text: 'December' }
+          { value: 12, text: 'December' },
         ],
-        loading: false
       };
-    },
-    computed: {
-      ...mapGetters(['isAuthenticated', 'loggedInUser'])
     },
     watch: {
       selectedMonth(newMonth) {
         this.getSLAMetrics(newMonth);
-      }
+      },
     },
     mounted() {
       this.getSLAMetrics();
@@ -73,9 +113,8 @@
     methods: {
       async getSLAMetrics(month = this.selectedMonth) {
         try {
-          this.loading = true;
           const result = await this.$axios.get(`${this.$config.restUrl}/api/sla/getslametrics`, {
-            params: { month }
+            params: { month },
           });
 
           if (result.data.data) {
@@ -83,15 +122,12 @@
             this.BreachedTickets = result.data.data.breachedTickets || 0;
             this.TotalTickets = result.data.data.totalTickets || 0;
             this.SuccessRate = result.data.data.successRate || 0;
-            this.$forceUpdate()
           } else {
             this.resetMetrics();
           }
         } catch (error) {
           console.error('There was a problem fetching the SLA metrics:', error);
           this.resetMetrics();
-        } finally {
-          this.loading = false;
         }
       },
       resetMetrics() {
@@ -103,26 +139,25 @@
       },
       goToBreachedTickets() {
         this.$router.push({ path: '/request', query: { breached: true, month: this.selectedMonth } });
-      }
-    }
+      },
+    },
   };
 </script>
-
-
 <style scoped>
+  @import '~@/../wwwroot/css/general-table.css';
   .page {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
     padding: 1rem;
   }
-
   .filter-bar {
+    margin: auto;
     margin-bottom: 1rem;
     display: flex;
-    align-items: center;
+    justify-content: center;
+    width: 35%;
   }
 
     .filter-bar label {
@@ -130,72 +165,90 @@
       font-weight: bold;
     }
 
-    .filter-bar select {
-      padding: 0.5rem;
-      font-size: 1rem;
-    }
+  .month-select {
+    width: 100%;
+  }
 
   .container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 1rem;
+    display: flex;
+    justify-content: space-between;
     width: 100%;
-    height: calc(100vh - 3rem);
+    margin-top: 20px;
   }
 
   .card {
     background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 2rem;
+    border-radius: 10px;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    margin: 0 0.5rem;
+    position: relative;
+    height: 300px;
   }
 
-  .average-time-card {
-    background-color: #4caf50;
-    color: white;
+  .card-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    padding: 1rem;
   }
 
-  .total-tickets-card {
-    background-color: #2196f3;
-    color: white;
-  }
-
-  .breached-card {
-    background-color: #9b5050;
-    color: white;
-  }
-
-  .success-rate-card {
-    background-color: #ff9800;
-    color: white;
+  .top-center-icon {
+    color: white !important;
+    font-size: 2.0rem !important;
+    margin-bottom: 1rem;
   }
 
   .number {
-    font-size: 4rem;
+    font-size: 5rem;
     font-weight: bold;
     margin-bottom: 1rem;
   }
 
-  .breached-button {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    color: #9b5050;
-    font-size: 1rem;
-    font-weight: bold;
-    margin-top: 1rem;
+  .bottom-center-text {
+    font-size: 1.0rem;
   }
 
-    .breached-button:hover {
-      background-color: #f2dede;
+  .bottom-reserved-space {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 3rem; /* Adjust height as needed */
+  }
+
+  .navigate-button {
+    background-color: transparent;
+    border: 2px solid white;
+    color: black;
+    border-radius: 20px;
+    padding: 0 16px;
+    font-weight: bold;
+    min-width: auto;
+  }
+
+    .navigate-button v-icon {
+      margin-left: 8px;
     }
+
+  .average-time-card,
+  .total-tickets-card,
+  .success-rate-card {
+    background-color: #003399;
+    color: white;
+  }
+
+  .breached-card {
+    background-color: #6d6d6d;
+    color: white;
+  }
 </style>

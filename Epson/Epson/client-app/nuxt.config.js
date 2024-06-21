@@ -159,7 +159,7 @@ export default {
       login: '/login',
       logout: '/login',
       callback: '/login',
-      home: '/reporting'
+      home: '/report'
     }
   },
 

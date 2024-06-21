@@ -1,4 +1,5 @@
-﻿using Epson.Core.Domain.Enum;
+﻿using AngleSharp.Dom;
+using Epson.Core.Domain.Enum;
 using Epson.Core.Domain.Products;
 using Epson.Core.Domain.Requests;
 using Epson.Core.Domain.Users;
@@ -78,93 +79,153 @@ namespace Epson.Services.Services.Report
             
         }
 
-        //public async Task<List<RequesterSales>> GetMonthlySalesByRequesterOnDonut(int month = 0, bool allRequester = false)
-        //{
-        //    List<RequesterSales> monthlySales = new List<RequesterSales>();
-        //    var query = _requestRepository.Table.AsQueryable();
+        public async Task<List<ProductRevenue>> GetMonthlySalesByProduct(int productId, int month = 0, bool allProducts = false)
+        {
+            var last12Months = new List<DateTime>();
+            for (int i = 0; i < 12; i++)
+            {
+                last12Months.Add(DateTime.UtcNow.AddMonths(-i));
+            }
+            last12Months = last12Months.Select(d => new DateTime(d.Year, d.Month, 1)).OrderBy(d => d).ToList();
 
-        //    if (month != 0)
-        //    {
-        //        query = query.Where(r => r.CreatedOnUTC.Month == month);
-        //    }
+            var query = _requestRepository.Table.AsQueryable();
 
-        //    if (allRequester && month != 0)
-        //    {
-        //        monthlySales = query
-        //            .GroupBy(r => r.CreatedById)
-        //            .Select(g => new RequesterSales
-        //            {
-        //                RequesterId = g.Key,
-        //                RequesterName = _userManager.FindByIdAsync(g.Key).Result.UserName,
-        //                TotalNumberOfSales = g.Count(),
-        //                MonthlySales = g.Sum(r => r.TotalBudget)
-        //            })
-        //            .OrderByDescending(x => x.TotalNumberOfSales)
-        //            .ToList();
-        //    }
-        //    else
-        //    {
-        //        monthlySales = query
-        //            .GroupBy(r => new
-        //            {
-        //                YearMonth = new DateTime(r.CreatedOnUTC.Year, r.CreatedOnUTC.Month, 1),
-        //                Requester = r.CreatedById
-        //            })
-        //            .Select(g => new RequesterSales
-        //            {
-        //                Date = g.Key.YearMonth,
-        //                RequesterName = _userManager.FindByIdAsync(g.Key.Requester).Result.UserName,
-        //                MonthlySales = g.Sum(r => r.TotalBudget),
-        //                TotalNumberOfSales = g.Count()
-        //            })
-        //            .OrderBy(x => x.Date)
-        //            .ToList();
-        //    }
+            if (month != 0)
+            {
+                query = query.Where(r => r.CreatedOnUTC.Month == month);
+            }
 
-        //    return monthlySales;
-        //}
+            var salesDataQuery = query
+                .Join(
+                    _requestProductRepository.Table,
+                    r => r.Id,
+                    rp => rp.RequestId,
+                    (r, rp) => new { Request = r, RequestProduct = rp }
+                )
+                .Join(
+                    _productRepository.Table,
+                    j => j.RequestProduct.ProductId,
+                    p => p.Id,
+                    (j, p) => new { j.Request, j.RequestProduct, Product = p }
+                );
+
+            if (!allProducts)
+            {
+                salesDataQuery = salesDataQuery.Where(j => j.RequestProduct.ProductId == productId);
+            }
+
+            var salesData = salesDataQuery
+                .GroupBy(j => new
+                {
+                    YearMonth = new DateTime(j.Request.CreatedOnUTC.Year, j.Request.CreatedOnUTC.Month, 1),
+                    Product = j.Product.Id
+                })
+                .Select(g => new ProductRevenue
+                {
+                    Date = g.Key.YearMonth,
+                    ProductName = g.FirstOrDefault().Product.Name,
+                    MonthlySales = (decimal)g.Sum(j => j.RequestProduct.Quantity * j.RequestProduct.DealerPrice),
+                    TotalNumberOfSales = g.Sum(j => j.RequestProduct.Quantity)
+                })
+                .OrderBy(x => x.Date)
+                .ToList();
+
+            var result = last12Months.Select(m => new ProductRevenue
+            {
+                Date = m,
+                ProductName = salesData.FirstOrDefault(s => s.Date == m)?.ProductName ?? "",
+                MonthlySales = salesData.FirstOrDefault(s => s.Date == m)?.MonthlySales ?? 0,
+                TotalNumberOfSales = salesData.FirstOrDefault(s => s.Date == m)?.TotalNumberOfSales ?? 0
+            }).ToList();
+
+            return await Task.FromResult(result);
+        }
+
 
         public async Task<List<RequesterSales>> GetMonthlySalesByRequesterByDonut(DateTime fromMonth, DateTime toMonth, bool allRequester = false)
         {
-            try
-            {
-                var query = _requestRepository.Table
-                        .Where(r => r.CreatedOnUTC >= fromMonth && r.CreatedOnUTC <= toMonth);
 
-                var groupedData = query
-                    .GroupBy(r => r.CreatedById)
-                    .Select(g => new
-                    {
-                        RequesterId = g.Key,
-                        MonthlySales = g.Sum(r => r.TotalBudget),
-                        TotalNumberOfSales = g.Count()
-                    })
-                    .OrderByDescending(x => x.TotalNumberOfSales)
-                    .ToList(); // Synchronously fetch the grouped data
+            var query = _requestRepository.Table
+                    .Where(r => r.CreatedOnUTC >= fromMonth && r.CreatedOnUTC <= toMonth);
 
-                var requesterSalesList = new List<RequesterSales>();
-
-                foreach (var data in groupedData)
+            var groupedData = query
+                .GroupBy(r => r.CreatedById)
+                .Select(g => new
                 {
-                    var user = await _userManager.FindByIdAsync(data.RequesterId);
-                    requesterSalesList.Add(new RequesterSales
-                    {
-                        RequesterId = data.RequesterId,
-                        RequesterName = user?.UserName ?? "Unknown",
-                        MonthlySales = data.MonthlySales,
-                        TotalNumberOfSales = data.TotalNumberOfSales
-                    });
-                }
+                    RequesterId = g.Key,
+                    MonthlySales = g.Sum(r => r.TotalBudget),
+                    TotalNumberOfSales = g.Count()
+                })
+                .OrderByDescending(x => x.TotalNumberOfSales)
+                .ToList(); // Synchronously fetch the grouped data
 
-                return requesterSalesList;
-            }
-            catch(Exception ex)
+            var requesterSalesList = new List<RequesterSales>();
+
+            foreach (var data in groupedData)
             {
-                return new List<RequesterSales>();
+                var user = await _userManager.FindByIdAsync(data.RequesterId);
+                requesterSalesList.Add(new RequesterSales
+                {
+                    RequesterId = data.RequesterId,
+                    RequesterName = user?.UserName ?? "Unknown",
+                    MonthlySales = data.MonthlySales,
+                    TotalNumberOfSales = data.TotalNumberOfSales
+                });
             }
 
+            return requesterSalesList;
         }
 
+        public async Task<List<ProductRevenue>> GetMonthlySalesByProductByDonut(DateTime fromMonth, DateTime toMonth, bool allProducts = false)
+        {
+
+            var query = _requestRepository.Table
+                .Where(r => r.CreatedOnUTC >= fromMonth && r.CreatedOnUTC <= toMonth);
+
+            var groupedData = query
+                .Join(
+                    _requestProductRepository.Table,
+                    r => r.Id,
+                    rp => rp.RequestId,
+                    (r, rp) => new { Request = r, RequestProduct = rp }
+                )
+                .Join(
+                    _productRepository.Table,
+                    j => j.RequestProduct.ProductId,
+                    p => p.Id,
+                    (j, p) => new { ProductName = p.Name, j.Request.CreatedOnUTC, TotalRevenue = j.RequestProduct.Quantity * j.RequestProduct.DealerPrice, Quantity = j.RequestProduct.Quantity }
+                )
+                .GroupBy(
+                    j => new { j.ProductName, j.CreatedOnUTC.Month, j.CreatedOnUTC.Year },
+                    (key, group) => new
+                    {
+                        ProductName = key.ProductName,
+                        Month = new DateTime(key.Year, key.Month, 1).ToString("MMM yyyy"),
+                        MonthlySales = group.Sum(x => x.TotalRevenue),
+                        TotalNumberOfSales = group.Sum(x => x.Quantity),
+                        Date = new DateTime(key.Year, key.Month, 1)
+                    }
+                )
+                .OrderByDescending(x => x.TotalNumberOfSales)
+                .ToList();
+
+            var productSalesList = new List<ProductRevenue>();
+
+            foreach (var data in groupedData)
+            {
+                productSalesList.Add(new ProductRevenue
+                {
+                    ProductName = data.ProductName,
+                    Month = data.Month,
+                    MonthlySales = (decimal)data.MonthlySales,
+                    TotalNumberOfSales = data.TotalNumberOfSales,
+                    Date = data.Date,
+                    TotalRevenue = (decimal)data.MonthlySales 
+                });
+            }
+
+            return productSalesList;
+        }
 
 
         public async Task<List<RequesterSales>> GetTopRequestersBySales(int month)
@@ -200,43 +261,6 @@ namespace Epson.Services.Services.Report
         }
 
 
-        public async Task<List<ProductRevenue>> GetTopProductsByRevenue(int month)
-        {
-            var query = _requestRepository.Table
-                .Where(r => r.ApprovalState == (int)ApprovalStateEnum.Approved);
-
-            if (month != 0)
-            {
-                query = query.Where(r => r.CreatedOnUTC.Month == month && r.CreatedOnUTC.Year == DateTime.UtcNow.Year);
-            }
-
-            var topProducts = query
-                .Join(
-                    _requestProductRepository.Table,
-                    r => r.Id,
-                    rp => rp.RequestId,
-                    (r, rp) => new { Request = r, RequestProduct = rp }
-                )
-                .Join(
-                    _productRepository.Table,
-                    j => j.RequestProduct.ProductId,
-                    p => p.Id,
-                    (j, p) => new { ProductName = p.Name, TotalRevenue = j.RequestProduct.Quantity * j.RequestProduct.DealerPrice, Quantity = j.RequestProduct.Quantity }
-                )
-                .GroupBy(
-                    j => j.ProductName,
-                    (key, group) => new ProductRevenue
-                    {
-                        ProductName = key,
-                        TotalRevenue = group.Sum(x => x.TotalRevenue),
-                        TotalNoOfSales = group.Sum(x => x.Quantity)
-                    }
-                )
-                .OrderByDescending(x => x.TotalNoOfSales)
-                .Take(10)
-                .ToList();
-
-            return topProducts;
-        }
+        
     }
 }

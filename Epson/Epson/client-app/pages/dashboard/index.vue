@@ -32,6 +32,16 @@
             { route: '/shDashboard', label: 'SALES HEAD DASHBOARD', icon: '🏷️' }
           );
         } else {
+          if (this.loggedInUser.roles.includes('Director')) {
+            links.push(
+              { route: '/sla', label: 'SLA CONFIGURATION', icon: '⚙️' },
+              { route: '/requestRejectionAuditTrail', label: 'REJECTION AUDIT TRAIL', icon: '📋' },
+              { route: '/productAuditTrail', label: 'PRODUCT AUDIT TRAIL', icon: '📝' },
+              { route: '/productDashboard', label: 'FULFILLER DASHBOARD', icon: '📦' },
+              { route: '/salesDashboard', label: 'REQUESTER DASHBOARD', icon: '📊' },
+              { route: '/shDashboard', label: 'SALES HEAD DASHBOARD', icon: '🏷️' }
+            );
+          }
           if (this.loggedInUser.roles.includes('Sales')) {
             links.push({ route: '/salesDashboard', label: 'REQUESTER DASHBOARD', icon: '📊' });
           }

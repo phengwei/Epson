@@ -26,7 +26,7 @@ using Epson.Services.DTO.Requests;
 
 namespace Epson.Controllers.API
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin, Sales, Product, Sales Section Head")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin, Sales, Product, Sales Section Head,Director")]
     [Route("api/sla")]
     public class SLAApiController : BaseApiController
     {
