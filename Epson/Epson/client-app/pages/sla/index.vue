@@ -1,5 +1,5 @@
 <template>
-  <div class="sla-management-container" v-if="loggedInUser.roles.includes('Admin')">
+  <div class="sla-management-container" v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director') ">
     <v-card class="sla-card">
       <v-row>
         <v-col cols="12">

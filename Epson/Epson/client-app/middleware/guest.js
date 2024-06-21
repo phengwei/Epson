@@ -4,15 +4,17 @@ export default function ({ store, redirect }) {
 
     const userRoles = store.state.auth.user.data.roles;  
     if (userRoles.includes('Admin')) {
-      return redirect('/userManagement');
+      return redirect('/dashboard');
     } else if (userRoles.includes('Sales Section Head')) {
-      return redirect('/request');
+      return redirect('/dashboard');
     } else if (userRoles.includes('Sales Operation')) {
       return redirect('/request');
     } else if (userRoles.includes('Product') || userRoles.includes('Coverplus')) {
-      return redirect('/productDashboard'); 
+      return redirect('/dashboard'); 
     } else if (userRoles.includes('Sales')) {
-      return redirect('/salesDashboard');
+      return redirect('/dashboard');
+    } else if (userRoles.includes('Director')) {
+      return redirect('/dashboard');
     } else {
       console.log('Unknown user role');
     }

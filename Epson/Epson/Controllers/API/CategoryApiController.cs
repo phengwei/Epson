@@ -12,7 +12,7 @@ using Microsoft.IdentityModel.Abstractions;
 
 namespace Epson.Controllers.API
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin,Coverplus,Sales Section Head,Sales Operation")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin,Coverplus,Sales Section Head,Sales Operation, Director")]
     [Route("api/category")]
     public class CategoryApiController : BaseApiController
     {

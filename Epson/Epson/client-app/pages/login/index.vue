@@ -95,17 +95,19 @@
           }).then(response => {
             const userRoles = this.$auth.user.data.roles;
             if (userRoles.includes('Admin')) {
-              this.$router.push('/userManagement');
+              this.$router.push('/dashboard');
             } else if (userRoles.includes('Sales Operation')) {
               this.$router.push('/request');
             } else if (userRoles.includes('Product')) {
-              this.$router.push('/productDashboard');
+              this.$router.push('/dashboard');
             } else if (userRoles.includes('Sales')) {
-              this.$router.push('/salesDashboard');
+              this.$router.push('/dashboard');
             } else if (userRoles.includes('Coverplus')) {
-              this.$router.push('/productDashboard');
+              this.$router.push('/dashboard');
             } else if (userRoles.includes('Sales Section Head')) {
-              this.$router.push('/request');
+              this.$router.push('/dashboard');
+            } else if (userRoles.includes('Director')) {
+              this.$router.push('/dashboard');
             } else {
               Swal.fire({
                 title: 'Error!',

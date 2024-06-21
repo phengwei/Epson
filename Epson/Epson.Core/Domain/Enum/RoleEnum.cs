@@ -14,7 +14,9 @@ namespace Epson.Core.Domain.Enum
 
         Coverplus = 30,
 
-        Admin = 40
+        Admin = 40,
+
+        Director = 50
 
     }
 }

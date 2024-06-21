@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex justify-content-center align-items-center vh-100" data-app="true" v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Admin')">
+  <div class="d-flex justify-content-center align-items-center vh-100" data-app="true" v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')">
     <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
       <v-card-title class="d-flex justify-content-between align-items-center">
         <v-toolbar flat>
@@ -20,7 +20,7 @@
             {{ item }}
           </v-tab>
           <v-spacer></v-spacer>
-          <v-btn class="mr-5 blue-button" color="primary" dark @click="dialog = true">
+          <v-btn class="mr-5 blue-button" color="primary" dark @click="dialog = true" v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Admin')">
             <v-icon left>mdi-plus</v-icon>
             ADD PRODUCT
           </v-btn>

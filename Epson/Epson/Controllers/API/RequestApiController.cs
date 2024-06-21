@@ -380,7 +380,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("approvefinalrequest")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Director")]
         public async Task<IActionResult> ApproveFinalRequest(int requestId, bool isAccept)
         {
             if (requestId == 0)
@@ -403,7 +403,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("cancelrequest")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin, Director")]
         public async Task<IActionResult> CancelRequest(int requestId, string remarks)
         {
             if (requestId == 0)
@@ -456,7 +456,7 @@ namespace Epson.Controllers.API
             var response = new GenericResponseModel<List<RequestModel>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
-            var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString());
+            var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString()) || await _userManager.IsInRoleAsync(user, RoleEnum.Director.ToString());
 
             List<RequestDTO> requests = new List<RequestDTO>();
 
@@ -491,7 +491,7 @@ namespace Epson.Controllers.API
             var response = new GenericResponseModel<List<RequestProductModel>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
-            var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString());
+            var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString()) || await _userManager.IsInRoleAsync(user, RoleEnum.Director.ToString());
 
             List<RequestProductDTO> requestProducts = new List<RequestProductDTO>();
 
@@ -516,7 +516,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getpendingfulfillmentasrequester")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Director")]
         public async Task<IActionResult> GetPendingFulfillmentAsRequester()
         {
             try
@@ -524,7 +524,7 @@ namespace Epson.Controllers.API
                 var response = new GenericResponseModel<List<RequestModel>>();
 
                 var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
-                var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString());
+                var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString()) || await _userManager.IsInRoleAsync(user, RoleEnum.Director.ToString());
 
                 List<RequestDTO> requests;
 
@@ -599,7 +599,7 @@ namespace Epson.Controllers.API
             var roles = await _userManager.GetRolesAsync(user);
             var isCoverplusUser = roles.Contains(RoleEnum.Coverplus.ToString());
             var isProductUser = roles.Contains(RoleEnum.Product.ToString());
-            var isAdminUser = roles.Contains(RoleEnum.Admin.ToString());
+            var isAdminUser = roles.Contains(RoleEnum.Admin.ToString()) || roles.Contains(RoleEnum.Director.ToString());
 
             var requests = _requestService.GetUnfulfilledRequests(user, isCoverplusUser, isProductUser, isAdminUser);
 
@@ -637,7 +637,7 @@ namespace Epson.Controllers.API
 
             List<RequestDTO> filteredRequestsQuery = new List<RequestDTO>();
 
-            if (userRoles.Contains("Admin"))
+            if (userRoles.Contains("Admin") || userRoles.Contains("Director"))
             {
                 filteredRequestsQuery = _requestService.GetRequests()
                           .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction)
@@ -715,7 +715,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getnumberofrequestssummary")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin, Director")]
         public async Task<IActionResult> GetNumberOfRequestsSummary(DateTime startDate, DateTime endDate, string granularity)
         {
             var response = new GenericResponseModel<List<NoOfRequestSummary>>();
@@ -730,7 +730,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getnumberofpendingrequestssummary")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin, Director")]
         public async Task<IActionResult> GetNumberOfPendingRequestsSummary(DateTime startDate, DateTime endDate, string granularity)
         {
             var response = new GenericResponseModel<List<NoOfPendingRequestSummary>>();
@@ -745,7 +745,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getnumberofcompletedrequestssummary")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin, Director")]
         public async Task<IActionResult> GetNumberOfCompletedRequestsSummary(DateTime startDate, DateTime endDate, string granularity)
         {
             var response = new GenericResponseModel<List<NoOfCompletedRequestSummary>>();

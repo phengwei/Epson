@@ -243,7 +243,7 @@ namespace Epson.Controllers.API
             List<RequestDTO> requests = new List<RequestDTO>();
 
 
-            if ((await _userManager.IsInRoleAsync(currentUser, RoleEnum.Admin.ToString())))
+            if ((await _userManager.IsInRoleAsync(currentUser, RoleEnum.Admin.ToString()))|| await _userManager.IsInRoleAsync(currentUser, RoleEnum.Director.ToString()))
             {
                 isAdminUser = true;
             }

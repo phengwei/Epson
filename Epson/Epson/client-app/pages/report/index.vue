@@ -563,7 +563,6 @@
   }
 
     .v-select .v-input__control {
-      padding: 5px !important;
       background-color: #fff !important;
     }
 

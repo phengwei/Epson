@@ -74,7 +74,7 @@ namespace Epson.Controllers.API
 
             List<ProductDTO> products = new List<ProductDTO>();
 
-            if (currentUser.Roles.Contains("Admin"))
+            if (currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Director"))
                 products = _productService.GetProducts();
             else
                 products = _productService.GetProducts().Where(x => x.CreatedById == currentUser.Id).ToList();
