@@ -28,7 +28,7 @@
 
         <v-dialog v-model="dialog" max-width="500px">
           <v-card>
-            <v-card-title>
+            <v-card-title v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Admin')">
               <span class="text-h5 blue-text big-bold">{{ formTitle }}</span>
             </v-card-title>
             <v-card-text>

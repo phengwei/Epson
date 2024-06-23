@@ -14,7 +14,6 @@
                       :items="months"
                       item-text="text"
                       item-value="value"
-                      label="Select Month"
                       outlined
                       dense
                       class="month-select"></v-select>

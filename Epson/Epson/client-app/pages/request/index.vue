@@ -2,7 +2,9 @@
   <div class="d-flex justify-content-center align-items-center vh-100" data-app="true">
     <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
       <v-toolbar flat>
-        <v-toolbar-title><h2 class="blue-text big-bold">{{ breached ? 'BREACHED REQUESTS' : 'REQUESTS' }}</h2></v-toolbar-title>
+        <v-toolbar-title>
+          <h2 class="blue-text big-bold">{{ breached ? 'BREACHED REQUESTS' : 'REQUESTS' }}</h2>
+        </v-toolbar-title>
         <v-spacer></v-spacer>
         <v-text-field v-model="search"
                       prepend-inner-icon="mdi-magnify"
@@ -189,5 +191,112 @@
 
   .create-quotation {
     margin-left: 16px;
+  }
+
+  .vh-100 {
+    height: 100vh;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: black;
+  }
+
+  .border-input {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 0.5rem;
+    width: 100%;
+  }
+
+  .role-checkbox {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+    .role-checkbox input[type="checkbox"] {
+      margin-right: 0.5rem;
+    }
+
+      .role-checkbox input[type="checkbox"].styled-checkbox {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 1px solid #003399;
+        border-radius: 4px;
+        position: relative;
+        cursor: pointer;
+      }
+
+        .role-checkbox input[type="checkbox"].styled-checkbox:checked::before {
+          font-size: 12px;
+          color: #003399;
+          position: absolute;
+          top: 1px;
+          left: 2px;
+        }
+
+  .search-bar {
+    width: 150px;
+    border-radius: 20px;
+    padding: 5px 10px;
+    border-width: medium;
+  }
+
+    .search-bar .v-input__control {
+      background-color: #d3d3d3;
+    }
+
+  .theme--light.v-text-field--solo > .v-input__control > .v-input__slot {
+    background-color: #d3d3d3 !important;
+  }
+
+  .search-bar .v-field__append-inner,
+  .search-bar .v-field__prepend-inner {
+    margin-top: 0;
+  }
+
+  .search-bar .v-input__control {
+    border: none;
+  }
+
+  .blue-button {
+    background-color: #003399 !important;
+    color: white !important;
+  }
+
+  .blue-text {
+    color: #003399 !important;
+  }
+
+  .blue-text--active {
+    color: #003399 !important;
+  }
+
+  .big-bold {
+    font-size: 24px;
+    font-weight: bold;
+  }
+
+  .small-bold {
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  .card-round {
+    border-radius: 20px !important;
+  }
+
+  .table-padding {
+    padding: 20px;
   }
 </style>
