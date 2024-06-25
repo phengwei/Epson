@@ -631,26 +631,26 @@ namespace Epson.Controllers.API
             relevantTeamIds.Add(currentUser.TeamId);
 
             var usersInRelevantTeams = _userManager.Users
-                                                   .Where(u => relevantTeamIds.Contains(u.TeamId))
-                                                   .Select(u => u.Id)
-                                                   .ToList();
+                                                    .Where(u => relevantTeamIds.Contains(u.TeamId))
+                                                    .Select(u => u.Id)
+                                                    .ToList();
 
             List<RequestDTO> filteredRequestsQuery = new List<RequestDTO>();
 
             if (userRoles.Contains("Admin"))
             {
                 filteredRequestsQuery = _requestService.GetRequests()
-                          .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction)
-                          .ToList();
+                            .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction)
+                            .ToList();
 
             }
             else
             {
                 filteredRequestsQuery = _requestService.GetRequests()
-                          .Where(x => usersInRelevantTeams.Contains(x.CreatedById) &&
-                                 x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction &&
-                                 x.CreatedById != currentUser.Id)
-                          .ToList();
+                            .Where(x => usersInRelevantTeams.Contains(x.CreatedById) &&
+                                    x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction &&
+                                    x.CreatedById != currentUser.Id)
+                            .ToList();
 
             }
 

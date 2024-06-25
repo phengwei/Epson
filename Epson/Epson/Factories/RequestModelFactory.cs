@@ -109,7 +109,10 @@ namespace Epson.Factories
             var userIds = requests.Select(r => r.CreatedById).Where(id => id != null).Distinct().ToList();
             var approverIds = requests.Select(r => r.ApprovedBy).Where(id => id != null).Distinct().ToList();
             var fulfillerIds = requests.SelectMany(r => r.RequestProducts.Select(rp => rp.FulfillerId)).Where(id => id != null).Distinct().ToList();
-            var allUserIds = userIds.Concat(approverIds).Concat(fulfillerIds).Distinct().ToList();
+
+            var adminUsers = await _userManager.GetUsersInRoleAsync(RoleEnum.Admin.GetDescription());
+            var adminUserIds = adminUsers.Select(u => u.Id).Distinct().ToList();
+            var allUserIds = userIds.Concat(approverIds).Concat(fulfillerIds).Concat(adminUserIds).Distinct().ToList();
 
             var users = await _userManager.Users.Where(u => allUserIds.Contains(u.Id)).ToListAsync();
             var userDictionary = users.ToDictionary(u => u.Id, u => u);
