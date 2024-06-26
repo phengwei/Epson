@@ -1487,16 +1487,17 @@ namespace Epson.Services.Services.Email
             return emailQueue;
         }
 
-        public void SendEmailBatch()
+        public async Task SendEmailBatchAsync()
         {
             var emailQueues = GetUnsentEmailQueues();
             foreach (var emailQueue in emailQueues)
             {
                 var emailAccount = GetEmailAccountById(emailQueue.EmailAccountId);
 
-                MailMessage message = new MailMessage(emailQueue.FromEmail, emailQueue.ToEmail, emailQueue.Subject, emailQueue.Body);
-
-                message.IsBodyHtml = true;
+                var message = new MailMessage(emailQueue.FromEmail, emailQueue.ToEmail, emailQueue.Subject, emailQueue.Body)
+                {
+                    IsBodyHtml = true
+                };
 
                 if (!string.IsNullOrEmpty(emailQueue.Cc))
                 {
@@ -1506,18 +1507,19 @@ namespace Epson.Services.Services.Email
                     }
                 }
 
-                SmtpClient client = new SmtpClient(emailAccount.OutgoingServer, int.Parse(emailAccount.OutgoingPort));
-
-                client.UseDefaultCredentials = false;
-                client.Credentials = new NetworkCredential(emailAccount.Username, emailAccount.Password);
-                client.EnableSsl = true;
-                client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                using var client = new SmtpClient(emailAccount.OutgoingServer, int.Parse(emailAccount.OutgoingPort))
+                {
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(emailAccount.Username, emailAccount.Password),
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network
+                };
 
                 if (DateTime.UtcNow > emailQueue.ScheduleTime.ToUniversalTime())
                 {
                     try
                     {
-                        client.Send(message);
+                        await client.SendMailAsync(message);
                         _logger.Information("Email of queue {emailQueue} successfully sent!", emailQueue.Id);
                         emailQueue.SentTime = DateTime.UtcNow;
                         emailQueue.SendAttempts += 1;
@@ -1534,7 +1536,6 @@ namespace Epson.Services.Services.Email
                 {
                     _logger.Information("Email of queue {emailQueue} is scheduled for {scheduledTime}. Skipped sending email", emailQueue.Id, emailQueue.ScheduleTime);
                 }
- 
             }
         }
     }

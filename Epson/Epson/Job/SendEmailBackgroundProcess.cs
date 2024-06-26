@@ -12,6 +12,7 @@ namespace Epson.Job
         private Timer _timer;
         private readonly Serilog.ILogger _logger;
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private bool _isProcessing;
 
         public EmailBackgroundService(
             Serilog.ILogger logger,
@@ -19,23 +20,33 @@ namespace Epson.Job
         {
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
+            _isProcessing = false;
         }
 
         public Task StartAsync(CancellationToken stoppingToken)
         {
             _logger.Information("[{0}] Begin executing process.", "SendEmailBackgroundProcess");
             _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromMinutes(5));
-            _logger.Information("[{0}] Finished executing process.", "SendEmailBackgroundProcess");
             return Task.CompletedTask;
         }
 
-        private void DoWork(object state)
+        private async void DoWork(object state)
         {
+            if (_isProcessing)
+            {
+                _logger.Information("Email batch processing is already running. Skipping this execution.");
+                return;
+            }
+
+            _isProcessing = true;
+
             using (var scope = _serviceScopeFactory.CreateScope())
             {
                 var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
-                emailService.SendEmailBatch();
+                await emailService.SendEmailBatchAsync();
             }
+
+            _isProcessing = false;
         }
 
         public Task StopAsync(CancellationToken stoppingToken)
