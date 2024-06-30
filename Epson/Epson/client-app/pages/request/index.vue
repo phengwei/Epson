@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex justify-content-center align-items-center vh-100" data-app="true">
+  <div class="d-flex justify-content-center align-items-center vh-100" :key="routeKey" data-app="true">
     <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
       <v-toolbar flat>
         <v-toolbar-title>
@@ -29,7 +29,7 @@
                       :items-per-page="5"
                       :options.sync="options"
                       :loading="loading"
-                      class="elevation-1">
+                      class="elevation-1 text-center">
           <template v-slot:item.action="{ item }">
             <v-btn @click="viewRequest(item)">View</v-btn>
           </template>
@@ -47,6 +47,14 @@
 
   export default {
     name: 'RequestOverview',
+    props: ['routeKey'],
+    watch: {
+      $route(to, from) {
+        if (to.fullPath !== from.fullPath) {
+          this.onRouteChange();
+        }
+      }
+    },
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser']),
       filteredRequests() {
@@ -72,15 +80,15 @@
     data() {
       return {
         headers: [
-          { text: 'Request #', value: 'id' },
-          { text: 'End User', value: 'endUserName' },
-          { text: 'Approval State', value: 'approvalStateStr' },
-          { text: 'Total Budget (RM)', value: 'totalBudget' },
-          { text: 'Created On', value: 'createdOnUTC' },
-          { text: 'Created By', value: 'createdBy' },
-          { text: 'Approved Time', value: 'approvedTime' },
-          { text: 'Requester Team', value: 'createdByTeam' },
-          { text: 'Actions', value: 'action' }
+          { text: 'Request #', value: 'id', align: 'center' },
+          { text: 'End User', value: 'endUserName', align: 'center' },
+          { text: 'Approval State', value: 'approvalStateStr', align: 'center' },
+          { text: 'Total Budget (RM)', value: 'totalBudget', align: 'center' },
+          { text: 'Created On', value: 'createdOnUTC', align: 'center' },
+          { text: 'Created By', value: 'createdBy', align: 'center' },
+          { text: 'Approved Time', value: 'approvedTime', align: 'center' },
+          { text: 'Requester Team', value: 'createdByTeam', align: 'center' },
+          { text: 'Actions', value: 'action', align: 'center' }
         ],
         requests: [],
         options: {},
@@ -113,6 +121,12 @@
       this.getRequests();
     },
     methods: {
+      onRouteChange() {
+        this.$nextTick(() => {
+          this.getRequests();
+          this.applyStyles();
+        });
+      },
       getRequests() {
         const params = { breached: this.breached };
         this.$axios.get(`${this.$config.restUrl}/api/request/getrequests`, { params })
@@ -132,6 +146,9 @@
           .catch(error => {
             console.error('Error fetching requests:', error);
           });
+      },
+      applyStyles() {
+        // Force reapplication of styles if needed
       },
       redirectToCreateQuotation() {
         this.$router.push('/createquotation?create=true');
@@ -159,7 +176,7 @@
           && request.approvalState === this.ApprovalStateEnum.AmendQuotation) {
           queryParameters = { ...queryParameters, editable: true };
         } else if (this.loggedInUser && this.loggedInUser.id === request.createdById
-          && request.approvalState === this.ApprovalStateEnum.RejectedByFulfiller) {
+          && request.approvalState === this.RequestProductStatusEnum.Rejected) {
           queryParameters = { ...queryParameters, amendable: true, view: true };
         } else {
           queryParameters = { ...queryParameters, view: true };

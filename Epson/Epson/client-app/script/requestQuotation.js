@@ -210,7 +210,7 @@ export default {
             .then(response => {
               Swal.fire('Amended!', 'Request is in amend stage.', 'success')
                 .then(() => {
-                  this.$router.push('/request');
+                  window.location.href = '/request';
                 });
             }).catch(error => {
               console.log('error', error);
@@ -236,7 +236,7 @@ export default {
               this.closeDialogProductFulfillment();
               Swal.fire('Approved!', 'Quotation is successfully approved.', 'success')
                 .then(() => {
-                  this.$router.push('/request');
+                  window.location.href = '/request';
                 });
             }).catch(error => {
               console.log('error', error);
@@ -262,7 +262,7 @@ export default {
               this.closeDialogProductFulfillment();
               Swal.fire('Approved!', 'Quotation is successfully rejected.', 'success')
                 .then(() => {
-                  this.$router.push('/request');
+                  window.location.href = '/request';
                 });
             }).catch(error => {
               console.log('error', error);
@@ -290,7 +290,7 @@ export default {
             .then(response => {
               Swal.fire('Done!', 'Request is successfully approved.', 'success')
                 .then(() => {
-                  this.$router.push('/request');
+                  window.location.href = '/request';
                 });
             }).catch(error => {
               console.log('error', error);
@@ -304,7 +304,7 @@ export default {
             .then(response => {
               Swal.fire('Done!', 'Request is successfully rejected.', 'success')
                 .then(() => {
-                  this.$router.push('/request');
+                  window.location.href = '/request';
                 });
             }).catch(error => {
               console.log('error', error);
@@ -616,7 +616,7 @@ export default {
 
     },
     redirectToRequest() {
-      this.$router.push('/request');
+      window.location.href = '/request';
     },
     acceptDeal() {
       this.closeDeal(true);
@@ -637,7 +637,7 @@ export default {
             if (response.status === 200) {
               Swal.fire('Closed deal!', '', 'success')
                 .then(() => {
-                  this.$router.push('/request');
+                  window.location.href = '/request';
                 });
             }
           } else if (result.isDenied) {
@@ -666,7 +666,7 @@ export default {
             if (response.status === 200) {
               Swal.fire('Closed!', '', 'success')
                 .then(() => {
-                  this.$router.push('/request');
+                  window.location.href = '/request';
                 });
             }
           } else if (result.isDenied) {
@@ -865,7 +865,7 @@ export default {
           this.$swal(successMessage)
             .then((confirm) => {
               if (confirm) {
-                this.$router.push('/request');
+                window.location.href = '/request';
                 localStorage.clear();
               }
             });
