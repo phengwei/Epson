@@ -23,6 +23,7 @@ using Epson.Services.Interface.Users;
 using Epson.Services.Interface.Categories;
 using Epson.Core.Domain.Categories;
 using Epson.Services.DTO.Requests;
+using System.Transactions;
 
 namespace Epson.Services.Services.Email
 {
@@ -284,10 +285,10 @@ namespace Epson.Services.Services.Email
                 <body>
                     <div class='email-container'>
                         <div class='email-header'>
-                            <h1>New Request</h1>
+                            <h1>Approved Request</h1>
                         </div>
                         <div class='email-body'>
-                            <p>A new request has been created with the following details:</p>
+                            <p>A request has been approved with the following details:</p>
                             <table>
                                 <tr>
                                     <th>Org</th>
@@ -1490,6 +1491,7 @@ namespace Epson.Services.Services.Email
         public async Task SendEmailBatchAsync()
         {
             var emailQueues = GetUnsentEmailQueues();
+
             foreach (var emailQueue in emailQueues)
             {
                 var emailAccount = GetEmailAccountById(emailQueue.EmailAccountId);
@@ -1519,11 +1521,15 @@ namespace Epson.Services.Services.Email
                 {
                     try
                     {
-                        await client.SendMailAsync(message);
-                        _logger.Information("Email of queue {emailQueue} successfully sent!", emailQueue.Id);
-                        emailQueue.SentTime = DateTime.UtcNow;
-                        emailQueue.SendAttempts += 1;
-                        _EmailQueueRepository.Update(_mapper.Map<EmailQueue>(emailQueue));
+                        using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                        {
+                            await client.SendMailAsync(message);
+                            _logger.Information("Email of queue {emailQueue} successfully sent!", emailQueue.Id);
+                            emailQueue.SentTime = DateTime.UtcNow;
+                            emailQueue.SendAttempts += 1;
+                            _EmailQueueRepository.Update(_mapper.Map<EmailQueue>(emailQueue));
+                            transaction.Complete();
+                        }
                     }
                     catch (Exception ex)
                     {
