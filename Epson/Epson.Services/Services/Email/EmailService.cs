@@ -1503,11 +1503,13 @@ namespace Epson.Services.Services.Email
 
                 if (!string.IsNullOrEmpty(emailQueue.Cc))
                 {
-                    foreach (var ccEmail in emailQueue.Cc.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                    var delimiters = new[] { ',', ' ' };
+                    foreach (var ccEmail in emailQueue.Cc.Split(delimiters, StringSplitOptions.RemoveEmptyEntries))
                     {
                         message.CC.Add(ccEmail.Trim());
                     }
                 }
+
 
                 using var client = new SmtpClient(emailAccount.OutgoingServer, int.Parse(emailAccount.OutgoingPort))
                 {
