@@ -164,7 +164,7 @@
   };
 </script>
 
-<style>
+<style scoped>
   @import '~@/../wwwroot/css/general-table.css';
 
   input[type="text"], select {
