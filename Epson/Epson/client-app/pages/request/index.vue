@@ -120,7 +120,19 @@
       this.selectedMonth = this.$route.query.month ? parseInt(this.$route.query.month) : new Date().getMonth() + 1;
       this.getRequests();
     },
+    mounted() {
+      this.modifySelectInputs();
+    },
     methods: {
+      modifySelectInputs() {
+        const vSelects = this.$el.querySelectorAll('.v-select');
+        vSelects.forEach(vSelect => {
+          const inputElement = vSelect.querySelector('input[type="text"]');
+          if (inputElement) {
+            inputElement.removeAttribute('type');
+          }
+        });
+      },
       onRouteChange() {
         this.$nextTick(() => {
           this.getRequests();
@@ -194,6 +206,9 @@
 <style scoped>
   @import '~@/../wwwroot/css/general-table.css';
 
+  v-btn {
+    background-color: #003399 !important;
+  }
   .filter-container {
     display: flex;
     align-items: center;
@@ -270,11 +285,12 @@
   }
 
     .search-bar .v-input__control {
-      background-color: #d3d3d3;
+      background-color: #003399;
     }
 
-  .theme--light.v-text-field--solo > .v-input__control > .v-input__slot {
-    background-color: #d3d3d3 !important;
+  .theme--light.v-btn.v-btn--has-bg {
+    background-color: #003399 !important;
+    color: white !important;
   }
 
   .search-bar .v-field__append-inner,

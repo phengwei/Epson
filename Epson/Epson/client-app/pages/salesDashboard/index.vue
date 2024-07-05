@@ -48,6 +48,9 @@
 </script>
 
 <style>
+  .v-application {
+    font-family: TCCC-UnityText-Regular, TCCC-UnityText !important;
+  }
   .grid-container {
     display: flex;
     flex-direction: column;

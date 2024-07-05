@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-    <h1 class="text-3xl font-bold mb-8">Dashboard</h1>
+    <h2 class="text-3xl font-bold mb-8">Dashboard</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <nuxt-link v-for="link in dashboardLinks" :key="link.route" :to="link.route" class="dashboard-card">
         <div class="card-content">
@@ -62,9 +62,10 @@
     padding: 20px;
   }
 
-  h1 {
+  h2 {
     text-align: center;
     color: #003399;
+    font-family: TCCC-UnityText-Regular, TCCC-UnityText !important;
   }
 
   .grid {

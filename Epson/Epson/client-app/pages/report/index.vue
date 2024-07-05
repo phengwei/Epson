@@ -3,16 +3,19 @@
     <v-main>
       <div class="report-container">
         <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
-          <v-toolbar flat>
-            <v-toolbar-title>
-              <h1 class="blue-text big-bold">REPORT</h1>
-            </v-toolbar-title>
-          </v-toolbar>
+          <v-card-title>
+            <v-toolbar flat>
+              <v-toolbar-title>
+                <h2 class="blue-text big-bold">REPORTS</h2>
+              </v-toolbar-title>
+            </v-toolbar>
+          </v-card-title>
+
           <v-card-text>
             <div class="filter-container mb-4">
               <v-menu offset-y>
                 <template v-slot:activator="{ on, attrs }">
-                  <v-btn color="primary" dark v-bind="attrs" v-on="on">
+                  <v-btn color="primary" class="blue-background" dark v-bind="attrs" v-on="on">
                     {{ selectedTab === 'requester' ? 'Requester Performance' : 'Product Performance' }}
                     <v-icon right>mdi-menu-down</v-icon>
                   </v-btn>
@@ -34,7 +37,7 @@
                     <v-radio label="Requester" value="requester"></v-radio>
                   </v-col>
                   <v-col cols="3">
-                    <v-select v-model="requester" :items="requesters" item-text="text" item-value="value" dense outlined></v-select>
+                    <v-select v-model="requester" :items="requesters" item-text="text" label="Requester" item-value="value" dense outlined></v-select>
                   </v-col>
                 </v-row>
                 <v-row class="compact-row">
@@ -78,7 +81,7 @@
                     <v-radio label="Product" value="product"></v-radio>
                   </v-col>
                   <v-col cols="3">
-                    <v-select v-model="product" :items="products" item-text="text" item-value="value" dense outlined></v-select>
+                    <v-select v-model="product" :items="products" item-text="text" label="Product" item-value="value" dense outlined></v-select>
                   </v-col>
                 </v-row>
                 <v-row class="compact-row">
@@ -261,11 +264,23 @@
       await this.fetchRequesters();
       await this.fetchproducts();
     },
+    mounted() {
+      this.modifySelectInputs();
+    },
     methods: {
+      modifySelectInputs() {
+        const vSelects = this.$el.querySelectorAll('.v-select');
+        vSelects.forEach(vSelect => {
+          const inputElement = vSelect.querySelector('input[type="text"]');
+          if (inputElement) {
+            inputElement.removeAttribute('type');
+          }
+        });
+      },
       generateMonths() {
         const months = [];
         const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth() + 1; // Months are zero-based
+        const currentMonth = new Date().getMonth() + 1; 
 
         for (let year = currentYear - 1; year <= currentYear; year++) {
           for (let month = 1; month <= 12; month++) {
@@ -492,7 +507,11 @@
   };
 </script>
 
-<style>
+<style scoped>
+  .v-application {
+    font-family: TCCC-UnityText-Regular, TCCC-UnityText !important;
+  }
+
   .report-container {
     display: flex;
     flex-direction: column;
@@ -518,6 +537,9 @@
     font-weight: bold;
   }
 
+  .theme--dark.v-btn.v-btn--has-bg {
+    background-color: #003399 !important;
+  }
   .big-bold {
     font-size: 1.5rem;
   }
@@ -528,7 +550,7 @@
   }
 
   .blue-button {
-    background-color: #003399;
+    background-color: #003399 !important;
     color: white;
   }
 

@@ -2,11 +2,14 @@
   <v-app>
     <div class="page">
       <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
-        <v-toolbar flat>
-          <v-toolbar-title>
-            <h2 class="blue-text big-bold">SLA OVERVIEW</h2>
-          </v-toolbar-title>
-        </v-toolbar>
+        <v-card-title>
+          <v-toolbar flat>
+            <v-toolbar-title>
+              <h2 class="blue-text big-bold">SLA OVERVIEW</h2>
+            </v-toolbar-title>
+          </v-toolbar>
+        </v-card-title>
+
         <v-card-text>
           <div class="filter-bar">
             <label for="month-select">Select Month:</label>
@@ -108,8 +111,18 @@
     },
     mounted() {
       this.getSLAMetrics();
+      this.modifySelectInputs();
     },
     methods: {
+      modifySelectInputs() {
+        const vSelects = this.$el.querySelectorAll('.v-select');
+        vSelects.forEach(vSelect => {
+          const inputElement = vSelect.querySelector('input[type="text"]');
+          if (inputElement) {
+            inputElement.removeAttribute('type');
+          }
+        });
+      },
       async getSLAMetrics(month = this.selectedMonth) {
         try {
           const result = await this.$axios.get(`${this.$config.restUrl}/api/sla/getslametrics`, {
@@ -144,6 +157,19 @@
 </script>
 <style scoped>
   @import '~@/../wwwroot/css/general-table.css';
+  .v-application {
+    font-family: TCCC-UnityText-Regular, TCCC-UnityText !important;
+  }
+
+  .blue-text {
+    color: #003399;
+    font-weight: bold;
+  }
+
+  .big-bold {
+    font-size: 1.5rem;
+  }
+
   .page {
     display: flex;
     flex-direction: column;
