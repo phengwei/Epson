@@ -166,6 +166,10 @@
     font-weight: bold;
   }
 
+  .theme--light.v-btn.v-btn--has-bg {
+    background-color: #f5f5f5 !important;
+    color: black !important;
+  }
   .big-bold {
     font-size: 1.5rem;
   }

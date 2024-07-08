@@ -67,7 +67,7 @@
         RequestProductStatusEnum,
         paginationOptions: {
           page: 1,
-          itemsPerPage: 10, // This will be dynamic based on user selection
+          itemsPerPage: 10, 
           sortBy: [],
           sortDesc: [],
         },
@@ -77,7 +77,7 @@
       query() {
         return {
           page: this.paginationOptions.page,
-          itemsPerPage: this.paginationOptions.itemsPerPage, // Use selected items per page
+          itemsPerPage: this.paginationOptions.itemsPerPage, 
           search: this.search,
         };
       },
@@ -102,7 +102,7 @@
         });
       },
       triggerSearch() {
-        this.paginationOptions.page = 1; // Reset to the first page on new search
+        this.paginationOptions.page = 1; 
         this.getFulfillerItem();
       },
       viewRequest(request) {

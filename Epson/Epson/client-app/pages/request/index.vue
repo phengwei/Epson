@@ -25,18 +25,21 @@
           <v-btn v-if="loggedInUser && loggedInUser.roles.includes('Sales')" class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
         </div>
       </div>
+      <v-card-text>
         <v-data-table :headers="headers"
                       :items="filteredRequests"
                       :options.sync="options"
                       :items-per-page="options.itemsPerPage"
-                      :footer-props="{ 'items-per-page-options': [5, 10, 20, 30, 50, { text: 'All', value: -1 }] }"
+                      :footer-props="{ itemsPerPageOptions: [5, 10, 20, 30, 50, { text: 'All', value: -1 }], 'items-per-page-text': 'Rows per page:', 'items-per-page-align': 'right' }"
                       :loading="loading"
                       :server-items-length="totalItems"
+                      @update:options="updateOptions"
                       class="elevation-1">
           <template v-slot:item.action="{ item }">
             <v-btn @click="viewRequest(item)">View</v-btn>
           </template>
         </v-data-table>
+      </v-card-text>
     </v-card>
   </div>
 </template>
@@ -53,15 +56,15 @@
     data() {
       return {
         headers: [
-          { text: 'Request #', value: 'id', align: 'center' },
-          { text: 'End User', value: 'endUserName', align: 'center' },
-          { text: 'Approval State', value: 'approvalStateStr', align: 'center' },
-          { text: 'Total Budget (RM)', value: 'totalBudget', align: 'center' },
-          { text: 'Created On', value: 'createdOnUTC', align: 'center' },
-          { text: 'Created By', value: 'createdBy', align: 'center' },
-          { text: 'Approved Time', value: 'approvedTime', align: 'center' },
-          { text: 'Requester Team', value: 'createdByTeam', align: 'center' },
-          { text: 'Actions', value: 'action', align: 'center' }
+          { text: 'Request #', value: 'id', align: 'center', sortable: false },
+          { text: 'End User', value: 'endUserName', align: 'center', sortable: false },
+          { text: 'Approval State', value: 'approvalStateStr', align: 'center', sortable: false },
+          { text: 'Total Budget (RM)', value: 'totalBudget', align: 'center', sortable: false },
+          { text: 'Created On', value: 'createdOnUTC', align: 'center', sortable: false },
+          { text: 'Created By', value: 'createdBy', align: 'center', sortable: false },
+          { text: 'Approved Time', value: 'approvedTime', align: 'center', sortable: false },
+          { text: 'Requester Team', value: 'createdByTeam', align: 'center', sortable: false },
+          { text: 'Actions', value: 'action', align: 'center', sortable: false }
         ],
         requests: [],
         options: {
@@ -137,8 +140,18 @@
     },
     mounted() {
       this.modifySelectInputs();
+      this.modifyTextInputs();
     },
     methods: {
+      modifyTextInputs() {
+        const vSelects = this.$el.querySelectorAll('.v-text-field__slot');
+        vSelects.forEach(vSelect => {
+          const inputElement = vSelect.querySelector('input[type="text"]');
+          if (inputElement) {
+            inputElement.removeAttribute('type');
+          }
+        });
+      },
       modifySelectInputs() {
         const vSelects = this.$el.querySelectorAll('.v-select');
         vSelects.forEach(vSelect => {
@@ -151,7 +164,6 @@
       onRouteChange() {
         this.$nextTick(() => {
           this.getRequests();
-          this.applyStyles();
         });
       },
       getRequests() {
@@ -177,7 +189,7 @@
               };
             });
             this.totalItems = response.data.count;
-            this.loading = true;
+            this.loading = false;
           })
           .catch(error => {
             this.loading = false;
@@ -187,6 +199,10 @@
       triggerSearch() {
         this.search = this.searchTerm;
         this.options.page = 1;
+        this.getRequests();
+      },
+      updateOptions(options) {
+        this.options = options;
         this.getRequests();
       },
       redirectToCreateQuotation() {
