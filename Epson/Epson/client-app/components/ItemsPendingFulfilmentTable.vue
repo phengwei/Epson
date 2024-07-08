@@ -64,11 +64,10 @@
         totalItems: 0,
         search: '',
         loading: true,
-        itemsPerPage: 10, 
         RequestProductStatusEnum,
         paginationOptions: {
           page: 1,
-          itemsPerPage: 10, 
+          itemsPerPage: 10, // This will be dynamic based on user selection
           sortBy: [],
           sortDesc: [],
         },
@@ -78,7 +77,7 @@
       query() {
         return {
           page: this.paginationOptions.page,
-          itemsPerPage: this.paginationOptions.itemsPerPage,
+          itemsPerPage: this.paginationOptions.itemsPerPage, // Use selected items per page
           search: this.search,
         };
       },
@@ -103,7 +102,7 @@
         });
       },
       triggerSearch() {
-        this.page = 1; 
+        this.paginationOptions.page = 1; // Reset to the first page on new search
         this.getFulfillerItem();
       },
       viewRequest(request) {
@@ -128,24 +127,20 @@
       },
       updateOptions(options) {
         this.paginationOptions = options;
-        this.page = options.page;
-        this.itemsPerPage = options.itemsPerPage;
-        this.getFulfillerItem(); 
+        this.getFulfillerItem();
       },
       getFulfillerItem() {
         this.loading = true;
         const params = {
           search: this.search,
-          page: this.page,
-          itemsPerPage: this.itemsPerPage,
+          page: this.paginationOptions.page,
+          itemsPerPage: this.paginationOptions.itemsPerPage, 
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`, { params }).then(result => {
           this.itemsPendingFulfilment = [];
-          let totalRequestProducts = 0; 
           result.data.data.items.forEach(item => {
             item.requestProductsModel.forEach(product => {
               if (product.authorizedToFulfill && product.status === this.RequestProductStatusEnum.Pending) {
-                totalRequestProducts++; 
                 const newItem = {
                   ...item,
                   ...product,
@@ -173,7 +168,7 @@
               }
             });
           });
-          this.totalItems = totalRequestProducts;
+          this.totalItems = result.data.data.total;
           this.loading = false;
         });
       },

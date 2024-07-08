@@ -486,7 +486,7 @@ namespace Epson.Controllers.API
 
         [HttpGet("getfulfilledrequestasfulfiller")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin, Director")]
-        public async Task<IActionResult> GetFulfilledRequestAsFulfiller(int page = 1, int itemsPerPage = 10, string search = "")
+        public async Task<IActionResult> GetFulfilledRequestAsFulfiller(int? page = null, int? itemsPerPage = null, string? search = null)
         {
             var response = new GenericResponseModel<List<RequestProductModel>>();
 
@@ -494,23 +494,58 @@ namespace Epson.Controllers.API
             var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString()) || await _userManager.IsInRoleAsync(user, RoleEnum.Director.ToString());
 
             List<RequestProductDTO> requestProducts;
+            List<RequestProductModel> requestModels = new List<RequestProductModel>();
+            int totalItems;
 
-            if (isAdminUser)
+            if (search == null)
             {
-                requestProducts = _requestService.GetRequestProducts(page, itemsPerPage)
-                                    .Where(x => x.HasFulfilled == true)
-                                    .ToList();
+                if (isAdminUser)
+                {
+                    requestProducts = _requestService.GetRequestProducts(out totalItems, rp => rp.HasFulfilled == true, page, itemsPerPage);
+                }
+                else
+                {
+                    requestProducts = _requestService.GetRequestProducts(out totalItems, rp => rp.FulfillerId == user.Id && rp.HasFulfilled == true, page, itemsPerPage);
+                }
+
+                requestModels = await _requestModelFactory.PrepareRequestProductModelAsync(requestProducts);
             }
             else
             {
-                requestProducts = _requestService.GetRequestProducts(page, itemsPerPage)
-                                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true)
-                                    .ToList();
+                if (isAdminUser)
+                {
+                    requestProducts = _requestService.GetRequestProducts(out totalItems, rp => rp.HasFulfilled == true);
+                }
+                else
+                {
+                    requestProducts = _requestService.GetRequestProducts(out totalItems, rp => rp.FulfillerId == user.Id && rp.HasFulfilled == true);
+                }
+
+                var requestProductModels = await _requestModelFactory.PrepareRequestProductModelAsync(requestProducts);
+                var requestQueryable = requestProductModels.AsQueryable();
+
+                if (page.HasValue && itemsPerPage.HasValue )
+                {
+                    requestQueryable = requestQueryable.ToList().Where(x =>
+                        (x.ProjectName != null && x.ProjectName.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
+                        x.RequestId.ToString().Contains(search)).AsQueryable();
+
+                    totalItems = requestQueryable.Count();
+
+                    if (itemsPerPage.Value != -1)
+                    {
+                        requestModels = requestQueryable
+                            .OrderByDescending(rp => rp.CreatedOnUTC)
+                            .Skip((page.Value - 1) * itemsPerPage.Value)
+                            .Take(itemsPerPage.Value).ToList();
+                    }
+                }
             }
 
-            var requestModels = await _requestModelFactory.PrepareRequestProductModelAsync(requestProducts);
 
             response.Data = requestModels;
+            response.Count = totalItems;
+
 
             return Ok(response);
         }
@@ -590,7 +625,7 @@ namespace Epson.Controllers.API
 
         [HttpGet("getpendingfulfilleritem")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin, Director")]
-        public async Task<IActionResult> GetPendingFulfillerItem(string search = null, int page = 1, int itemsPerPage = 10)
+        public async Task<IActionResult> GetPendingFulfillerItem(string search = null, int? page = null, int? itemsPerPage = null)
         {
             var response = new GenericResponseModel<PagedResult<RequestModel>>();
 

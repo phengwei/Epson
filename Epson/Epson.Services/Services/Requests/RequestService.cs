@@ -95,7 +95,71 @@ namespace Epson.Services.Services.Requests
             return requestDTO;
         }
 
+        public async Task<List<RequestDTO>> GetRequestsByIdsAsync(List<int> requestIds)
+        {
+            var requests = await _context.Request
+                .Include(x => x.CompetitorInformations)
+                .Include(x => x.RequestProducts)
+                .Include(x => x.RequestSubmissionDetail)
+                .Include(x => x.ProjectInformation)
+                .ThenInclude(pi => pi.ProjectInformationReasons)
+                .Where(r => requestIds.Contains(r.Id))
+                .ToListAsync();
+
+            var requestDTOs = requests.Select(x => new RequestDTO
+            {
+                Id = x.Id,
+                ApprovedBy = x.ApprovedBy,
+                ApprovedTime = x.ApprovedTime.AddHours(8),
+                AmendQuotationTime = x.AmendQuotationTime,
+                CompetitorInformations = _mapper.Map<List<CompetitorInformationDTO>>(x.CompetitorInformations.ToList()),
+                CreatedById = x.CreatedById,
+                CreatedOnUTC = x.CreatedOnUTC.AddHours(8),
+                UpdatedById = x.UpdatedById,
+                UpdatedOnUTC = x.UpdatedOnUTC,
+                Segment = x.Segment,
+                TotalBudget = x.TotalBudget,
+                ApprovalState = x.ApprovalState,
+                TotalPrice = x.TotalPrice,
+                TimeToResolution = x.TimeToResolution,
+                Comments = x.Comments,
+                TeamId = x.TeamId,
+                RequestProducts = _mapper.Map<List<RequestProductDTO>>(x.RequestProducts.ToList()),
+                RequestSubmissionDetail = _mapper.Map<RequestSubmissionDetailDTO>(x.RequestSubmissionDetail),
+                ProjectInformation = x.ProjectInformation != null ? new ProjectInformationDTO
+                {
+                    Id = x.ProjectInformation.Id,
+                    RequestId = x.Id,
+                    ProjectName = x.ProjectInformation.ProjectName,
+                    ProjectId = x.ProjectInformation.ProjectId,
+                    Industry = x.ProjectInformation.Industry,
+                    Type = x.ProjectInformation.Type,
+                    ClosingDate = x.ProjectInformation.ClosingDate,
+                    DeliveryDate = x.ProjectInformation.DeliveryDate,
+                    CompanyAddress = x.ProjectInformation.CompanyAddress,
+                    ContactPersonName = x.ProjectInformation.ContactPersonName,
+                    TelephoneNo = x.ProjectInformation.TelephoneNo,
+                    Email = x.ProjectInformation.Email,
+                    Requirements = x.ProjectInformation.Requirements,
+                    CustomerApplications = x.ProjectInformation.CustomerApplications,
+                    Budget = x.ProjectInformation.Budget,
+                    StaggeredComments = x.ProjectInformation.StaggeredComments,
+                    StaggeredMonth = x.ProjectInformation.StaggeredMonth,
+                    OtherInformation = x.ProjectInformation.OtherInformation,
+                    ProjectInformationReasons = _mapper.Map<List<ProjectInformationReasonDTO>>(x.ProjectInformation.ProjectInformationReasons.ToList())
+                } : null
+            }).ToList();
+
+            return requestDTOs;
+        }
+
         public List<RequestDTO> GetRequests(string search = null, int? page = null, int? itemsPerPage = null)
+        {
+            int totalItems;
+            return GetRequests(out totalItems, search, page, itemsPerPage);
+        }
+
+        public List<RequestDTO> GetRequests(out int totalItems, string search = null, int? page = null, int? itemsPerPage = null)
         {
             var query = _context.Request
                 .Include(x => x.CompetitorInformations)
@@ -125,6 +189,7 @@ namespace Epson.Services.Services.Requests
             }
 
             var requests = query.ToList();
+            totalItems = requests.Count;
 
             var requestDTOs = requests.Select(x =>
             {
@@ -234,10 +299,32 @@ namespace Epson.Services.Services.Requests
                    (isBackupFulfiller && (!rp.IsCoverplus || !isCoverplusUser));
         }
 
-
-        public List<RequestProductDTO> GetRequestProducts()
+        public List<RequestProductDTO> GetRequestProducts(Func<RequestProduct, bool> filter = null, int? page = null, int? itemsPerPage = null)
         {
-            var requestProducts = _RequestProductRepository.GetAll();
+            int totalItems;
+            return GetRequestProducts(out totalItems, rp => rp.HasFulfilled == true, page, itemsPerPage);
+        }
+
+        public List<RequestProductDTO> GetRequestProducts(out int totalCount, Func<RequestProduct, bool> filter = null, int? page = null, int? itemsPerPage = null)
+        {
+            var query = _RequestProductRepository.GetAll().OrderByDescending(x => x.CreatedOnUTC).AsQueryable();
+
+            if (filter != null)
+            {
+                query = query.Where(filter).AsQueryable();
+            }
+
+            totalCount = query.Count();
+
+            if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value != -1)
+            {
+                query = query
+                    .OrderByDescending(rp => rp.CreatedOnUTC)
+                    .Skip((page.Value - 1) * itemsPerPage.Value)
+                    .Take(itemsPerPage.Value);
+            }
+
+            var requestProducts = query.ToList();
 
             var requestProductDTOs = requestProducts.Select(x => new RequestProductDTO
             {
@@ -261,6 +348,7 @@ namespace Epson.Services.Services.Requests
 
             return requestProductDTOs;
         }
+
 
         public bool InsertRequest(RequestDTO request,
             List<RequestProductDTO> requestProducts,

@@ -12,7 +12,7 @@
       <v-toolbar flat>
         <v-toolbar-title class="blue-text big-bold">FULFILLED REQUEST</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-text-field v-model="search"
+        <v-text-field v-model="searchTerm"
                       append-icon="mdi-magnify"
                       placeholder="Search by end user or request #"
                       solo
@@ -63,6 +63,7 @@
           { text: 'Request Status', value: 'overallRequestStatusStr' },
           { text: 'Actions', value: 'action', sortable: false }
         ],
+        searchTerm: '',
         search: '',
         requests: [],
         totalItems: 0,
@@ -153,7 +154,8 @@
       },
 
       triggerSearch() {
-        this.page = 1;
+        this.search = this.searchTerm;
+        this.paginationOptions.page = 1;
         this.getFulfilledRequestAsFulfiller();
       },
       updateOptions(options) {
@@ -166,13 +168,13 @@
         this.loading = true;
         const params = {
           search: this.search,
-          page: this.page,
-          itemsPerPage: this.itemsPerPage,
+          page: this.paginationOptions.page,
+          itemsPerPage: this.paginationOptions.itemsPerPage,
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getfulfilledrequestasfulfiller`, { params })
           .then(response => {
             this.requests = response.data.data;
-            this.totalItems = response.data.totalItems; 
+            this.totalItems = response.data.count;
             this.loading = false;
           })
           .catch(error => {
