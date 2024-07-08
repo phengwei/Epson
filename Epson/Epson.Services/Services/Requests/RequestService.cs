@@ -95,15 +95,36 @@ namespace Epson.Services.Services.Requests
             return requestDTO;
         }
 
-        public List<RequestDTO> GetRequests()
+        public List<RequestDTO> GetRequests(string search = null, int? page = null, int? itemsPerPage = null)
         {
-            var requests = _context.Request
+            var query = _context.Request
                 .Include(x => x.CompetitorInformations)
                 .Include(x => x.RequestProducts)
                 .Include(x => x.RequestSubmissionDetail)
                 .Include(x => x.ProjectInformation)
                 .ThenInclude(pi => pi.ProjectInformationReasons)
-                .ToList();
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.ToList().Where(x =>
+                    (x.ProjectInformation != null && x.ProjectInformation.ProjectName.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
+                    x.Id.ToString().Contains(search)).AsQueryable();
+            }
+
+            if (page.HasValue && itemsPerPage.HasValue)
+            {
+                query = query
+                    .OrderByDescending(x => x.CreatedOnUTC)
+                    .Skip((page.Value - 1) * itemsPerPage.Value)
+                    .Take(itemsPerPage.Value);
+            }
+            else
+            {
+                query = query.OrderByDescending(x => x.CreatedOnUTC);
+            }
+
+            var requests = query.ToList();
 
             var requestDTOs = requests.Select(x =>
             {
@@ -150,29 +171,44 @@ namespace Epson.Services.Services.Requests
                         ProjectInformationReasons = _mapper.Map<List<ProjectInformationReasonDTO>>(x.ProjectInformation.ProjectInformationReasons.ToList())
                     } : null
                 };
-            }).OrderByDescending(x => x.CreatedOnUTC).ToList();
+            }).ToList();
 
             return requestDTOs;
         }
 
 
-
-        public List<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
+        public PagedResult<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser, string search = null, int? page = null, int? itemsPerPage = null)
         {
-            var requests = GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction).ToList();
+            var requests = GetRequests(search).Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction).ToList();
 
-            foreach (var request in requests)
+            var requestProducts = requests.SelectMany(r => r.RequestProducts).ToList();
+
+            var totalItems = requestProducts.Count();
+
+            if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value != -1)
             {
-                foreach (var rp in request.RequestProducts)
-                {
-                    rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isCoverplusUser, isProductUser, isAdminUser);
-                }
+                requestProducts = requestProducts
+                    .Skip((page.Value - 1) * itemsPerPage.Value)
+                    .Take(itemsPerPage.Value)
+                    .ToList();
             }
 
-            return requests
-                .Where(x => x.RequestProducts.Any(rp => rp.AuthorizedToFulfill))
+            foreach (var rp in requestProducts)
+            {
+                rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isCoverplusUser, isProductUser, isAdminUser);
+            }
+
+            var authorizedRequests = requests
+                .Where(r => r.RequestProducts.Any(rp => requestProducts.Contains(rp) && rp.AuthorizedToFulfill))
                 .ToList();
+
+            return new PagedResult<RequestDTO>
+            {
+                Items = authorizedRequests,
+                Total = totalItems
+            };
         }
+
 
 
         private bool DetermineAuthorization(RequestProductDTO rp, ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)

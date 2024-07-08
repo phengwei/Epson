@@ -4,14 +4,15 @@ using Epson.Core.Domain.Users;
 using Epson.Services.DTO.SLA;
 using Epson.Core.Domain.Products;
 using Epson.Services.DTO.Report;
+using Epson.Data;
 
 namespace Epson.Services.Interface.Requests
 {
     public interface IRequestService
     {
         public RequestDTO GetRequestById(int id);
-        public List<RequestDTO> GetRequests();
-        public List<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser);
+        public List<RequestDTO> GetRequests(string search = null, int? page = null, int? itemsPerPage = null);
+        PagedResult<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser, string search = null, int? page = null, int? itemsPerPage = null);
         public List<RequestProductDTO> GetRequestProducts();
         public bool InsertRequest(RequestDTO request, List<RequestProductDTO> requestProducts, List<CompetitorInformationDTO> competitorInformations, RequestSubmissionDetailDTO requestSubmissionDetail, ProjectInformationDTO projectInformationDTO);
         public bool UpdateRequest(RequestDTO request, List<RequestProductDTO> requestProducts, List<CompetitorInformationDTO> competitorInformations, RequestSubmissionDetailDTO requestSubmissionDetail, ProjectInformationDTO projectInformationDTO);

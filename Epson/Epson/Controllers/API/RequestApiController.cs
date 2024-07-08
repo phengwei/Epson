@@ -589,26 +589,30 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getpendingfulfilleritem")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin,Director")]
-        public async Task<IActionResult> GetPendingFulfillerItem()
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin, Director")]
+        public async Task<IActionResult> GetPendingFulfillerItem(string search = null, int page = 1, int itemsPerPage = 10)
         {
-            var response = new GenericResponseModel<List<RequestModel>>();
+            var response = new GenericResponseModel<PagedResult<RequestModel>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
-
             var roles = await _userManager.GetRolesAsync(user);
             var isCoverplusUser = roles.Contains(RoleEnum.Coverplus.ToString());
             var isProductUser = roles.Contains(RoleEnum.Product.ToString());
             var isAdminUser = roles.Contains(RoleEnum.Admin.ToString()) || roles.Contains(RoleEnum.Director.ToString());
 
-            var requests = _requestService.GetUnfulfilledRequests(user, isCoverplusUser, isProductUser, isAdminUser);
+            var requests = _requestService.GetUnfulfilledRequests(user, isCoverplusUser, isProductUser, isAdminUser, search, page, itemsPerPage);
 
-            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
+            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests.Items);
 
-            response.Data = requestModels;
+            response.Data = new PagedResult<RequestModel>
+            {
+                Items = requestModels,
+                Total = requests.Total
+            };
 
             return Ok(response);
         }
+
 
 
         [HttpGet("getpendingsalessectionheaditem")]

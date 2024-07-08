@@ -2,19 +2,26 @@
   <v-data-table :headers="headers"
                 :items="filteredItemsPendingFulfilment"
                 :loading="loading"
+                :server-items-length="totalItems"
+                :items-per-page="paginationOptions.itemsPerPage"
+                :options.sync="paginationOptions"
+                :footer-props="{ 'items-per-page-options': [5, 10, 20, 30, 50, { text: 'All', value: -1 }] }"
+                @update:options="updateOptions"
                 class="elevation-1">
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title class="blue-text big-bold">NEW REQUEST</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-text-field v-model="search"
-                      prepend-inner-icon="mdi-magnify"
+                      append-icon="mdi-magnify"
                       placeholder="Search by end user or request #"
                       solo
                       hide-details
                       flat
                       dense
-                      class="search-bar"></v-text-field>
+                      class="search-bar"
+                      @keyup.enter="triggerSearch"
+                      @click:append="triggerSearch"></v-text-field>
       </v-toolbar>
     </template>
 
@@ -54,41 +61,57 @@
           { text: 'Fulfill Request', value: 'actions', sortable: false },
         ],
         itemsPendingFulfilment: [],
+        totalItems: 0,
         search: '',
         loading: true,
-        RequestProductStatusEnum
-      }
+        itemsPerPage: 10, // Set default items per page to 10
+        page: 1,
+        RequestProductStatusEnum,
+        paginationOptions: {
+          page: 1,
+          itemsPerPage: 10, // Set default rows per page to 10
+          sortBy: [],
+          sortDesc: [],
+        },
+      };
     },
     computed: {
-      filteredItemsPendingFulfilment() {
-        if (this.search.trim() === '') {
-          return this.itemsPendingFulfilment;
-        }
-        return this.itemsPendingFulfilment.filter(request => {
-          const requestIdMatch = String(request.requestId).toLowerCase().includes(this.search.toLowerCase());
-          const projectNameMatch = request.projectName && request.projectName.toLowerCase().includes(this.search.toLowerCase());
-          return requestIdMatch || projectNameMatch;
-        });
+      query() {
+        return {
+          page: this.paginationOptions.page,
+          itemsPerPage: this.paginationOptions.itemsPerPage,
+          search: this.search,
+        };
       },
-    },
-    watch: {
-      options: {
-        handler() {
-          this.getFulfillerItem()
-        },
-        deep: true,
-      }
+      filteredItemsPendingFulfilment() {
+        return this.itemsPendingFulfilment;
+      },
     },
     created() {
       this.getFulfillerItem();
     },
+    mounted() {
+      this.modifySelectInputs();
+    },
     methods: {
+      modifySelectInputs() {
+        const vSelects = this.$el.querySelectorAll('.v-text-field__slot');
+        vSelects.forEach(vSelect => {
+          const inputElement = vSelect.querySelector('input[type="text"]');
+          if (inputElement) {
+            inputElement.removeAttribute('type');
+          }
+        });
+      },
+      triggerSearch() {
+        this.page = 1; // Reset to the first page on new search
+        this.getFulfillerItem();
+      },
       viewRequest(request) {
-        // Filter out the request products based on the selected product's ID and price
         const selectedProduct = request;
         const filteredRequest = {
           ...request,
-          requestProductsModel: [selectedProduct]
+          requestProductsModel: [selectedProduct],
         };
 
         let queryParameters = { view: true, request: JSON.stringify(filteredRequest) };
@@ -101,16 +124,29 @@
 
         this.$router.push({
           path: '/createquotation',
-          query: queryParameters
+          query: queryParameters,
         });
       },
+      updateOptions(options) {
+        this.paginationOptions = options;
+        this.page = options.page;
+        this.itemsPerPage = options.itemsPerPage;
+        this.getFulfillerItem(); // Trigger API call on pagination option change
+      },
       getFulfillerItem() {
-        this.loading = true
-        this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`).then(result => {
+        this.loading = true;
+        const params = {
+          search: this.search,
+          page: this.page,
+          itemsPerPage: this.itemsPerPage,
+        };
+        this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`, { params }).then(result => {
           this.itemsPendingFulfilment = [];
-          result.data.data.forEach(item => {
+          let totalRequestProducts = 0; // Initialize total request products counter
+          result.data.data.items.forEach(item => {
             item.requestProductsModel.forEach(product => {
-              if (product.authorizedToFulfill && product.status === RequestProductStatusEnum.Pending) {
+              if (product.authorizedToFulfill && product.status === this.RequestProductStatusEnum.Pending) {
+                totalRequestProducts++; // Increment counter for each request product
                 const newItem = {
                   ...item,
                   ...product,
@@ -130,19 +166,20 @@
                   const c = {
                     model: comp.model,
                     brand: comp.brand,
-                    price: comp.price
-                  }
+                    price: comp.price,
+                  };
                   newItem.competitors.push(c);
                 });
                 this.itemsPendingFulfilment.push(newItem);
               }
             });
           });
+          this.totalItems = totalRequestProducts; // Set total items to the total number of request products
           this.loading = false;
-        })
+        });
       },
     },
-  }
+  };
 </script>
 
 <style scoped>
