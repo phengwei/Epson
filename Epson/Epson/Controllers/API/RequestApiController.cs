@@ -196,6 +196,7 @@ namespace Epson.Controllers.API
                 CreatedOnUTC = DateTime.UtcNow,
                 UpdatedOnUTC = DateTime.UtcNow,
                 CreatedById = user.Id,
+                CreatedByStr = user.Name,
                 UpdatedById = user.Id,
                 Segment = model.Segment,
                 ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction,
@@ -633,7 +634,7 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin, Director")]
         public async Task<IActionResult> GetPendingFulfillerItem(string search = null, int? page = null, int? itemsPerPage = null)
         {
-            var response = new GenericResponseModel<PagedResult<RequestModel>>();
+            var response = new GenericResponseModel<PagedResult<RequestDTO>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
             var roles = await _userManager.GetRolesAsync(user);
@@ -643,11 +644,11 @@ namespace Epson.Controllers.API
 
             var requests = _requestService.GetUnfulfilledRequests(user, isCoverplusUser, isProductUser, isAdminUser, search, page, itemsPerPage);
 
-            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests.Items);
+            //var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests.Items);
 
-            response.Data = new PagedResult<RequestModel>
+            response.Data = new PagedResult<RequestDTO>
             {
-                Items = requestModels,
+                Items = requests.Items,
                 Total = requests.Total
             };
 

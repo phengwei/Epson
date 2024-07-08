@@ -93,16 +93,21 @@ export default {
       ApprovalStateEnum,
       editedItem: {},
       submitting: false,
+      loading: false
     };
   },
   async created() {
+    this.loading = true;
     this.submissionDetail.createdOnUTC = this.getToday();
     this.submissionDetail.preparedBy = this.loggedInUser.userName;
     await this.fetchCategories();
     if (this.$route.query.view || this.$route.query.editable) {
       const request = JSON.parse(this.$route.query.request);
-      this.populateForm(request);
+      console.log("id", request.requestId);
+      await this.fetchRequestById(request.requestId);
+      this.populateForm(this.unpopulatedRequests);
     }
+    this.loading = false;
   },
   computed: {
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
@@ -526,7 +531,17 @@ export default {
         });
       });
     },
-
+    async fetchRequestById(id) {
+      try {
+        const response = await this.$axios.get(`${this.$config.restUrl}/api/request/getrequestbyid`, {
+          params: { id }
+        });
+        this.unpopulatedRequests = response.data.data;
+        console.log("response", response);
+      } catch (error) {
+        console.error(error);
+      }
+    },
     async fetchCategories() {
       try {
         const response = await this.$axios.get(`${this.$config.restUrl}/api/category/getvalidcategories`);

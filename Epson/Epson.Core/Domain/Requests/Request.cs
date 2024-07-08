@@ -11,6 +11,7 @@ namespace Epson.Core.Domain.Requests
     {
         public DateTime ApprovedTime { get; set; }
         public string? ApprovedBy { get; set; }
+        public string CreatedByStr { get; set; }
         public DateTime? AmendQuotationTime { get; set; }
         public string Segment { get; set; }
         public decimal TotalBudget { get; set; }

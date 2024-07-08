@@ -1,13 +1,16 @@
 <template>
   <div class="create-quotation-container">
-    <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
+    <v-overlay :value="loading" class="loading-overlay">
+      <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
+
+    <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;" v-if="!loading">
       <v-toolbar flat>
         <v-toolbar-title><h1 class="blue-text big-bold">PRICING REQUEST</h1></v-toolbar-title>
       </v-toolbar>
       <v-card-text>
         <!-- Fulfiller Dialog -->
-        <ProductFulfillmentDialog :editedItem="editedItem"
-                                  :dialogProductFulfillment.sync="dialogProductFulfillment" />
+        <ProductFulfillmentDialog :editedItem="editedItem" :dialogProductFulfillment.sync="dialogProductFulfillment" />
 
         <!-- Product Dialog -->
         <ProductDialog ref="productDialog" :dialogProduct.sync="dialogProduct"
@@ -25,10 +28,6 @@
             </div>
             <table class="mb-5 mt-2">
               <thead>
-                <!--<tr class="header-row">
-                  <th colspan="3"><h2>PROPOSED MODEL</h2></th>
-                  <th colspan="11"><h2>PRICE EXPECTATION (RM)</h2></th>
-                </tr>-->
                 <tr>
                   <th>Category</th>
                   <th>Product</th>
@@ -92,10 +91,6 @@
             </div>
             <table class="mb-5 mt-2">
               <thead>
-                <!--<tr class="header-row">
-                  <th colspan="4"><h2>PROPOSED COVERPLUS</h2></th>
-                  <th colspan="8"><h2>PRICE EXPECTATION (RM)</h2></th>
-                </tr>-->
                 <tr>
                   <th>Category</th>
                   <th>Product</th>
@@ -163,9 +158,6 @@
             </div>
             <table class="mb-5 mt-2">
               <thead>
-                <!--<tr class="header-row">
-                  <th colspan="6"><h2>COMPETITOR'S INFORMATION</h2></th>
-                </tr>-->
                 <tr>
                   <th>Model</th>
                   <th>Brand</th>
@@ -198,11 +190,6 @@
               <span class="blue-text small-bold">SUBMISSION DETAILS</span>
             </div>
             <table class="mb-5 mt-2">
-              <!--<thead>
-                <tr class="header-row">
-                  <th colspan="4"><h2>SUBMISSION DETAILS</h2></th>
-                </tr>
-              </thead>-->
               <tbody>
                 <tr>
                   <td class="td-header">Prepared By (EMSB)</td>
@@ -282,11 +269,6 @@
               <span class="blue-text small-bold">END USER / PROJECT INFORMATION</span>
             </div>
             <table class="mb-5 mt-2">
-              <!--<thead>
-                <tr class="header-row">
-                  <th colspan="6"><h2>END USER / PROJECT INFORMATION</h2></th>
-                </tr>
-              </thead>-->
               <tbody>
                 <tr>
                   <td class="td-header">Company / Project Name</td>
@@ -387,29 +369,26 @@
                     </div>
                   </td>
                 </tr>
-<td class="td-header">Key Customer Requirements <span class="required-asterisk">*</span></td>
-              <td><input type="text" v-model="projectInformation.requirements" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
-              </tr>
-              <tr>
-                <td class="td-header">Customer Applications</td>
-                <td><input type="text" v-model="projectInformation.customerApplications" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
-              </tr>
-              <tr>
-                <td class="td-header">Customer's Budget for this purchase <span class="required-asterisk">*</span></td>
-                <td><input type="number" min="1" v-model="projectInformation.budget" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
-              </tr>
-              <tr>
-                <td class="td-header">Other Information</td>
-                <td><input type="text" v-model="projectInformation.otherInformation" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
-              </tr>
+                <tr>
+                  <td class="td-header">Key Customer Requirements <span class="required-asterisk">*</span></td>
+                  <td><input type="text" v-model="projectInformation.requirements" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td class="td-header">Customer Applications</td>
+                  <td><input type="text" v-model="projectInformation.customerApplications" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td class="td-header">Customer's Budget for this purchase <span class="required-asterisk">*</span></td>
+                  <td><input type="number" min="1" v-model="projectInformation.budget" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
+                <tr>
+                  <td class="td-header">Other Information</td>
+                  <td><input type="text" v-model="projectInformation.otherInformation" class="border-input" :class="{'readonly-field': isViewMode}" :readonly="isViewMode"></td>
+                </tr>
               </tbody>
             </table>
           </v-card-text>
         </v-card>
-        <!--<div class="form-group" v-if="comments != ''">
-      <label>Comments</label>
-      <textarea v-model="comments" class="border-input"></textarea>
-    </div>-->
         <button type="submit" @click="submitQuotation" v-if="isMode('create')">Submit</button>
         <button type="submit" @click="saveDraft" v-if="isMode('create')">Save Draft</button>
         <button type="submit" @click="saveDraft" v-if="loggedInUser.roles.includes('Sales') && !isMode('create')">Copy Form</button>
@@ -432,7 +411,6 @@
         </button>
       </v-card-text>
     </v-card>
-
   </div>
 </template>
 
@@ -440,7 +418,7 @@
   import requestQuotation from '~/script/requestQuotation.js';
   export default {
     ...requestQuotation,
-    name: "request-quotation",
+    name: "request-quotation"
   }
 </script>
 
@@ -607,10 +585,23 @@
       font-size: 1.5rem;
     }
   }
+
   .filter-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
   }
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
 </style>

@@ -7,7 +7,8 @@
                 :options.sync="paginationOptions"
                 :footer-props="{ 'items-per-page-options': [5, 10, 20, 30, 50, { text: 'All', value: -1 }] }"
                 @update:options="updateOptions"
-                class="elevation-1">
+                class="elevation-1"
+                disable-sort>
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title class="blue-text big-bold">NEW REQUEST</v-toolbar-title>
@@ -30,7 +31,7 @@
         <td>{{ item.requestId }}</td>
         <td>{{ item.createdOnUTC }}</td>
         <td>{{ item.projectName }}</td>
-        <td>{{ item.createdBy }}</td>
+        <td>{{ item.createdByStr }}</td>
         <td>{{ item.productName }}</td>
         <td>{{ item.endUserPrice }}</td>
         <td>{{ item.quantity }}</td>
@@ -54,11 +55,11 @@
           { text: 'Request #', value: 'requestId' },
           { text: 'Requested On', value: 'createdOnUTC' },
           { text: 'End User', align: 'start', value: 'projectName' },
-          { text: 'Requested By', value: 'createdBy' },
+          { text: 'Requested By', value: 'createdByStr' },
           { text: 'Product', value: 'productName' },
           { text: 'Budget', value: 'endUserPrice' },
           { text: 'Quantity', value: 'quantity' },
-          { text: 'Fulfill Request', value: 'actions', sortable: false },
+          { text: 'Fulfill Request', value: 'actions', sortable: false }
         ],
         itemsPendingFulfilment: [],
         totalItems: 0,
@@ -67,23 +68,23 @@
         RequestProductStatusEnum,
         paginationOptions: {
           page: 1,
-          itemsPerPage: 10, 
+          itemsPerPage: 10,
           sortBy: [],
-          sortDesc: [],
-        },
+          sortDesc: []
+        }
       };
     },
     computed: {
       query() {
         return {
           page: this.paginationOptions.page,
-          itemsPerPage: this.paginationOptions.itemsPerPage, 
-          search: this.search,
+          itemsPerPage: this.paginationOptions.itemsPerPage,
+          search: this.search
         };
       },
       filteredItemsPendingFulfilment() {
         return this.itemsPendingFulfilment;
-      },
+      }
     },
     created() {
       this.getFulfillerItem();
@@ -102,14 +103,15 @@
         });
       },
       triggerSearch() {
-        this.paginationOptions.page = 1; 
+        this.paginationOptions.page = 1;
         this.getFulfillerItem();
       },
       viewRequest(request) {
+        console.log("awd", request);
         const selectedProduct = request;
         const filteredRequest = {
           ...request,
-          requestProductsModel: [selectedProduct],
+          requestProductsModel: [selectedProduct]
         };
 
         let queryParameters = { view: true, request: JSON.stringify(filteredRequest) };
@@ -122,7 +124,7 @@
 
         this.$router.push({
           path: '/createquotation',
-          query: queryParameters,
+          query: queryParameters
         });
       },
       updateOptions(options) {
@@ -134,17 +136,18 @@
         const params = {
           search: this.search,
           page: this.paginationOptions.page,
-          itemsPerPage: this.paginationOptions.itemsPerPage, 
+          itemsPerPage: this.paginationOptions.itemsPerPage
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`, { params }).then(result => {
           this.itemsPendingFulfilment = [];
+          console.log("awd", result);
           result.data.data.items.forEach(item => {
-            item.requestProductsModel.forEach(product => {
+            item.requestProducts.forEach(product => {
               if (product.authorizedToFulfill && product.status === this.RequestProductStatusEnum.Pending) {
                 const newItem = {
                   ...item,
                   ...product,
-                  projectName: item.projectInformationModel && item.projectInformationModel.projectName ? item.projectInformationModel.projectName : 'N/A',
+                  projectName: item.projectInformation && item.projectInformation.projectName ? item.projectInformation.projectName : 'N/A',
                   createdOnUTC: moment(product.createdOnUTC).format('DD MMM YY HH:mm'),
                   productName: product.productName,
                   distyPrice: product.distyPrice,
@@ -153,14 +156,14 @@
                   quantity: product.quantity,
                   authorizedToFulfill: product.authorizedToFulfill,
                   competitors: [],
-                  status: product.status,
+                  status: product.status
                 };
 
-                item.competitorInformationModel.forEach(comp => {
+                item.competitorInformations.forEach(comp => {
                   const c = {
                     model: comp.model,
                     brand: comp.brand,
-                    price: comp.price,
+                    price: comp.price
                   };
                   newItem.competitors.push(c);
                 });
@@ -171,11 +174,139 @@
           this.totalItems = result.data.data.total;
           this.loading = false;
         });
-      },
-    },
+      }
+    }
   };
 </script>
 
 <style scoped>
   @import '~@/../wwwroot/css/general-table.css';
+
+  v-btn {
+    background-color: #003399 !important;
+  }
+
+  .filter-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .month-selector {
+    width: 20%;
+    min-width: 150px;
+  }
+
+  .create-quotation {
+    margin-left: 16px;
+  }
+
+  .vh-100 {
+    height: 100vh;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: black;
+  }
+
+  .border-input {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 0.5rem;
+    width: 100%;
+  }
+
+  .role-checkbox {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+    .role-checkbox input[type="checkbox"] {
+      margin-right: 0.5rem;
+    }
+
+      .role-checkbox input[type="checkbox"].styled-checkbox {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 1px solid #003399;
+        border-radius: 4px;
+        position: relative;
+        cursor: pointer;
+      }
+
+        .role-checkbox input[type="checkbox"].styled-checkbox:checked::before {
+          font-size: 12px;
+          color: #003399;
+          position: absolute;
+          top: 1px;
+          left: 2px;
+        }
+
+  .search-bar {
+    width: 150px;
+    border-radius: 20px;
+    padding: 5px 10px;
+    border-width: medium;
+  }
+
+    .search-bar .v-input__control {
+      background-color: #003399;
+    }
+
+  .theme--light.v-btn.v-btn--has-bg {
+    background-color: #003399 !important;
+    color: white !important;
+  }
+
+  .search-bar .v-field__append-inner,
+  .search-bar .v-field__prepend-inner {
+    margin-top: 0;
+  }
+
+  .search-bar .v-input__control {
+    border: none;
+  }
+
+  .blue-button {
+    background-color: #003399 !important;
+    color: white !important;
+  }
+
+  .blue-text {
+    color: #003399 !important;
+  }
+
+  .blue-text--active {
+    color: #003399 !important;
+  }
+
+  .big-bold {
+    font-size: 24px;
+    font-weight: bold;
+  }
+
+  .small-bold {
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  .card-round {
+    border-radius: 20px !important;
+  }
+
+  .table-padding {
+    padding: 20px;
+  }
 </style>

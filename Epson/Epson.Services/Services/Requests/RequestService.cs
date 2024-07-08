@@ -83,18 +83,67 @@ namespace Epson.Services.Services.Requests
         public const string Entity = "Request";
         public RequestDTO GetRequestById(int id)
         {
-            if (id == 0 || id == null)
+            if (id == 0)
                 return new RequestDTO();
 
-            var requestDTO = _mapper.Map<RequestDTO>(_RequestRepository.GetById(id));
+            var request = _context.Request
+                .Include(x => x.CompetitorInformations)
+                .Include(x => x.RequestProducts)
+                .Include(x => x.RequestSubmissionDetail)
+                .Include(x => x.ProjectInformation)
+                .ThenInclude(pi => pi.ProjectInformationReasons)
+                .FirstOrDefault(r => r.Id == id);
 
-            requestDTO.RequestProducts = _mapper.Map<List<RequestProductDTO>>(_RequestProductRepository.GetAll().Where(x => x.RequestId == id).ToList());
-            requestDTO.CompetitorInformations = _mapper.Map<List<CompetitorInformationDTO>>(_CompetitorInformationRepository.GetAll().Where(x => x.RequestId == id).ToList());
-            requestDTO.RequestSubmissionDetail = _mapper.Map<RequestSubmissionDetailDTO>(_RequestSubmissionDetailRepository.GetAll().Where(x => x.RequestId == id).FirstOrDefault());
-            requestDTO.ProjectInformation = _mapper.Map<List<ProjectInformationDTO>>(_ProjectInformationRepository.GetAll().Where(x => x.RequestId == id)).FirstOrDefault();
+            if (request == null)
+                return new RequestDTO();
+
+            var requestDTO = new RequestDTO
+            {
+                Id = request.Id,
+                ApprovedBy = request.ApprovedBy,
+                ApprovedTime = request.ApprovedTime.AddHours(8),
+                AmendQuotationTime = request.AmendQuotationTime,
+                CompetitorInformations = _mapper.Map<List<CompetitorInformationDTO>>(request.CompetitorInformations.ToList()),
+                CreatedById = request.CreatedById,
+                CreatedOnUTC = request.CreatedOnUTC.AddHours(8),
+                UpdatedById = request.UpdatedById,
+                UpdatedOnUTC = request.UpdatedOnUTC,
+                Segment = request.Segment,
+                TotalBudget = request.TotalBudget,
+                ApprovalState = request.ApprovalState,
+                TotalPrice = request.TotalPrice,
+                TimeToResolution = request.TimeToResolution,
+                Comments = request.Comments,
+                TeamId = request.TeamId,
+                RequestProducts = _mapper.Map<List<RequestProductDTO>>(request.RequestProducts.ToList()),
+                RequestSubmissionDetail = _mapper.Map<RequestSubmissionDetailDTO>(request.RequestSubmissionDetail),
+                ProjectInformation = request.ProjectInformation != null ? new ProjectInformationDTO
+                {
+                    Id = request.ProjectInformation.Id,
+                    RequestId = request.Id,
+                    ProjectName = request.ProjectInformation.ProjectName,
+                    ProjectId = request.ProjectInformation.ProjectId,
+                    Industry = request.ProjectInformation.Industry,
+                    Type = request.ProjectInformation.Type,
+                    ClosingDate = request.ProjectInformation.ClosingDate,
+                    DeliveryDate = request.ProjectInformation.DeliveryDate,
+                    CompanyAddress = request.ProjectInformation.CompanyAddress,
+                    ContactPersonName = request.ProjectInformation.ContactPersonName,
+                    TelephoneNo = request.ProjectInformation.TelephoneNo,
+                    Email = request.ProjectInformation.Email,
+                    Requirements = request.ProjectInformation.Requirements,
+                    CustomerApplications = request.ProjectInformation.CustomerApplications,
+                    Budget = request.ProjectInformation.Budget,
+                    StaggeredComments = request.ProjectInformation.StaggeredComments,
+                    StaggeredMonth = request.ProjectInformation.StaggeredMonth,
+                    OtherInformation = request.ProjectInformation.OtherInformation,
+                    ProjectInformationReasons = _mapper.Map<List<ProjectInformationReasonDTO>>(request.ProjectInformation.ProjectInformationReasons.ToList())
+                } : null
+            };
 
             return requestDTO;
         }
+
 
         public async Task<List<RequestDTO>> GetRequestsByIdsAsync(List<int> requestIds)
         {
@@ -210,6 +259,7 @@ namespace Epson.Services.Services.Requests
                     AmendQuotationTime = x.AmendQuotationTime,
                     CompetitorInformations = _mapper.Map<List<CompetitorInformationDTO>>(x.CompetitorInformations.ToList()),
                     CreatedById = x.CreatedById,
+                    CreatedByStr = x.CreatedByStr,
                     CreatedOnUTC = x.CreatedOnUTC.AddHours(8),
                     UpdatedById = x.UpdatedById,
                     UpdatedOnUTC = x.UpdatedOnUTC,
@@ -254,27 +304,27 @@ namespace Epson.Services.Services.Requests
         public PagedResult<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser, string search = null, int? page = null, int? itemsPerPage = null)
         {
             var requests = GetRequests(search).Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction).ToList();
-
             var requestProducts = requests.SelectMany(r => r.RequestProducts).ToList();
-
-            var totalItems = requestProducts.Count();
-
-            if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value != -1)
-            {
-                requestProducts = requestProducts
-                    .Skip((page.Value - 1) * itemsPerPage.Value)
-                    .Take(itemsPerPage.Value)
-                    .ToList();
-            }
 
             foreach (var rp in requestProducts)
             {
                 rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isCoverplusUser, isProductUser, isAdminUser);
             }
 
+            var authorizedRequestProducts = requestProducts.Where(rp => rp.HasFulfilled == false).ToList();
             var authorizedRequests = requests
-                .Where(r => r.RequestProducts.Any(rp => requestProducts.Contains(rp) && rp.AuthorizedToFulfill))
+                .Where(r => r.RequestProducts.Any(rp => authorizedRequestProducts.Contains(rp)))
                 .ToList();
+
+            var totalItems = authorizedRequestProducts.Count;
+
+            if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value != -1)
+            {
+                authorizedRequests = authorizedRequests
+                    .Skip((page.Value - 1) * itemsPerPage.Value)
+                    .Take(itemsPerPage.Value)
+                    .ToList();
+            }
 
             return new PagedResult<RequestDTO>
             {
@@ -388,7 +438,9 @@ namespace Epson.Services.Services.Requests
                 {
                     var product = _productService.GetProductById(requestProduct.ProductId);
                     requestProduct.FulfillerId = product.CreatedById;
+
                     requestProduct.CreatedOnUTC = request.CreatedOnUTC;
+                    requestProduct.ProductName = product.Name;
                     requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
                     requestProduct.RequestId = request.Id;
                     requestProduct.Status = (int)RequestProductStatusEnum.Pending;
