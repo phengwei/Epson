@@ -12,8 +12,9 @@ namespace Epson.Services.Interface.Requests
     {
         public RequestDTO GetRequestById(int id);
         public List<RequestDTO> GetRequests(string search = null, int? page = null, int? itemsPerPage = null);
+        Task<List<RequestDTO>> GetRequestsByIdsAsync(List<int> requestIds);
         PagedResult<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser, string search = null, int? page = null, int? itemsPerPage = null);
-        public List<RequestProductDTO> GetRequestProducts();
+        List<RequestProductDTO> GetRequestProducts(int? page = null, int? itemsPerPage = null);
         public bool InsertRequest(RequestDTO request, List<RequestProductDTO> requestProducts, List<CompetitorInformationDTO> competitorInformations, RequestSubmissionDetailDTO requestSubmissionDetail, ProjectInformationDTO projectInformationDTO);
         public bool UpdateRequest(RequestDTO request, List<RequestProductDTO> requestProducts, List<CompetitorInformationDTO> competitorInformations, RequestSubmissionDetailDTO requestSubmissionDetail, ProjectInformationDTO projectInformationDTO);
         public bool AcceptDeal(ApplicationUser user, Request request, string comments);

@@ -64,12 +64,11 @@
         totalItems: 0,
         search: '',
         loading: true,
-        itemsPerPage: 10, // Set default items per page to 10
-        page: 1,
+        itemsPerPage: 10, 
         RequestProductStatusEnum,
         paginationOptions: {
           page: 1,
-          itemsPerPage: 10, // Set default rows per page to 10
+          itemsPerPage: 10, 
           sortBy: [],
           sortDesc: [],
         },
@@ -104,7 +103,7 @@
         });
       },
       triggerSearch() {
-        this.page = 1; // Reset to the first page on new search
+        this.page = 1; 
         this.getFulfillerItem();
       },
       viewRequest(request) {
@@ -131,7 +130,7 @@
         this.paginationOptions = options;
         this.page = options.page;
         this.itemsPerPage = options.itemsPerPage;
-        this.getFulfillerItem(); // Trigger API call on pagination option change
+        this.getFulfillerItem(); 
       },
       getFulfillerItem() {
         this.loading = true;
@@ -142,11 +141,11 @@
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`, { params }).then(result => {
           this.itemsPendingFulfilment = [];
-          let totalRequestProducts = 0; // Initialize total request products counter
+          let totalRequestProducts = 0; 
           result.data.data.items.forEach(item => {
             item.requestProductsModel.forEach(product => {
               if (product.authorizedToFulfill && product.status === this.RequestProductStatusEnum.Pending) {
-                totalRequestProducts++; // Increment counter for each request product
+                totalRequestProducts++; 
                 const newItem = {
                   ...item,
                   ...product,
@@ -174,7 +173,7 @@
               }
             });
           });
-          this.totalItems = totalRequestProducts; // Set total items to the total number of request products
+          this.totalItems = totalRequestProducts;
           this.loading = false;
         });
       },

@@ -1,28 +1,48 @@
 <template>
   <v-data-table :headers="headers"
                 :items="filteredFlattenedRequests"
-                :items-per-page="10"
+                :loading="loading"
+                :server-items-length="totalItems"
+                :items-per-page="paginationOptions.itemsPerPage"
+                :options.sync="paginationOptions"
+                :footer-props="{ 'items-per-page-options': [5, 10, 20, 30, 50, { text: 'All', value: -1 }] }"
+                @update:options="updateOptions"
                 class="elevation-1">
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title class="blue-text big-bold">FULFILLED REQUEST</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-text-field v-model="search"
-                      prepend-inner-icon="mdi-magnify"
+                      append-icon="mdi-magnify"
                       placeholder="Search by end user or request #"
                       solo
                       hide-details
                       flat
                       dense
-                      class="search-bar"></v-text-field>
+                      class="search-bar"
+                      @keyup.enter="triggerSearch"
+                      @click:append="triggerSearch"></v-text-field>
       </v-toolbar>
     </template>
-    <template v-slot:item.action="{ item }">
-      <v-btn @click="viewRequest(item)">View</v-btn>
+
+    <template v-slot:item="{ item }">
+      <tr>
+        <td>{{ item.id }}</td>
+        <td>{{ item.requestedBy }}</td>
+        <td>{{ item.projectName }}</td>
+        <td>{{ item.productName }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.budget }}</td>
+        <td>{{ item.fulfilledPrice }}</td>
+        <td>{{ item.fulfilledDate }}</td>
+        <td>{{ item.overallRequestStatusStr }}</td>
+        <td>
+          <v-btn @click="viewRequest(item)">View</v-btn>
+        </td>
+      </tr>
     </template>
   </v-data-table>
 </template>
-
 
 <script>
   import moment from 'moment';
@@ -45,9 +65,24 @@
         ],
         search: '',
         requests: [],
+        totalItems: 0,
+        loading: true,
+        paginationOptions: {
+          page: 1,
+          itemsPerPage: 10,
+          sortBy: [],
+          sortDesc: [],
+        },
       };
     },
     computed: {
+      query() {
+        return {
+          page: this.paginationOptions.page,
+          itemsPerPage: this.paginationOptions.itemsPerPage,
+          search: this.search,
+        };
+      },
       flattenedRequests() {
         return this.requests.map(product => ({
           projectInformationModel: product.projectInformationModel,
@@ -78,24 +113,33 @@
     created() {
       this.getFulfilledRequestAsFulfiller();
     },
+    mounted() {
+      this.modifySelectInputs();
+    },
     methods: {
+      modifySelectInputs() {
+        const vSelects = this.$el.querySelectorAll('.v-text-field__slot');
+        vSelects.forEach(vSelect => {
+          const inputElement = vSelect.querySelector('input[type="text"]');
+          if (inputElement) {
+            inputElement.removeAttribute('type');
+          }
+        });
+      },
       async getRequest(requestId) {
         try {
-          const response = await this.$axios.get(`${this.$config.restUrl}/api/request/getrequests`);
+          const response = await this.$axios.get(`${this.$config.restUrl}/api/request/getrequestbyid`, {
+            params: { id: requestId }
+          });
 
-          const requests = response.data.data.map(item => ({
-            ...item,
-            createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm')
-          }));
+          const request = response.data.data;
+          request.createdOnUTC = moment(request.createdOnUTC).format('DD MMM YY HH:mm');
 
-          const request = requests.find(req => req.id === requestId);
           return request;
-
         } catch (error) {
-          console.error('Error fetching requests:', error);
+          console.error('Error fetching request:', error);
         }
       },
-
 
       async viewRequest(req) {
         const request = await this.getRequest(req.id);
@@ -108,14 +152,32 @@
         });
       },
 
-
+      triggerSearch() {
+        this.page = 1;
+        this.getFulfilledRequestAsFulfiller();
+      },
+      updateOptions(options) {
+        this.paginationOptions = options;
+        this.page = options.page;
+        this.itemsPerPage = options.itemsPerPage;
+        this.getFulfilledRequestAsFulfiller();
+      },
       getFulfilledRequestAsFulfiller() {
-        this.$axios.get(`${this.$config.restUrl}/api/request/getfulfilledrequestasfulfiller`)
+        this.loading = true;
+        const params = {
+          search: this.search,
+          page: this.page,
+          itemsPerPage: this.itemsPerPage,
+        };
+        this.$axios.get(`${this.$config.restUrl}/api/request/getfulfilledrequestasfulfiller`, { params })
           .then(response => {
             this.requests = response.data.data;
+            this.totalItems = response.data.totalItems; 
+            this.loading = false;
           })
           .catch(error => {
             console.error('Error fetching fulfilled request:', error);
+            this.loading = false;
           });
       },
     },

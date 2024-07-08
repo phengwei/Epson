@@ -42,44 +42,52 @@ namespace Epson.Factories
             _userManager = userManager;
         }
 
-        public List<RequestProductModel> PrepareRequestProductModel(List<RequestProductDTO> requestProducts)
+        private async Task<List<ApplicationUser>> GetUsersByIdsAsync(List<string> userIds)
         {
-            if (requestProducts?.Count == 0 || requestProducts == null)
+            return await _userManager.Users
+                .Where(u => userIds.Contains(u.Id))
+                .ToListAsync();
+        }
+
+        public async Task<List<RequestProductModel>> PrepareRequestProductModelAsync(List<RequestProductDTO> requestProducts)
+        {
+            if (requestProducts == null || requestProducts.Count == 0)
                 return new List<RequestProductModel>();
 
-            List<RequestProductModel> requestProductModels = new List<RequestProductModel>();
+            var requestIds = requestProducts.Select(rp => rp.RequestId).Distinct().ToList();
+            var productIds = requestProducts.Select(rp => rp.ProductId).Distinct().ToList();
+            var fulfillerIds = requestProducts.Where(rp => rp.FulfillerId != null).Select(rp => rp.FulfillerId).Distinct().ToList();
+
+            var requests = await _requestService.GetRequestsByIdsAsync(requestIds); 
+            var products = _productService.GetProductsByIds(productIds);
+            var fulfillers = await GetUsersByIdsAsync(fulfillerIds);
+
+            var requestDict = requests.ToDictionary(r => r.Id);
+            var productDict = products.ToDictionary(p => p.Id);
+            var fulfillerDict = fulfillers.ToDictionary(f => f.Id);
+
+            var requestProductModels = new List<RequestProductModel>();
             foreach (var requestProduct in requestProducts)
             {
-                var request = _requestService.GetRequestById(requestProduct.RequestId);
+                var request = requestDict[requestProduct.RequestId];
+                var product = productDict[requestProduct.ProductId];
+                var fulfiller = requestProduct.FulfillerId != null ? fulfillerDict[requestProduct.FulfillerId] : null;
 
-                var overallRequestStatusStr = "Pending amendment";
-
-                if (request.ApprovalState == (int)ApprovalStateEnum.Approved)
-                {
-                    overallRequestStatusStr = "Successful";
-                }
-                else if ((request.ApprovalState >= (int)ApprovalStateEnum.RejectedByFulfiller) && (request.ApprovalState <= (int)ApprovalStateEnum.DealExited))
-                {
-                    overallRequestStatusStr = "Failed";
-                }
-                else if (request.ApprovalState == (int)ApprovalStateEnum.AmendQuotation)
-                {
-                    overallRequestStatusStr = "Pending amendment";
-                }
+                var overallRequestStatusStr = GetOverallRequestStatus(request.ApprovalState);
 
                 var requestProductModel = new RequestProductModel
                 {
                     Id = requestProduct.Id,
-                    RequestedBy = _userManager.FindByIdAsync(_requestService.GetRequestById(requestProduct.RequestId).CreatedById).Result.UserName,
+                    RequestedBy = await GetUserNameAsync(request.CreatedById),
                     ProductId = requestProduct.ProductId,
-                    ProductName = _productService.GetProductById(requestProduct.ProductId).Name,
+                    ProductName = product.Name,
                     RequestId = requestProduct.RequestId,
                     Quantity = requestProduct.Quantity,
                     DistyPrice = requestProduct.DistyPrice,
                     DealerPrice = requestProduct.DealerPrice,
                     EndUserPrice = requestProduct.EndUserPrice,
                     FulfillerId = requestProduct.FulfillerId,
-                    FulfillerName = requestProduct.FulfillerId != null ? _userManager.FindByIdAsync(requestProduct.FulfillerId).Result.UserName : null,
+                    FulfillerName = fulfiller?.UserName,
                     FulfilledPrice = requestProduct.FulfilledPrice,
                     FulfilledDate = requestProduct.FulfilledDate,
                     HasFulfilled = requestProduct.HasFulfilled,
@@ -96,9 +104,26 @@ namespace Epson.Factories
                 requestProductModels.Add(requestProductModel);
             }
 
-
             return requestProductModels;
         }
+
+        private async Task<string> GetUserNameAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            return user?.UserName;
+        }
+
+        private string GetOverallRequestStatus(int approvalState)
+        {
+            return approvalState switch
+            {
+                (int)ApprovalStateEnum.Approved => "Successful",
+                >= (int)ApprovalStateEnum.RejectedByFulfiller and <= (int)ApprovalStateEnum.DealExited => "Failed",
+                (int)ApprovalStateEnum.AmendQuotation => "Pending amendment",
+                _ => "Pending amendment"
+            };
+        }
+
         public async Task<List<RequestModel>> PrepareRequestModelsAsync(List<RequestDTO> requests)
         {
             if (requests == null || requests.Count == 0)

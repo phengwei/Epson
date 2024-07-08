@@ -485,30 +485,30 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getfulfilledrequestasfulfiller")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin,Director")]
-        public async Task<IActionResult> GetFulfilledRequestAsFulfiller()
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin, Director")]
+        public async Task<IActionResult> GetFulfilledRequestAsFulfiller(int page = 1, int itemsPerPage = 10, string search = "")
         {
             var response = new GenericResponseModel<List<RequestProductModel>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
             var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString()) || await _userManager.IsInRoleAsync(user, RoleEnum.Director.ToString());
 
-            List<RequestProductDTO> requestProducts = new List<RequestProductDTO>();
+            List<RequestProductDTO> requestProducts;
 
             if (isAdminUser)
             {
-                requestProducts = _requestService.GetRequestProducts()
+                requestProducts = _requestService.GetRequestProducts(page, itemsPerPage)
                                     .Where(x => x.HasFulfilled == true)
                                     .ToList();
             }
             else
             {
-                requestProducts = _requestService.GetRequestProducts()
+                requestProducts = _requestService.GetRequestProducts(page, itemsPerPage)
                                     .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true)
                                     .ToList();
             }
 
-            var requestModels = _requestModelFactory.PrepareRequestProductModel(requestProducts);
+            var requestModels = await _requestModelFactory.PrepareRequestProductModelAsync(requestProducts);
 
             response.Data = requestModels;
 
