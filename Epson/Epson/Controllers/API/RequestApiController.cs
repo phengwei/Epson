@@ -448,10 +448,9 @@ namespace Epson.Controllers.API
                 return BadRequest("Failed to reject request!");
         }
 
-
         [HttpGet("getpendingrequesteritem")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin,Director")]
-        public async Task<IActionResult> GetPendingRequesterItem()
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin, Director")]
+        public async Task<IActionResult> GetPendingRequesterItem(string search = null, int? page = null, int? itemsPerPage = null)
         {
             var response = new GenericResponseModel<List<RequestModel>>();
 
@@ -459,30 +458,31 @@ namespace Epson.Controllers.API
             var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString()) || await _userManager.IsInRoleAsync(user, RoleEnum.Director.ToString());
 
             List<RequestDTO> requests = new List<RequestDTO>();
+            int totalItems;
+            Func<Request, bool> filter;
 
             if (isAdminUser)
             {
-                requests = _requestService.GetRequests().Where(x => x.ApprovalState != (int)ApprovalStateEnum.Cancelled).ToList();
+                filter = x => x.ApprovalState == (int)ApprovalStateEnum.Approved ||
+                              x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller;
             }
             else
             {
-                requests = _requestService.GetRequests().Where(x => x.CreatedById == user.Id && x.ApprovalState != (int)ApprovalStateEnum.Cancelled).ToList();
+                filter = x => x.CreatedById == user.Id && 
+                              (x.ApprovalState == (int)ApprovalStateEnum.Approved ||
+                              x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller);
             }
 
-            //var pendingRequests = requests.Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingRequesterAction                      
-            //                                    || x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller)
-            //                                    .ToList();            
-            
-            var approvedRequests = requests.Where(x => x.ApprovalState == (int)ApprovalStateEnum.Approved
-                                                  || x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller)
-                                                .ToList();
+            requests = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage);
 
-            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(approvedRequests);
+            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
 
             response.Data = requestModels;
+            response.Count = totalItems;
 
             return Ok(response);
         }
+
 
         [HttpGet("getfulfilledrequestasfulfiller")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin, Director")]
@@ -552,45 +552,38 @@ namespace Epson.Controllers.API
 
         [HttpGet("getpendingfulfillmentasrequester")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Director")]
-        public async Task<IActionResult> GetPendingFulfillmentAsRequester()
+        public async Task<IActionResult> GetPendingFulfillmentAsRequester(string search = null, int? page = null, int? itemsPerPage = null)
         {
-            try
+            var response = new GenericResponseModel<List<RequestModel>>();
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+            var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString()) || await _userManager.IsInRoleAsync(user, RoleEnum.Director.ToString());
+
+            Func<Request, bool> filter;
+
+            if (isAdminUser)
             {
-                var response = new GenericResponseModel<List<RequestModel>>();
-
-                var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
-                var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString()) || await _userManager.IsInRoleAsync(user, RoleEnum.Director.ToString());
-
-                List<RequestDTO> requests;
-
-                if (isAdminUser)
-                {
-                    requests = _requestService.GetRequests()
-                                              .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction ||
-                                                          x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation)
-                                              .ToList();
-                }
-                else
-                {
-                    requests = _requestService.GetRequests()
-                                              .Where(x => (x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction ||
-                                                           x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction ||
-                                                           x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation) &&
-                                                           x.CreatedById == user.Id)
-                                              .ToList();
-                }
-
-                var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
-
-                response.Data = requestModels;
-
-                return Ok(response);
-            }catch(Exception ex)
-            {
-                return Ok();
+                filter = x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction ||
+                              x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation;
             }
-            
+            else
+            {
+                filter = x => (x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction ||
+                               x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction ||
+                               x.ApprovalState == (int)ApprovalStateEnum.AmendQuotation) &&
+                              x.CreatedById == user.Id;
+            }
+
+            int totalItems;
+            var requests = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage);
+            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
+
+            response.Data = requestModels;
+            response.Count = totalItems; 
+
+            return Ok(response);
         }
+
 
 
         [HttpGet("getrequestsummary")]

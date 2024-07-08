@@ -2,21 +2,25 @@
   <v-data-table :headers="headers"
                 :items="filteredRequests"
                 :options.sync="options"
-                :items-per-page="10"
+                :items-per-page="options.itemsPerPage"
                 :loading="loading"
+                :footer-props="{ 'items-per-page-options': [5, 10, 20, 30, 50, { text: 'All', value: -1 }] }"
+                :server-items-length="totalItems"
                 class="elevation-1">
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title class="blue-text big-bold">PENDING</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-text-field v-model="search"
-                      prepend-inner-icon="mdi-magnify"
+        <v-text-field v-model="searchTerm"
+                      append-icon="mdi-magnify"
                       placeholder="Search by end user or request #"
                       solo
                       hide-details
                       flat
                       dense
-                      class="search-bar"></v-text-field>
+                      class="search-bar"
+                      @keyup.enter="triggerSearch"
+                      @click:append="triggerSearch"></v-text-field>
         <v-dialog v-model="dialog" max-width="500px">
           <v-card>
             <v-card-title>
@@ -205,7 +209,6 @@
       <v-btn @click="viewRequest(item)">View</v-btn>
     </template>
   </v-data-table>
-
 </template>
 
 <script>
@@ -250,8 +253,15 @@
           },
           { text: 'Actions', value: 'actions', sortable: false },
         ],
-        options: {},
+        options: {
+          page: 1,
+          itemsPerPage: 10,
+          sortBy: [],
+          sortDesc: [],
+        },
+        searchTerm: '',
         requests: [],
+        totalItems: 0,
         loading: true,
         quotationDialog: false,
         editedIndex: -1,
@@ -273,7 +283,6 @@
         selectedProducts: {},
         quantity: {},
         budget: {},
-        search: '',
         priority: {
           value: 1,
           options: [
@@ -288,18 +297,12 @@
         ApprovalStateEnum
       }
     },
-    created() {
-      this.categories.forEach(category => {
-        this.options[category.id] = [];
-      });
-      this.fetchCategories();
-    },
     computed: {
       formTitle() {
         return 'Request'
       },
       filteredRequests() {
-        if (this.search.trim() === '') {
+        if (!this.search || this.search.trim() === '') {
           return this.requests;
         }
         return this.requests.filter(request => {
@@ -310,7 +313,6 @@
           return requestIdMatch || projectNameMatch;
         });
       },
-      
     },
     watch: {
       options: {
@@ -325,7 +327,23 @@
         }
       },
     },
+    mounted() {
+      this.modifySelectInputs();
+    },
+    created() {
+      this.getPendingFulfillmentAsRequester();
+      this.fetchCategories();
+    },
     methods: {
+      modifySelectInputs() {
+        const vSelects = this.$el.querySelectorAll('.v-text-field__slot');
+        vSelects.forEach(vSelect => {
+          const inputElement = vSelect.querySelector('input[type="text"]');
+          if (inputElement) {
+            inputElement.removeAttribute('type');
+          }
+        });
+      },
       viewRequest(request) {
         let queryParameters = { request: JSON.stringify(request) };
 
@@ -406,7 +424,12 @@
       },
       getPendingFulfillmentAsRequester() {
         this.loading = true
-        this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfillmentasrequester`).then(result => {
+        const params = {
+          search: this.search,
+          page: this.options.page,
+          itemsPerPage: this.options.itemsPerPage,
+        };
+        this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfillmentasrequester`, { params }).then(result => {
           this.requests = result.data.data.map(request => {
             return {
               ...request,
@@ -414,7 +437,11 @@
               createdOnUTC: moment(request.createdOnUTC).format('DD MMM YY HH:mm')
             };
           });
+          this.totalItems = result.data.count;
           this.loading = false;
+        }).catch(error => {
+          this.loading = false;
+          console.error('Error fetching pending fulfillment as requester items:', error);
         });
       },
       checkboxChanged(selectedCategory) {
@@ -447,37 +474,37 @@
         }).then((result) => {
           if (result.isConfirmed) {
             this.$axios.post(`${this.$config.restUrl}/api/request/setrequesttoamendquotation?requestId=${item.id}`)
-            .then(response => {
-              Swal.fire('Amended!', 'Request is in amend stage.', 'success')
-                .then(() => {
-                this.$router.push('/salesDashboard');
+              .then(response => {
+                Swal.fire('Amended!', 'Request is in amend stage.', 'success')
+                  .then(() => {
+                    this.$router.push('/salesDashboard');
+                  });
+              }).catch(error => {
+                console.log('error', error);
+                Swal.fire('Error', 'Failed to amend request', 'error');
               });
-            }).catch(error => {
-              console.log('error', error);
-              Swal.fire('Error', 'Failed to amend request', 'error');
-            });
           }
         });
       },
       cancelRequest(item) {
         Swal.fire({
           title: 'Cancel Request?',
-          input: 'textarea', 
+          input: 'textarea',
           inputPlaceholder: 'Remark',
           showCancelButton: true,
           confirmButtonText: 'Cancel Request',
         }).then((result) => {
           if (result.isConfirmed) {
             this.$axios.post(`${this.$config.restUrl}/api/request/cancelrequest?requestId=${item.id}&remarks=${result.value}`)
-            .then(response => {
-              Swal.fire('Cancelled!', 'Request has been cancelled.', 'success')
-                .then(() => {
-                  this.$router.push('/salesDashboard');
-                });
-            }).catch(error => {
-              console.log('error', error);
-              Swal.fire('Error', 'Failed to cancel request', 'error');
-            });
+              .then(response => {
+                Swal.fire('Cancelled!', 'Request has been cancelled.', 'success')
+                  .then(() => {
+                    this.$router.push('/salesDashboard');
+                  });
+              }).catch(error => {
+                console.log('error', error);
+                Swal.fire('Error', 'Failed to cancel request', 'error');
+              });
           }
         })
       },
@@ -588,7 +615,7 @@
             cancelButtonText: 'No, later'
           }).then((result) => {
             if (result.isConfirmed) {
-              location.reload(); 
+              location.reload();
             }
           });
         } catch (error) {
@@ -603,12 +630,15 @@
         try {
           await this.$axios.get(`${this.$config.restUrl}/api/category/getcategories`).then(response => {
             this.categories = response.data.data;
-
           });
-
         } catch (error) {
           console.error(error);
         }
+      },
+      triggerSearch() {
+        this.options.page = 1;
+        this.search = this.searchTerm;
+        this.getPendingFulfillmentAsRequester();
       },
     },
   }

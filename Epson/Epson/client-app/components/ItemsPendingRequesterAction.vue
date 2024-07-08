@@ -3,21 +3,25 @@
     <v-data-table :headers="headers"
                   :items="filteredRequests"
                   :options.sync="options"
-                  :items-per-page="10"
+                  :items-per-page="options.itemsPerPage"
                   :loading="loading"
+                  :footer-props="{ 'items-per-page-options': [5, 10, 20, 30, 50, { text: 'All', value: -1 }] }"
+                  :server-items-length="totalItems"
                   class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title class="blue-text big-bold">REQUEST RESPONDED</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-text-field v-model="search"
-                        prepend-inner-icon="mdi-magnify"
+          <v-text-field v-model="searchTerm"
+                        append-icon="mdi-magnify"
                         placeholder="Search by end user or request #"
                         solo
                         hide-details
                         flat
                         dense
-                        class="search-bar"></v-text-field>
+                        class="search-bar"
+                        @keyup.enter="triggerSearch"
+                        @click:append="triggerSearch"></v-text-field>
         </v-toolbar>
       </template>
       <template v-slot:item.actions="{ item }">
@@ -119,8 +123,15 @@
           { text: 'Tender Date', align: 'start', value: 'tenderDate' },
           { text: 'Delivery Date', align: 'start', value: 'deliveryDate' },
         ],
-        options: {},
+        searchTerm: '',
+        options: {
+          page: 1,
+          itemsPerPage: 10,
+          sortBy: [],
+          sortDesc: [],
+        },
         requests: [],
+        totalItems: 0,
         loading: true,
         editedIndex: -1,
         search: '',
@@ -150,15 +161,30 @@
         });
       },
     },
+    created() {
+      this.getPendingRequesterItem();
+    },
+    mounted() {
+      this.modifySelectInputs();
+    },
     watch: {
       options: {
         handler() {
-          this.getPendingRequesterItem()
+          this.getPendingRequesterItem();
         },
         deep: true,
       },
     },
     methods: {
+      modifySelectInputs() {
+        const vSelects = this.$el.querySelectorAll('.v-text-field__slot');
+        vSelects.forEach(vSelect => {
+          const inputElement = vSelect.querySelector('input[type="text"]');
+          if (inputElement) {
+            inputElement.removeAttribute('type');
+          }
+        });
+      },
       viewRequest(request) {
         let queryParameters = { view: true, request: JSON.stringify(request) };
 
@@ -174,8 +200,13 @@
         });
       },
       getPendingRequesterItem() {
-        this.loading = true
-        this.$axios.get(`${this.$config.restUrl}/api/request/getpendingrequesteritem`).then(result => {
+        this.loading = true;
+        const params = {
+          search: this.search,
+          page: this.options.page,
+          itemsPerPage: this.options.itemsPerPage,
+        };
+        this.$axios.get(`${this.$config.restUrl}/api/request/getpendingrequesteritem`, { params }).then(result => {
           this.requests = result.data.data.map(request => {
             return {
               ...request,
@@ -183,7 +214,11 @@
               createdOnUTC: moment(request.createdOnUTC).format('DD MMM YY HH:mm')
             };
           });
+          this.totalItems = result.data.count;
           this.loading = false;
+        }).catch(error => {
+          this.loading = false;
+          console.error('Error fetching pending requester items:', error);
         });
       },
       editItem(item) {
@@ -196,7 +231,11 @@
         });
         this.dialog = true
       },
-
+      triggerSearch() {
+        this.search = this.searchTerm;
+        this.options.page = 1;
+        this.getPendingRequesterItem();
+      },
       async close() {
         try {
           const result = await this.$axios.post(`${this.$config.restUrl}/api/request/approverequest?id=${this.editedItem.id}&comments=${this.editedItem.comments}`);
@@ -219,7 +258,6 @@
           });
         }
       },
-
       async save() {
         try {
           const result = await this.$axios.post(`${this.$config.restUrl}/api/request/approverequest?id=${this.editedItem.id}`);
@@ -242,7 +280,6 @@
           });
         }
       }
-
     },
   }
 </script>

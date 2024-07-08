@@ -21,6 +21,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
 using System.Globalization;
+using System.Web.Mvc;
 
 namespace Epson.Services.Services.Requests
 {
@@ -153,13 +154,13 @@ namespace Epson.Services.Services.Requests
             return requestDTOs;
         }
 
-        public List<RequestDTO> GetRequests(string search = null, int? page = null, int? itemsPerPage = null)
+        public List<RequestDTO> GetRequests(string search = null, Func<Request, bool> filter = null, int? page = null, int? itemsPerPage = null)
         {
             int totalItems;
-            return GetRequests(out totalItems, search, page, itemsPerPage);
+            return GetRequests(out totalItems, filter, search, page, itemsPerPage);
         }
 
-        public List<RequestDTO> GetRequests(out int totalItems, string search = null, int? page = null, int? itemsPerPage = null)
+        public List<RequestDTO> GetRequests(out int totalItems, Func<Request, bool> filter = null, string search = null, int? page = null, int? itemsPerPage = null)
         {
             var query = _context.Request
                 .Include(x => x.CompetitorInformations)
@@ -167,7 +168,14 @@ namespace Epson.Services.Services.Requests
                 .Include(x => x.RequestSubmissionDetail)
                 .Include(x => x.ProjectInformation)
                 .ThenInclude(pi => pi.ProjectInformationReasons)
-                .AsQueryable();
+            .AsQueryable();
+
+
+            if (filter != null)
+            {
+                query = query.Where(filter).AsQueryable();
+
+            }
 
             if (!string.IsNullOrEmpty(search))
             {
@@ -176,7 +184,9 @@ namespace Epson.Services.Services.Requests
                     x.Id.ToString().Contains(search)).AsQueryable();
             }
 
-            if (page.HasValue && itemsPerPage.HasValue)
+            totalItems = query.Count();
+
+            if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value != -1)
             {
                 query = query
                     .OrderByDescending(x => x.CreatedOnUTC)
@@ -189,7 +199,6 @@ namespace Epson.Services.Services.Requests
             }
 
             var requests = query.ToList();
-            totalItems = requests.Count;
 
             var requestDTOs = requests.Select(x =>
             {
