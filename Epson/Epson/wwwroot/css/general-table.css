@@ -22,6 +22,11 @@ label {
     width: 100%;
 }
 
+.theme--light.v-btn.v-btn--has-bg {
+    background-color: #003399 !important;
+    color: white !important;
+}
+
 .role-checkbox {
     display: flex;
     align-items: center;

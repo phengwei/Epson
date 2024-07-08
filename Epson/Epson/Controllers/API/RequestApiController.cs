@@ -78,24 +78,29 @@ namespace Epson.Controllers.API
 
         [HttpGet("getrequests")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
-        public async Task<IActionResult> GetRequests(bool breached = false)
+        public async Task<IActionResult> GetRequests(string search = null, int? page = null, int? itemsPerPage = null, bool breached = false, int month = 0)
         {
-
             var response = new GenericResponseModel<List<RequestModel>>();
             var currentUser = _workContext.CurrentUser;
             var currentUserDetail = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
+            Func<Request, bool> filter = null;
+            int totalItems;
+
             HashSet<RequestDTO> requestSet = new HashSet<RequestDTO>(new RequestDTOComparer());
+
+            Func<Request, bool> monthFilter = x => month == 0 || (x.CreatedOnUTC.Month == month);
 
             if (currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Director"))
             {
-                requestSet.UnionWith(_requestService.GetRequests());
+                Func<Request, bool> adminFilter = x => true;
+                requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => adminFilter(x) && monthFilter(x), search, page: null, itemsPerPage: null));
             }
 
             if (currentUser.Roles.Contains("Sales Operation"))
             {
-                requestSet.UnionWith(_requestService.GetRequests()
-                                                        .Where(x => x.ApprovalState == (int)ApprovalStateEnum.Approved));
+                Func<Request, bool> salesOperationFilter = x => x.ApprovalState == (int)ApprovalStateEnum.Approved;
+                requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesOperationFilter(x) && monthFilter(x), search, page: null, itemsPerPage: null));
             }
 
             if (currentUser.Roles.Contains("Sales Section Head"))
@@ -112,26 +117,38 @@ namespace Epson.Controllers.API
                                                         .Select(u => u.Id)
                                                         .ToList();
 
-                requestSet.UnionWith(_requestService.GetRequests()
-                                                    .Where(x => usersInRelevantTeams.Contains(x.CreatedById) &&
-                                                            x.CreatedById != currentUser.Id));
+                Func<Request, bool> salesSectionHeadFilter = x => usersInRelevantTeams.Contains(x.CreatedById) &&
+                                                            x.CreatedById != currentUser.Id;
+
+                requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesSectionHeadFilter(x) && monthFilter(x), search, page: null, itemsPerPage: null));
             }
 
             if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus"))
             {
-                requestSet.UnionWith(_requestService.GetRequests()
-                                                .Where(x => x.RequestProducts.Any(rp => rp.FulfillerId == currentUser.Id)));
+                Func<Request, bool> fulfillerFilter = x => x.RequestProducts.Any(rp => rp.FulfillerId == currentUser.Id);
+
+                requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => fulfillerFilter(x) && monthFilter(x), search, page: null, itemsPerPage: null));
             }
 
             if (currentUser.Roles.Contains("Sales"))
             {
-                requestSet.UnionWith(_requestService.GetRequests()
-                                                        .Where(x => x.CreatedById == currentUser.Id));
+                Func<Request, bool> salesFilter = x => x.CreatedById == currentUser.Id;
+
+                requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesFilter(x) && monthFilter(x), search, page: null, itemsPerPage: null));
             }
 
-            var requests = requestSet.ToList().Distinct(new RequestDTOComparer()).ToList();
+            var uniqueRequests = requestSet.ToList().Distinct(new RequestDTOComparer()).ToList();
+            int actualTotalItems = uniqueRequests.Count;
 
-            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests.OrderByDescending(x => x.CreatedOnUTC).ToList());
+            if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value != -1)
+            {
+                uniqueRequests = uniqueRequests
+                                    .Skip((page.Value - 1) * itemsPerPage.Value)
+                                    .Take(itemsPerPage.Value)
+                                    .ToList();
+            }
+
+            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(uniqueRequests.OrderByDescending(x => x.CreatedOnUTC).ToList());
 
             if (breached)
             {
@@ -141,10 +158,12 @@ namespace Epson.Controllers.API
             }
 
             response.Data = requestModels;
-
+            response.Count = actualTotalItems;
 
             return Ok(response);
         }
+
+
 
         public class RequestDTOComparer : IEqualityComparer<RequestDTO>
         {
@@ -645,7 +664,7 @@ namespace Epson.Controllers.API
 
         [HttpGet("getpendingsalessectionheaditem")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin,Director")]
-        public async Task<IActionResult> GetPendingSalesSectionHeadItem()
+        public async Task<IActionResult> GetPendingSalesSectionHeadItem(string search = null, int? page = null, int? itemsPerPage = null)
         {
             var response = new GenericResponseModel<List<RequestModel>>();
 
@@ -669,35 +688,34 @@ namespace Epson.Controllers.API
 
             List<RequestDTO> filteredRequestsQuery = new List<RequestDTO>();
 
+            Func<Request, bool> filter;
+            int totalItems;
+
             if (userRoles.Contains("Admin") || userRoles.Contains("Director"))
             {
-                filteredRequestsQuery = _requestService.GetRequests()
-                          .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction)
-                          .ToList();
-
+                filter = x => x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction;
             }
             else
             {
-                filteredRequestsQuery = _requestService.GetRequests()
-                          .Where(x => usersInRelevantTeams.Contains(x.CreatedById) &&
-                                 x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction &&
-                                 x.CreatedById != currentUser.Id)
-                          .ToList();
-
+                filter = x => x.ApprovalState == (int)ApprovalStateEnum.PendingSalesSectionHeadAction &&
+                              usersInRelevantTeams.Contains(x.CreatedById) &&
+                              x.CreatedById != currentUser.Id;
             }
 
-            var filteredRequests = filteredRequestsQuery.ToList();
+            filteredRequestsQuery = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage)
+                                .ToList();
 
-            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(filteredRequests);
+            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(filteredRequestsQuery);
 
             response.Data = requestModels;
+            response.Count = totalItems;
 
             return Ok(response);
         }
 
         [HttpGet("getpendingsalessectionheaddepartmentrequests")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin,Director")]
-        public async Task<IActionResult> GetPendingSalesSectionHeadDepartmentItems()
+        public async Task<IActionResult> GetPendingSalesSectionHeadDepartmentItems(string search = null, int? page = null, int? itemsPerPage = null)
         {
             var response = new GenericResponseModel<List<RequestModel>>();
 
@@ -713,14 +731,19 @@ namespace Epson.Controllers.API
                                                    .Select(u => u.Id)
                                                    .ToList();
 
-            var requests = _requestService.GetRequests()
-                .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
-                            x.RequestProducts.Any(rp => usersInRelevantTeams.Contains(rp.FulfillerId)))
-                .ToList();
+            Func<Request, bool> filter;
+            int totalItems;
+
+            filter = x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
+                            x.RequestProducts.Any(rp => usersInRelevantTeams.Contains(rp.FulfillerId));
+
+            var requests = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage)
+                                .ToList();
 
             var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
 
             response.Data = requestModels;
+            response.Count = totalItems;
 
             return Ok(response);
         }

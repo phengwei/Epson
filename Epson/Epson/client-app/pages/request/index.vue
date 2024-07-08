@@ -6,35 +6,37 @@
           <h2 class="blue-text big-bold">{{ breached ? 'BREACHED REQUESTS' : 'REQUESTS' }}</h2>
         </v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-text-field v-model="search"
-                      prepend-inner-icon="mdi-magnify"
-                      placeholder="Search"
+        <v-text-field v-model="searchTerm"
+                      append-icon="mdi-magnify"
+                      placeholder="Search by end user or request #"
                       solo
                       hide-details
                       flat
                       dense
-                      class="search-bar"></v-text-field>
+                      class="search-bar"
+                      @keyup.enter="triggerSearch"
+                      @click:append="triggerSearch"></v-text-field>
       </v-toolbar>
       <div class="filter-container">
         <div class="month-selector">
-          <v-select v-model="selectedMonth" :items="months" @change="getRequests" class="month-select"></v-select>
+          <v-select v-model="selectedMonth" :items="months" @change="triggerSearch" class="month-select"></v-select>
         </div>
         <div class="create-quotation">
           <v-btn v-if="loggedInUser && loggedInUser.roles.includes('Sales')" class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
         </div>
       </div>
-      <v-card-text>
         <v-data-table :headers="headers"
                       :items="filteredRequests"
-                      :items-per-page="5"
                       :options.sync="options"
+                      :items-per-page="options.itemsPerPage"
+                      :footer-props="{ 'items-per-page-options': [5, 10, 20, 30, 50, { text: 'All', value: -1 }] }"
                       :loading="loading"
-                      class="elevation-1 text-center">
+                      :server-items-length="totalItems"
+                      class="elevation-1">
           <template v-slot:item.action="{ item }">
             <v-btn @click="viewRequest(item)">View</v-btn>
           </template>
         </v-data-table>
-      </v-card-text>
     </v-card>
   </div>
 </template>
@@ -48,12 +50,50 @@
   export default {
     name: 'RequestOverview',
     props: ['routeKey'],
-    watch: {
-      $route(to, from) {
-        if (to.fullPath !== from.fullPath) {
-          this.onRouteChange();
-        }
-      }
+    data() {
+      return {
+        headers: [
+          { text: 'Request #', value: 'id', align: 'center' },
+          { text: 'End User', value: 'endUserName', align: 'center' },
+          { text: 'Approval State', value: 'approvalStateStr', align: 'center' },
+          { text: 'Total Budget (RM)', value: 'totalBudget', align: 'center' },
+          { text: 'Created On', value: 'createdOnUTC', align: 'center' },
+          { text: 'Created By', value: 'createdBy', align: 'center' },
+          { text: 'Approved Time', value: 'approvedTime', align: 'center' },
+          { text: 'Requester Team', value: 'createdByTeam', align: 'center' },
+          { text: 'Actions', value: 'action', align: 'center' }
+        ],
+        requests: [],
+        options: {
+          page: 1,
+          itemsPerPage: 5,
+          sortBy: [],
+          sortDesc: [],
+        },
+        totalItems: 0,
+        loading: true,
+        searchTerm: '',
+        search: '',
+        breached: false,
+        selectedMonth: new Date().getMonth() + 1,
+        months: [
+          { value: 0, text: 'All' },
+          { value: 1, text: 'January' },
+          { value: 2, text: 'February' },
+          { value: 3, text: 'March' },
+          { value: 4, text: 'April' },
+          { value: 5, text: 'May' },
+          { value: 6, text: 'June' },
+          { value: 7, text: 'July' },
+          { value: 8, text: 'August' },
+          { value: 9, text: 'September' },
+          { value: 10, text: 'October' },
+          { value: 11, text: 'November' },
+          { value: 12, text: 'December' }
+        ],
+        ApprovalStateEnum,
+        RequestProductStatusEnum,
+      };
     },
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser']),
@@ -77,43 +117,18 @@
         return filtered;
       }
     },
-    data() {
-      return {
-        headers: [
-          { text: 'Request #', value: 'id', align: 'center' },
-          { text: 'End User', value: 'endUserName', align: 'center' },
-          { text: 'Approval State', value: 'approvalStateStr', align: 'center' },
-          { text: 'Total Budget (RM)', value: 'totalBudget', align: 'center' },
-          { text: 'Created On', value: 'createdOnUTC', align: 'center' },
-          { text: 'Created By', value: 'createdBy', align: 'center' },
-          { text: 'Approved Time', value: 'approvedTime', align: 'center' },
-          { text: 'Requester Team', value: 'createdByTeam', align: 'center' },
-          { text: 'Actions', value: 'action', align: 'center' }
-        ],
-        requests: [],
-        options: {},
-        loading: false,
-        search: '',
-        breached: false,
-        selectedMonth: new Date().getMonth() + 1,
-        months: [
-          { value: 0, text: 'All' },
-          { value: 1, text: 'January' },
-          { value: 2, text: 'February' },
-          { value: 3, text: 'March' },
-          { value: 4, text: 'April' },
-          { value: 5, text: 'May' },
-          { value: 6, text: 'June' },
-          { value: 7, text: 'July' },
-          { value: 8, text: 'August' },
-          { value: 9, text: 'September' },
-          { value: 10, text: 'October' },
-          { value: 11, text: 'November' },
-          { value: 12, text: 'December' }
-        ],
-        ApprovalStateEnum,
-        RequestProductStatusEnum,
-      };
+    watch: {
+      options: {
+        handler() {
+          this.getRequests();
+        },
+        deep: true,
+      },
+      $route(to, from) {
+        if (to.fullPath !== from.fullPath) {
+          this.onRouteChange();
+        }
+      }
     },
     created() {
       this.breached = this.$route.query.breached === 'true';
@@ -140,7 +155,14 @@
         });
       },
       getRequests() {
-        const params = { breached: this.breached };
+        this.loading = true;
+        const params = {
+          search: this.search,
+          breached: this.breached,
+          page: this.options.page,
+          itemsPerPage: this.options.itemsPerPage,
+          month: this.selectedMonth,
+        };
         this.$axios.get(`${this.$config.restUrl}/api/request/getrequests`, { params })
           .then(response => {
             this.requests = response.data.data.map(item => {
@@ -154,13 +176,18 @@
                 createdByTeam: item.createdTeam || 'N/A'
               };
             });
+            this.totalItems = response.data.count;
+            this.loading = true;
           })
           .catch(error => {
+            this.loading = false;
             console.error('Error fetching requests:', error);
           });
       },
-      applyStyles() {
-        // Force reapplication of styles if needed
+      triggerSearch() {
+        this.search = this.searchTerm;
+        this.options.page = 1;
+        this.getRequests();
       },
       redirectToCreateQuotation() {
         this.$router.push('/createquotation?create=true');
@@ -209,6 +236,7 @@
   v-btn {
     background-color: #003399 !important;
   }
+
   .filter-container {
     display: flex;
     align-items: center;
