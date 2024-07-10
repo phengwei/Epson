@@ -466,7 +466,7 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin, Director")]
         public async Task<IActionResult> GetPendingRequesterItem(string search = null, int? page = null, int? itemsPerPage = null)
         {
-            var response = new GenericResponseModel<List<RequestModel>>();
+            var response = new GenericResponseModel<List<RequestDTO>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
             var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString()) || await _userManager.IsInRoleAsync(user, RoleEnum.Director.ToString());
@@ -489,9 +489,9 @@ namespace Epson.Controllers.API
 
             requests = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage);
 
-            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
+            //var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
 
-            response.Data = requestModels;
+            response.Data = requests;
             response.Count = totalItems;
 
             return Ok(response);
@@ -591,7 +591,7 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Director")]
         public async Task<IActionResult> GetPendingFulfillmentAsRequester(string search = null, int? page = null, int? itemsPerPage = null)
         {
-            var response = new GenericResponseModel<List<RequestModel>>();
+            var response = new GenericResponseModel<List<RequestDTO>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
             var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString()) || await _userManager.IsInRoleAsync(user, RoleEnum.Director.ToString());
@@ -613,9 +613,9 @@ namespace Epson.Controllers.API
 
             int totalItems;
             var requests = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage);
-            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
+            //var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
 
-            response.Data = requestModels;
+            response.Data = requests;
             response.Count = totalItems; 
 
             return Ok(response);

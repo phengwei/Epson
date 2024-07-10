@@ -41,6 +41,7 @@
 </template>
 
 <script>
+  import { Base64 } from 'js-base64';
   import moment from 'moment';
 
   export default {
@@ -138,9 +139,11 @@
       viewRequest(req) {
         const queryParameters = { view: true, requestId: req.id };
 
+        const encodedParams = Base64.encode(JSON.stringify(queryParameters));
+
         this.$router.push({
           path: '/createquotation',
-          query: queryParameters
+          query: { params: encodedParams }
         });
       },
 

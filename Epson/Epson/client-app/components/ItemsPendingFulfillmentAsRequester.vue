@@ -1,6 +1,6 @@
 <template>
   <v-data-table :headers="headers"
-                :items="filteredRequests"
+                :items="requests"
                 :options.sync="options"
                 :items-per-page="options.itemsPerPage"
                 :loading="loading"
@@ -212,9 +212,24 @@
 </template>
 
 <script>
+  import { Base64 } from 'js-base64';
   import moment from 'moment';
   import Swal from 'sweetalert2';
   import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
+
+  const approvalStateMapping = {
+    [ApprovalStateEnum.PendingSalesSectionHeadAction]: 'Pending Sales Section Head Action',
+    [ApprovalStateEnum.PendingFulfillerAction]: 'Pending Fulfiller Action',
+    [ApprovalStateEnum.PendingRequesterAction]: 'Pending Requester Action',
+    [ApprovalStateEnum.PendingSalesSectionHeadFinalAction]: 'Pending Sales Section Head Final Action',
+    [ApprovalStateEnum.Approved]: 'Approved',
+    [ApprovalStateEnum.AmendQuotation]: 'Amend Quotation',
+    [ApprovalStateEnum.RejectedByFulfiller]: 'Rejected By Fulfiller',
+    [ApprovalStateEnum.RejectedByRequester]: 'Rejected By Requester',
+    [ApprovalStateEnum.RejectedBySalesSectionHead]: 'Rejected By Sales Section Head',
+    [ApprovalStateEnum.Cancelled]: 'Cancelled',
+    [ApprovalStateEnum.DealExited]: 'Deal Exited'
+  };
 
   export default {
     name: 'ItemsPendingRequesterAction',
@@ -345,7 +360,7 @@
         });
       },
       viewRequest(request) {
-        let queryParameters = { request: JSON.stringify(request) };
+        let queryParameters = { view: true, requestId: request.id };
 
         if (request.approvalState === ApprovalStateEnum.AmendQuotation) {
           queryParameters = { ...queryParameters, editable: true };
@@ -353,9 +368,11 @@
           queryParameters = { ...queryParameters, view: true };
         }
 
+        const encodedParams = Base64.encode(JSON.stringify(queryParameters));
+
         this.$router.push({
           path: '/createquotation',
-          query: queryParameters
+          query: { params: encodedParams }
         });
       },
       addCompetitorInformationRow() {
@@ -430,15 +447,18 @@
           itemsPerPage: this.options.itemsPerPage,
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfillmentasrequester`, { params }).then(result => {
+          console.log("aw", result);
           this.requests = result.data.data.map(request => {
             return {
               ...request,
-              endUserName: request.projectInformationModel.projectName || 'N/A',
+              approvalStateStr: approvalStateMapping[request.approvalState] || 'Pending',
+              endUserName: request.projectInformation.projectName || 'N/A',
               createdOnUTC: moment(request.createdOnUTC).format('DD MMM YY HH:mm')
             };
           });
           this.totalItems = result.data.count;
           this.loading = false;
+          console.log("this.request", this.requests);
         }).catch(error => {
           this.loading = false;
           console.error('Error fetching pending fulfillment as requester items:', error);

@@ -41,6 +41,7 @@
 </template>
 
 <script>
+  import { Base64 } from 'js-base64';
   import moment from 'moment';
   import { RequestProductStatusEnum } from '~/script/requestProductStatusEnum.js';
 
@@ -101,14 +102,15 @@
         this.getFulfillerItem();
       },
       viewRequest(request) {
-        console.log("awdss", request);
         let queryParameters = { view: true, requestId: request.requestId };
 
         queryParameters = { ...queryParameters, isFulfill: true };
 
+        const encodedParams = Base64.encode(JSON.stringify(queryParameters));
+
         this.$router.push({
           path: '/createquotation',
-          query: queryParameters
+          query: { params: encodedParams }
         });
       },
       updateOptions(options) {

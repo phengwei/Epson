@@ -1,4 +1,5 @@
 import { mapGetters } from 'vuex';
+import { Base64 } from 'js-base64';
 import moment from 'moment';
 import Swal from 'sweetalert2';
 import JsPDF from 'jspdf';
@@ -93,18 +94,25 @@ export default {
       ApprovalStateEnum,
       editedItem: {},
       submitting: false,
-      loading: false
+      loading: false,
+      decodedQueryParams: {}
     };
   },
+
   async created() {
     this.loading = true;
     this.submissionDetail.createdOnUTC = this.getToday();
     this.submissionDetail.preparedBy = this.loggedInUser.userName;
     await this.fetchCategories();
-    if (this.$route.query.view || this.$route.query.editable) {
-      const requestId = this.$route.query.requestId;
-      await this.fetchRequestById(requestId);
-      this.populateForm(this.unpopulatedRequests);
+
+    if (this.$route.query.params) {
+      this.decodedQueryParams = JSON.parse(Base64.decode(this.$route.query.params));
+      const queryParams = JSON.parse(Base64.decode(this.$route.query.params));
+      if (this.decodedQueryParams.view || this.decodedQueryParams.editable) {
+        const requestId = queryParams.requestId;
+        await this.fetchRequestById(requestId);
+        this.populateForm(this.unpopulatedRequests);
+      }
     }
     this.loading = false;
   },
@@ -123,16 +131,16 @@ export default {
       return moment(this.projectInformation.deliveryDate).format('DD/MM/YYYY hh:mm A');
     },
     isCommentEditable() {
-      return this.isViewMode && !this.isMode('dealable');
+      return this.isViewMode() && !this.isMode('dealable');
     },
     isViewMode() {
-      return this.$route.query.view === 'true';
+      return this.decodedQueryParams.view === true;
     },
     isAmendMode() {
-      return this.$route.query.editable === 'true';
+      return this.decodedQueryParams.editable === true;
     },
     isFulfillMode() {
-      return this.$route.query.isFulfill === 'true' || this.$route.query.isFulfillCoverplus === 'true';
+      return this.decodedQueryParams.isFulfill === true || this.decodedQueryParams.isFulfillCoverplus === true;
     },
     currentRequestApprovalState() {
       return this.currentRequest ? this.currentRequest.approvalState : null;
@@ -154,6 +162,9 @@ export default {
     }
   },
   methods: {
+    isMode(mode) {
+      return this.decodedQueryParams[mode] === true;
+    },
     openAddProductDialog() {
       this.selectedProduct = {}; 
       this.dialogProduct = true;
@@ -194,9 +205,6 @@ export default {
       this.product.dealerPrice = null;
       this.product.endUserPrice = null;
       this.dialogProduct = false;
-    },
-    isMode(mode) {
-      return this.$route.query[mode] === 'true';
     },
     confirmAmmendQuotation() {
       Swal.fire({

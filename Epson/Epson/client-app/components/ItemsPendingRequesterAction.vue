@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-data-table :headers="headers"
-                  :items="filteredRequests"
+                  :items="requests"
                   :options.sync="options"
                   :items-per-page="options.itemsPerPage"
                   :loading="loading"
@@ -74,9 +74,25 @@
 </template>
 
 <script>
+  import { Base64 } from 'js-base64';
   import Swal from 'sweetalert2'
   import moment from 'moment';
   import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
+
+  const approvalStateMapping = {
+    [ApprovalStateEnum.PendingSalesSectionHeadAction]: 'Pending Sales Section Head Action',
+    [ApprovalStateEnum.PendingFulfillerAction]: 'Pending Fulfiller Action',
+    [ApprovalStateEnum.PendingRequesterAction]: 'Pending Requester Action',
+    [ApprovalStateEnum.PendingSalesSectionHeadFinalAction]: 'Pending Sales Section Head Final Action',
+    [ApprovalStateEnum.Approved]: 'Approved',
+    [ApprovalStateEnum.AmendQuotation]: 'Amend Quotation',
+    [ApprovalStateEnum.RejectedByFulfiller]: 'Rejected By Fulfiller',
+    [ApprovalStateEnum.RejectedByRequester]: 'Rejected By Requester',
+    [ApprovalStateEnum.RejectedBySalesSectionHead]: 'Rejected By Sales Section Head',
+    [ApprovalStateEnum.Cancelled]: 'Cancelled',
+    [ApprovalStateEnum.DealExited]: 'Deal Exited'
+  };
+
 
   export default {
     name: 'ItemsPendingRequesterAction',
@@ -186,7 +202,7 @@
         });
       },
       viewRequest(request) {
-        let queryParameters = { view: true, request: JSON.stringify(request) };
+        let queryParameters = { view: true, requestId: request.id };
 
         if (request.approvalState === ApprovalStateEnum.PendingRequesterAction) {
           queryParameters = { ...queryParameters, dealable: true, amendable: true };
@@ -194,9 +210,11 @@
           queryParameters = { ...queryParameters, amendable: true };
         }
 
+        const encodedParams = Base64.encode(JSON.stringify(queryParameters));
+
         this.$router.push({
           path: '/createquotation',
-          query: queryParameters
+          query: { params: encodedParams }
         });
       },
       getPendingRequesterItem() {
@@ -210,7 +228,8 @@
           this.requests = result.data.data.map(request => {
             return {
               ...request,
-              endUserName: request.projectInformationModel.projectName || 'N/A',
+              approvalStateStr: approvalStateMapping[request.approvalState] || 'Pending',
+              endUserName: request.projectInformation.projectName || 'N/A',
               createdOnUTC: moment(request.createdOnUTC).format('DD MMM YY HH:mm')
             };
           });
