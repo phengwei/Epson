@@ -102,9 +102,8 @@ export default {
     this.submissionDetail.preparedBy = this.loggedInUser.userName;
     await this.fetchCategories();
     if (this.$route.query.view || this.$route.query.editable) {
-      const request = JSON.parse(this.$route.query.request);
-      console.log("id", request.requestId);
-      await this.fetchRequestById(request.requestId);
+      const requestId = this.$route.query.requestId;
+      await this.fetchRequestById(requestId);
       this.populateForm(this.unpopulatedRequests);
     }
     this.loading = false;

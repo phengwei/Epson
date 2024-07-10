@@ -1,6 +1,6 @@
 <template>
   <v-data-table :headers="headers"
-                :items="filteredFlattenedRequests"
+                :items="this.fulfilledItems"
                 :loading="loading"
                 :server-items-length="totalItems"
                 :items-per-page="paginationOptions.itemsPerPage"
@@ -30,11 +30,7 @@
         <td>{{ item.id }}</td>
         <td>{{ item.requestedBy }}</td>
         <td>{{ item.projectName }}</td>
-        <td>{{ item.productName }}</td>
-        <td>{{ item.quantity }}</td>
-        <td>{{ item.budget }}</td>
-        <td>{{ item.fulfilledPrice }}</td>
-        <td>{{ item.fulfilledDate }}</td>
+        <td>{{ item.lastFulfilledDate }}</td>
         <td>{{ item.overallRequestStatusStr }}</td>
         <td>
           <v-btn @click="viewRequest(item)">View</v-btn>
@@ -55,14 +51,11 @@
           { text: 'Request #', value: 'id' },
           { text: 'Requester', value: 'requestedBy' },
           { text: 'End User', value: 'projectName' },
-          { text: 'Product', value: 'productName' },
-          { text: 'Quantity', value: 'quantity' },
-          { text: 'Budget', value: 'budget' },
-          { text: 'Fulfilled Price', value: 'fulfilledPrice' },
-          { text: 'Fulfilled Date', value: 'fulfilledDate' },
+          { text: 'Last Fulfilled', value: 'lastFulfilledDate' },
           { text: 'Request Status', value: 'overallRequestStatusStr' },
           { text: 'Actions', value: 'action', sortable: false }
         ],
+        fulfilledItems: [],
         searchTerm: '',
         search: '',
         requests: [],
@@ -142,10 +135,8 @@
         }
       },
 
-      async viewRequest(req) {
-        const request = await this.getRequest(req.id);
-
-        const queryParameters = { view: true, request: JSON.stringify(request) };
+      viewRequest(req) {
+        const queryParameters = { view: true, requestId: req.id };
 
         this.$router.push({
           path: '/createquotation',
@@ -173,7 +164,31 @@
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getfulfilledrequestasfulfiller`, { params })
           .then(response => {
-            this.requests = response.data.data;
+            this.fulfilledItems = [];
+            response.data.data.forEach(item => {
+              const lastFulfilledDate = item.requestProducts.reduce((latest, product) => {
+                return latest > new Date(product.fulfilledDate) ? latest : new Date(product.fulfilledDate);
+              }, new Date(0));
+
+              let overallRequestStatusString;
+              if (item.approvalState > 50) {
+                overallRequestStatusString = 'Failed';
+              } else if (item.approvalState === 50) {
+                overallRequestStatusString = 'Approved';
+              } else {
+                overallRequestStatusString = 'Pending';
+              }
+
+              const newItem = {
+                id: item.id,
+                requestedBy: item.createdByStr,
+                projectName: item.projectInformation.projectName,
+                lastFulfilledDate: moment(lastFulfilledDate).format('DD MMM YY HH:mm'),
+                overallRequestStatusStr: overallRequestStatusString
+              };
+
+              this.fulfilledItems.push(newItem);
+            });
             this.totalItems = response.data.count;
             this.loading = false;
           })
@@ -181,6 +196,7 @@
             console.error('Error fetching fulfilled request:', error);
             this.loading = false;
           });
+
       },
     },
   };

@@ -502,53 +502,76 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin, Director")]
         public async Task<IActionResult> GetFulfilledRequestAsFulfiller(int? page = null, int? itemsPerPage = null, string? search = null)
         {
-            var response = new GenericResponseModel<List<RequestProductModel>>();
+            var response = new GenericResponseModel<List<RequestDTO>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
             var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString()) || await _userManager.IsInRoleAsync(user, RoleEnum.Director.ToString());
 
-            List<RequestProductDTO> requestProducts;
-            List<RequestProductModel> requestModels = new List<RequestProductModel>();
+            List<RequestDTO> requests;
             int totalItems;
 
             if (search == null)
             {
                 if (isAdminUser)
                 {
-                    requestProducts = _requestService.GetRequestProducts(out totalItems, rp => rp.HasFulfilled == true, page, itemsPerPage);
+                    requests = _requestService.GetRequests(
+                        out totalItems,
+                        r => r.RequestProducts.Any(rp => rp.HasFulfilled),
+                        search,
+                        page,
+                        itemsPerPage
+                    );
                 }
                 else
                 {
-                    requestProducts = _requestService.GetRequestProducts(out totalItems, rp => rp.FulfillerId == user.Id && rp.HasFulfilled == true, page, itemsPerPage);
+                    requests = _requestService.GetRequests(
+                        out totalItems,
+                        r => r.RequestProducts.Any(rp => rp.HasFulfilled) && r.RequestProducts.Any(rp => rp.FulfillerId == user.Id),
+                        search,
+                        page,
+                        itemsPerPage
+                    );
                 }
 
-                requestModels = await _requestModelFactory.PrepareRequestProductModelAsync(requestProducts);
+                //requestModels = await _requestModelFactory.PrepareRequestProductModelAsync(requestProducts);
             }
             else
             {
                 if (isAdminUser)
                 {
-                    requestProducts = _requestService.GetRequestProducts(out totalItems, rp => rp.HasFulfilled == true);
+                    requests = _requestService.GetRequests(
+                        out totalItems,
+                        r => r.RequestProducts.Any(rp => rp.HasFulfilled),
+                        search,
+                        page,
+                        itemsPerPage
+                    );
                 }
                 else
                 {
-                    requestProducts = _requestService.GetRequestProducts(out totalItems, rp => rp.FulfillerId == user.Id && rp.HasFulfilled == true);
+                    requests = _requestService.GetRequests(
+                        out totalItems,
+                        r => r.RequestProducts.Any(rp => rp.HasFulfilled) && r.RequestProducts.Any(rp => rp.FulfillerId == user.Id),
+                        search,
+                        page,
+                        itemsPerPage
+                    );
                 }
 
-                var requestProductModels = await _requestModelFactory.PrepareRequestProductModelAsync(requestProducts);
-                var requestQueryable = requestProductModels.AsQueryable();
+                //var requestProductModels = await _requestModelFactory.PrepareRequestProductModelAsync(requestProducts);
+                var requestQueryable = requests.AsQueryable();
 
                 if (page.HasValue && itemsPerPage.HasValue )
                 {
                     requestQueryable = requestQueryable.ToList().Where(x =>
-                        (x.ProjectName != null && x.ProjectName.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
-                        x.RequestId.ToString().Contains(search)).AsQueryable();
+                        (x.ProjectInformation.ProjectName != null && x.ProjectInformation.ProjectName.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
+                        x.Id.ToString().Contains(search)).AsQueryable();
 
                     totalItems = requestQueryable.Count();
 
                     if (itemsPerPage.Value != -1)
                     {
-                        requestModels = requestQueryable
+                        requests = requests
                             .OrderByDescending(rp => rp.CreatedOnUTC)
                             .Skip((page.Value - 1) * itemsPerPage.Value)
                             .Take(itemsPerPage.Value).ToList();
@@ -557,7 +580,7 @@ namespace Epson.Controllers.API
             }
 
 
-            response.Data = requestModels;
+            response.Data = requests;
             response.Count = totalItems;
 
 

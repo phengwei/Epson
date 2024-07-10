@@ -217,13 +217,11 @@ namespace Epson.Services.Services.Requests
                 .Include(x => x.RequestSubmissionDetail)
                 .Include(x => x.ProjectInformation)
                 .ThenInclude(pi => pi.ProjectInformationReasons)
-            .AsQueryable();
-
+                .AsQueryable();
 
             if (filter != null)
             {
                 query = query.Where(filter).AsQueryable();
-
             }
 
             if (!string.IsNullOrEmpty(search))
@@ -316,7 +314,7 @@ namespace Epson.Services.Services.Requests
                 .Where(r => r.RequestProducts.Any(rp => authorizedRequestProducts.Contains(rp)))
                 .ToList();
 
-            var totalItems = authorizedRequestProducts.Count;
+            var totalItems = authorizedRequests.Count;
 
             if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value != -1)
             {

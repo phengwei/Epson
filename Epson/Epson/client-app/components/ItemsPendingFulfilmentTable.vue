@@ -32,9 +32,6 @@
         <td>{{ item.createdOnUTC }}</td>
         <td>{{ item.projectName }}</td>
         <td>{{ item.createdByStr }}</td>
-        <td>{{ item.productName }}</td>
-        <td>{{ item.endUserPrice }}</td>
-        <td>{{ item.quantity }}</td>
         <td>
           <v-btn @click="viewRequest(item)">View</v-btn>
         </td>
@@ -56,9 +53,6 @@
           { text: 'Requested On', value: 'createdOnUTC' },
           { text: 'End User', align: 'start', value: 'projectName' },
           { text: 'Requested By', value: 'createdByStr' },
-          { text: 'Product', value: 'productName' },
-          { text: 'Budget', value: 'endUserPrice' },
-          { text: 'Quantity', value: 'quantity' },
           { text: 'Fulfill Request', value: 'actions', sortable: false }
         ],
         itemsPendingFulfilment: [],
@@ -107,20 +101,10 @@
         this.getFulfillerItem();
       },
       viewRequest(request) {
-        console.log("awd", request);
-        const selectedProduct = request;
-        const filteredRequest = {
-          ...request,
-          requestProductsModel: [selectedProduct]
-        };
+        console.log("awdss", request);
+        let queryParameters = { view: true, requestId: request.requestId };
 
-        let queryParameters = { view: true, request: JSON.stringify(filteredRequest) };
-
-        if (selectedProduct.isCoverplus === true) {
-          queryParameters = { ...queryParameters, isFulfillCoverplus: true };
-        } else if (selectedProduct.isCoverplus === false) {
-          queryParameters = { ...queryParameters, isFulfill: true };
-        }
+        queryParameters = { ...queryParameters, isFulfill: true };
 
         this.$router.push({
           path: '/createquotation',
@@ -140,36 +124,15 @@
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfilleritem`, { params }).then(result => {
           this.itemsPendingFulfilment = [];
-          console.log("awd", result);
           result.data.data.items.forEach(item => {
-            item.requestProducts.forEach(product => {
-              if (product.authorizedToFulfill && product.status === this.RequestProductStatusEnum.Pending) {
-                const newItem = {
-                  ...item,
-                  ...product,
-                  projectName: item.projectInformation && item.projectInformation.projectName ? item.projectInformation.projectName : 'N/A',
-                  createdOnUTC: moment(product.createdOnUTC).format('DD MMM YY HH:mm'),
-                  productName: product.productName,
-                  distyPrice: product.distyPrice,
-                  dealerPrice: product.dealerPrice,
-                  endUserPrice: product.endUserPrice,
-                  quantity: product.quantity,
-                  authorizedToFulfill: product.authorizedToFulfill,
-                  competitors: [],
-                  status: product.status
-                };
-
-                item.competitorInformations.forEach(comp => {
-                  const c = {
-                    model: comp.model,
-                    brand: comp.brand,
-                    price: comp.price
-                  };
-                  newItem.competitors.push(c);
-                });
-                this.itemsPendingFulfilment.push(newItem);
-              }
-            });
+            const newItem = {
+              requestId: item.id,
+              projectName: item.projectInformation && item.projectInformation.projectName ? item.projectInformation.projectName : 'N/A',
+              createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm'),
+              createdByStr: item.createdByStr
+            }
+            
+            this.itemsPendingFulfilment.push(newItem);
           });
           this.totalItems = result.data.data.total;
           this.loading = false;
