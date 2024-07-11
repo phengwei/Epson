@@ -245,26 +245,31 @@
             text: 'ID',
             align: ' d-none',
             value: 'id',
+            sortable: false
           },
           {
             text: 'Request #',
             align: 'start',
             value: 'id',
+            sortable: false
           },
           {
             text: 'End User',
             align: 'start',
             value: 'endUserName',
+            sortable: false
           },
           {
             text: 'Created Time',
             align: 'start',
             value: 'createdOnUTC',
+            sortable: false
           },
           {
             text: 'Total Budget',
             align: 'start',
             value: 'totalBudget',
+            sortable: false
           },
           { text: 'Actions', value: 'actions', sortable: false },
         ],

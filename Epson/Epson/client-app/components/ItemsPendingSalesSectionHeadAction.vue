@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-data-table :headers="headers"
-                  :items="filteredRequests"
+                  :items="requests"
                   :options.sync="options"
                   :items-per-page="options.itemsPerPage"
                   :loading="loading"
@@ -74,9 +74,25 @@
 </template>
 
 <script>
+  import { Base64 } from 'js-base64';
   import Swal from 'sweetalert2'
   import moment from 'moment';
   import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
+
+  const approvalStateMapping = {
+    [ApprovalStateEnum.PendingSalesSectionHeadAction]: 'Pending Sales Section Head Action',
+    [ApprovalStateEnum.PendingFulfillerAction]: 'Pending Fulfiller Action',
+    [ApprovalStateEnum.PendingRequesterAction]: 'Pending Requester Action',
+    [ApprovalStateEnum.PendingSalesSectionHeadFinalAction]: 'Pending Sales Section Head Final Action',
+    [ApprovalStateEnum.Approved]: 'Approved',
+    [ApprovalStateEnum.AmendQuotation]: 'Amend Quotation',
+    [ApprovalStateEnum.RejectedByFulfiller]: 'Rejected By Fulfiller',
+    [ApprovalStateEnum.RejectedByRequester]: 'Rejected By Requester',
+    [ApprovalStateEnum.RejectedBySalesSectionHead]: 'Rejected By Sales Section Head',
+    [ApprovalStateEnum.Cancelled]: 'Cancelled',
+    [ApprovalStateEnum.DealExited]: 'Deal Exited'
+  };
+
 
   export default {
     name: 'ItemsPendingRequesterAction',
@@ -90,26 +106,31 @@
             text: 'Request #',
             align: 'start',
             value: 'id',
+            sortable: false
           },
           {
             text: 'Requested By',
             align: 'start',
-            value: 'createdBy',
+            value: 'createdByStr',
+            sortable: false
           },
           {
             text: 'End User',
             align: 'start',
-            value: 'endUserName'
+            value: 'endUserName',
+            sortable: false
           },
           {
             text: 'Created Time',
             align: 'start',
             value: 'createdOnUTC',
+            sortable: false
           },
           {
             text: 'Total Budget',
             align: 'start',
             value: 'totalBudget',
+            sortable: false
           },
           { text: 'Record', value: 'actions', sortable: false },
         ],
@@ -186,15 +207,17 @@
         });
       },
       viewRequest(request) {
-        let queryParameters = { view: true, request: JSON.stringify(request) };
+        let queryParameters = { view: true, requestId: request.id };
 
         if (request.approvalState === ApprovalStateEnum.PendingSalesSectionHeadAction) {
           queryParameters = { ...queryParameters, isApprove: true };
         }
 
+        const encodedParams = Base64.encode(JSON.stringify(queryParameters));
+
         this.$router.push({
           path: '/createquotation',
-          query: queryParameters
+          query: { params: encodedParams }
         });
       },
       getPendingSalesSectionHeadItem() {
@@ -206,9 +229,11 @@
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingsalessectionheaditem`, { params }).then(result => {
           this.requests = result.data.data.map(request => {
+            console.log("awdre", request);
             return {
               ...request,
-              endUserName: request.projectInformationModel.projectName || 'N/A',
+              approvalStateStr: approvalStateMapping[request.approvalState] || 'Pending',
+              endUserName: request.projectInformation.projectName || 'N/A',
               createdOnUTC: moment(request.createdOnUTC).format('DD MMM YY HH:mm')
             };
           });

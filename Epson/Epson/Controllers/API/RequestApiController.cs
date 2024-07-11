@@ -80,7 +80,7 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
         public async Task<IActionResult> GetRequests(string search = null, int? page = null, int? itemsPerPage = null, bool breached = false, int month = 0)
         {
-            var response = new GenericResponseModel<List<RequestModel>>();
+            var response = new GenericResponseModel<List<RequestDTO>>();
             var currentUser = _workContext.CurrentUser;
             var currentUserDetail = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
@@ -97,45 +97,47 @@ namespace Epson.Controllers.API
                 Func<Request, bool> adminFilter = x => true;
                 requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => adminFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
             }
-
-            if (currentUser.Roles.Contains("Sales Operation"))
+            else
             {
-                Func<Request, bool> salesOperationFilter = x => x.ApprovalState == (int)ApprovalStateEnum.Approved;
-                requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesOperationFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
-            }
+                if (currentUser.Roles.Contains("Sales Operation"))
+                {
+                    Func<Request, bool> salesOperationFilter = x => x.ApprovalState == (int)ApprovalStateEnum.Approved;
+                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesOperationFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                }
 
-            if (currentUser.Roles.Contains("Sales Section Head"))
-            {
-                bool multiRoles = currentUser.Roles.Count > 1;
+                if (currentUser.Roles.Contains("Sales Section Head"))
+                {
+                    bool multiRoles = currentUser.Roles.Count > 1;
 
-                var teamHierarchy = _userService.InitializeTeamHierarchy(true, multiRoles);
+                    var teamHierarchy = _userService.InitializeTeamHierarchy(true, multiRoles);
 
-                var relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUserDetail.TeamId, _teamRepository);
-                relevantTeamIds.Add(currentUserDetail.TeamId);
+                    var relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUserDetail.TeamId, _teamRepository);
+                    relevantTeamIds.Add(currentUserDetail.TeamId);
 
-                var usersInRelevantTeams = _userManager.Users
-                                                        .Where(u => relevantTeamIds.Contains(u.TeamId))
-                                                        .Select(u => u.Id)
-                                                        .ToList();
+                    var usersInRelevantTeams = _userManager.Users
+                                                            .Where(u => relevantTeamIds.Contains(u.TeamId))
+                                                            .Select(u => u.Id)
+                                                            .ToList();
 
-                Func<Request, bool> salesSectionHeadFilter = x => usersInRelevantTeams.Contains(x.CreatedById) &&
-                                                            x.CreatedById != currentUser.Id;
+                    Func<Request, bool> salesSectionHeadFilter = x => usersInRelevantTeams.Contains(x.CreatedById) &&
+                                                                x.CreatedById != currentUser.Id;
 
-                requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesSectionHeadFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
-            }
+                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesSectionHeadFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                }
 
-            if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus"))
-            {
-                Func<Request, bool> fulfillerFilter = x => x.RequestProducts.Any(rp => rp.FulfillerId == currentUser.Id);
+                if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus"))
+                {
+                    Func<Request, bool> fulfillerFilter = x => x.RequestProducts.Any(rp => rp.FulfillerId == currentUser.Id);
 
-                requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => fulfillerFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
-            }
+                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => fulfillerFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                }
 
-            if (currentUser.Roles.Contains("Sales"))
-            {
-                Func<Request, bool> salesFilter = x => x.CreatedById == currentUser.Id;
+                if (currentUser.Roles.Contains("Sales"))
+                {
+                    Func<Request, bool> salesFilter = x => x.CreatedById == currentUser.Id;
 
-                requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                }
             }
 
             var uniqueRequests = requestSet.ToList().Distinct(new RequestDTOComparer()).ToList();
@@ -149,9 +151,9 @@ namespace Epson.Controllers.API
                                     .ToList();
             }
 
-            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(uniqueRequests.OrderByDescending(x => x.CreatedOnUTC).ToList());
+            //var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(uniqueRequests.OrderByDescending(x => x.CreatedOnUTC).ToList());
 
-            response.Data = requestModels;
+            response.Data = uniqueRequests;
             response.Count = actualTotalItems;
 
             return Ok(response);
@@ -684,7 +686,7 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin,Director")]
         public async Task<IActionResult> GetPendingSalesSectionHeadItem(string search = null, int? page = null, int? itemsPerPage = null)
         {
-            var response = new GenericResponseModel<List<RequestModel>>();
+            var response = new GenericResponseModel<List<RequestDTO>>();
 
             var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
@@ -723,9 +725,9 @@ namespace Epson.Controllers.API
             filteredRequestsQuery = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage)
                                 .ToList();
 
-            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(filteredRequestsQuery);
+            //var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(filteredRequestsQuery);
 
-            response.Data = requestModels;
+            response.Data = filteredRequestsQuery;
             response.Count = totalItems;
 
             return Ok(response);
@@ -735,7 +737,7 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin,Director")]
         public async Task<IActionResult> GetPendingSalesSectionHeadDepartmentItems(string search = null, int? page = null, int? itemsPerPage = null)
         {
-            var response = new GenericResponseModel<List<RequestModel>>();
+            var response = new GenericResponseModel<List<RequestDTO>>();
 
             var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
@@ -758,9 +760,9 @@ namespace Epson.Controllers.API
             var requests = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage)
                                 .ToList();
 
-            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
+            //var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
 
-            response.Data = requestModels;
+            response.Data = requests;
             response.Count = totalItems;
 
             return Ok(response);

@@ -227,7 +227,7 @@ namespace Epson.Services.Services.Requests
             if (!string.IsNullOrEmpty(search))
             {
                 query = query.ToList().Where(x =>
-                    (x.ProjectInformation != null && x.ProjectInformation.ProjectName.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.ProjectInformation?.ProjectName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
                     x.Id.ToString().Contains(search)).AsQueryable();
             }
 
@@ -268,6 +268,7 @@ namespace Epson.Services.Services.Requests
                     TimeToResolution = x.TimeToResolution,
                     Comments = x.Comments,
                     TeamId = x.TeamId,
+                    TeamName = x.TeamName,
                     RequestProducts = _mapper.Map<List<RequestProductDTO>>(x.RequestProducts.ToList()),
                     RequestSubmissionDetail = _mapper.Map<RequestSubmissionDetailDTO>(x.RequestSubmissionDetail),
                     ProjectInformation = x.ProjectInformation != null ? new ProjectInformationDTO

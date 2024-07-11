@@ -21,6 +21,7 @@ namespace Epson.Services.DTO.Requests
         public string UpdatedById { get; set; }
         public string Comments { get; set; }
         public int TeamId { get; set; }
+        public string TeamName { get; set; }
         public List<RequestProductDTO> RequestProducts { get; set; } = new List<RequestProductDTO>();
         public List<CompetitorInformationDTO> CompetitorInformations { get; set; } = new List<CompetitorInformationDTO>();
         public RequestSubmissionDetailDTO RequestSubmissionDetail { get; set; } = new RequestSubmissionDetailDTO();

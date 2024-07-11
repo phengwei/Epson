@@ -27,7 +27,7 @@
       </div>
       <v-card-text>
         <v-data-table :headers="headers"
-                      :items="filteredRequests"
+                      :items="requests"
                       :options.sync="options"
                       :items-per-page="options.itemsPerPage"
                       :footer-props="{ itemsPerPageOptions: [5, 10, 20, 30, 50, { text: 'All', value: -1 }], 'items-per-page-text': 'Rows per page:', 'items-per-page-align': 'right' }"
@@ -46,9 +46,24 @@
 
 <script>
   import { mapGetters } from 'vuex';
+  import { Base64 } from 'js-base64';
   import moment from 'moment';
   import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
   import { RequestProductStatusEnum } from '~/script/requestProductStatusEnum.js';
+
+  const approvalStateMapping = {
+    [ApprovalStateEnum.PendingSalesSectionHeadAction]: 'Pending Sales Section Head Action',
+    [ApprovalStateEnum.PendingFulfillerAction]: 'Pending Fulfiller Action',
+    [ApprovalStateEnum.PendingRequesterAction]: 'Pending Requester Action',
+    [ApprovalStateEnum.PendingSalesSectionHeadFinalAction]: 'Pending Sales Section Head Final Action',
+    [ApprovalStateEnum.Approved]: 'Approved',
+    [ApprovalStateEnum.AmendQuotation]: 'Amend Quotation',
+    [ApprovalStateEnum.RejectedByFulfiller]: 'Rejected By Fulfiller',
+    [ApprovalStateEnum.RejectedByRequester]: 'Rejected By Requester',
+    [ApprovalStateEnum.RejectedBySalesSectionHead]: 'Rejected By Sales Section Head',
+    [ApprovalStateEnum.Cancelled]: 'Cancelled',
+    [ApprovalStateEnum.DealExited]: 'Deal Exited'
+  };
 
   export default {
     name: 'RequestOverview',
@@ -59,17 +74,17 @@
           { text: 'Request #', value: 'id', align: 'center', sortable: false },
           { text: 'End User', value: 'endUserName', align: 'center', sortable: false },
           { text: 'Approval State', value: 'approvalStateStr', align: 'center', sortable: false },
-          { text: 'Total Budget (RM)', value: 'totalBudget', align: 'center', sortable: false },
+          { text: 'Total Budget (RM)', value: 'totalEndUserBudget', align: 'center', sortable: false },
           { text: 'Created On', value: 'createdOnUTC', align: 'center', sortable: false },
-          { text: 'Created By', value: 'createdBy', align: 'center', sortable: false },
+          { text: 'Created By', value: 'createdByStr', align: 'center', sortable: false },
           { text: 'Approved Time', value: 'approvedTime', align: 'center', sortable: false },
-          { text: 'Requester Team', value: 'createdByTeam', align: 'center', sortable: false },
+          { text: 'Requester Team', value: 'teamName', align: 'center', sortable: false },
           { text: 'Actions', value: 'action', align: 'center', sortable: false }
         ],
         requests: [],
         options: {
           page: 1,
-          itemsPerPage: 5,
+          itemsPerPage: 10,
           sortBy: [],
           sortDesc: [],
         },
@@ -100,25 +115,6 @@
     },
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser']),
-      filteredRequests() {
-        let filtered = this.requests;
-        if (this.search.trim() !== '') {
-          filtered = filtered.filter(request => {
-            const requestIdMatch = String(request.id).toLowerCase().includes(this.search.toLowerCase());
-            const projectNameMatch = request.projectInformationModel &&
-              request.projectInformationModel.projectName &&
-              request.projectInformationModel.projectName.toLowerCase().includes(this.search.toLowerCase());
-            return requestIdMatch || projectNameMatch;
-          });
-        }
-        if (this.selectedMonth !== null) {
-          filtered = filtered.filter(request => {
-            const requestMonth = moment(request.createdOnUTC).month() + 1; // months are 0-indexed
-            return this.selectedMonth === 0 || requestMonth === this.selectedMonth;
-          });
-        }
-        return filtered;
-      }
     },
     watch: {
       options: {
@@ -177,15 +173,17 @@
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getrequests`, { params })
           .then(response => {
+            console.log("response", response);
             this.requests = response.data.data.map(item => {
               const isApproved = item.approvalState === this.ApprovalStateEnum.Approved;
               const approvedTime = isApproved ? moment(item.approvedTime).add(8, 'hours').format('DD MMM YY HH:mm') : 'N/A';
               return {
                 ...item,
-                endUserName: item.projectInformationModel.projectName || 'N/A',
+                totalEndUserBudget: item.projectInformation.budget,
+                approvalStateStr: approvalStateMapping[item.approvalState] || 'Pending',
+                endUserName: item.projectInformation.projectName || 'N/A',
                 createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm'),
-                approvedTime,
-                createdByTeam: item.createdTeam || 'N/A'
+                approvedTime
               };
             });
             this.totalItems = response.data.count;
@@ -209,10 +207,13 @@
         this.$router.push('/createquotation?create=true');
       },
       viewRequest(request) {
-        const anyProductRejected = request.requestProductsModel.some(product =>
+        console.log("request", request);
+        const anyProductRejected = request.requestProducts.some(product =>
           product.status === this.RequestProductStatusEnum.Rejected
         );
-        let queryParameters = { request: JSON.stringify(request), month: this.selectedMonth };
+
+        let queryParameters = { requestId: request.id, month: this.selectedMonth };
+
         if (this.loggedInUser && this.loggedInUser.roles.includes('Sales Section Head')
           && request.approvalState === this.ApprovalStateEnum.PendingSalesSectionHeadAction
           && request.createdById !== this.loggedInUser.id) {
@@ -237,9 +238,11 @@
           queryParameters = { ...queryParameters, view: true };
         }
 
+        const encodedParams = Base64.encode(JSON.stringify(queryParameters));
+
         this.$router.push({
           path: '/createquotation',
-          query: queryParameters
+          query: { params: encodedParams }
         });
       },
     },
