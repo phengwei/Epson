@@ -18,6 +18,6 @@ namespace Epson.Services.DTO.Requests
         public string? Email { get; set; }
         public DateTime CreatedOnUTC { get; set; }
         public string CreatedBy { get; set; }
-        public string PreparedBy { get; set; }
+        public string? CreatedByStr { get; set; }
     }
 }

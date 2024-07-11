@@ -30,7 +30,7 @@ namespace Epson.Core.Domain.Requests
         public bool HasReminded { get; set; }
         public string? WarrantyRequest { get; set; }
         public string? WarrantyRequestPeriod { get; set; }
-
+        public int CategoryId { get; set; }
         public virtual Request Request { get; set; }
     }
 }

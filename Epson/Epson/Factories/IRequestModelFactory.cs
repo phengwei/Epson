@@ -8,7 +8,7 @@ namespace Epson.Factories
 {
     public interface IRequestModelFactory
     {
-        Task<List<RequestModel>> PrepareRequestModelsAsync(List<RequestDTO> requests);
+        RequestModel PrepareRequestModel(RequestDTO request);
         Task<List<RequestProductModel>> PrepareRequestProductModelAsync(List<RequestProductDTO> requestProducts);
     }
 }

@@ -299,18 +299,45 @@ namespace Epson.Services.Services.Requests
             return requestDTOs;
         }
 
+        public RequestDTO GetUnfulfilledRequestProducts(RequestDTO request, ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
+        {
+            var backupFulfillers = GetBackupFulfillers(user.Id);
+            var authorizedRequestProducts = new List<RequestProductDTO>();
+
+            foreach (var rp in request.RequestProducts)
+            {
+                rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isCoverplusUser, isProductUser, isAdminUser, backupFulfillers);
+                if (!rp.HasFulfilled && rp.AuthorizedToFulfill)
+                {
+                    authorizedRequestProducts.Add(rp);
+                }
+            }
+
+            request.RequestProducts = authorizedRequestProducts;
+            return request;
+        }
+
 
         public PagedResult<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser, string search = null, int? page = null, int? itemsPerPage = null)
         {
-            var requests = GetRequests(search).Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction).ToList();
+            var requests = GetRequests(search)
+                .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
+                .ToList();
+
             var requestProducts = requests.SelectMany(r => r.RequestProducts).ToList();
+
+            var authorizedRequestProducts = new List<RequestProductDTO>();
+            var backupFulfillers = GetBackupFulfillers(user.Id);
 
             foreach (var rp in requestProducts)
             {
-                rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isCoverplusUser, isProductUser, isAdminUser);
+                rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isCoverplusUser, isProductUser, isAdminUser, backupFulfillers);
+                if (!rp.HasFulfilled && rp.AuthorizedToFulfill)
+                {
+                    authorizedRequestProducts.Add(rp);
+                }
             }
 
-            var authorizedRequestProducts = requestProducts.Where(rp => rp.HasFulfilled == false).ToList();
             var authorizedRequests = requests
                 .Where(r => r.RequestProducts.Any(rp => authorizedRequestProducts.Contains(rp)))
                 .ToList();
@@ -332,29 +359,31 @@ namespace Epson.Services.Services.Requests
             };
         }
 
-
-
-        private bool DetermineAuthorization(RequestProductDTO rp, ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
+        private bool DetermineAuthorization(RequestProductDTO rp, ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser, HashSet<int> backupFulfillers)
         {
             if (isAdminUser)
             {
                 return true;
             }
 
-            bool isBackupFulfiller = _CategoryRepository.Table
-                .Any(c => _ProductCategoryRepository.Table
-                    .Where(pc => pc.ProductId == rp.ProductId)
-                    .Select(pc => pc.CategoryId)
-                    .Contains(c.Id) && (c.BackupFulfiller1 == user.Id || c.BackupFulfiller2 == user.Id));
-
             if (rp.IsCoverplus && !isCoverplusUser)
             {
-                return isBackupFulfiller && !rp.IsCoverplus;
+                return backupFulfillers.Contains(rp.ProductId) && !rp.IsCoverplus;
             }
 
             return (isCoverplusUser && rp.IsCoverplus) ||
                    (isProductUser && rp.FulfillerId == user.Id && !rp.IsCoverplus) ||
-                   (isBackupFulfiller && (!rp.IsCoverplus || !isCoverplusUser));
+                   (backupFulfillers.Contains(rp.ProductId) && (!rp.IsCoverplus || !isCoverplusUser));
+        }
+
+        private HashSet<int> GetBackupFulfillers(string userId)
+        {
+            return _CategoryRepository.Table
+                .Where(c => c.BackupFulfiller1 == userId || c.BackupFulfiller2 == userId)
+                .SelectMany(c => _ProductCategoryRepository.Table
+                    .Where(pc => pc.CategoryId == c.Id)
+                    .Select(pc => pc.ProductId))
+                .ToHashSet();
         }
 
         public List<RequestProductDTO> GetRequestProducts(Func<RequestProduct, bool> filter = null, int? page = null, int? itemsPerPage = null)

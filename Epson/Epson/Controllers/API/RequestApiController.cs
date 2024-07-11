@@ -59,20 +59,26 @@ namespace Epson.Controllers.API
             _configuration = configuration;
         }
         [HttpGet("getrequestbyid")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin,Director")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin,Director,Sales Operation,Coverplus,Sales Section Head")]
         public async Task<IActionResult> RequestById(int id)
         {
-            var response = new GenericResponseModel<RequestModel>();
+            var response = new GenericResponseModel<RequestDTO>();
 
             if (id == null || id == 0)
                 return BadRequest("Id must not be empty");
 
-            List<RequestDTO> request = new List<RequestDTO>(); 
-            request.Add(_requestService.GetRequestById(id));
+            RequestDTO request = _requestService.GetRequestById(id);
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+            var roles = await _userManager.GetRolesAsync(user);
+            var isCoverplusUser = roles.Contains(RoleEnum.Coverplus.ToString());
+            var isProductUser = roles.Contains(RoleEnum.Product.ToString());
+            var isAdminUser = roles.Contains(RoleEnum.Admin.ToString()) || roles.Contains(RoleEnum.Director.ToString());
 
-            var requestModel = await _requestModelFactory.PrepareRequestModelsAsync(request);
+            request = _requestService.GetUnfulfilledRequestProducts(request, user, isCoverplusUser, isProductUser, isAdminUser);
 
-            response.Data = requestModel.First();
+            //var requestModel = _requestModelFactory.PrepareRequestModel(request);
+
+            response.Data = request;
             return Ok(response);
         }
 
@@ -528,7 +534,7 @@ namespace Epson.Controllers.API
                 {
                     requests = _requestService.GetRequests(
                         out totalItems,
-                        r => r.RequestProducts.Any(rp => rp.HasFulfilled) && r.RequestProducts.Any(rp => rp.FulfillerId == user.Id),
+                        r => r.RequestProducts.Any(rp => rp.FulfillerId == user.Id && rp.HasFulfilled == true),
                         search,
                         page,
                         itemsPerPage
@@ -773,7 +779,7 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales Section Head, Admin,Director")]
         public async Task<IActionResult> GetCompletedRequests()
         {
-            var response = new GenericResponseModel<List<RequestModel>>();
+            var response = new GenericResponseModel<List<RequestDTO>>();
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
@@ -782,9 +788,9 @@ namespace Epson.Controllers.API
             var requests = _requestService.GetRequests().Where(x => x.ApprovalState == (int)ApprovalStateEnum.Approved)
                                                                     .ToList();
 
-            var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
+            //var requestModels = await _requestModelFactory.PrepareRequestProductModelAsync(requests);
 
-            response.Data = requestModels;
+            response.Data = requests;
 
             return Ok(response);
         }

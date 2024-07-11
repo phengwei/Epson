@@ -6,6 +6,13 @@ import JsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { ApprovalStateEnum } from '~/script/approvalStateEnum.js';
 
+const statusMapping = {
+  0: 'Pending',
+  10: 'Cancelled',
+  20: 'Rejected',
+  30: 'Approved'
+};
+
 export default {
   name: "request-quotation",
   components: {
@@ -45,7 +52,7 @@ export default {
       productsToShow: [],
       competitorsToShow: [],
       coverplusesToShow: [],
-      submissionDetail: { preparedBy: null, createdOnUTC: null, distributorName: null, resellerName: null, contactPersonName: null, telephoneNo: null, faxNo: null, email: null },
+      submissionDetail: { createdByStr: null, createdOnUTC: null, distributorName: null, resellerName: null, contactPersonName: null, telephoneNo: null, faxNo: null, email: null },
       projectInformation: {
         projectName: null, projectId: null, industry: null, type: null, closingDate: null, deliveryDate: null, companyAddress: null, contactPersonName: null,
         email: null, requirements: null, budget: null, staggeredDelivery: null, otherInformation: null,
@@ -102,7 +109,8 @@ export default {
   async created() {
     this.loading = true;
     this.submissionDetail.createdOnUTC = this.getToday();
-    this.submissionDetail.preparedBy = this.loggedInUser.userName;
+    this.submissionDetail.createdByStr = this.loggedInUser.userName;
+    console.log("this.loggedinuser", this.loggedInUser);
     await this.fetchCategories();
 
     if (this.$route.query.params) {
@@ -164,6 +172,11 @@ export default {
   methods: {
     isMode(mode) {
       return this.decodedQueryParams[mode] === true;
+    },
+    openFulfillProductDialog(product) {
+      this.editedItem = { ...product };
+      this.editedItem.createdByStr = this.submissionDetail.createdByStr;
+      this.dialogProductFulfillment = true;
     },
     openAddProductDialog() {
       this.selectedProduct = {}; 
@@ -459,10 +472,12 @@ export default {
       return 'N/A';
     },
     populateForm(requestData) {
+      console.log("requestData", requestData);
       this.currentRequest = requestData;
-      for (const productModel of requestData.requestProductsModel) {
-        const categoryFound = productModel.productCategory && productModel.productCategory.categoryId
-          ? this.categories.find((categoryFound) => categoryFound.id === productModel.productCategory.categoryId)
+      console.log("this.category", this.categories);
+      for (const productModel of requestData.requestProducts) {
+        const categoryFound = productModel.categoryId
+          ? this.categories.find((c) => c.id === productModel.categoryId)
           : null;
 
         if (categoryFound) {
@@ -492,13 +507,14 @@ export default {
             productName: productModel.productName,
             remarks: (productModel.remarks === null || productModel.remarks === "null") ? 'N/A' : productModel.remarks,
             status: productModel.status,
-            statusStr: productModel.statusStr,
+            statusStr: statusMapping[productModel.status] || 'Pendings', 
             fulfilledPrice: productModel.fulfilledPrice,
             warrantyRequest: productModel.warrantyRequest,
             warrantyRequestPeriod: productModel.warrantyRequestPeriod,
             breached: productModel.breached
           };
 
+          console.log("p", p);
           if (productModel.isCoverplus === true) {
             this.coverplusesToShow.push(p);
           } else {
@@ -506,7 +522,7 @@ export default {
           }
         }
       }
-      for (const competitorModel of requestData.competitorInformationModel) {
+      for (const competitorModel of requestData.competitorInformations) {
         const c = {
           model: competitorModel.model,
           brand: competitorModel.brand,
@@ -518,12 +534,12 @@ export default {
       }
       this.approvedByName = requestData.approvedByName;
       this.approvedTime = requestData.approvedTime;
-      this.submissionDetail = requestData.requestSubmissionDetailModel;
-      this.projectInformation = requestData.projectInformationModel;
+      this.submissionDetail = requestData.requestSubmissionDetail;
+      this.projectInformation = requestData.projectInformation;
       this.approvalStateStr = requestData.approvalStateStr;
       this.comments = requestData.comments;
 
-      requestData.projectInformationModel.projectInformationReasons.forEach((populatedReason) => {
+      requestData.projectInformation.projectInformationReasons.forEach((populatedReason) => {
         const reasonInData = this.reasons.find((reason) => reason.text === populatedReason.selectedReason);
         if (reasonInData) {
           reasonInData.isChecked = true;
@@ -537,6 +553,8 @@ export default {
           additionalInfo: populatedReason.additionalText || null
         });
       });
+
+      console.log("requestssss", this.productsToShow);
     },
     async fetchRequestById(id) {
       try {

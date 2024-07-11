@@ -204,10 +204,15 @@
         this.getRequests();
       },
       redirectToCreateQuotation() {
-        this.$router.push('/createquotation?create=true');
+        const queryParameters = { create: true };
+        const encodedParams = Base64.encode(JSON.stringify(queryParameters));
+
+        this.$router.push({
+          path: '/createquotation',
+          query: { params: encodedParams }
+        });
       },
       viewRequest(request) {
-        console.log("request", request);
         const anyProductRejected = request.requestProducts.some(product =>
           product.status === this.RequestProductStatusEnum.Rejected
         );

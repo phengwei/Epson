@@ -7,7 +7,7 @@
       <v-card-text>
         <div class="form-group">
           <label>Requested By</label>
-          <input v-model="localEditedItem.createdBy" class="border-input readonly-field" label="Requested By" readonly></input>
+          <input v-model="localEditedItem.createdByStr" class="border-input readonly-field" label="Requested By" readonly></input>
         </div>
         <div class="form-group">
           <label>Product</label>

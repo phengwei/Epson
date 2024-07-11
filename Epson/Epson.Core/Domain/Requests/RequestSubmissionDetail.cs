@@ -18,7 +18,7 @@ namespace Epson.Core.Domain.Requests
         public string? Email { get; set; }
         public DateTime? CreatedOnUTC { get; set; }
         public string? CreatedBy { get; set; }
-
+        public string? CreatedByStr { get; set; }
         public virtual Request Request { get; set; }
     }
 }

@@ -37,6 +37,7 @@
                   <th>End User Price</th>
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
+                  <th v-if="isFulfillMode">Fulfill</th>
                   <th v-if="!isViewMode">Action</th>
                 </tr>
               </thead>
@@ -61,6 +62,11 @@
                     <span v-else>
                       {{ product.statusStr || 'N/A' }}
                     </span>
+                  </td>
+                  <td v-if="isFulfillMode">
+                    <v-btn small color="primary" @click="openFulfillProductDialog(product)">
+                      <v-icon>mdi-pencil</v-icon>
+                    </v-btn>
                   </td>
                   <td v-if="!isViewMode">
                     <v-btn small color="primary" @click="openEditProductDialog(product)">
@@ -193,7 +199,7 @@
               <tbody>
                 <tr>
                   <td class="td-header">Prepared By (EMSB)</td>
-                  <td><input type="text" v-model="submissionDetail.preparedBy" class="border-input" readonly></td>
+                  <td><input type="text" v-model="submissionDetail.createdByStr" class="border-input" readonly></td>
                 </tr>
                 <tr>
                   <td class="td-header">Request Date</td>
@@ -397,8 +403,6 @@
         <button type="submit" @click="acceptDeal" v-if="isMode('dealable')">Accept Deal</button>
         <button type="submit" @click="rejectDeal" v-if="isMode('dealable')">Reject Deal</button>
         <button type="submit" @click="exitDeal" v-if="isMode('amendable')">Exit Deal</button>
-        <button type="submit" @click="fulfillNonCoverplusItem" v-if="isMode('isFulfill')">Fulfill Request</button>
-        <button type="submit" @click="fulfillCoverplusItem" v-if="isMode('isFulfillCoverplus')">Fulfill Coverplus Request</button>
         <button type="submit" @click="approveRequest" v-if="isMode('isFinalApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadFinalAction">Approve Request</button>
         <button type="submit" @click="confirmAmmendQuotation" v-if="isMode('amendable')">Set Request to Amend</button>
         <button type="submit" @click="approveQuotation()" v-if="isMode('isApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadAction">Approve Quotation</button>
