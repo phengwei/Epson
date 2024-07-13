@@ -418,6 +418,8 @@ namespace Epson.Services.Services.Requests
             var requestProductDTOs = requestProducts.Select(x => new RequestProductDTO
             {
                 Id = x.Id,
+                CategoryId = x.CategoryId,
+                ProductName = x.ProductName,
                 RequestId = x.RequestId,
                 ProductId = x.ProductId,
                 Quantity = x.Quantity,

@@ -173,7 +173,6 @@ export default {
       return this.decodedQueryParams[mode] === true;
     },
     openFulfillProductDialog(product) {
-      console.log("product", product);
       this.editedItem = { ...product };
       this.editedItem.createdByStr = this.submissionDetail.createdByStr;
       this.dialogProductFulfillment = true;
@@ -472,7 +471,6 @@ export default {
       return 'N/A';
     },
     populateForm(requestData) {
-      console.log("requestData", requestData);
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProducts) {
         const categoryFound = productModel.categoryId
@@ -514,7 +512,6 @@ export default {
             warrantyRequestPeriod: productModel.warrantyRequestPeriod,
             breached: productModel.breached
           };
-
           if (productModel.isCoverplus === true) {
             this.coverplusesToShow.push(p);
           } else {
@@ -554,6 +551,7 @@ export default {
         });
       });
 
+      console.log("requestproducts", this.productsToShow);
     },
     async fetchRequestById(id) {
       try {
