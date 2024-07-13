@@ -64,7 +64,7 @@
                     </span>
                   </td>
                   <td v-if="isFulfillMode">
-                    <v-btn small color="primary" @click="openFulfillProductDialog(product)">
+                    <v-btn v-if="product.authorizedToFulfill === true" small color="primary" @click="openFulfillProductDialog(product)">
                       <v-icon>mdi-pencil</v-icon>
                     </v-btn>
                   </td>
@@ -107,6 +107,7 @@
                   <th>End User Price</th>
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
+                  <th v-if="isFulfillMode">Fulfill</th>
                   <th v-if="!isViewMode">Action</th>
                 </tr>
               </thead>
@@ -135,6 +136,11 @@
                     <span v-else>
                       {{ coverplus.statusStr || 'N/A' }}
                     </span>
+                  </td>
+                  <td v-if="isFulfillMode">
+                    <v-btn v-if="product.authorizedToFulfill === true" small color="primary" @click="openFulfillProductDialog(product)">
+                      <v-icon>mdi-pencil</v-icon>
+                    </v-btn>
                   </td>
                   <td v-if="!isViewMode">
                     <v-btn small color="primary" @click="openEditCoverplusDialog(coverplus)">

@@ -110,7 +110,6 @@ export default {
     this.loading = true;
     this.submissionDetail.createdOnUTC = this.getToday();
     this.submissionDetail.createdByStr = this.loggedInUser.userName;
-    console.log("this.loggedinuser", this.loggedInUser);
     await this.fetchCategories();
 
     if (this.$route.query.params) {
@@ -174,6 +173,7 @@ export default {
       return this.decodedQueryParams[mode] === true;
     },
     openFulfillProductDialog(product) {
+      console.log("product", product);
       this.editedItem = { ...product };
       this.editedItem.createdByStr = this.submissionDetail.createdByStr;
       this.dialogProductFulfillment = true;
@@ -474,7 +474,6 @@ export default {
     populateForm(requestData) {
       console.log("requestData", requestData);
       this.currentRequest = requestData;
-      console.log("this.category", this.categories);
       for (const productModel of requestData.requestProducts) {
         const categoryFound = productModel.categoryId
           ? this.categories.find((c) => c.id === productModel.categoryId)
@@ -498,6 +497,8 @@ export default {
           this.coverplusRequestItem = this.itemsPendingFulfillment.filter(item => item.isCoverplus);
 
           const p = {
+            authorizedToFulfill: productModel.authorizedToFulfill,
+            id: productModel.id,
             category: categoryFound,
             productId: productModel.productId,
             quantity: productModel.quantity,
@@ -514,7 +515,6 @@ export default {
             breached: productModel.breached
           };
 
-          console.log("p", p);
           if (productModel.isCoverplus === true) {
             this.coverplusesToShow.push(p);
           } else {
@@ -554,7 +554,6 @@ export default {
         });
       });
 
-      console.log("requestssss", this.productsToShow);
     },
     async fetchRequestById(id) {
       try {
@@ -562,7 +561,6 @@ export default {
           params: { id }
         });
         this.unpopulatedRequests = response.data.data;
-        console.log("response", response);
       } catch (error) {
         console.error(error);
       }

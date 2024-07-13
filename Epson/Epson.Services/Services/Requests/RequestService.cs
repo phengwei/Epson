@@ -105,6 +105,7 @@ namespace Epson.Services.Services.Requests
                 AmendQuotationTime = request.AmendQuotationTime,
                 CompetitorInformations = _mapper.Map<List<CompetitorInformationDTO>>(request.CompetitorInformations.ToList()),
                 CreatedById = request.CreatedById,
+                CreatedByStr = request.CreatedByStr,
                 CreatedOnUTC = request.CreatedOnUTC.AddHours(8),
                 UpdatedById = request.UpdatedById,
                 UpdatedOnUTC = request.UpdatedOnUTC,
@@ -115,6 +116,7 @@ namespace Epson.Services.Services.Requests
                 TimeToResolution = request.TimeToResolution,
                 Comments = request.Comments,
                 TeamId = request.TeamId,
+                TeamName = request.TeamName,
                 RequestProducts = _mapper.Map<List<RequestProductDTO>>(request.RequestProducts.ToList()),
                 RequestSubmissionDetail = _mapper.Map<RequestSubmissionDetailDTO>(request.RequestSubmissionDetail),
                 ProjectInformation = request.ProjectInformation != null ? new ProjectInformationDTO
@@ -304,16 +306,16 @@ namespace Epson.Services.Services.Requests
             var backupFulfillers = GetBackupFulfillers(user.Id);
             var authorizedRequestProducts = new List<RequestProductDTO>();
 
-            foreach (var rp in request.RequestProducts)
+            foreach (var rp in request.RequestProducts.Where(x => x.HasFulfilled == false))
             {
                 rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isCoverplusUser, isProductUser, isAdminUser, backupFulfillers);
-                if (!rp.HasFulfilled && rp.AuthorizedToFulfill)
-                {
-                    authorizedRequestProducts.Add(rp);
-                }
+                //if (!rp.HasFulfilled && rp.AuthorizedToFulfill)
+                //{
+                //    authorizedRequestProducts.Add(rp);
+                //}
             }
 
-            request.RequestProducts = authorizedRequestProducts;
+            //request.RequestProducts = authorizedRequestProducts;
             return request;
         }
 
@@ -389,7 +391,7 @@ namespace Epson.Services.Services.Requests
         public List<RequestProductDTO> GetRequestProducts(Func<RequestProduct, bool> filter = null, int? page = null, int? itemsPerPage = null)
         {
             int totalItems;
-            return GetRequestProducts(out totalItems, rp => rp.HasFulfilled == true, page, itemsPerPage);
+            return GetRequestProducts(out totalItems, filter, page, itemsPerPage);
         }
 
         public List<RequestProductDTO> GetRequestProducts(out int totalCount, Func<RequestProduct, bool> filter = null, int? page = null, int? itemsPerPage = null)
@@ -875,7 +877,7 @@ namespace Epson.Services.Services.Requests
                 return false;
 
             var projectInformation = _ProjectInformationRepository.GetAll()
-                 .FirstOrDefault(x => x.RequestId == existingRequest.Id) ?? new ProjectInformation { ClosingDate = DateTime.MinValue };
+                    .FirstOrDefault(x => x.RequestId == existingRequest.Id) ?? new ProjectInformation { ClosingDate = DateTime.MinValue };
 
             requestProductToFulfill.DealerPrice = totalPrice;
             requestProductToFulfill.FulfillerId = user.Id;
@@ -883,9 +885,9 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
             requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;
             requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate,
-                                                                               existingRequest.AmendQuotationTime ?? (DateTime)existingRequest.ApprovedTime,
-                                                                               _slaService.GetSLAStaffLeavesByStaffId(user.Id),
-                                                                               _slaService.GetSLAHolidays());
+                                                                                existingRequest.AmendQuotationTime ?? (DateTime)existingRequest.ApprovedTime,
+                                                                                _slaService.GetSLAStaffLeavesByStaffId(user.Id),
+                                                                                _slaService.GetSLAHolidays());
             requestProductToFulfill.Remarks = remarks;
             requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
 

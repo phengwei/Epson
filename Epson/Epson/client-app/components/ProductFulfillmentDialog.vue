@@ -64,6 +64,7 @@
       return {
         localDialogProductFulfillment: this.dialogProductFulfillment,
         localEditedItem: {},
+        
       };
     },
     watch: {
@@ -76,6 +77,7 @@
       editedItem: {
         handler(newValue) {
           this.localEditedItem = { ...newValue };
+          this.localEditedItem.remarks = '';
           
         },
         immediate: true,
@@ -104,6 +106,7 @@
             confirmButtonText: 'Fulfill',
           }).then((result) => {
             if (result.isConfirmed) {
+              console.log("awd", this.localEditedItem);
               this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?id=${this.localEditedItem.id}&productId=${this.localEditedItem.productId}&fulfilledPrice=${this.localEditedItem.fulfilledPrice}&remarks=${this.localEditedItem.remarks}`)
                 .then(response => {
                   this.close(); 
