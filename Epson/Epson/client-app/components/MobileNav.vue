@@ -149,7 +149,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .stop-scrolling {
   height: 100%;
   overflow: hidden

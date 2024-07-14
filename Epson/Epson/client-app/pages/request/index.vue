@@ -173,7 +173,6 @@
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getrequests`, { params })
           .then(response => {
-            console.log("response", response);
             this.requests = response.data.data.map(item => {
               const isApproved = item.approvalState === this.ApprovalStateEnum.Approved;
               const approvedTime = isApproved ? moment(item.approvedTime).add(8, 'hours').format('DD MMM YY HH:mm') : 'N/A';
@@ -242,9 +241,7 @@
         } else {
           queryParameters = { ...queryParameters, view: true };
         }
-
         const encodedParams = Base64.encode(JSON.stringify(queryParameters));
-
         this.$router.push({
           path: '/createquotation',
           query: { params: encodedParams }

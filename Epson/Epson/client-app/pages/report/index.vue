@@ -37,7 +37,7 @@
                     <v-radio label="Requester" value="requester"></v-radio>
                   </v-col>
                   <v-col cols="3">
-                    <v-select v-model="requester" :items="requesters" item-text="text" label="Requester" item-value="value" dense outlined></v-select>
+                    <v-select v-model="requester" :items="requesters" item-text="text" label="Requester" item-value="value" dense outlined :disabled="selectedOption !== 'requester'"></v-select>
                   </v-col>
                 </v-row>
                 <v-row class="compact-row">
@@ -45,7 +45,7 @@
                     <v-radio label="All Requesters in" value="all_requesters_in"></v-radio>
                   </v-col>
                   <v-col cols="3">
-                    <v-select v-model="month" :items="months" item-text="text" item-value="value" label="All Requesters in" dense outlined></v-select>
+                    <v-select v-model="month" :items="months" item-text="text" item-value="value" label="All Requesters in" dense outlined :disabled="selectedOption !== 'all_requesters_in'"></v-select>
                   </v-col>
                 </v-row>
                 <v-row class="compact-row">
@@ -53,10 +53,10 @@
                     <v-radio label="All Requesters from" value="all_requesters_from"></v-radio>
                   </v-col>
                   <v-col cols="3">
-                    <v-select v-model="fromMonth" :items="months" item-text="text" item-value="value" label="From" dense outlined></v-select>
+                    <v-select v-model="fromMonth" :items="months" item-text="text" item-value="value" label="From" dense outlined :disabled="selectedOption !== 'all_requesters_from'"></v-select>
                   </v-col>
                   <v-col cols="3">
-                    <v-select v-model="toMonth" :items="months" item-text="text" item-value="value" label="To" dense outlined></v-select>
+                    <v-select v-model="toMonth" :items="months" item-text="text" item-value="value" label="To" dense outlined :disabled="selectedOption !== 'all_requesters_from'"></v-select>
                   </v-col>
                 </v-row>
                 <v-row>
@@ -81,7 +81,7 @@
                     <v-radio label="Product" value="product"></v-radio>
                   </v-col>
                   <v-col cols="3">
-                    <v-select v-model="product" :items="products" item-text="text" label="Product" item-value="value" dense outlined></v-select>
+                    <v-select v-model="product" :items="products" item-text="text" label="Product" item-value="value" dense outlined :disabled="selectedOption !== 'product'"></v-select>
                   </v-col>
                 </v-row>
                 <v-row class="compact-row">
@@ -89,7 +89,7 @@
                     <v-radio label="All Products in" value="all_products_in"></v-radio>
                   </v-col>
                   <v-col cols="3">
-                    <v-select v-model="productMonth" :items="months" item-text="text" item-value="value" label="All Products in" dense outlined></v-select>
+                    <v-select v-model="productMonth" :items="months" item-text="text" item-value="value" label="All Products in" dense outlined :disabled="selectedOption !== 'all_products_in'"></v-select>
                   </v-col>
                 </v-row>
                 <v-row class="compact-row">
@@ -97,10 +97,10 @@
                     <v-radio label="All Products from" value="all_products_from"></v-radio>
                   </v-col>
                   <v-col cols="3">
-                    <v-select v-model="productFromMonth" :items="months" item-text="text" item-value="value" label="From" dense outlined></v-select>
+                    <v-select v-model="productFromMonth" :items="months" item-text="text" item-value="value" label="From" dense outlined :disabled="selectedOption !== 'all_products_from'"></v-select>
                   </v-col>
                   <v-col cols="3">
-                    <v-select v-model="productToMonth" :items="months" item-text="text" item-value="value" label="To" dense outlined></v-select>
+                    <v-select v-model="productToMonth" :items="months" item-text="text" item-value="value" label="To" dense outlined :disabled="selectedOption !== 'all_products_from'"></v-select>
                   </v-col>
                 </v-row>
                 <v-row>
@@ -280,7 +280,7 @@
       generateMonths() {
         const months = [];
         const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth() + 1; 
+        const currentMonth = new Date().getMonth() + 1;
 
         for (let year = currentYear - 1; year <= currentYear; year++) {
           for (let month = 1; month <= 12; month++) {
@@ -540,6 +540,7 @@
   .theme--dark.v-btn.v-btn--has-bg {
     background-color: #003399 !important;
   }
+
   .big-bold {
     font-size: 1.5rem;
   }
@@ -581,7 +582,7 @@
     max-width: 100%;
     border-radius: 10px;
     padding: 0 10px;
-    box-shadow: none; 
+    box-shadow: none;
   }
 
     .v-select .v-input__control {
