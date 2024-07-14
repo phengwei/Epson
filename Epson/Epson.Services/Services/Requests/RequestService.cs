@@ -101,12 +101,12 @@ namespace Epson.Services.Services.Requests
             {
                 Id = request.Id,
                 ApprovedBy = request.ApprovedBy,
-                ApprovedTime = request.ApprovedTime.AddHours(8),
+                ApprovedTime = request.ApprovedTime,
                 AmendQuotationTime = request.AmendQuotationTime,
                 CompetitorInformations = _mapper.Map<List<CompetitorInformationDTO>>(request.CompetitorInformations.ToList()),
                 CreatedById = request.CreatedById,
                 CreatedByStr = request.CreatedByStr,
-                CreatedOnUTC = request.CreatedOnUTC.AddHours(8),
+                CreatedOnUTC = request.CreatedOnUTC,
                 UpdatedById = request.UpdatedById,
                 UpdatedOnUTC = request.UpdatedOnUTC,
                 Segment = request.Segment,
@@ -509,6 +509,7 @@ namespace Epson.Services.Services.Requests
                 requestSubmissionDetail.CreatedBy = request.CreatedById;
 
                 var requestSubmissionDetailToInsert = _mapper.Map<RequestSubmissionDetail>(requestSubmissionDetail);
+                requestSubmissionDetailToInsert.CreatedByStr = request.CreatedByStr;
                 _RequestSubmissionDetailRepository.Add(requestSubmissionDetailToInsert);
                 _logger.Information("Successfully created request {id}", request.Id);
 
@@ -616,6 +617,7 @@ namespace Epson.Services.Services.Requests
                 }
 
                 var requestSubmissionDetailToInsert = _mapper.Map<RequestSubmissionDetail>(requestSubmissionDetail);
+                requestSubmissionDetailToInsert.CreatedByStr = request.CreatedByStr;
                 _RequestSubmissionDetailRepository.Update(requestSubmissionDetailToInsert);
 
                 _logger.Information("Successfully created request {id}", request.Id);
@@ -878,9 +880,6 @@ namespace Epson.Services.Services.Requests
             if (requestProductToFulfill == null)
                 return false;
 
-            var projectInformation = _ProjectInformationRepository.GetAll()
-                    .FirstOrDefault(x => x.RequestId == existingRequest.Id) ?? new ProjectInformation { ClosingDate = DateTime.MinValue };
-
             requestProductToFulfill.DealerPrice = totalPrice;
             requestProductToFulfill.FulfillerId = user.Id;
             requestProductToFulfill.HasFulfilled = true;
@@ -901,37 +900,26 @@ namespace Epson.Services.Services.Requests
                 _RequestProductRepository.Update(requestProductToFulfill);
                 _logger.Information("Fulfilling request product {id}", requestProductToFulfill.Id);
 
-                //calculates total price for all requested products
+                // Calculate total price for all requested products
                 decimal totalUpdatedPrice = requestProducts.Sum(x => x.FulfilledPrice);
                 existingRequest.TotalPrice = totalUpdatedPrice;
 
-                //checks for all hasfulfilled field 
-                bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled == true);
+                // Check if all products are fulfilled
+                bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled);
 
+                var request = _mapper.Map<Request>(existingRequest);
                 if (allProductsFulfilled)
                 {
-                    existingRequest.ApprovalState = (int)ApprovalStateEnum.Approved;
-                    //existingRequest.ApprovedTime = DateTime.UtcNow;
+                    request.ApprovalState = (int)ApprovalStateEnum.Approved;
+                    _RequestRepository.Update(request);
 
-                    var request = _RequestRepository.GetById(requestProduct.RequestId);
-                    List<RequestProduct> rps = _RequestProductRepository.GetAll().Where(x => x.RequestId == requestProduct.RequestId).ToList();
-
-                    List<EmailQueue> emailQueues = _emailService.NotifySalesSectionHeadUsersOnApprovedRequest(request, rps);
-
-                    emailQueues.AddRange(_emailService.NotifySalesOperationTeamsOnApprovedRequest(request, rps));
-                    emailQueues.Add(_emailService.CreateApprovedEmailQueue(request, rps));
-
-                    foreach (var emailQueue in emailQueues)
-                    {
-                        _emailService.InsertEmailQueue(emailQueue);
-                    }
+                    // Run email notification in the background
+                    Task.Run(() => NotifyFulfillment(request, requestProducts, requestProductToFulfill, allProductsFulfilled));
                 }
-
-                _RequestRepository.Update(_mapper.Map<Request>(existingRequest));
-
-                var updatedRequest = _mapper.Map<Request>(GetRequestById(existingRequest.Id));
-                var fulfillRequestQueue = _emailService.CreateFulfillEmailQueue(updatedRequest, requestProductToFulfill, allProductsFulfilled);
-                _emailService.InsertEmailQueue(fulfillRequestQueue);
+                else
+                {
+                    _RequestRepository.Update(request);
+                }
 
                 return true;
             }
@@ -941,6 +929,34 @@ namespace Epson.Services.Services.Requests
                 return false;
             }
         }
+
+        private void NotifyFulfillment(Request request, List<RequestProduct> requestProducts, RequestProduct requestProductToFulfill, bool allProductsFulfilled)
+        {
+            try
+            {
+                List<EmailQueue> emailQueues = new List<EmailQueue>();
+
+                if (allProductsFulfilled)
+                {
+                    emailQueues.AddRange(_emailService.NotifySalesSectionHeadUsersOnApprovedRequest(request, requestProducts));
+                    emailQueues.AddRange(_emailService.NotifySalesOperationTeamsOnApprovedRequest(request, requestProducts));
+                    emailQueues.Add(_emailService.CreateApprovedEmailQueue(request, requestProducts));
+                }
+
+                var fulfillRequestQueue = _emailService.CreateFulfillEmailQueue(request, requestProductToFulfill, allProductsFulfilled);
+                emailQueues.Add(fulfillRequestQueue);
+
+                foreach (var emailQueue in emailQueues)
+                {
+                    _emailService.InsertEmailQueue(emailQueue);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error sending email notifications for request {id}", request.Id);
+            }
+        }
+
 
         public bool SetRequestToAmendQuotation(Request request)
         {

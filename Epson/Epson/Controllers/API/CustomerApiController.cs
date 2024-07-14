@@ -425,7 +425,6 @@ namespace Epson.Controllers.API
 
             return Ok(response);
         }
-
         [HttpGet("getallusers")]
         [AllowAnonymous]
         public async Task<IActionResult> GetAllUsers()
@@ -433,6 +432,10 @@ namespace Epson.Controllers.API
             var response = new GenericResponseModel<List<UserModel>>();
 
             var users = _userService.GetAllUsers();
+
+            var allTeams = _userService.GetTeams();
+            var teamLookup = allTeams.ToDictionary(t => t.Id, t => t.Name);
+
             var userModels = new List<UserModel>();
 
             foreach (var user in users)
@@ -448,7 +451,7 @@ namespace Epson.Controllers.API
                     Roles = filteredRoles,
                     Phone = user.PhoneNumber,
                     TeamId = user.TeamId,
-                    Teams = _mapper.Map<Team>(_userService.GetTeamById(user.TeamId)).Name,
+                    Teams = teamLookup.TryGetValue(user.TeamId, out var teamName) ? teamName : null,
                     LockoutEnd = user.LockoutEnd
                 };
 

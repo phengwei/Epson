@@ -182,6 +182,7 @@ export default {
       this.dialogProduct = true;
     },
     openEditProductDialog(product) {
+      console.log("product", product);
       this.selectedProduct = { ...product };
       this.$nextTick(() => {
         this.dialogProduct = true;
@@ -770,7 +771,6 @@ export default {
 
         pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
 
-        // Get the request ID from the currentRequest object
         const requestId = this.currentRequest.id;
         const fileName = `request_${requestId}.pdf`;
 
@@ -783,6 +783,7 @@ export default {
       });
     },
     processQuotation() {
+      console.log("productsToShow", this.productsToShow);
       const quotationData = {
         ApprovalState: 20,
         Priority: this.priority,
@@ -797,6 +798,7 @@ export default {
 
       for (const product in this.productsToShow) {
         const productToInsert = {
+          categoryId: this.productsToShow[product].category.id,
           productId: this.productsToShow[product].productId,
           quantity: this.productsToShow[product].quantity,
           distyPrice: this.productsToShow[product].distyPrice,
@@ -819,6 +821,7 @@ export default {
       }
       for (const coverplus in this.coverplusesToShow) {
         const coverplusToInsert = {
+          categoryId: this.coverplusesToShow[coverplus].category.id,
           productId: this.coverplusesToShow[coverplus].productId,
           quantity: this.coverplusesToShow[coverplus].quantity,
           distyPrice: this.coverplusesToShow[coverplus].distyPrice,
@@ -863,6 +866,7 @@ export default {
       return quotationData;
     },
     async submitQuotation() {
+      this.loading = true;
       let clientErr = "";
       clientErr = this.validateForm();
 
@@ -915,7 +919,8 @@ export default {
       } catch (error) {
         console.log(error);
       } finally {
-          this.submitting = false;
+        this.submitting = false;
+        this.loading = false;
       }
     }
   }

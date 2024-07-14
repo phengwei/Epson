@@ -365,7 +365,7 @@
         });
       },
       viewRequest(request) {
-        let queryParameters = { view: true, requestId: request.id };
+        let queryParameters = { requestId: request.id };
 
         if (request.approvalState === ApprovalStateEnum.AmendQuotation) {
           queryParameters = { ...queryParameters, editable: true };

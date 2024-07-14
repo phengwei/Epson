@@ -59,6 +59,7 @@
         this.$emit('update:dialogProduct', newVal);
         if (!newVal) {
           this.isEditMode = false;
+          this.resetLocalProduct();
         }
       },
       product: {

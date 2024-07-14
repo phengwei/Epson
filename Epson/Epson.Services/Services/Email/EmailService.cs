@@ -1268,104 +1268,105 @@ namespace Epson.Services.Services.Email
             if (emailAccount == null)
                 return new EmailQueue();
 
-            var requester = _userManager.FindByIdAsync(request.CreatedById);
-            var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
+            var requester = _userManager.FindByIdAsync(request.CreatedById).Result;
+            var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId).Result;
             var product = _productService.GetProductById(requestProduct.ProductId);
 
             var productCategories = _productService.GetCategoryIdsByProductId(requestProduct.ProductId);
+
             List<string> backupFulfillerEmails = new List<string>();
 
             foreach (var pc in productCategories)
             {
                 var category = _categoryService.GetCategoryById(pc.CategoryId);
 
-                var backupFulfiller1 = _userManager.FindByIdAsync(category.BackupFulfiller1);
-                var backupFulfiller2 = _userManager.FindByIdAsync(category.BackupFulfiller2);
+                var backupFulfiller1 = _userManager.FindByIdAsync(category.BackupFulfiller1).Result;
+                var backupFulfiller2 = _userManager.FindByIdAsync(category.BackupFulfiller2).Result;
 
                 if (backupFulfiller1 != null)
                 {
-                    backupFulfillerEmails.Add(backupFulfiller1.Result.Email);
+                    backupFulfillerEmails.Add(backupFulfiller1.Email);
                 }
                 if (backupFulfiller2 != null)
                 {
-                    backupFulfillerEmails.Add(backupFulfiller2.Result.Email);
+                    backupFulfillerEmails.Add(backupFulfiller2.Email);
                 }
             }
 
             var subject = "";
-            subject = $"Request {request.Id} amended by {requester.Result.UserName} ";
+            subject = $"Request {request.Id} amended by {requester.UserName} ";
 
             var body = $@"
-            <!DOCTYPE html>
-            <html lang='en'>
-            <head>
-                <meta charset='UTF-8'>
-                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-                <style>
-                    body {{
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        margin: 0;
-                        padding: 0;
-                        background-color: #f4f4f4;
-                    }}
-                    .email-container {{
-                        max-width: 600px;
-                        margin: auto;
-                        background: #ffffff;
-                        padding: 20px;
-                        border: 1px solid #dddddd;
-                    }}
-                    .email-header {{
-                        background-color: #004aad;
-                        color: white;
-                        padding: 10px 20px;
-                        text-align: center;
-                    }}
-                    .email-body {{
-                        padding: 20px;
-                        line-height: 1.5;
-                        color: #333333;
-                    }}
-                    table {{
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-top: 20px;
-                    }}
-                    th, td {{
-                        padding: 10px;
-                        border: 1px solid #dddddd;
-                        text-align: left;
-                    }}
-                    th {{
-                        background-color: #f2f2f2;
-                    }}
-                </style>
-            </head>
-            <body>
-                <div class='email-container'>
-                    <div class='email-header'>
-                        <h1>Request Amendment</h1>
+                <!DOCTYPE html>
+                <html lang='en'>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <style>
+                        body {{
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            background-color: #f4f4f4;
+                        }}
+                        .email-container {{
+                            max-width: 600px;
+                            margin: auto;
+                            background: #ffffff;
+                            padding: 20px;
+                            border: 1px solid #dddddd;
+                        }}
+                        .email-header {{
+                            background-color: #004aad;
+                            color: white;
+                            padding: 10px 20px;
+                            text-align: center;
+                        }}
+                        .email-body {{
+                            padding: 20px;
+                            line-height: 1.5;
+                            color: #333333;
+                        }}
+                        table {{
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                        }}
+                        th, td {{
+                            padding: 10px;
+                            border: 1px solid #dddddd;
+                            text-align: left;
+                        }}
+                        th {{
+                            background-color: #f2f2f2;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class='email-container'>
+                        <div class='email-header'>
+                            <h1>Request Amendment</h1>
+                        </div>
+                        <div class='email-body'>
+                            <p>The request is in an amended state by {fulfiller.UserName} with the following old fulfilled details:</p>
+                            <table>
+                                <tr>
+                                    <th>Product</th>
+                                    <td>{product.Name}</td>
+                                </tr>
+                                <tr>
+                                    <th>Quantity</th>
+                                    <td>{requestProduct.Quantity}</td>
+                                </tr>
+                                <tr>
+                                    <th>Price Fulfilled</th>
+                                    <td>RM {requestProduct.FulfilledPrice}</td>
+                                </tr>
+                            </table>
+                        </div>
                     </div>
-                    <div class='email-body'>
-                        <p>The request is in an amended state by {fulfiller.Result.UserName} with the following old fulfilled details:</p>
-                        <table>
-                            <tr>
-                                <th>Product</th>
-                                <td>{product.Name}</td>
-                            </tr>
-                            <tr>
-                                <th>Quantity</th>
-                                <td>{requestProduct.Quantity}</td>
-                            </tr>
-                            <tr>
-                                <th>Price Fulfilled</th>
-                                <td>RM {requestProduct.FulfilledPrice}</td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </body>
-            </html>";
+                </body>
+                </html>";
 
             HashSet<string> uniqueEmails = new HashSet<string>(backupFulfillerEmails);
 
@@ -1374,7 +1375,7 @@ namespace Epson.Services.Services.Email
             var emailQueue = new EmailQueue
             {
                 FromEmail = emailAccount.Username,
-                ToEmail = requester.Result.Email,
+                ToEmail = requester.Email,
                 Subject = subject,
                 Body = body,
                 ScheduleTime = DateTime.UtcNow,

@@ -52,16 +52,16 @@ namespace Epson.Controllers.API
         [HttpGet("getproductbycategory")]
         public async Task<IActionResult> GetProductByCategory(int categoryId)
         {
-            var response = new GenericResponseModel<List<ProductModel>>();
+            var response = new GenericResponseModel<List<ProductDTO>>();
 
             if (categoryId == null || categoryId == 0)
                 return BadRequest("Id must not be empty");
 
             var products = _productService.GetProductsByCategory(categoryId);
 
-            var productModel = _productModelFactory.PrepareProductModels(products);
+            //var productModel = _productModelFactory.PrepareProductModels(products);
 
-            response.Data = productModel;
+            response.Data = products;
             return Ok(response);
         }
 

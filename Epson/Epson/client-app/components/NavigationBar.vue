@@ -15,7 +15,7 @@
         <div class="flex items-center space-x-7">
           <nuxt-link to="/dashboard"
                      exact-active-class="nav-link-active"
-                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">DASHBOARD</nuxt-link>
+                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">OVERVIEW</nuxt-link>
           <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')" to="/report"
                      exact-active-class="nav-link-active"
                      class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">REPORTS</nuxt-link>

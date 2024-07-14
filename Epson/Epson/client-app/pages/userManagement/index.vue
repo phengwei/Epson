@@ -4,14 +4,6 @@
       <v-toolbar flat>
         <v-toolbar-title><h2 class="blue-text big-bold">USERS</h2></v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-text-field v-model="search"
-                      prepend-inner-icon="mdi-magnify"
-                      placeholder="Search"
-                      solo
-                      hide-details
-                      flat
-                      dense
-                      class="search-bar"></v-text-field>
       </v-toolbar>
 
       <v-tabs class="mt-4" v-model="tab" background-color="white">

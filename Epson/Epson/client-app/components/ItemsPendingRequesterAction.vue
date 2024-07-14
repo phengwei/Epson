@@ -25,7 +25,7 @@
         </v-toolbar>
       </template>
       <template v-slot:item.actions="{ item }">
-        <v-btn @click="viewRequest(item)">Action</v-btn>
+        <v-btn @click="viewRequest(item)">View</v-btn>
       </template>
     </v-data-table>
 

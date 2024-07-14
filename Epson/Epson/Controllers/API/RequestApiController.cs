@@ -249,6 +249,7 @@ namespace Epson.Controllers.API
                 CreatedOnUTC = request.CreatedOnUTC,
                 UpdatedOnUTC = DateTime.UtcNow,
                 CreatedById = user.Id,
+                CreatedByStr = user.Name,
                 UpdatedById = user.Id,
                 Segment = request.Segment,
                 ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction,
@@ -487,13 +488,15 @@ namespace Epson.Controllers.API
             if (isAdminUser)
             {
                 filter = x => x.ApprovalState == (int)ApprovalStateEnum.Approved ||
-                              x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller;
+                              x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller ||
+                              x.ApprovalState == (int)ApprovalStateEnum.RejectedBySalesSectionHead;
             }
             else
             {
                 filter = x => x.CreatedById == user.Id && 
                               (x.ApprovalState == (int)ApprovalStateEnum.Approved ||
-                              x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller);
+                              x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller) ||
+                              x.ApprovalState == (int)ApprovalStateEnum.RejectedBySalesSectionHead;
             }
 
             requests = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage);
@@ -762,7 +765,8 @@ namespace Epson.Controllers.API
             int totalItems;
 
             filter = x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
-                            x.RequestProducts.Any(rp => usersInRelevantTeams.Contains(rp.FulfillerId));
+                          (x.RequestProducts.Any(rp => usersInRelevantTeams.Contains(rp.FulfillerId)) ||
+                          usersInRelevantTeams.Contains(x.CreatedById));
 
             var requests = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage)
                                 .ToList();
