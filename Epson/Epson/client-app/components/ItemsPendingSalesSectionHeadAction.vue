@@ -229,7 +229,6 @@
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingsalessectionheaditem`, { params }).then(result => {
           this.requests = result.data.data.map(request => {
-            console.log("awdre", request);
             return {
               ...request,
               approvalStateStr: approvalStateMapping[request.approvalState] || 'Pending',
