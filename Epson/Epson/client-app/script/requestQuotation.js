@@ -102,7 +102,8 @@ export default {
       editedItem: {},
       submitting: false,
       loading: false,
-      decodedQueryParams: {}
+      decodedQueryParams: {},
+      currentDate: new Date().toISOString().slice(0, 16)
     };
   },
 

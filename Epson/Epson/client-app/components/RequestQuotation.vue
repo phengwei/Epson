@@ -352,6 +352,7 @@
                     <input v-else
                            type="datetime-local"
                            v-model="projectInformation.closingDate"
+                           :min="currentDate"
                            class="border-input" />
                   </td>
                 </tr>
@@ -366,6 +367,7 @@
                     <input v-else
                            type="datetime-local"
                            v-model="projectInformation.deliveryDate"
+                           :min="currentDate"
                            class="border-input" />
                   </td>
                 </tr>
