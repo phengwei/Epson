@@ -287,7 +287,7 @@ namespace Epson.Services.Services.Email
                             <h1>New Request</h1>
                         </div>
                         <div class='email-body'>
-                            <p>A new request has been created with the following details:</p>
+                            <p>A new request has been approved with the following details:</p>
                             <table>
                                 <tr>
                                     <th>Org</th>
@@ -1501,7 +1501,8 @@ namespace Epson.Services.Services.Email
 
                 if (!string.IsNullOrEmpty(emailQueue.Cc))
                 {
-                    foreach (var ccEmail in emailQueue.Cc.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                    var delimiters = new[] { ',', ' ' };
+                    foreach (var ccEmail in emailQueue.Cc.Split(delimiters, StringSplitOptions.RemoveEmptyEntries))
                     {
                         message.CC.Add(ccEmail.Trim());
                     }
