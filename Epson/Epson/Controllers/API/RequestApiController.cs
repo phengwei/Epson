@@ -754,6 +754,9 @@ namespace Epson.Controllers.API
 
             var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
+            var roles = await _userManager.GetRolesAsync(currentUser);
+            var isAdminUser = roles.Contains(RoleEnum.Admin.ToString()) || roles.Contains(RoleEnum.Director.ToString());
+
             var teamHierarchy = _userService.InitializeTeamHierarchy();
 
             var relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUser.TeamId, _teamRepository);
@@ -764,12 +767,19 @@ namespace Epson.Controllers.API
                                                    .Select(u => u.Id)
                                                    .ToList();
 
-            Func<Request, bool> filter;
+            Func<Request, bool> filter = null;
             int totalItems;
 
-            filter = x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
+            if (!isAdminUser)
+            {
+                filter = x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
                           (x.RequestProducts.Any(rp => usersInRelevantTeams.Contains(rp.FulfillerId)) ||
                           usersInRelevantTeams.Contains(x.CreatedById));
+            }
+            else
+            {
+                filter = x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction;
+            }
 
             var requests = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage)
                                 .ToList();
