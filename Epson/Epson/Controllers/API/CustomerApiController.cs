@@ -12,6 +12,7 @@ using System.Security.Claims;
 using Epson.Infrastructure;
 using Epson.Services.Interface.Users;
 using AutoMapper;
+using Epson.Extensions;
 
 namespace Epson.Controllers.API
 {
@@ -135,7 +136,8 @@ namespace Epson.Controllers.API
                 UserName = model.Username,
                 Email = model.Email,
                 PhoneNumber = model.Phone,
-                TeamId = model.TeamId
+                TeamId = model.TeamId,
+                IsActive = true
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
@@ -185,6 +187,7 @@ namespace Epson.Controllers.API
                 user.Email = model.Email;
                 user.PhoneNumber = model.Phone;
                 user.TeamId = model.TeamId;
+                user.IsActive = true;
 
                 var result = await _userManager.UpdateAsync(user);
 
@@ -228,6 +231,36 @@ namespace Epson.Controllers.API
                 result = await _userManager.RemoveFromRoleAsync(user, role);
 
             result = await _userManager.DeleteAsync(user);
+
+            return Ok();
+        }
+
+        [HttpPost("deactivateuser")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DeactivateUser(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            user.IsActive = false;
+
+            var result = await _userManager.UpdateAsync(user);
+
+            return Ok();
+        }
+
+        [HttpPost("reactivateuser")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ReactivateUser(string userId)
+        {
+            var user = await ((UserManagerExtension)_userManager).FindByIdIncludingInactiveAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            user.IsActive = true;
+
+            var result = await _userManager.UpdateAsync(user);
 
             return Ok();
         }
@@ -452,7 +485,9 @@ namespace Epson.Controllers.API
                     Phone = user.PhoneNumber,
                     TeamId = user.TeamId,
                     Teams = teamLookup.TryGetValue(user.TeamId, out var teamName) ? teamName : null,
-                    LockoutEnd = user.LockoutEnd
+                    LockoutEnd = user.LockoutEnd,
+                    IsActive = user.IsActive
+
                 };
 
                 userModels.Add(userModel);

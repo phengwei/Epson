@@ -9,6 +9,7 @@
         public int TeamId { get; set; }
         public string Phone { get; set; }
         public string Teams { get; set; }
+        public bool IsActive { get; set; }
         public DateTimeOffset? LockoutEnd { get; set; }
     }
 }

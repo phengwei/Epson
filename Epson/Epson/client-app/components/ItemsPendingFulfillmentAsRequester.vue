@@ -196,16 +196,31 @@
       </v-dialog>
     </template>
     <template v-slot:item.actions="{ item }">
-      <v-icon small
-              class="mr-2"
-              v-if="item.approvalState !== ApprovalStateEnum.AmendQuotation"
-              @click="confirmAmmendQuotation(item)">
-        mdi-check
-      </v-icon>
-      <v-icon small
-              @click="cancelRequest(item)">
-        mdi-cancel
-      </v-icon>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-icon small
+                  class="mr-2"
+                  v-if="item.approvalState !== ApprovalStateEnum.AmendQuotation"
+                  v-bind="attrs"
+                  v-on="on"
+                  @click="confirmAmmendQuotation(item)">
+            mdi-check
+          </v-icon>
+        </template>
+        <span>Amend Quotation</span>
+      </v-tooltip>
+
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-icon small
+                  v-bind="attrs"
+                  v-on="on"
+                  @click="cancelRequest(item)">
+            mdi-cancel
+          </v-icon>
+        </template>
+        <span>Cancel Request</span>
+      </v-tooltip>
       <v-btn @click="viewRequest(item)">View</v-btn>
     </template>
   </v-data-table>

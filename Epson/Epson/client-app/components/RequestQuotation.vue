@@ -138,7 +138,7 @@
                     </span>
                   </td>
                   <td v-if="isFulfillMode">
-                    <v-btn v-if="product.authorizedToFulfill === true" small color="primary" @click="openFulfillProductDialog(product)">
+                    <v-btn v-if="coverplus.authorizedToFulfill === true" small color="primary" @click="openFulfillProductDialog(coverplus)">
                       <v-icon>mdi-pencil</v-icon>
                     </v-btn>
                   </td>

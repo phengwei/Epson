@@ -46,6 +46,7 @@ using System;
 using Org.BouncyCastle.Asn1.Cmp;
 using Org.BouncyCastle.Asn1.X509;
 using Newtonsoft.Json;
+using Epson.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,9 +87,10 @@ builder.Host.UseSerilog();
 builder.Services.AddIdentity<ApplicationUser, Role>()
     .AddRoleManager<RoleManager<Role>>()
     .AddEntityFrameworkStores<EpsonDbContext>()
+    .AddUserManager<UserManagerExtension>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddScoped<UserManager<ApplicationUser>, UserManager<ApplicationUser>>();
+//builder.Services.AddScoped<UserManager<ApplicationUser>, UserManager<ApplicationUser>>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

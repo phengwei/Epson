@@ -10,5 +10,6 @@ namespace Epson.Core.Domain.Users
     public class ApplicationUser : IdentityUser
     {
         public int TeamId { get; set; }
+        public bool IsActive { get; set; }
     }
 }
