@@ -57,18 +57,36 @@
                 </v-dialog>
             </v-card-title>
             <v-card-text>
-                <v-data-table :headers="headers"
-                              :items="filteredProducts"
-                              :options.sync="options"
-                              :items-per-page="5"
-                              :loading="loading"
-                              class="elevation-1">
-                    <template v-slot:item.actions="{ item }">
-                        <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
-                        <v-icon small v-if="item.isActive" @click="deactivateItemConfirm(item)">mdi-eye-off</v-icon>
-                        <v-icon small v-if="!item.isActive" @click="reactivateItemConfirm(item)">mdi-eye</v-icon>
+              <v-data-table :headers="headers"
+                            :items="filteredProducts"
+                            :options.sync="options"
+                            :items-per-page="5"
+                            :loading="loading"
+                            class="elevation-1">
+                <template v-slot:item.actions="{ item }">
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="editItem(item)">mdi-pencil</v-icon>
                     </template>
-                </v-data-table>
+                    <span>Edit Item</span>
+                  </v-tooltip>
+
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon small v-if="item.isActive" class="mr-2" v-bind="attrs" v-on="on" @click="deactivateItemConfirm(item)">mdi-eye-off</v-icon>
+                    </template>
+                    <span>Deactivate Item</span>
+                  </v-tooltip>
+
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon small v-if="!item.isActive" class="mr-2" v-bind="attrs" v-on="on" @click="reactivateItemConfirm(item)">mdi-eye</v-icon>
+                    </template>
+                    <span>Reactivate Item</span>
+                  </v-tooltip>
+                </template>
+
+              </v-data-table>
             </v-card-text>
         </v-card>
     </div>

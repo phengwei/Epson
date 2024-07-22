@@ -22,14 +22,46 @@
           <v-tab-item v-for="(item, index) in tabItems" :key="index">
             <v-data-table :headers="headers" :items="filteredUsers(item)" class="elevation-1 table-padding">
               <template v-slot:item.actions="{ item }">
-                <v-icon small class="mr-2" @click="editUser(item)">mdi-pencil</v-icon>
-                <v-icon small class="mr-2" @click="changePassword(item)">mdi-lock-reset</v-icon>
-                <v-icon small v-if="item.lockoutEnd != null" class="mr-2" @click="reactivateAccountConfirmation(item)">mdi-account-reactivate</v-icon>
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="editUser(item)">mdi-pencil</v-icon>
+                  </template>
+                  <span>Edit User</span>
+                </v-tooltip>
+
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="changePassword(item)">mdi-lock-reset</v-icon>
+                  </template>
+                  <span>Change Password</span>
+                </v-tooltip>
+
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-icon small v-if="item.isActive == true" class="mr-2" v-bind="attrs" v-on="on" @click="deactivateUserConfirmation(item)">mdi-lock</v-icon>
+                  </template>
+                  <span>Deactivate User</span>
+                </v-tooltip>
+
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-icon small v-if="item.isActive == false" class="mr-2" v-bind="attrs" v-on="on" @click="reactivateUserConfirmation(item)">mdi-account-reactivate-outline</v-icon>
+                  </template>
+                  <span>Reactivate User</span>
+                </v-tooltip>
+
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-icon small v-if="item.lockoutEnd != null" class="mr-2" v-bind="attrs" v-on="on" @click="unlockAccountConfirmation(item)">mdi-account-reactivate</v-icon>
+                  </template>
+                  <span>Unlock Account</span>
+                </v-tooltip>
               </template>
             </v-data-table>
           </v-tab-item>
         </v-tabs-items>
       </v-card-text>
+
 
       <v-dialog v-model="dialog" max-width="500px">
         <v-card>
@@ -348,22 +380,61 @@
             this.$swal('Failed to delete user', error.response.data.message, 'error');
           });
       },
-      deleteUserConfirmation(item) {
+      deactivateUserConfirmation(item) {
         this.$swal({
           title: 'Are you sure?',
-          text: "You won't be able to revert this!",
+          text: "Deactivate User!",
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#3085d6',
           cancelButtonColor: '#d33',
-          confirmButtonText: 'Yes, delete it!'
+          confirmButtonText: 'Yes, deactivate it!'
         }).then((result) => {
           if (result.isConfirmed) {
-            this.deleteUser(this.users.indexOf(item));
+            this.deactivateUser(this.users.indexOf(item));
           }
         })
       },
-      reactivateAccountConfirmation(item) {
+      deactivateUser(index) {
+        this.$axios.post(`${this.$config.restUrl}/api/customer/deactivateUser?userId=${this.users[index].id}`)
+          .then(response => {
+            this.users.splice(index, 1);
+            this.$swal('Success', 'User account disabled successfully.', 'success').then(() => {
+              location.reload();
+            });
+          }).catch(error => {
+            console.error('Error deactivating account:', error);
+            this.$swal('Failed to deactivate account', error.response.data.message, 'error');
+          });
+      },
+      reactivateUserConfirmation(item) {
+        this.$swal({
+          title: 'Are you sure?',
+          text: "Reactivate User",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, reactivate it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.reactivateUser(this.users.indexOf(item));
+          }
+        })
+      },
+      reactivateUser(index) {
+        this.$axios.post(`${this.$config.restUrl}/api/customer/reactivateuser?userId=${this.users[index].id}`)
+          .then(response => {
+            this.users.splice(index, 1);
+            this.$swal('Success', 'User account reactivated successfully.', 'success').then(() => {
+              location.reload();
+            });
+          }).catch(error => {
+            console.error('Error reactivating account:', error);
+            this.$swal('Failed to reactivate account', error.response.data.message, 'error');
+          });
+      },
+      unlockAccountConfirmation(item) {
         this.$swal({
           title: 'Are you sure?',
           text: "Unlock account!",

@@ -76,9 +76,14 @@
       <v-card-text>
         <v-data-table :headers="headers" :items="categories" class="elevation-1">
           <template v-slot:item.actions="{ item }">
-            <v-icon small class="mr-2" @click="editCategory(item)">mdi-pencil</v-icon>
-            <!--<v-icon small class="mr-2" @click="deleteCategoryConfirmation(item)">mdi-delete</v-icon>-->
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="editCategory(item)">mdi-pencil</v-icon>
+              </template>
+              <span>Edit Category</span>
+            </v-tooltip>
           </template>
+
         </v-data-table>
       </v-card-text>
 
