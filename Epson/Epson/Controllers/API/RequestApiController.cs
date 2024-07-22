@@ -70,7 +70,11 @@ namespace Epson.Controllers.API
             RequestDTO request = _requestService.GetRequestById(id);
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
             var approver = await _userManager.FindByIdAsync(request.ApprovedBy);
-            request.ApprovedByName = approver.UserName;
+
+            if (approver != null)
+            {
+                request.ApprovedByName = approver.UserName;
+            }
 
             var roles = await _userManager.GetRolesAsync(user);
             var isCoverplusUser = roles.Contains(RoleEnum.Coverplus.ToString());
