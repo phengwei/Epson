@@ -341,6 +341,24 @@ namespace Epson.Controllers.API
                 return BadRequest("Failed to fulfill request");
         }
 
+        [HttpPost("fulfillrequests")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Coverplus,Sales Section Head")]
+        public async Task<IActionResult> FulfillRequests([FromBody] List<int> ids)
+        {
+            if (ids.Count == 0)
+                return NotFound("Resources not found!");
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (user == null)
+                return Unauthorized("User not authorized to perform this operation");
+
+            if (_requestService.FulfillRequests(ids, user))
+                return Ok("Request has been fulfilled");
+            else
+                return BadRequest("Failed to fulfill request");
+        }
+
         [HttpPost("setrequesttoamendquotation")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin")]
         public async Task<IActionResult> SetRequestToAmendQuotation(int requestId)

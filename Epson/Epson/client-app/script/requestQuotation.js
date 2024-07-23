@@ -41,7 +41,8 @@ export default {
       categories: [],
       selectedCategories: [],
       isChecked: [],
-      selectedProducts: {},
+      selectedProducts: [],
+      selectedCoverpluses: [],
       months: ['None', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
       product: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null, remarks: null },
       products: [],
@@ -170,6 +171,57 @@ export default {
     }
   },
   methods: {
+    fulfillSelectedProducts() {
+      this.$swal({
+        title: 'Fulfill Requests?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, fulfill it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.fulfillProducts(this.selectedProducts);
+        }
+      })
+    },
+    fulfillSelectedCoverpluses() {
+      this.$swal({
+        title: 'Fulfill Requests?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, fulfill it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.fulfillProducts(this.selectedCoverpluses);
+        }
+      })
+    },
+    fulfillProducts(product) {
+      const payload = product;
+
+      this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequests`, payload)
+        .then(response => {
+          this.selectedProducts.forEach(productId => {
+            const index = this.productsToShow.findIndex(product => product.productId === productId);
+            if (index !== -1) {
+              this.productsToShow.splice(index, 1);
+            }
+          });
+
+          this.$swal('Success', 'Request fulfilled successfully.', 'success').then(() => {
+            location.reload();
+          });
+
+          this.selectedProducts = [];
+        })
+        .catch(error => {
+          console.error('Error fulfilling requests:', error);
+          this.$swal('Failed to fulfill request', error.response.data.message, 'error');
+        });
+    },
     isMode(mode) {
       return this.decodedQueryParams[mode] === true;
     },

@@ -19,6 +19,7 @@ using Epson.Services.Interface.Requests;
 using Epson.Services.Interface.SLA;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Org.BouncyCastle.Crypto;
 using Serilog;
 using System.Globalization;
 using System.Web.Mvc;
@@ -929,6 +930,69 @@ namespace Epson.Services.Services.Requests
                 return false;
             }
         }
+
+        public bool FulfillRequests(List<int> requestProductIds, ApplicationUser user)
+        {
+            //get list of request products by ids
+            var requestProducts = _RequestProductRepository.GetAll()
+                                                           .Where(x => requestProductIds.Contains(x.Id))
+                                                           .ToList();
+
+            var existingRequest = GetRequestById(requestProducts.First().RequestId);
+
+            foreach (var rp in requestProducts)
+            {
+                rp.FulfillerId = user.Id;
+                rp.HasFulfilled = true;
+                rp.FulfilledDate = DateTime.UtcNow;
+                rp.UpdatedOnUTC = DateTime.UtcNow;
+                rp.TimeToResolution = CalculateResolutionTime(rp.FulfilledDate,
+                                                                existingRequest.AmendQuotationTime ?? (DateTime)existingRequest.ApprovedTime,
+                                                                _slaService.GetSLAStaffLeavesByStaffId(user.Id),
+                                                                _slaService.GetSLAHolidays());
+                rp.Status = (int)RequestProductStatusEnum.Approved;
+
+                if (DateTime.UtcNow > rp.CreatedOnUTC.AddWorkingDays(5))
+                    rp.Breached = true;
+
+                try
+                {
+                    _RequestProductRepository.Update(rp);
+                    _logger.Information("Fulfilling request product {id}", rp.Id);
+
+                    // Calculate total price for all requested products
+                    decimal totalUpdatedPrice = requestProducts.Sum(x => x.FulfilledPrice);
+                    existingRequest.TotalPrice = totalUpdatedPrice;
+
+                    // Check if all products are fulfilled
+                    bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled);
+
+                    var request = _mapper.Map<Request>(existingRequest);
+                    if (allProductsFulfilled)
+                    {
+                        request.ApprovalState = (int)ApprovalStateEnum.Approved;
+                        _RequestRepository.Update(request);
+
+                        // Run email notification in the background
+                        Task.Run(() => NotifyFulfillment(request, requestProducts, rp, allProductsFulfilled));
+                    }
+                    else
+                    {
+                        _RequestRepository.Update(request);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Error fulfilling request {id}", rp.Id);
+                    return false;
+                }
+            }
+
+            return true;
+            
+        }
+
+
 
         private void NotifyFulfillment(Request request, List<RequestProduct> requestProducts, RequestProduct requestProductToFulfill, bool allProductsFulfilled)
         {

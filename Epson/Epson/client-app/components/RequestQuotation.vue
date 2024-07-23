@@ -25,6 +25,9 @@
               <v-btn v-if="!isViewMode" color="primary" @click="openAddProductDialog">
                 Add New
               </v-btn>
+              <v-btn v-if="isFulfillMode && selectedProducts.length > 0" color="primary" @click="fulfillSelectedProducts">
+                Fulfill Selected
+              </v-btn>
             </div>
             <table class="mb-5 mt-2">
               <thead>
@@ -44,10 +47,10 @@
               <tbody>
                 <tr v-for="(product, index) in productsToShow" :key="index"
                     :class="{
-                      'highlighted': currentRequestApprovalState === ApprovalStateEnum.Approved && product.breached,
-                      'not-approved': isFulfillMode && product.statusStr !== 'Approved',
-                      'approved': isAmendMode && product.statusStr === 'Approved'
-                    }">
+                'highlighted': currentRequestApprovalState === ApprovalStateEnum.Approved && product.breached,
+                'not-approved': isFulfillMode && product.statusStr !== 'Approved',
+                'approved': isAmendMode && product.statusStr === 'Approved'
+              }">
                   <td>{{ product.category ? product.category.name : 'N/A' }}</td>
                   <td>{{ product.productId ? findProductName(product.productId) : product.productName }}</td>
                   <td>{{ product.quantity || 'N/A' }}</td>
@@ -64,9 +67,16 @@
                     </span>
                   </td>
                   <td v-if="isFulfillMode">
-                    <v-btn v-if="product.authorizedToFulfill === true" small color="primary" @click="openFulfillProductDialog(product)">
-                      <v-icon>mdi-pencil</v-icon>
-                    </v-btn>
+                    <div class="d-flex align-center">
+                      <v-btn class="mr-3" v-if="product.authorizedToFulfill === true" small color="primary" @click="openFulfillProductDialog(product)">
+                        <v-icon>mdi-pencil</v-icon>
+                      </v-btn>
+                      <v-checkbox v-if="product.authorizedToFulfill === true"
+                                  v-model="selectedProducts"
+                                  :value="product.id"
+                                  :label="null"></v-checkbox>
+
+                    </div>
                   </td>
                   <td v-if="!isViewMode">
                     <v-btn small color="primary" @click="openEditProductDialog(product)">
@@ -93,6 +103,9 @@
               <span class="blue-text small-bold">COVERPLUS</span>
               <v-btn v-if="!isViewMode" color="primary" @click="openAddCoverplusDialog">
                 Add New
+              </v-btn>
+              <v-btn v-if="isFulfillMode && selectedCoverpluses.length > 0" color="primary" @click="fulfillSelectedCoverpluses">
+                Fulfill Selected
               </v-btn>
             </div>
             <table class="mb-5 mt-2">
@@ -138,9 +151,15 @@
                     </span>
                   </td>
                   <td v-if="isFulfillMode">
-                    <v-btn v-if="coverplus.authorizedToFulfill === true" small color="primary" @click="openFulfillProductDialog(coverplus)">
-                      <v-icon>mdi-pencil</v-icon>
-                    </v-btn>
+                    <div class="d-flex align-center">
+                      <v-btn class="mr-3" v-if="coverplus.authorizedToFulfill === true" small color="primary" @click="openFulfillProductDialog(coverplus)">
+                        <v-icon>mdi-pencil</v-icon>
+                      </v-btn>
+                      <v-checkbox v-if="coverplus.authorizedToFulfill === true"
+                                  v-model="selectedCoverpluses"
+                                  :value="coverplus.id"
+                                  :label="null"></v-checkbox>
+                      </div>
                   </td>
                   <td v-if="!isViewMode">
                     <v-btn small color="primary" @click="openEditCoverplusDialog(coverplus)">
