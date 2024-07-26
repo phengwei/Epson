@@ -548,7 +548,12 @@ export default {
           this.nonCoverplusRequestItem = this.itemsPendingFulfillment.filter(item => !item.isCoverplus);
           this.coverplusRequestItem = this.itemsPendingFulfillment.filter(item => item.isCoverplus);
 
+          const fulfilledDate = new Date(productModel.fulfilledDate);
+          fulfilledDate.setHours(fulfilledDate.getHours() + 8);
+          const formattedFulfilledDate = moment(fulfilledDate).format('DD/MM/YYYY hh:mm A');
+
           const p = {
+            fulfilledDate: formattedFulfilledDate,
             authorizedToFulfill: productModel.authorizedToFulfill,
             id: productModel.id,
             category: categoryFound,

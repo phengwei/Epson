@@ -256,7 +256,7 @@ namespace Epson.Services.Services.Requests
                 {
                     Id = x.Id,
                     ApprovedBy = x.ApprovedBy,
-                    ApprovedTime = x.ApprovedTime.AddHours(8),
+                    ApprovedTime = x.ApprovedTime,
                     AmendQuotationTime = x.AmendQuotationTime,
                     CompetitorInformations = _mapper.Map<List<CompetitorInformationDTO>>(x.CompetitorInformations.ToList()),
                     CreatedById = x.CreatedById,
@@ -418,6 +418,8 @@ namespace Epson.Services.Services.Requests
 
             var requestProductDTOs = requestProducts.Select(x => new RequestProductDTO
             {
+                CreatedOnUTC = x.CreatedOnUTC,
+                UpdatedOnUTC = x.UpdatedOnUTC ?? DateTime.MinValue,
                 Id = x.Id,
                 CategoryId = x.CategoryId,
                 ProductName = x.ProductName,
@@ -940,6 +942,10 @@ namespace Epson.Services.Services.Requests
 
             var existingRequest = GetRequestById(requestProducts.First().RequestId);
 
+            var allRequestProducts = _RequestProductRepository.GetAll()
+                                       .Where(x => x.RequestId == existingRequest.Id)
+                                       .ToList();
+
             foreach (var rp in requestProducts)
             {
                 rp.FulfillerId = user.Id;
@@ -965,7 +971,7 @@ namespace Epson.Services.Services.Requests
                     existingRequest.TotalPrice = totalUpdatedPrice;
 
                     // Check if all products are fulfilled
-                    bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled);
+                    bool allProductsFulfilled = allRequestProducts.All(x => x.HasFulfilled);
 
                     var request = _mapper.Map<Request>(existingRequest);
                     if (allProductsFulfilled)

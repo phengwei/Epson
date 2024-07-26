@@ -40,6 +40,7 @@
                   <th>End User Price</th>
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
+                  <th v-if="isViewMode">Approved Time</th>
                   <th v-if="isFulfillMode">Fulfill</th>
                   <th v-if="!isViewMode">Action</th>
                 </tr>
@@ -64,6 +65,14 @@
                     </span>
                     <span v-else>
                       {{ product.statusStr || 'N/A' }}
+                    </span>
+                  </td>
+                  <td v-if="isViewMode">
+                    <span v-if="product.statusStr === 'Approved'">
+                      Approved on {{ product.fulfilledDate }}
+                    </span>
+                    <span v-else>
+                      {{ 'N/A' }}
                     </span>
                   </td>
                   <td v-if="isFulfillMode">
@@ -120,6 +129,7 @@
                   <th>End User Price</th>
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
+                  <th v-if="isViewMode">Approved Time</th>
                   <th v-if="isFulfillMode">Fulfill</th>
                   <th v-if="!isViewMode">Action</th>
                 </tr>
@@ -150,6 +160,14 @@
                       {{ coverplus.statusStr || 'N/A' }}
                     </span>
                   </td>
+                  <td v-if="isViewMode">
+                    <span v-if="product.statusStr === 'Approved'">
+                      Approved on {{ product.fulfilledDate }}
+                    </span>
+                    <span v-else>
+                      {{ 'N/A' }}
+                    </span>
+                  </td>
                   <td v-if="isFulfillMode">
                     <div class="d-flex align-center">
                       <v-btn class="mr-3" v-if="coverplus.authorizedToFulfill === true" small color="primary" @click="openFulfillProductDialog(coverplus)">
@@ -159,7 +177,7 @@
                                   v-model="selectedCoverpluses"
                                   :value="coverplus.id"
                                   :label="null"></v-checkbox>
-                      </div>
+                    </div>
                   </td>
                   <td v-if="!isViewMode">
                     <v-btn small color="primary" @click="openEditCoverplusDialog(coverplus)">
