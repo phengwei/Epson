@@ -115,8 +115,8 @@ namespace Epson.Services.Services.Users
                     {"Area (City)", "Retail"},
                     {"Area - MDT / Chain Store / E Commerce", "Retail"},
                     {"Retail", "Retail"},
-                    {"Corporate Sales (West M'sia)", "Corporate Sales (West M'sia)" },
-                    {"Corporate Sales (East M'sia)", "Corporate Sales (East M'sia)" }
+                    {"Corporate Sales (West M'sia)", "Corp & Gov" },
+                    {"Corporate Sales (East M'sia)", "Corp & Gov" }
                 };
             }
             else
