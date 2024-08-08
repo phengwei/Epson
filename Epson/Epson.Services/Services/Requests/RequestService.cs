@@ -942,9 +942,9 @@ namespace Epson.Services.Services.Requests
 
             var existingRequest = GetRequestById(requestProducts.First().RequestId);
 
-            var allRequestProducts = _RequestProductRepository.GetAll()
-                                       .Where(x => x.RequestId == existingRequest.Id)
-                                       .ToList();
+            List<RequestProduct> allRequestProducts = _RequestProductRepository.GetAll()
+                           .Where(x => x.RequestId == existingRequest.Id)
+                           .ToList(); ;
 
             foreach (var rp in requestProducts)
             {
@@ -961,10 +961,23 @@ namespace Epson.Services.Services.Requests
                 if (DateTime.UtcNow > rp.CreatedOnUTC.AddWorkingDays(5))
                     rp.Breached = true;
 
+
                 try
                 {
                     _RequestProductRepository.Update(rp);
                     _logger.Information("Fulfilling request product {id}", rp.Id);
+
+                    var existingProduct = allRequestProducts.FirstOrDefault(x => x.Id == rp.Id);
+                    if (existingProduct != null)
+                    {
+                        existingProduct.FulfillerId = rp.FulfillerId;
+                        existingProduct.HasFulfilled = rp.HasFulfilled;
+                        existingProduct.FulfilledDate = rp.FulfilledDate;
+                        existingProduct.UpdatedOnUTC = rp.UpdatedOnUTC;
+                        existingProduct.TimeToResolution = rp.TimeToResolution;
+                        existingProduct.Status = rp.Status;
+                        existingProduct.Breached = rp.Breached;
+                    }
 
                     // Calculate total price for all requested products
                     decimal totalUpdatedPrice = requestProducts.Sum(x => x.FulfilledPrice);
