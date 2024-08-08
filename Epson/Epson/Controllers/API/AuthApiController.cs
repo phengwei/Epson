@@ -16,6 +16,7 @@ using Epson.Models.Users;
 using Epson.Services.Interface.Users;
 using Epson.Core.Domain.Users;
 using Microsoft.AspNetCore.Identity;
+using Epson.Model.Users;
 
 namespace Epson.Controllers.API
 {
@@ -27,10 +28,10 @@ namespace Epson.Controllers.API
         private readonly IConfiguration configuration;
         private readonly Saml2Configuration config;
         private readonly Serilog.ILogger logger;
-        private readonly IJwtService _jwtService;
+        private readonly JwtService _jwtService;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public AuthApiController(IOptions<Saml2Configuration> saml2Config, IConfiguration configuration, Serilog.ILogger logger, IJwtService jwtService, UserManager<ApplicationUser> userManager)
+        public AuthApiController(IOptions<Saml2Configuration> saml2Config, IConfiguration configuration, Serilog.ILogger logger, JwtService jwtService, UserManager<ApplicationUser> userManager)
         {
             this.configuration = configuration;
             this.logger = logger;

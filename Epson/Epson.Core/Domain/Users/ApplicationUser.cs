@@ -11,8 +11,8 @@ namespace Epson.Core.Domain.Users
     {
         public int TeamId { get; set; }
         public bool IsActive { get; set; }
-        public string ssoIdentifier { get; set; }
-        public string firstName { get; set; }
-        public string lastName { get; set; }
+        public string? ssoIdentifier { get; set; }
+        public string? firstName { get; set; }
+        public string? lastName { get; set; }
     }
 }
