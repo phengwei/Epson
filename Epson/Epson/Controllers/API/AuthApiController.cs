@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Authentication;
 using Epson.Infrastructure;
+using Microsoft.Extensions.Options;
+using System.Security.Cryptography.X509Certificates;
+using Microsoft.Extensions.Logging;
 
 namespace Epson.Controllers.API
 {
@@ -17,17 +20,39 @@ namespace Epson.Controllers.API
     public class AuthApiController : Controller
     {
         const string relayStateReturnUrl = "ReturnUrl";
+        private readonly IConfiguration configuration;
         private readonly Saml2Configuration config;
+        private readonly Serilog.ILogger logger;
 
-        public AuthApiController(Saml2Configuration config)
+        public AuthApiController(IOptions<Saml2Configuration> saml2Config, IConfiguration configuration, Serilog.ILogger logger)
         {
-            this.config = config;
+            this.configuration = configuration;
+            this.logger = logger;
+            
+            config = new Saml2Configuration
+            {
+                Issuer = configuration["Saml2:Issuer"],
+                SingleSignOnDestination = new Uri(configuration["Saml2:SingleSignOnDestination"]),
+                SingleLogoutDestination = new Uri(configuration["Saml2:SingleLogoutDestination"]),
+                SignatureAlgorithm = configuration["Saml2:SignatureAlgorithm"],
+                SigningCertificate = new X509Certificate2(
+                    configuration["Saml2:SigningCertificateFile"],
+                    configuration["Saml2:SigningCertificatePassword"]
+                )
+            };
+
+            var validationCerts = configuration.GetSection("Saml2:SignatureValidationCertificates").Get<List<string>>();
+            foreach (var certPath in validationCerts)
+            {
+                config.SignatureValidationCertificates.Add(new X509Certificate2(certPath));
+            }
+
         }
 
         [HttpGet("ssoLogin")]
         public IActionResult ssoLogin(string returnUrl = null)
         {
-            var binding = new Saml2RedirectBinding();
+            var binding = new Saml2PostBinding();
             binding.SetRelayStateQuery(new Dictionary<string, string> { { relayStateReturnUrl, returnUrl ?? Url.Content("~/") } });
 
             return binding.Bind(new Saml2AuthnRequest(config)).ToActionResult();
@@ -39,19 +64,29 @@ namespace Epson.Controllers.API
             var httpRequest = Request.ToGenericHttpRequest(validate: true);
             var saml2AuthnResponse = new Saml2AuthnResponse(config);
 
+            logger.Information("Reading SAML response from HTTP request...");
             httpRequest.Binding.ReadSamlResponse(httpRequest, saml2AuthnResponse);
+
             if (saml2AuthnResponse.Status != Saml2StatusCodes.Success)
             {
+                logger.Error($"SAML Response status: {saml2AuthnResponse.Status}");
                 throw new AuthenticationException($"SAML Response status: {saml2AuthnResponse.Status}");
             }
+
+            logger.Information("Unbinding SAML response from HTTP request...");
             httpRequest.Binding.Unbind(httpRequest, saml2AuthnResponse);
+
+            logger.Information("Creating session for the authenticated user...");
             await saml2AuthnResponse.CreateSession(HttpContext,
                 claimsTransform: (claimsPrincipal) => ClaimsTransform.Transform(claimsPrincipal));
 
             var relayStateQuery = httpRequest.Binding.GetRelayStateQuery();
             var returnUrl = relayStateQuery.ContainsKey(relayStateReturnUrl) ? relayStateQuery[relayStateReturnUrl] : Url.Content("~/");
+
+            logger.Information($"Redirecting to {returnUrl}");
             return Redirect(returnUrl);
         }
+
 
         [HttpPost("AuthLogout")]
         [ValidateAntiForgeryToken]
@@ -91,7 +126,7 @@ namespace Epson.Controllers.API
             catch (Exception exc)
             {
                 // log exception
-                Debug.WriteLine("SingleLogout error: " + exc.ToString());
+                logger.Error($"SingleLogout error: {exc}");
                 status = Saml2StatusCodes.RequestDenied;
             }
 
@@ -105,5 +140,4 @@ namespace Epson.Controllers.API
             return responsebinding.Bind(saml2LogoutResponse).ToActionResult();
         }
     }
-
 }

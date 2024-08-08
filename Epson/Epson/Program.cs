@@ -90,8 +90,6 @@ builder.Services.AddIdentity<ApplicationUser, Role>()
     .AddUserManager<UserManagerExtension>()
     .AddDefaultTokenProviders();
 
-//builder.Services.AddScoped<UserManager<ApplicationUser>, UserManager<ApplicationUser>>();
-
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -107,7 +105,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-//builder.Services.Configure<Saml2Configuration>(builder.Configuration.GetSection("Saml2"));
 builder.Services.Configure<Saml2Configuration>(saml2Configuration =>
 {
     saml2Configuration.Issuer = builder.Configuration["Saml2:Issuer"];
@@ -125,30 +122,12 @@ builder.Services.Configure<Saml2Configuration>(saml2Configuration =>
         throw new Exception("IdPSsoDescriptor not loaded from metadata.");
     }
     saml2Configuration.SigningCertificate = new X509Certificate2(
-    builder.Configuration["Saml2:SigningCertificateFile"],
-    builder.Configuration["Saml2:SigningCertificatePassword"]);
-
-});
-builder.Services.AddSingleton<Saml2Configuration>(sp =>
-{
-    var saml2Config = new Saml2Configuration
-    {
-        SigningCertificate = new X509Certificate2(builder.Configuration["Saml2:SigningCertificateFile"],
-        builder.Configuration["Saml2:SigningCertificatePassword"]),
-        //.cert format
-        //SigningCertificate = new X509Certificate2(builder.Configuration["Saml2:SigningCertificateFile"]),
-        Issuer = builder.Configuration["Saml2:Issuer"]
-    };
-    saml2Config.AllowedAudienceUris.Add(saml2Config.Issuer);
-    X509Certificate2 idpCertificate = new X509Certificate2(builder.Configuration["Saml2:SigningCertificateFile"],
+        builder.Configuration["Saml2:SigningCertificateFile"],
         builder.Configuration["Saml2:SigningCertificatePassword"]);
-    saml2Config.SignatureValidationCertificates.Add(idpCertificate);
-    saml2Config.CertificateValidationMode = System.ServiceModel.Security.X509CertificateValidationMode.None;
-    return saml2Config;
 });
+builder.Services.AddSingleton<Saml2Configuration>();
 
 builder.Services.AddSaml2();
-
 
 builder.Services.AddAuthorization(options =>
 {
@@ -176,9 +155,8 @@ builder.Services.AddScoped<EpsonSQLConnectionFactory>(provider =>
     new EpsonSQLConnectionFactory(builder.Configuration));
 builder.Services.AddSingleton<IDbConnectionFactory, EpsonSQLConnectionFactory>();
 builder.Services.AddDbContext<EpsonDbContext>(options =>
-        options.UseMySql(builder.Configuration.GetConnectionString("EpsonDbConnection"),
-        new MySqlServerVersion(new Version(8, 0, 22))
-));
+    options.UseMySql(builder.Configuration.GetConnectionString("EpsonDbConnection"),
+    new MySqlServerVersion(new Version(8, 0, 22))));
 #endregion
 
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
@@ -245,7 +223,6 @@ app.UseSwaggerUI(c =>
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-
 app.UseRouting();
 
 app.Use(async (context, next) =>
@@ -261,13 +238,11 @@ app.UseAuthorization();
 app.UseSaml2();
 
 app.UseSession();
+
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
 });
-
-// app.MapRazorPages();
-app.MapControllers();
 
 app.UseSpaStaticFiles();
 
@@ -283,6 +258,5 @@ app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
         }
     });
 });
-
 
 app.Run();
