@@ -22,23 +22,25 @@
               <form method="post" @submit.prevent="login">
                 <div class="relative w-full mb-3">
                   <label class="block uppercase text-blue-800 text-xs font-bold mb-2"
-                         for="grid-username">Username</label><input type="text"
-                                                                    class="border-0 px-3 py-3 placeholder-gray-400 text-blue-800 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full"
-                                                                    placeholder="Username"
-                                                                    style="transition: all 0.15s ease 0s;"
-                                                                    v-model="userName" />
+                         for="grid-username">Username</label>
+                  <input type="text"
+                         class="border-0 px-3 py-3 placeholder-gray-400 text-blue-800 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full"
+                         placeholder="Username"
+                         style="transition: all 0.15s ease 0s;"
+                         v-model="userName" />
                 </div>
                 <div class="relative w-full mb-3">
                   <label class="block uppercase text-blue-800 text-xs font-bold mb-2"
-                         for="grid-password">Password</label><input type="password"
-                                                                    class="border-0 px-3 py-3 placeholder-gray-400 text-blue-800 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full"
-                                                                    placeholder="Password"
-                                                                    style="transition: all 0.15s ease 0s;"
-                                                                    v-model="password" />
+                         for="grid-password">Password</label>
+                  <input type="password"
+                         class="border-0 px-3 py-3 placeholder-gray-400 text-blue-800 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full"
+                         placeholder="Password"
+                         style="transition: all 0.15s ease 0s;"
+                         v-model="password" />
                 </div>
                 <div class="text-center mt-6">
                   <button :disabled="loginDisabled"
-                          class="bg-white text-blue-800 border border-blue-800 hover:bg-blue-800 hover:text-white hover:border-blue-800 active:bg-blue-800 active:text-white active:border-blue-800 text-sm font-bold uppercase px-6 py-3 rounded-full shadow hover:shadow-lg outline-none focus:outline-none flex items-center justify-center mx-auto"
+                          class="w-full bg-white text-blue-800 border border-blue-800 hover:bg-blue-800 hover:text-white hover:border-blue-800 active:bg-blue-800 active:text-white active:border-blue-800 text-sm font-bold uppercase px-6 py-3 rounded-full shadow hover:shadow-lg outline-none focus:outline-none flex items-center justify-center mx-auto"
                           type="submit"
                           style="transition: all 0.15s ease 0s;">
                     <span class="mr-2">Sign In</span>
@@ -46,6 +48,14 @@
                   </button>
                 </div>
               </form>
+              <div class="text-center mt-6">
+                <a href="/auth/ssoLogin"
+                   class="w-full bg-white text-blue-800 hover:bg-blue-800 hover:text-white active:bg-blue-800 active:text-white text-sm font-bold uppercase px-6 py-3 rounded-full shadow hover:shadow-lg outline-none focus:outline-none flex items-center justify-center mx-auto"
+                   style="transition: all 0.15s ease 0s;">
+                  <span class="mr-2">Epson Company Login</span>
+                  <i class="fas fa-building"></i>
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -53,6 +63,7 @@
     </div>
   </main>
 </template>
+
 
 <script>
   import Swal from 'sweetalert2';
@@ -76,7 +87,7 @@
     },
     beforeMount() {
       if (this.$auth.loggedIn) {
-        this.$router.push('/report');
+        this.$router.push('/dashboard');
       }
     },
     mounted() { },

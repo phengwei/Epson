@@ -41,8 +41,9 @@ export default {
     { src: '~/plugins/sanitize.js', ssr: false },
     { src: '~/plugins/client-detection.js', ssr: false },
     { src: '~/plugins/vue-chartkick.js', ssr: false },
+    { src: '~/plugins/ssoHandler.js', ssr: false },
    ],
-
+   
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: false,
 
@@ -149,36 +150,35 @@ export default {
           autoFetch: true
         },
         endpoints: {
-          login: { url: 'api/customer/login', method: 'post'},
+          login: { url: 'api/customer/login', method: 'post' },
           user: { url: 'api/customer/getcurrentuser', method: 'get' },
-          logout: { url: 'api/customer/logout', method: 'post' },
+          logout: { url: 'auth/AuthLogout', method: 'post' },
         }
       }
     },
     redirect: {
-      login: '/login',
+      login: '/',
       logout: '/login',
       callback: '/login',
-      home: '/report'
+      home: '/dashboard'
     }
   },
 
   
   publicRuntimeConfig: {
-    restUrl: 'https://ums.epson.com.my',
-    baseURL: 'https://ums.epson.com.my',
+    restUrl: 'https://localhost:7223',
+    baseURL: 'https://localhost:7223',
   },
   privateRuntimeConfig: {
     myPrivateToken: process.env.PRIVATE_TOKEN,
     
   },
   router: {
-    middleware: ['auth']
+    middleware: ['redirect', 'auth']
   },
-
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    baseURL: 'https://ums.epson.com.my',
+    baseURL: 'https://localhost:7223',
     https: true,
   },
   // PWA module configuration: https://go.nuxtjs.dev/pwa

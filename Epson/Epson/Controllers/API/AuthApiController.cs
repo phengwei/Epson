@@ -17,6 +17,7 @@ using Epson.Services.Interface.Users;
 using Epson.Core.Domain.Users;
 using Microsoft.AspNetCore.Identity;
 using Epson.Model.Users;
+using AngleSharp.Css;
 
 namespace Epson.Controllers.API
 {
@@ -35,7 +36,7 @@ namespace Epson.Controllers.API
         {
             this.configuration = configuration;
             this.logger = logger;
-            
+
             config = new Saml2Configuration
             {
                 Issuer = configuration["Saml2:Issuer"],
@@ -45,8 +46,12 @@ namespace Epson.Controllers.API
                 SigningCertificate = new X509Certificate2(
                     configuration["Saml2:SigningCertificateFile"],
                     configuration["Saml2:SigningCertificatePassword"]
-                )
+                ),
+                AudienceRestricted = true, 
             };
+
+            var allowedAudienceUris = configuration["Saml2:AllowedAudienceUris"];
+            config.AllowedAudienceUris.Add(allowedAudienceUris);
 
             var validationCerts = configuration.GetSection("Saml2:SignatureValidationCertificates").Get<List<string>>();
             foreach (var certPath in validationCerts)
@@ -67,15 +72,35 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("AssertionConsumerService")]
+        [Consumes("application/x-www-form-urlencoded")]
         public async Task<IActionResult> AssertionConsumerService()
         {
             try
             {
-                var httpRequest = Request.ToGenericHttpRequest(validate: true);
+                // Log the entire request including headers and body
+                var requestHeaders = Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString());
+                var requestBody = new Dictionary<string, string>
+                {
+                    { "SAMLResponse", Request.Form["SAMLResponse"] },
+                    { "RelayState", Request.Form["RelayState"] }
+                };
+
+                var fullRequestLog = new
+                {
+                    Headers = requestHeaders,
+                    Body = requestBody
+                };
+
+                logger.Information($"Full HTTP Request: {System.Text.Json.JsonSerializer.Serialize(fullRequestLog)}");
+
+                var rawSamlResponse = Request.Form["SAMLResponse"];
+                logger.Information($"Raw SAML Response: {rawSamlResponse}");
+
                 var saml2AuthnResponse = new Saml2AuthnResponse(config);
 
                 logger.Information("Reading SAML response from HTTP request...");
-                httpRequest.Binding.ReadSamlResponse(httpRequest, saml2AuthnResponse);
+                var binding = new Saml2PostBinding();
+                binding.ReadSamlResponse(Request.ToGenericHttpRequest(), saml2AuthnResponse);
 
                 if (saml2AuthnResponse.Status != Saml2StatusCodes.Success)
                 {
@@ -83,15 +108,12 @@ namespace Epson.Controllers.API
                     throw new AuthenticationException($"SAML Response status: {saml2AuthnResponse.Status}");
                 }
 
-                logger.Information("Unbinding SAML response from HTTP request...");
-                httpRequest.Binding.Unbind(httpRequest, saml2AuthnResponse);
-
                 logger.Information("Extracting claims from SAML response...");
                 var claims = saml2AuthnResponse.ClaimsIdentity.Claims;
-                var email = claims.FirstOrDefault(c => c.Type == "user.mail")?.Value;
-                var uniqueIdentifier = claims.FirstOrDefault(c => c.Type == "user.userprincipalname")?.Value;
-                var givenName = claims.FirstOrDefault(c => c.Type == "user.givenname")?.Value;
-                var surname = claims.FirstOrDefault(c => c.Type == "user.surname")?.Value;
+                var email = claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
+                var uniqueIdentifier = claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value;
+                var givenName = claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname")?.Value;
+                var surname = claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname")?.Value;
 
                 if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(uniqueIdentifier))
                 {
@@ -118,40 +140,47 @@ namespace Epson.Controllers.API
                         Email = email,
                         ssoIdentifier = uniqueIdentifier,
                         firstName = givenName,
-                        lastName = surname
+                        lastName = surname,
+                        TeamId = 7,
+                        IsActive = true
                     };
+
                     var result = await _userManager.CreateAsync(user);
                     if (!result.Succeeded)
                     {
                         logger.Error($"Error creating new user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
                         return StatusCode(500, "Internal server error: Unable to create new user.");
                     }
+                    else
+                    {
+                        await _userManager.AddToRoleAsync(user, "Sales");
+                    }
                 }
 
                 logger.Information("Creating session for the authenticated user...");
-                await saml2AuthnResponse.CreateSession(HttpContext,
-                    claimsTransform: (claimsPrincipal) => ClaimsTransform.Transform(claimsPrincipal));
+                await saml2AuthnResponse.CreateSession(HttpContext, claimsTransform: (claimsPrincipal) => ClaimsTransform.Transform(claimsPrincipal));
 
-                var relayStateQuery = httpRequest.Binding.GetRelayStateQuery();
-                var returnUrl = relayStateQuery.ContainsKey(relayStateReturnUrl) ? relayStateQuery[relayStateReturnUrl] : Url.Content("~/");
+                //var relayStateQuery = binding.GetRelayStateQuery();
+                //var returnUrl = relayStateQuery.ContainsKey(relayStateReturnUrl) ? relayStateQuery[relayStateReturnUrl] : Url.Content("~/");
+
+                var relayState = Request.Form["RelayState"].ToString();
+                logger.Information($"RelayState received: {relayState}");
+                //var returnUrl = !string.IsNullOrEmpty(relayState) ? relayState : "https://ums.epson.com.my/handle-sso";
+                var returnUrl = "https://localhost:7223/handle-sso";
 
                 logger.Information($"Generating JWT token for user {user.Email}...");
                 var generatedToken = await _jwtService.GenerateToken(user);
 
                 logger.Information($"Redirecting to {returnUrl}");
-                return Ok(new
-                {
-                    token = generatedToken,
-                    returnUrl = returnUrl
-                });
+                return Redirect($"{returnUrl}?token={generatedToken}");
+
             }
             catch (Exception ex)
             {
-                logger.Error($"Error processing SAML response: {ex}");
-                return StatusCode(500, "Internal server error");
+                logger.Error($"Unhandled exception in AssertionConsumerService: {ex}");
+                return StatusCode(500, "Internal server error: An unexpected error occurred.");
             }
         }
-
 
         [HttpPost("AuthLogout")]
         [ValidateAntiForgeryToken]
@@ -161,6 +190,11 @@ namespace Epson.Controllers.API
             {
                 return Redirect(Url.Content("~/"));
             }
+
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            _jwtService.InvalidateToken(token);
+
+            Response.Headers.Remove("Authorization");
 
             var binding = new Saml2PostBinding();
             var saml2LogoutRequest = await new Saml2LogoutRequest(config, User).DeleteSession(HttpContext);
@@ -173,7 +207,7 @@ namespace Epson.Controllers.API
             var httpRequest = Request.ToGenericHttpRequest(validate: true);
             httpRequest.Binding.Unbind(httpRequest, new Saml2LogoutResponse(config));
 
-            return Redirect(Url.Content("~/"));
+            return Redirect(Url.Content("~/login"));
         }
 
         [HttpPost("singleLogout")]
