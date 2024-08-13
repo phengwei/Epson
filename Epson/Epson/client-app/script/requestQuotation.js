@@ -792,12 +792,6 @@ export default {
         return "Main Unit / Coverplus must not be empty!";
       } else if (this.productsToShow.length > 0 && this.competitorsToShow.length === 0) {
         return "At least one competitor is required!";
-      } else if (!emailRegex.test(this.submissionDetail.email)) {
-        return "Invalid email format!";
-      } else if (this.projectInformation.email != null && !emailRegex.test(this.projectInformation.email)) {
-        return "Invalid email format!";
-      } else if (!phoneRegex.test(this.submissionDetail.telephoneNo) || !phoneRegex.test(this.projectInformation.telephoneNo)) {
-        return "Invalid phone no. format!";
       } else if (this.projectInformation.closingDate == null) {
           return "Closing Date must not be empty!";
       } else if (this.projectInformation.deliveryDate == null) {

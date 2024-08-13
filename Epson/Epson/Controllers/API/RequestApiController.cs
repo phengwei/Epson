@@ -518,10 +518,11 @@ namespace Epson.Controllers.API
             }
             else
             {
-                filter = x => x.CreatedById == user.Id && 
-                              (x.ApprovalState == (int)ApprovalStateEnum.Approved ||
-                              x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller) ||
-                              x.ApprovalState == (int)ApprovalStateEnum.RejectedBySalesSectionHead;
+                filter = x => x.CreatedById == user.Id &&
+                             (x.ApprovalState == (int)ApprovalStateEnum.Approved ||
+                              x.ApprovalState == (int)ApprovalStateEnum.RejectedByFulfiller ||
+                              x.ApprovalState == (int)ApprovalStateEnum.RejectedBySalesSectionHead);
+
             }
 
             requests = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage);

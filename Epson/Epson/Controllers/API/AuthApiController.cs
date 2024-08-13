@@ -166,7 +166,7 @@ namespace Epson.Controllers.API
                 var relayState = Request.Form["RelayState"].ToString();
                 logger.Information($"RelayState received: {relayState}");
                 //var returnUrl = !string.IsNullOrEmpty(relayState) ? relayState : "https://ums.epson.com.my/handle-sso";
-                var returnUrl = "https://localhost:7223/handle-sso";
+                var returnUrl = "https://ums.epson.com.my/handle-sso";
 
                 logger.Information($"Generating JWT token for user {user.Email}...");
                 var generatedToken = await _jwtService.GenerateToken(user);
