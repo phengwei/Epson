@@ -18,6 +18,7 @@ using Epson.Services.Interface.Products;
 using Epson.Services.Interface.Requests;
 using Epson.Services.Interface.SLA;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Org.BouncyCastle.Crypto;
 using Serilog;
@@ -44,6 +45,7 @@ namespace Epson.Services.Services.Requests
         private readonly ILogger _logger;
         private readonly ISLAService _slaService;
         private readonly IOptions<SLASetting> _slaSetting;
+        private readonly ScopedTaskRunner _scopedTaskRunner;
 
         public RequestService
             (IMapper mapper,
@@ -61,7 +63,8 @@ namespace Epson.Services.Services.Requests
             IEmailService emailService,
             ILogger logger,
             ISLAService slaService,
-            IOptions<SLASetting> slaSetting)
+            IOptions<SLASetting> slaSetting,
+            ScopedTaskRunner scopedTaskRunner)
         {
             _mapper = mapper;
             _context = dbContext;
@@ -79,6 +82,7 @@ namespace Epson.Services.Services.Requests
             _logger = logger;
             _slaService = slaService;
             _slaSetting = slaSetting;
+            _scopedTaskRunner = scopedTaskRunner;
         }
 
         public const string Entity = "Request";
@@ -916,13 +920,19 @@ namespace Epson.Services.Services.Requests
                     request.ApprovalState = (int)ApprovalStateEnum.Approved;
                     _RequestRepository.Update(request);
 
-                    // Run email notification in the background
-                    Task.Run(() => NotifyFulfillment(request, requestProducts, requestProductToFulfill, allProductsFulfilled));
                 }
                 else
                 {
                     _RequestRepository.Update(request);
                 }
+
+                // Run email notification in the background
+                Task.Run(() => _scopedTaskRunner.RunInScope(provider =>
+                {
+                    var emailService = provider.GetRequiredService<IEmailService>();
+
+                    NotifyFulfillment(request, requestProducts, requestProductToFulfill, allProductsFulfilled, emailService);
+                }));
 
                 return true;
             }
@@ -991,14 +1001,18 @@ namespace Epson.Services.Services.Requests
                     {
                         request.ApprovalState = (int)ApprovalStateEnum.Approved;
                         _RequestRepository.Update(request);
-
-                        // Run email notification in the background
-                        Task.Run(() => NotifyFulfillment(request, requestProducts, rp, allProductsFulfilled));
                     }
                     else
                     {
                         _RequestRepository.Update(request);
                     }
+
+                    _scopedTaskRunner.RunInScope(provider =>
+                    {
+                        var emailService = provider.GetRequiredService<IEmailService>();
+
+                        NotifyFulfillment(request, requestProducts, rp, allProductsFulfilled, emailService);
+                    });
                 }
                 catch (Exception ex)
                 {
@@ -1013,7 +1027,7 @@ namespace Epson.Services.Services.Requests
 
 
 
-        private void NotifyFulfillment(Request request, List<RequestProduct> requestProducts, RequestProduct requestProductToFulfill, bool allProductsFulfilled)
+        private void NotifyFulfillment(Request request, List<RequestProduct> requestProducts, RequestProduct requestProductToFulfill, bool allProductsFulfilled, IEmailService emailService)
         {
             try
             {
@@ -1021,17 +1035,17 @@ namespace Epson.Services.Services.Requests
 
                 if (allProductsFulfilled)
                 {
-                    emailQueues.AddRange(_emailService.NotifySalesSectionHeadUsersOnApprovedRequest(request, requestProducts));
-                    emailQueues.AddRange(_emailService.NotifySalesOperationTeamsOnApprovedRequest(request, requestProducts));
-                    emailQueues.Add(_emailService.CreateApprovedEmailQueue(request, requestProducts));
+                    emailQueues.AddRange(emailService.NotifySalesSectionHeadUsersOnApprovedRequest(request, requestProducts));
+                    emailQueues.AddRange(emailService.NotifySalesOperationTeamsOnApprovedRequest(request, requestProducts));
+                    emailQueues.Add(emailService.CreateApprovedEmailQueue(request, requestProducts));
                 }
 
-                var fulfillRequestQueue = _emailService.CreateFulfillEmailQueue(request, requestProductToFulfill, allProductsFulfilled);
+                var fulfillRequestQueue = emailService.CreateFulfillEmailQueue(request, requestProductToFulfill, allProductsFulfilled);
                 emailQueues.Add(fulfillRequestQueue);
 
                 foreach (var emailQueue in emailQueues)
                 {
-                    _emailService.InsertEmailQueue(emailQueue);
+                    emailService.InsertEmailQueue(emailQueue);
                 }
             }
             catch (Exception ex)
@@ -1039,6 +1053,7 @@ namespace Epson.Services.Services.Requests
                 _logger.Error(ex, "Error sending email notifications for request {id}", request.Id);
             }
         }
+
 
 
         public bool SetRequestToAmendQuotation(Request request)

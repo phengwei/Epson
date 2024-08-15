@@ -47,6 +47,7 @@ using Org.BouncyCastle.Asn1.Cmp;
 using Org.BouncyCastle.Asn1.X509;
 using Newtonsoft.Json;
 using Epson.Extensions;
+using Epson.Services.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -126,6 +127,7 @@ builder.Services.Configure<Saml2Configuration>(saml2Configuration =>
         builder.Configuration["Saml2:SigningCertificatePassword"]);
 });
 builder.Services.AddSingleton<Saml2Configuration>();
+builder.Services.AddSingleton<ScopedTaskRunner>();
 
 builder.Services.AddSaml2();
 
@@ -135,7 +137,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Sales", policy => policy.RequireRole("Sales"));
     options.AddPolicy("Product", policy => policy.RequireRole("Product"));
 });
-
+builder.Services.AddScoped<UserManagerExtension>();
 builder.Services.AddOptions<SLASetting>().Bind(builder.Configuration.GetSection("SLA"));
 builder.Services.AddOptions<JwtSettings>().Bind(builder.Configuration.GetSection("Jwt"));
 #endregion

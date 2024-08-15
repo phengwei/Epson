@@ -142,7 +142,8 @@ namespace Epson.Controllers.API
                         firstName = givenName,
                         lastName = surname,
                         TeamId = 7,
-                        IsActive = true
+                        IsActive = true,
+                        PasswordHash = "AQAAAAEAACcQAAAAELy+Nrpvnl30xC4PFbeQHJ9vjAweE9AHi6h1+uMGE50+l8AuiEIDlsHpCv14xv3WKw=="
                     };
 
                     var result = await _userManager.CreateAsync(user);
