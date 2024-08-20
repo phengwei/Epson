@@ -6,6 +6,7 @@
           <h2 class="blue-text big-bold">{{ breached ? 'BREACHED REQUESTS' : 'REQUESTS' }}</h2>
         </v-toolbar-title>
         <v-spacer></v-spacer>
+        <v-btn class="request-btn" @click="exportToExcel">Export to Excel</v-btn>
         <v-text-field v-model="searchTerm"
                       append-icon="mdi-magnify"
                       placeholder="Search by end user or request #"
@@ -191,6 +192,21 @@
           .catch(error => {
             this.loading = false;
             console.error('Error fetching requests:', error);
+          });
+      },
+      exportToExcel() {
+        const requestIds = this.requests.map(request => request.id);
+
+        this.$axios.post(`${this.$config.restUrl}/api/export/toExcel`, requestIds)
+          .then(response => {
+            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = 'requests.xlsx';
+            link.click();
+          })
+          .catch(error => {
+            console.error('Error exporting to Excel:', error);
           });
       },
       triggerSearch() {

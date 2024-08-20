@@ -419,10 +419,10 @@ namespace Epson.Services.Services.Email
                     <body>
                         <div class='email-container'>
                             <div class='email-header'>
-                                <h1>New Request</h1>
+                                <h1>Approved Request</h1>
                             </div>
                             <div class='email-body'>
-                                <p>A new request has been created with the following details:</p>
+                                <p>A request has been approved with the following details:</p>
                                 <table>
                                     <tr>
                                         <th>Org</th>
@@ -578,10 +578,10 @@ namespace Epson.Services.Services.Email
                 <body>
                     <div class='email-container'>
                         <div class='email-header'>
-                            <h1>New Request</h1>
+                            <h1>Approved Request</h1>
                         </div>
                         <div class='email-body'>
-                            <p>A new request has been created with the following details:</p>
+                            <p>A request has been approved with the following details:</p>
                             <table>
                                 <tr>
                                     <th>Org</th>

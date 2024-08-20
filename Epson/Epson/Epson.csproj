@@ -74,6 +74,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include=".platform\nginx\conf.d\custom.conf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Certificates\epson-stg.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -19,7 +19,6 @@
               <hr class="mt-6 border-b-1 border-blue-800" />
             </div>
             <div class="flex-auto px-4 lg:px-10 py-10 pt-0">
-              <!-- Local Login Form -->
               <form method="post" @submit.prevent="login">
                 <div class="relative w-full mb-3">
                   <label class="block uppercase text-blue-800 text-xs font-bold mb-2"
@@ -49,7 +48,6 @@
                   </button>
                 </div>
               </form>
-              <!-- SSO Login Button -->
               <div class="text-center mt-6">
                 <a href="/auth/ssoLogin"
                    class="w-full bg-white text-blue-800 hover:bg-blue-800 hover:text-white active:bg-blue-800 active:text-white text-sm font-bold uppercase px-6 py-3 rounded-full shadow hover:shadow-lg outline-none focus:outline-none flex items-center justify-center mx-auto"
@@ -66,77 +64,89 @@
   </main>
 </template>
 
+
 <script>
   import Swal from 'sweetalert2';
   export default {
     name: "auth-login",
     middleware: 'guest',
     auth: false,
+    components: {},
     data() {
       return {
         userName: '',
         password: '',
+        error: null,
         loginDisabled: false,
-      };
+      }
     },
     head() {
       return {
         title: "Epson Unity Management Login"
-      };
+      }
     },
     beforeMount() {
       if (this.$auth.loggedIn) {
         this.$router.push('/dashboard');
       }
     },
+    mounted() { },
+    destroyed() { },
     methods: {
       async login() {
         try {
           this.loginDisabled = true;
           await this.$auth.loginWith('local', {
             data: {
-              userName: this.userName,
-              password: this.password
+              data: {
+                userName: this.userName,
+                password: this.password
+              }
             }
-          });
-          const userRoles = this.$auth.user.data.roles;
-          if (userRoles.includes('Admin')) {
-            this.$router.push('/dashboard');
-          } else if (userRoles.includes('Sales Operation')) {
-            this.$router.push('/request');
-          } else if (userRoles.includes('Product')) {
-            this.$router.push('/dashboard');
-          } else if (userRoles.includes('Sales')) {
-            this.$router.push('/dashboard');
-          } else if (userRoles.includes('Coverplus')) {
-            this.$router.push('/dashboard');
-          } else if (userRoles.includes('Sales Section Head')) {
-            this.$router.push('/dashboard');
-          } else if (userRoles.includes('Director')) {
-            this.$router.push('/dashboard');
-          } else {
+          }).then(response => {
+            const userRoles = this.$auth.user.data.roles;
+            if (userRoles.includes('Admin')) {
+              this.$router.push('/dashboard');
+            } else if (userRoles.includes('Sales Operation')) {
+              this.$router.push('/request');
+            } else if (userRoles.includes('Product')) {
+              this.$router.push('/dashboard');
+            } else if (userRoles.includes('Sales')) {
+              this.$router.push('/dashboard');
+            } else if (userRoles.includes('Coverplus')) {
+              this.$router.push('/dashboard');
+            } else if (userRoles.includes('Sales Section Head')) {
+              this.$router.push('/dashboard');
+            } else if (userRoles.includes('Director')) {
+              this.$router.push('/dashboard');
+            } else {
+              Swal.fire({
+                title: 'Error!',
+                text: 'Unknown user role',
+                icon: 'error',
+                confirmButtonText: 'OK'
+              });
+            }
+          }).catch(error => {
+            setTimeout(() => {
+              this.loginDisabled = false;
+            }, 5000);
+            const errorMessage = error.response.data.error;
             Swal.fire({
               title: 'Error!',
-              text: 'Unknown user role',
+              text: errorMessage,
               icon: 'error',
               confirmButtonText: 'OK'
             });
-          }
-        } catch (error) {
-          this.loginDisabled = false;
-          const errorMessage = error.response?.data?.error || 'An error occurred during login.';
-          Swal.fire({
-            title: 'Error!',
-            text: errorMessage,
-            icon: 'error',
-            confirmButtonText: 'OK'
           });
+        } catch (err) {
+          console.log(err);
         } finally {
           this.loginDisabled = false;
         }
       }
     }
-  };
+  }
 </script>
 
 <style scoped>
