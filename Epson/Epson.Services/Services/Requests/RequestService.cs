@@ -968,7 +968,7 @@ namespace Epson.Services.Services.Requests
                                                                 _slaService.GetSLAHolidays());
                 rp.Status = (int)RequestProductStatusEnum.Approved;
 
-                if (DateTime.UtcNow > rp.CreatedOnUTC.AddWorkingDays(5))
+                if (DateTime.UtcNow > existingRequest.ApprovedTime.AddWorkingDays(5))
                     rp.Breached = true;
 
 

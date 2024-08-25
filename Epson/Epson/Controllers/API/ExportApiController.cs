@@ -21,6 +21,8 @@ using Epson.Model.Products;
 using OfficeOpenXml;
 using System.Drawing.Imaging;
 using System.Drawing.Printing;
+using static Epson.Controllers.API.RequestApiController;
+using Epson.Data;
 
 namespace Epson.Controllers.API
 {
@@ -34,6 +36,7 @@ namespace Epson.Controllers.API
         private readonly IWorkContext _workContext;
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IRepository<Team> _teamRepository;
         private readonly IConfiguration _configuration;
 
         public ExportApiController(
@@ -44,6 +47,7 @@ namespace Epson.Controllers.API
             IWorkContext workContext,
             IMapper mapper,
             UserManager<ApplicationUser> userManager,
+            IRepository<Team> teamRepository,
             IConfiguration configuration)
         {
             _requestService = requestService;
@@ -53,67 +57,175 @@ namespace Epson.Controllers.API
             _workContext = workContext;
             _mapper = mapper;
             _userManager = userManager;
+            _teamRepository = teamRepository;
             _configuration = configuration;
         }
 
         [HttpGet("toExcel")]
-        public async Task<IActionResult> ExportToExcel([FromQuery] int requestId)
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
+        public async Task<IActionResult> ExportToExcel(string search = null, bool breached = false, int month = 0)
         {
-            return Ok();
-            //var request = _requestService.GetRequestById(requestId) as RequestDTO;
+            var response = new GenericResponseModel<List<RequestDTO>>();
+            var currentUser = _workContext.CurrentUser;
+            var currentUserDetail = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-            //ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
-            //using var package = new ExcelPackage();
+            Func<Request, bool> filter = null;
+            int totalItems;
 
-            //await PopulateRequestWorksheet(package.Workbook.Worksheets.Add("Request"), request);
+            HashSet<RequestDTO> requestSet = new HashSet<RequestDTO>(new RequestDTOComparer());
+
+            Func<Request, bool> monthFilter = x => month == 0 || (x.CreatedOnUTC.Month == month);
+            Func<Request, bool> breachedFilter = x => !breached || x.RequestProducts.Any(rp => rp.Breached);
+
+            if (currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Director"))
+            {
+                Func<Request, bool> adminFilter = x => true;
+                requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => adminFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+            }
+            else
+            {
+                if (currentUser.Roles.Contains("Sales Operation"))
+                {
+                    Func<Request, bool> salesOperationFilter = x => x.ApprovalState == (int)ApprovalStateEnum.Approved;
+                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesOperationFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                }
+
+                if (currentUser.Roles.Contains("Sales Section Head"))
+                {
+                    bool multiRoles = currentUser.Roles.Count > 1;
+
+                    var teamHierarchy = _userService.InitializeTeamHierarchy(true, multiRoles);
+
+                    var relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUserDetail.TeamId, _teamRepository);
+                    relevantTeamIds.Add(currentUserDetail.TeamId);
+
+                    var usersInRelevantTeams = _userManager.Users
+                                                            .Where(u => relevantTeamIds.Contains(u.TeamId))
+                                                            .Select(u => u.Id)
+                                                            .ToList();
+
+                    Func<Request, bool> salesSectionHeadFilter = x => usersInRelevantTeams.Contains(x.CreatedById) &&
+                                                                x.CreatedById != currentUser.Id;
+
+                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesSectionHeadFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                }
+
+                if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus"))
+                {
+                    Func<Request, bool> fulfillerFilter = x => x.RequestProducts.Any(rp => rp.FulfillerId == currentUser.Id);
+
+                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => fulfillerFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                }
+
+                if (currentUser.Roles.Contains("Sales"))
+                {
+                    Func<Request, bool> salesFilter = x => x.CreatedById == currentUser.Id;
+
+                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                }
+            }
+
+            var uniqueRequests = requestSet.ToList().Distinct(new RequestDTOComparer()).ToList();
+
+            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+            using var package = new ExcelPackage();
+
+            await PopulateRequestWorksheet(package.Workbook.Worksheets.Add("Request"), uniqueRequests);
             //await PopulateRequestProductWorksheet(package.Workbook.Worksheets.Add("Request Products"), request.RequestProducts);
             //PopulateCompetitorInformationWorksheet(package.Workbook.Worksheets.Add("Competitor Informations"), request.CompetitorInformations);
             //PopulateRequestSubmissionDetailWorksheet(package.Workbook.Worksheets.Add("Request Submission Detail"), request.RequestSubmissionDetail);
             //PopulateProjectInformationWorksheet(package.Workbook.Worksheets.Add("Project Information"), request.ProjectInformation);
 
-            //var stream = new MemoryStream();
-            //await package.SaveAsAsync(stream);
+            var stream = new MemoryStream();
+            await package.SaveAsAsync(stream);
 
-            //string fileName = "request.xlsx";
-            //string fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-            //stream.Position = 0;
-            //return File(stream, fileType, fileName);
+            string fileName = "request.xlsx";
+            string fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            stream.Position = 0;
+            return File(stream, fileType, fileName);
         }
 
-        private async Task PopulateRequestWorksheet(ExcelWorksheet ws, RequestDTO request)
+        private async Task PopulateRequestWorksheet(ExcelWorksheet ws, List<RequestDTO> requests)
         {
             setBorder(ws.Cells[1, 1, 1, 9]);
             setTitleStyle(ws.Cells[1, 1, 1, 9]);
 
             ws.Cells[1, 1, 1, 9].Merge = true;
-            ws.Cells[1, 1].Value = $"Request Data for Request ID {request.Id}";
+            ws.Cells[1, 1].Value = "Request Data";
             ws.Row(3).Height = 50;
 
             ws.Cells[3, 1].Value = "Id";
-            ws.Cells[3, 2].Value = "Approved Time";
-            ws.Cells[3, 3].Value = "Approved By";
-            ws.Cells[3, 4].Value = "Total Budget";
-            ws.Cells[3, 5].Value = "Approval State";
-            ws.Cells[3, 6].Value = "Time To Resolution";
-            ws.Cells[3, 7].Value = "Breached";
-            ws.Cells[3, 8].Value = "Created On";
-            ws.Cells[3, 9].Value = "Comments";
+            ws.Cells[3, 2].Value = "Created On";
+            ws.Cells[3, 3].Value = "Approved Time";
+            ws.Cells[3, 4].Value = "Approved By";
+            ws.Cells[3, 5].Value = "Total Budget";
+            ws.Cells[3, 6].Value = "Approval State";
+            ws.Cells[3, 7].Value = "End User Name";
+            ws.Cells[3, 8].Value = "Breached";
+            ws.Cells[3, 9].Value = "Resolution Time";
 
-            setBorder(ws.Cells[3, 1, 3, 9]); 
+            setBorder(ws.Cells[3, 1, 3, 9]);
 
-            ws.Cells[4, 1].Value = request.Id;
-            ws.Cells[4, 2].Value = request.ApprovedTime.ToString("yyyy-MM-dd HH:mm:ss");
-            ws.Cells[4, 3].Value = request.ApprovedBy;
-            ws.Cells[4, 3].Value = await _userManager.FindByIdAsync(request.ApprovedBy);
-            ws.Cells[4, 4].Value = request.TotalBudget;
-            ws.Cells[4, 5].Value = ((ApprovalStateEnum)request.ApprovalState).GetDescription();
-            ws.Cells[4, 6].Value = $"{request.TimeToResolution.Hours}h {request.TimeToResolution.Minutes}m {request.TimeToResolution.Seconds}s";
-            ws.Cells[4, 7].Value = request.Breached ? "Breached" : "Not Breached";
-            ws.Cells[4, 8].Value = request.CreatedOnUTC.ToString("yyyy-MM-dd HH:mm:ss"); ;
-            ws.Cells[4, 9].Value = request.Comments;
+            int rowIndex = 4;
+
+            foreach (var request in requests)
+            {
+                ws.Cells[rowIndex, 1].Value = request.Id;
+                ws.Cells[rowIndex, 2].Value = request.CreatedOnUTC.ToString("yyyy-MM-dd HH:mm:ss");
+                ws.Cells[rowIndex, 3].Value = request.ApprovedTime.AddHours(8).ToString("yyyy-MM-dd HH:mm:ss");
+                ws.Cells[rowIndex, 4].Value = await _userManager.FindByIdAsync(request.ApprovedBy);
+                ws.Cells[rowIndex, 5].Value = request.TotalBudget;
+                ws.Cells[rowIndex, 6].Value = ((ApprovalStateEnum)request.ApprovalState).GetDescription();
+                ws.Cells[rowIndex, 7].Value = request.ProjectInformation.ProjectName;
+
+                if (request.ApprovalState == (int)ApprovalStateEnum.Approved)
+                {
+                    bool isBreached = request.RequestProducts.Any(rp => rp.Breached);
+                    ws.Cells[rowIndex, 8].Value = isBreached ? "Breached" : "Not Breached";
+
+                    var latestUpdatedOnUTC = request.RequestProducts.Max(rp => rp.UpdatedOnUTC);
+                    var resolutionTime = CalculateBusinessTimeDifference(request.CreatedOnUTC.AddHours(-8), latestUpdatedOnUTC);
+                    ws.Cells[rowIndex, 9].Value = $"{resolutionTime.Days}d {resolutionTime.Hours}h {resolutionTime.Minutes}m {resolutionTime.Seconds}s";
+                }
+                else
+                {
+                    ws.Cells[rowIndex, 8].Value = "N/A";
+                    ws.Cells[rowIndex, 9].Value = "N/A";
+                }
+
+                setBorder(ws.Cells[rowIndex, 1, rowIndex, 9]);
+
+                rowIndex++;
+            }
 
             ws.Cells.AutoFitColumns(0);
         }
+        private TimeSpan CalculateBusinessTimeDifference(DateTime start, DateTime end)
+        {
+            TimeSpan totalDuration = TimeSpan.Zero;
+            DateTime current = start;
+
+            while (current < end)
+            {
+                if (current.DayOfWeek != DayOfWeek.Saturday && current.DayOfWeek != DayOfWeek.Sunday)
+                {
+                    var nextDay = current.AddDays(1);
+                    if (nextDay > end)
+                    {
+                        totalDuration += end - current;
+                    }
+                    else
+                    {
+                        totalDuration += nextDay - current;
+                    }
+                }
+                current = current.AddDays(1).Date;
+            }
+
+            return totalDuration;
+        }
+
+
 
 
         private async Task PopulateRequestProductWorksheet(ExcelWorksheet ws, List<RequestProductDTO> requestProducts)

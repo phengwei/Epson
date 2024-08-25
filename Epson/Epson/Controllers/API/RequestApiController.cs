@@ -95,7 +95,7 @@ namespace Epson.Controllers.API
         {
             var response = new GenericResponseModel<List<RequestDTO>>();
             var currentUser = _workContext.CurrentUser;
-            var currentUserDetail = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+            var currentUserDetail = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id); 
 
             Func<Request, bool> filter = null;
             int totalItems;

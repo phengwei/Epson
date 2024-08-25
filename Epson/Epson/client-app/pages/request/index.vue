@@ -6,7 +6,6 @@
           <h2 class="blue-text big-bold">{{ breached ? 'BREACHED REQUESTS' : 'REQUESTS' }}</h2>
         </v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn class="request-btn" @click="exportToExcel">Export to Excel</v-btn>
         <v-text-field v-model="searchTerm"
                       append-icon="mdi-magnify"
                       placeholder="Search by end user or request #"
@@ -24,6 +23,7 @@
         </div>
         <div class="create-quotation">
           <v-btn v-if="loggedInUser && loggedInUser.roles.includes('Sales')" class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
+          <v-btn class="blue-button" @click="exportToExcel">Export</v-btn> 
         </div>
       </div>
       <v-card-text>
@@ -92,7 +92,6 @@
         totalItems: 0,
         loading: true,
         searchTerm: '',
-        search: '',
         breached: false,
         selectedMonth: new Date().getMonth() + 1,
         months: [
@@ -166,7 +165,7 @@
       getRequests() {
         this.loading = true;
         const params = {
-          search: this.search,
+          search: this.searchTerm,
           breached: this.breached,
           page: this.options.page,
           itemsPerPage: this.options.itemsPerPage,
@@ -192,21 +191,6 @@
           .catch(error => {
             this.loading = false;
             console.error('Error fetching requests:', error);
-          });
-      },
-      exportToExcel() {
-        const requestIds = this.requests.map(request => request.id);
-
-        this.$axios.post(`${this.$config.restUrl}/api/export/toExcel`, requestIds)
-          .then(response => {
-            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = 'requests.xlsx';
-            link.click();
-          })
-          .catch(error => {
-            console.error('Error exporting to Excel:', error);
           });
       },
       triggerSearch() {
@@ -263,6 +247,37 @@
           query: { params: encodedParams }
         });
       },
+      exportToExcel() {
+        const params = {
+          month: this.selectedMonth,
+          breached: this.breached,
+        };
+
+        const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, ''); 
+        const randomGuid = ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+          (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+        );
+
+        this.$axios({
+          method: 'get',
+          url: `${this.$config.restUrl}/api/export/toexcel`,
+          params,
+          responseType: 'blob'
+        })
+          .then((response) => {
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `request_${currentDate}_${randomGuid}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          })
+          .catch(error => {
+            console.error('Error exporting to Excel:', error);
+          });
+      }
+
     },
   };
 </script>
