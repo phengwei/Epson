@@ -3,6 +3,17 @@
     <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
       <v-toolbar flat>
         <v-toolbar-title><h2 class="blue-text big-bold">REJECTION AUDIT TRAIL</h2></v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-text-field v-model="searchTerm"
+                      append-icon="mdi-magnify"
+                      placeholder="Search by request #"
+                      solo
+                      hide-details
+                      flat
+                      dense
+                      class="search-bar"
+                      @keyup.enter="triggerSearch"
+                      @click:append="triggerSearch"></v-text-field>
       </v-toolbar>
       <v-card-text>
         <v-data-table :headers="headers"
@@ -33,14 +44,38 @@
         auditTrails: [],
         options: {},
         loading: true,
+        search: '',
+        searchTerm: '',
       };
     },
+    mounted() {
+      this.modifySelectInputs();
+    },
     created() {
-      this.getProductAuditTrail();
+      this.getRequestAuditTrail();
     },
     methods: {
-      getProductAuditTrail() {
-        this.$axios.get(`${this.$config.restUrl}/api/audittrail/getrejectionaudittrail`)
+      modifySelectInputs() {
+        const vSelects = this.$el.querySelectorAll('.v-text-field__slot');
+        vSelects.forEach(vSelect => {
+          const inputElement = vSelect.querySelector('input[type="text"]');
+          if (inputElement) {
+            inputElement.removeAttribute('type');
+          }
+        });
+      },
+      triggerSearch() {
+        this.search = this.searchTerm;
+        this.options.page = 1;
+        this.getRequestAuditTrail();
+      },
+      getRequestAuditTrail() {
+        const params = {
+          search: this.search,
+          page: this.options.page,
+          itemsPerPage: this.options.itemsPerPage,
+        };
+        this.$axios.get(`${this.$config.restUrl}/api/audittrail/getrequestaudittrails`, {params})
           .then(response => {
             this.auditTrails = response.data.data.map(item => {
               item.actionTime = this.formatDate(item.actionTime);

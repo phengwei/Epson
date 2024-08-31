@@ -1,16 +1,21 @@
 ﻿using Epson.Core.Domain.AuditTrail;
 using Epson.Data;
+using Epson.Data.Context;
 using Epson.Services.DTO.Products;
 using Epson.Services.Interface.AuditTrails;
+using System.Web.Mvc;
 
 namespace Epson.Services.Services.AuditTrails
 {
     public class AuditTrailService : IAuditTrailService
     {
         private readonly IRepository<AuditTrail> _auditTrailRepository;
+        private readonly EpsonDbContext _context;
 
-        public AuditTrailService(IRepository<AuditTrail> auditTrailRepository)
+        public AuditTrailService(IRepository<AuditTrail> auditTrailRepository,
+            EpsonDbContext context)
         {
+            _context = context;
             _auditTrailRepository = auditTrailRepository;
         }
 
@@ -35,9 +40,25 @@ namespace Epson.Services.Services.AuditTrails
             return _auditTrailRepository.Table.Where(x => x.Entity == "Product").ToList();
         }
 
-        public List<AuditTrail> GetRejectionAuditTrails()
+        public List<AuditTrail> GetRequestAuditTrails(out int totalItems, Func<AuditTrail, bool> filter = null, string search = null, int? page = null, int? itemsPerPage = null)
         {
-            return _auditTrailRepository.Table.Where(x => x.Entity == "Request").ToList();
+            var query = _context.AuditTrail.AsQueryable();
+
+
+            if (filter != null)
+            {
+                query = query.Where(filter).AsQueryable();
+            }
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.ToList().Where(x =>
+                    (x.EntityId.ToString() == search)).AsQueryable();
+            }
+
+            totalItems = query.Count();
+
+            return query.ToList();
         }
     }
 }

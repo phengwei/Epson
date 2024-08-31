@@ -376,7 +376,7 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (_requestService.SetRequestToAmendQuotation(_mapper.Map<Request>(request)))
+            if (_requestService.SetRequestToAmendQuotation(_workContext.CurrentUser?.Id, _workContext.CurrentUser.Name, _mapper.Map<Request>(request)))
                 return Ok("Request has been set to amend quotation");
             else
                 return BadRequest("Failed to set amend quotation for request");
@@ -399,7 +399,7 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (await _requestService.ApproveFirstLevelRequest(_workContext.CurrentUser?.Id, _mapper.Map<Request>(request)))
+            if (await _requestService.ApproveFirstLevelRequest(_workContext.CurrentUser?.Id, _workContext.CurrentUser?.Name, _mapper.Map<Request>(request)))
                 return Ok("Request has been approved to proceed");
             else
                 return BadRequest("Failed to set complete first level approval for request");
@@ -422,7 +422,7 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (_requestService.RejectFirstLevelRequest(_mapper.Map<Request>(request)))
+            if (_requestService.RejectFirstLevelRequest(_workContext.CurrentUser?.Id, _workContext.CurrentUser?.Name, _mapper.Map<Request>(request)))
                 return Ok("Request has been rejected");
             else
                 return BadRequest("Failed to set complete first level approval for request");

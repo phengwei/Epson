@@ -24,9 +24,9 @@ namespace Epson.Services.Interface.Requests
         public bool AcceptDeal(ApplicationUser user, Request request, string comments);
         public bool RejectDeal(ApplicationUser user, Request request, string comments);
         public bool ExitDeal(ApplicationUser user, Request request, string comments);
-        public bool SetRequestToAmendQuotation(Request request);
-        public Task<bool> ApproveFirstLevelRequest(string userId, Request request);
-        public bool RejectFirstLevelRequest(Request request);
+        public bool SetRequestToAmendQuotation(string userID, string userName, Request request);
+        public Task<bool> ApproveFirstLevelRequest(string userId, string userName, Request request);
+        public bool RejectFirstLevelRequest(string userID, string userName, Request request);
         public bool ApproveFinalLevelRequest(Request request, bool isApprove);
         public bool FulfillRequest(ApplicationUser user, RequestProduct requestProduct, Product product, decimal totalPrice, string remarks);
         bool FulfillRequests(List<int> requestProductIds, ApplicationUser user);

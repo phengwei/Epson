@@ -90,7 +90,7 @@
         const links = [];
         if (this.loggedInUser.roles.includes('Admin') || this.loggedInUser.roles.includes('Director')) {
           links.push(
-            { route: '/requestRejectionAuditTrail', label: 'REJECTION AUDIT TRAIL', icon: '📋' },
+            { route: '/requestAuditTrail', label: 'REQUEST AUDIT TRAIL', icon: '📋' },
             { route: '/productAuditTrail', label: 'PRODUCT AUDIT TRAIL', icon: '📝' }
           );
         }

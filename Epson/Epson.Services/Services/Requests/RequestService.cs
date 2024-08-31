@@ -520,6 +520,9 @@ namespace Epson.Services.Services.Requests
                 _RequestSubmissionDetailRepository.Add(requestSubmissionDetailToInsert);
                 _logger.Information("Successfully created request {id}", request.Id);
 
+                string actionDetails = $"{request.CreatedByStr} created request {request.Id} ";
+                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, request.CreatedById, actionDetails, "Insert");
+
                 return true;
             }
             catch (Exception ex)
@@ -627,7 +630,10 @@ namespace Epson.Services.Services.Requests
                 requestSubmissionDetailToInsert.CreatedByStr = request.CreatedByStr;
                 _RequestSubmissionDetailRepository.Update(requestSubmissionDetailToInsert);
 
-                _logger.Information("Successfully created request {id}", request.Id);
+                _logger.Information("Successfully updated request {id}", request.Id);   
+
+                string actionDetails = $"{request.CreatedByStr} updated request {request.Id} ";
+                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, request.UpdatedById, actionDetails, "Update");
 
                 return true;
             }
@@ -934,6 +940,10 @@ namespace Epson.Services.Services.Requests
                     NotifyFulfillment(request, requestProducts, requestProductToFulfill, allProductsFulfilled, emailService);
                 }));
 
+
+                string actionDetails = $"{user.UserName} fulfilled request {request.Id} of product { requestProduct.ProductName } ";
+                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, user.Id, actionDetails, "Fulfill");
+
                 return true;
             }
             catch (Exception ex)
@@ -1013,6 +1023,10 @@ namespace Epson.Services.Services.Requests
 
                         NotifyFulfillment(request, requestProducts, rp, allProductsFulfilled, emailService);
                     });
+
+
+                    string actionDetails = $"{user.UserName} fulfilled request {request.Id} of product {existingProduct.ProductName} ";
+                    _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, user.Id, actionDetails, "Fulfill");
                 }
                 catch (Exception ex)
                 {
@@ -1056,7 +1070,7 @@ namespace Epson.Services.Services.Requests
 
 
 
-        public bool SetRequestToAmendQuotation(Request request)
+        public bool SetRequestToAmendQuotation(string userID, string userName, Request request)
         {
             var req = GetRequestById(request.Id);
 
@@ -1078,6 +1092,10 @@ namespace Epson.Services.Services.Requests
                 {
                     var amendQuotationEmailQueue = _emailService.CreateAmendQuotationEmailQueue(request, requestProduct);
                     _emailService.InsertEmailQueue(amendQuotationEmailQueue);
+
+                    string actionDetails = $"{userName} set request {request.Id} to amendment mode";
+                    _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, userID, actionDetails, "Update");
+
                 }
                 return true;
             }
@@ -1088,7 +1106,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public async Task<bool> ApproveFirstLevelRequest(string userId, Request request)
+        public async Task<bool> ApproveFirstLevelRequest(string userId, string userName, Request request)
         {
             var req = GetRequestById(request.Id);
 
@@ -1113,6 +1131,9 @@ namespace Epson.Services.Services.Requests
                     _emailService.InsertEmailQueue(emailQueue);
                 }
 
+                string actionDetails = $"{userName} approved request {request.Id}";
+                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, userId, actionDetails, "Sales Section Head Approval");
+
                 return true;
             }
             catch (Exception ex)
@@ -1122,7 +1143,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool RejectFirstLevelRequest(Request request)
+        public bool RejectFirstLevelRequest(string userID, string userName, Request request)
         {
             var req = GetRequestById(request.Id);
 
@@ -1137,6 +1158,11 @@ namespace Epson.Services.Services.Requests
                 _logger.Information("Completing first level approval for request {id}", request.Id);
 
                 return true;
+
+
+                string actionDetails = $"{userName} rejected request {request.Id}";
+                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, userID, actionDetails, "Sales Section Head Approval");
+
             }
             catch (Exception ex)
             {
@@ -1239,7 +1265,7 @@ namespace Epson.Services.Services.Requests
 
                 string productName = _productService.GetProductById(requestProduct.ProductId).Name;
 
-                string actionDetails = $"{user.UserName} Rejected request {request.Id} of {productName} with remark of {requestProduct.Remarks}";
+                string actionDetails = $"{user.UserName} rejected request {request.Id} of {productName} with remark of {requestProduct.Remarks}";
                 _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, user.Id, actionDetails, "Reject");
 
 
