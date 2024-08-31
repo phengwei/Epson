@@ -99,6 +99,7 @@ namespace Epson.Controllers.API
 
             var product = new Product
             {
+                SKU = model.SKU,
                 Name = model.Name,
                 Price = model.Price,
                 DealerPrice = model.DealerPrice,
@@ -136,6 +137,7 @@ namespace Epson.Controllers.API
             var updatedProduct = new Product
             {
                 Id = product.Id,
+                SKU = product.SKU,
                 Name = model.Name,
                 Price = model.Price,
                 DealerPrice = model.DealerPrice,

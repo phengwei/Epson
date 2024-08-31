@@ -12,6 +12,8 @@ namespace Epson.Services.DTO.Products
     public class ProductDTO
     {
         public int Id { get; set; }
+        [Required(ErrorMessage = "Please enter SKU")]
+        public string SKU { get; set; }
         [Required(ErrorMessage = "Please enter name")]
         public string Name { get; set; }
         [Required(ErrorMessage = "Please enter price")]

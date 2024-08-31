@@ -610,7 +610,6 @@ export default {
         });
       });
 
-      console.log("requestproducts", this.productsToShow);
     },
     async fetchRequestById(id) {
       try {
@@ -778,10 +777,6 @@ export default {
       }
     },
     validateForm() {
-      const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-
-      const phoneRegex = /^[\d-]{8,12}$/;
-
       if (this.projectInformation.budget == null || this.projectInformation.budget === "0" || this.projectInformation.budget === "") {
         return "Customer's budget must not be empty!";
       } else if (this.projectInformation.type == null) {

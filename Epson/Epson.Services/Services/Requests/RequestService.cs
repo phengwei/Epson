@@ -479,7 +479,7 @@ namespace Epson.Services.Services.Requests
                     requestProduct.FulfillerId = product.CreatedById;
 
                     requestProduct.CreatedOnUTC = request.CreatedOnUTC;
-                    requestProduct.ProductName = product.Name;
+                    requestProduct.ProductName = product.SKU + product.Name;
                     requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
                     requestProduct.RequestId = request.Id;
                     requestProduct.Status = (int)RequestProductStatusEnum.Pending;
@@ -572,6 +572,8 @@ namespace Epson.Services.Services.Requests
                 {
                     var product = _productService.GetProductById(requestProduct.ProductId);
 
+                    requestProduct.ProductName = product.SKU + product.Name;
+                    requestProduct.ProductId = product.Id;
                     requestProduct.FulfillerId = product.CreatedById;
                     requestProduct.RequestId = request.Id;
                     requestProduct.CreatedOnUTC = request.CreatedOnUTC;

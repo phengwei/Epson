@@ -30,6 +30,7 @@ namespace Epson.Factories
             {
                 var productModel = new ProductModel();
                 productModel.Id = product.Id;
+                productModel.SKU = product.SKU;
                 productModel.Name = product.Name;
                 productModel.Price = product.Price;
                 productModel.UpdatedById = product.UpdatedById;
@@ -60,6 +61,7 @@ namespace Epson.Factories
                 var productModel = new ProductModel
                 {
                     Id = product.Id,
+                    SKU = product.SKU,
                     Name = product.Name,
                     Price = product.Price,
                     DealerPrice = product.DealerPrice,
@@ -95,6 +97,7 @@ namespace Epson.Factories
             return products.Select(product => new ProductModel
             {
                 Id = product.Id,
+                SKU = product.SKU,
                 Name = product.Name,
                 Price = product.Price,
                 DealerPrice = product.DealerPrice,

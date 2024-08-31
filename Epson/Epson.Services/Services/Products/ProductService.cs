@@ -75,6 +75,7 @@ namespace Epson.Services.Services.Products
             var productDTOs = products.Select(x => new ProductDTO
             {
                 Id = x.Id,
+                SKU = x.SKU,
                 Name = x.Name,
                 Price = x.Price,
                 DealerPrice = x.DealerPrice,
@@ -98,7 +99,8 @@ namespace Epson.Services.Services.Products
             var productDTOs = products.Select(x => new ProductDTO
             {
                 Id = x.Id,
-                Name = x.Name,
+                SKU = x.SKU,
+                Name = x.SKU + " - " + x.Name,
                 Price = x.Price,
                 DealerPrice = x.DealerPrice,
                 IsActive = x.IsActive,
@@ -132,7 +134,7 @@ namespace Epson.Services.Services.Products
             try
             {
                 product.Id = _ProductRepository.Add(product);
-                _logger.Information("Inserting product {ProductName}", product.Name);
+                _logger.Information("Inserting product {ProductName} of SKU {SKU}", product.Name, product.SKU);
 
                 var actionDetails = $"Inserted product {product.Id} of {product.Name} for a price of {product.Price}";
                 _auditTrailService.CreateAuditTrail(product.Id, Entity, DateTime.UtcNow, userId, actionDetails, "Insert");

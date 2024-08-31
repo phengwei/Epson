@@ -68,7 +68,14 @@ namespace Epson.Factories
             if (categories?.Count == 0 || categories == null)
                 return new List<CategoryModel>();
 
-            var allProducts = _productService.GetProducts().Where(p => p.IsActive);
+            var allProducts = _productService.GetProducts()
+                .Where(p => p.IsActive)
+                .Select(p =>
+                {
+                    p.Name = $"{p.SKU} - {p.Name}";
+                    return p;
+                }).ToList();
+
             var productCategories = _ProductCategoryRepository.GetAll();
 
             var productsByCategory = allProducts
@@ -91,6 +98,7 @@ namespace Epson.Factories
             }
 
             return categoryModels.ToList();
+
         }
 
     }

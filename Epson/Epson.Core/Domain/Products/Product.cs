@@ -9,6 +9,7 @@ namespace Epson.Core.Domain.Products
 {
     public class Product : BaseEntityExtension
     {
+        public string SKU { get; set; }
         public string Name { get; set; }
         public decimal Price { get; set; }
         public decimal DealerPrice { get; set; }
