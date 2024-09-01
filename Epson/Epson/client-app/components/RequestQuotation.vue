@@ -259,6 +259,16 @@
                   </td>
                 </tr>
                 <tr>
+                  <td class="td-header">Request SLA type</td>
+                  <td>
+                    <select v-model="sla" class="border-input" :class="{'readonly-field': isViewMode}" :disabled="isViewMode">
+                      <option v-for="sla in slas" :key="sla" :value="sla">
+                        {{ sla }}
+                      </option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
                   <td class="td-header">Distributor Name</td>
                   <td>
                     <select v-model="submissionDetail.distributorName" class="border-input" :class="{'readonly-field': isViewMode}" :disabled="isViewMode">

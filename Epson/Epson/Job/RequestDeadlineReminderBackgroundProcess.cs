@@ -62,7 +62,22 @@ namespace Epson.Job
                 if (request != null)
                 {
                     var referenceTime = request.AmendQuotationTime ?? request.ApprovedTime;
-                    if (referenceTime != DateTime.MinValue && referenceTime.AddWorkingDays(3) <= DateTime.UtcNow)
+                    int workingDays = 0;
+
+                    if (rp.SLA == "Local")
+                    {
+                        workingDays = 3;
+                    }
+                    else if (rp.SLA == "Regional")
+                    {
+                        workingDays = 5;
+                    }
+                    else if (rp.SLA == "SEC")
+                    {
+                        workingDays = 10;
+                    }
+
+                    if (referenceTime != DateTime.MinValue && referenceTime.AddWorkingDays(workingDays) <= DateTime.UtcNow)
                     {
                         requestProductsToNotify.Add(rp);
                     }

@@ -105,6 +105,7 @@ namespace Epson.Services.Services.Requests
             var requestDTO = new RequestDTO
             {
                 Id = request.Id,
+                sla = request.SLA,
                 ApprovedBy = request.ApprovedBy,
                 ApprovedTime = request.ApprovedTime,
                 AmendQuotationTime = request.AmendQuotationTime,
@@ -259,6 +260,7 @@ namespace Epson.Services.Services.Requests
                 return new RequestDTO
                 {
                     Id = x.Id,
+                    sla = x.SLA,
                     ApprovedBy = x.ApprovedBy,
                     ApprovedTime = x.ApprovedTime,
                     AmendQuotationTime = x.AmendQuotationTime,
@@ -483,6 +485,7 @@ namespace Epson.Services.Services.Requests
                     requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
                     requestProduct.RequestId = request.Id;
                     requestProduct.Status = (int)RequestProductStatusEnum.Pending;
+                    requestProduct.sla = request.sla;
 
                     var requestProductToInsert = _mapper.Map<RequestProduct>(requestProduct);
                     InsertRequestProduct(requestProductToInsert);
@@ -871,7 +874,7 @@ namespace Epson.Services.Services.Requests
             {
                 _RequestRepository.Update(request);
                 _logger.Information("Rejecting deal of request {id}", request.Id);
-
+                
                 return true;
             }
             catch (Exception ex)
@@ -907,7 +910,22 @@ namespace Epson.Services.Services.Requests
             requestProductToFulfill.Remarks = remarks;
             requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
 
-            if (DateTime.UtcNow > requestProductToFulfill.CreatedOnUTC.AddWorkingDays(5))
+            int workingDays = 0;
+
+            if (requestProduct.SLA == "Local")
+            {
+                workingDays = 5;
+            }
+            else if (requestProduct.SLA == "Regional")
+            {
+                workingDays = 8;
+            }
+            else if (requestProduct.SLA == "SEC")
+            {
+                workingDays = 14;
+            }
+
+            if (DateTime.UtcNow > requestProductToFulfill.CreatedOnUTC.AddWorkingDays(workingDays))
                 requestProductToFulfill.Breached = true;
 
             try

@@ -22,6 +22,7 @@ namespace Epson.Core.Domain.Requests
         public string? Comments { get; set; }
         public int TeamId { get; set; }
         public string? TeamName { get; set; }
+        public string SLA { get; set; }
         public virtual ICollection<CompetitorInformation> CompetitorInformations { get; set; }
         public virtual ICollection<RequestProduct> RequestProducts { get; set; }
         public virtual RequestSubmissionDetail RequestSubmissionDetail { get; set; }

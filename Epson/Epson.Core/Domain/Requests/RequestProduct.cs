@@ -32,5 +32,6 @@ namespace Epson.Core.Domain.Requests
         public string? WarrantyRequestPeriod { get; set; }
         public int CategoryId { get; set; }
         public virtual Request Request { get; set; }
+        public string SLA { get; set; }
     }
 }

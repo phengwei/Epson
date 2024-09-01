@@ -32,5 +32,6 @@ namespace Epson.Services.DTO.Requests
         public bool HasReminded { get; set; }
         public string? WarrantyRequest { get; set; }
         public string? WarrantyRequestPeriod { get; set; }
+        public string sla { get; set; }
     }
 }

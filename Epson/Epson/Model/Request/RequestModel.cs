@@ -24,7 +24,7 @@ namespace Epson.Model.Request
         public string? UpdatedById { get; set; }
         public string? Comments { get; set; }
         public string? CreatedTeam { get; set; }
-
+        public string sla { get; set; }
         public int TeamId { get; set; }
         public List<RequestProductModel> RequestProductsModel { get; set; } = new List<RequestProductModel>();
         public List<CompetitorInformationModel> CompetitorInformationModel { get; set; } = new List<CompetitorInformationModel>();

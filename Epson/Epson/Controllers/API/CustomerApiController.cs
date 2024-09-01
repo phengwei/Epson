@@ -244,7 +244,6 @@ namespace Epson.Controllers.API
                 return NotFound();
 
             user.IsActive = false;
-
             var result = await _userManager.UpdateAsync(user);
 
             return Ok();

@@ -79,6 +79,7 @@ export default {
           { value: 3, label: 'Low' }
         ]
       },
+      slas: ['Local', 'Regional', 'SEC'],
       distributors: ['Servex', 'Ingram', 'VSTECs', 'Etech IT', 'GOS', 'EDAP'],
       quantity: {},
       budget: {},
@@ -95,6 +96,7 @@ export default {
       dialogCoverplus: false,
       dialogProductFulfillment: false,
       comments: '',
+      sla: '',
       nonCoverplusRequestItem: {},
       coverplusRequestItem: {},
       itemsPendingFulfillment: [],
@@ -525,6 +527,7 @@ export default {
       return 'N/A';
     },
     populateForm(requestData) {
+      this.sla = requestData.sla;
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProducts) {
         const categoryFound = productModel.categoryId
@@ -670,6 +673,7 @@ export default {
         this.customerName = localStorage.getItem("savedItem-customerName") || this.customerName;
         this.dealJustification = localStorage.getItem("savedItem-dealJustification") || this.dealJustification;
         this.deadline = localStorage.getItem("savedItem-deadline") || this.deadline;
+        this.sla = localStorage.getItem("savedItem-sla") || this.sla;
       } catch (error) {
         console.error(error);
       }
@@ -689,6 +693,7 @@ export default {
         localStorage.setItem("savedItem-customerName", this.customerName);
         localStorage.setItem("savedItem-dealJustification", this.dealJustification);
         localStorage.setItem("savedItem-deadline", this.deadline);
+        localStorage.setItem("savedItem-sla", this.sla);
         this.$swal('Form saved');
       } catch (error) {
         console.error(error);
@@ -777,7 +782,9 @@ export default {
       }
     },
     validateForm() {
-      if (this.projectInformation.budget == null || this.projectInformation.budget === "0" || this.projectInformation.budget === "") {
+      if (this.sla == null || this.sla === "") {
+        return "An SLA type must be selected!";
+      } else if (this.projectInformation.budget == null || this.projectInformation.budget === "0" || this.projectInformation.budget === "") {
         return "Customer's budget must not be empty!";
       } else if (this.projectInformation.type == null) {
         return "Type must not be empty!";
@@ -830,18 +837,18 @@ export default {
       });
     },
     processQuotation() {
-      console.log("productsToShow", this.productsToShow);
       const quotationData = {
         ApprovalState: 20,
         Priority: this.priority,
         requestProducts: [],
         competitorInformations: [],
-        comments: this.comments
+        comments: this.comments,
+        sla: this.sla
       };
 
       if (this.isMode('editable')) {
         quotationData.id = this.currentRequest.id;
-      }
+      }     
 
       for (const product in this.productsToShow) {
         const productToInsert = {
@@ -918,8 +925,9 @@ export default {
       clientErr = this.validateForm();
 
       if (clientErr) {
-          this.$swal(clientErr);
-          return;
+        this.$swal(clientErr);
+        this.loading = false;
+        return;
       }
       if (this.submitting) {
           return;
@@ -942,7 +950,8 @@ export default {
             requestSubmissionDetail: quotationData.submissionDetail,
             ProjectInformation: quotationData.projectInformation,
             Id: quotationData.id,
-            comments: quotationData.comments
+            comments: quotationData.comments,
+            sla: quotationData.sla
           }
         }).then(response => {
           const successMessage = apiEndpoint.endsWith('/editrequest')

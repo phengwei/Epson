@@ -72,15 +72,6 @@ namespace Epson.Extensions
             return await base.CreateAsync(user);
         }
 
-        public override async Task<IdentityResult> UpdateAsync(ApplicationUser user)
-        {
-            if (user != null && !user.IsActive)
-            {
-                return IdentityResult.Failed(new IdentityError { Description = "Cannot update a user that is not active." });
-            }
-            return await base.UpdateAsync(user);
-        }
-
         public override async Task<IdentityResult> AddPasswordAsync(ApplicationUser user, string password)
         {
             if (user != null && !user.IsActive)
