@@ -33,7 +33,7 @@
           <label>Remarks</label>
           <input v-model="localEditedItem.remarks" class="border-input" label="Remarks"></input>
         </div>
-        <div class="form-group">
+        <div class="form-group" v-if="localEditedItem.status !== 40">
           <label>Dealer Price</label>
           <input v-model="localEditedItem.fulfilledPrice" type="number" class="border-input" label="Approved Price" required></input>
         </div>
@@ -41,7 +41,8 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="rejectRequest">Reject</v-btn>
-          <v-btn color="blue darken-1" text @click="fulfillRequest">Approve</v-btn>
+          <v-btn v-if="localEditedItem.status !== 40" color="blue darken-1" text @click="fulfillRequest">Approve</v-btn>
+          <v-btn v-if="localEditedItem.status === 40" color="blue darken-1" text @click="fulfillCoverplusDivisionRequest">Approve</v-btn>
         </v-card-actions>
       </v-card-text>
     </v-card>
@@ -110,6 +111,36 @@
               this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?id=${this.localEditedItem.id}&productId=${this.localEditedItem.productId}&fulfilledPrice=${this.localEditedItem.fulfilledPrice}&remarks=${this.localEditedItem.remarks}`)
                 .then(response => {
                   this.close(); 
+                  Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success')
+                    .then(() => {
+                      this.$router.push('/productDashboard');
+                    });
+                }).catch(error => {
+                  console.log('error', error);
+                  Swal.fire('Error', 'Failed to fulfill request', 'error');
+                });
+            }
+          });
+        }
+        else {
+          this.$swal('Error', 'Please fill in all fields!', 'error');
+        }
+      },
+      fulfillCoverplusDivisionRequest() {
+        if (this.localEditedItem) {
+          Swal.fire({
+            title: 'Approve Request',
+            text: 'Are you sure you want to approve this request?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Fulfill',
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.$axios.post(`${this.$config.restUrl}/api/request/fulfilldivisioncoverplusrequest?id=${this.localEditedItem.id}&productId=${this.localEditedItem.productId}&remarks=${this.localEditedItem.remarks}`)
+                .then(response => {
+                  this.close();
                   Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success')
                     .then(() => {
                       this.$router.push('/productDashboard');

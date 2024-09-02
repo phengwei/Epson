@@ -3,4 +3,5 @@ export const RequestProductStatusEnum = {
   Cancelled: 10,
   Rejected: 20,
   Approved: 30,
+  PendingDivisionHeadApproval: 40
 };

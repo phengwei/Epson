@@ -10,7 +10,8 @@ const statusMapping = {
   0: 'Pending',
   10: 'Cancelled',
   20: 'Rejected',
-  30: 'Approved'
+  30: 'Approved',
+  40: 'Pending Division Head Approval'
 };
 
 export default {
@@ -46,7 +47,7 @@ export default {
       months: ['None', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
       product: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null, remarks: null },
       products: [],
-      coverplus: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null , remarks: null, warrantyRequest: null, warrantyRequestPeriod: null },
+      coverplus: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null , remarks: null, warrantyRequest: null, warrantyRequestPeriod: null, status: 0 },
       coverpluses: [],
       competitor: { model: null, brand: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
       competitors: [],
@@ -228,6 +229,7 @@ export default {
       return this.decodedQueryParams[mode] === true;
     },
     openFulfillProductDialog(product) {
+      console.log("product", product);
       this.editedItem = { ...product };
       this.editedItem.createdByStr = this.submissionDetail.createdByStr;
       this.dialogProductFulfillment = true;
@@ -446,6 +448,7 @@ export default {
     },
     openEditCoverplusDialog(coverplus) {
       this.selectedCoverplus = { ...coverplus };
+
       this.$nextTick(() => {
         this.dialogCoverplus = true;
         this.$refs.coverplusDialog.setEditMode(true, coverplus);

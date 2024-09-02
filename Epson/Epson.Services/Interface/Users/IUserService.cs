@@ -18,5 +18,7 @@ namespace Epson.Services.Interface.Users
         Dictionary<string, string> InitializeTeamHierarchy(bool isSalesHead = false, bool multiRole = false);
         List<int> GetChildTeamIds(Dictionary<string, string> teamHierarchy, int parentTeamId, IRepository<Team> teamRepository);
         Task<List<ApplicationUser>> GetUserSalesHead(int teamID, string createdById, bool isSalesHead = false);
+        List<TeamHierarchy> GetTeamHierarchy();
+        string GetCoverplusTeamHierarchyEmail();
     }
 }

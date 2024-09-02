@@ -17,5 +17,7 @@ namespace Epson.Core.Domain.Enum
         Rejected = 20,
         [Description("Approved")]
         Approved = 30,
+        [Description("Pending division head approval")]
+        PendingDivisionHeadApproval = 40
     }
 }

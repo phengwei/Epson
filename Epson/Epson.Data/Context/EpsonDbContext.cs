@@ -33,6 +33,7 @@ namespace Epson.Data.Context
         public DbSet<ProjectInformationReason> ProjectInformationReason { get; set; }
         public DbSet<CompetitorInformation> CompetitorInformation { get; set; }
         public DbSet<SLAHoliday> SLAHoliday { get; set; }
+        public DbSet<TeamHierarchy> TeamHierarchy { get; set; }
         public DbSet<SLAStaffLeave> SLAStaffLeave { get; set; }
         public DbSet<Team> Team { get; set; }
 

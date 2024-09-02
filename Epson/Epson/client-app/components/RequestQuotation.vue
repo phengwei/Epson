@@ -161,8 +161,8 @@
                     </span>
                   </td>
                   <td v-if="isViewMode">
-                    <span v-if="product.statusStr === 'Approved'">
-                      Approved on {{ product.fulfilledDate }}
+                    <span v-if="coverplus.statusStr === 'Approved'">
+                      Approved on {{ coverplus.fulfilledDate }}
                     </span>
                     <span v-else>
                       {{ 'N/A' }}

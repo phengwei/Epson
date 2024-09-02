@@ -76,12 +76,21 @@ namespace Epson.Controllers.API
                 request.ApprovedByName = approver.UserName;
             }
 
+
+            string divisionHeadUserEmail = _userService.GetCoverplusTeamHierarchyEmail();
+
+            bool isDivisionHeadUser = false;
+            if (user.Email == divisionHeadUserEmail)
+            {
+                isDivisionHeadUser = true;
+            }
+
             var roles = await _userManager.GetRolesAsync(user);
             var isCoverplusUser = roles.Contains(RoleEnum.Coverplus.ToString());
             var isProductUser = roles.Contains(RoleEnum.Product.ToString());
             var isAdminUser = roles.Contains(RoleEnum.Admin.ToString()) || roles.Contains(RoleEnum.Director.ToString());
 
-            request = _requestService.GetUnfulfilledRequestProducts(request, user, isCoverplusUser, isProductUser, isAdminUser);
+            request = _requestService.GetUnfulfilledRequestProducts(request, user, isDivisionHeadUser, isCoverplusUser, isProductUser, isAdminUser);
 
             //var requestModel = _requestModelFactory.PrepareRequestModel(request);
 
@@ -316,6 +325,30 @@ namespace Epson.Controllers.API
                 return Ok("Deal has been exited");
             else
                 return BadRequest("Failed to exit deal");
+        }
+
+        [HttpPost("fulfilldivisioncoverplusrequest")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Coverplus")]
+        public async Task<IActionResult> FulfillDivisionCoverplusRequest(int id, int productId, string remarks)
+        {
+            if (id == 0 || productId == 0)
+                return NotFound("Resources not found!");
+
+            var requestProduct = _requestService.GetRequestProducts().Where(x => x.Id == id).FirstOrDefault();
+            var product = _productService.GetProductById(productId);
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (requestProduct == null || product == null)
+                return NotFound("Resources not found!");
+
+            if (user == null)
+                return Unauthorized("User not authorized to perform this operation");
+
+            if (_requestService.FulfillDivisionCoverplusRequest(user, _mapper.Map<RequestProduct>(requestProduct), _mapper.Map<Product>(product), remarks))
+                return Ok("Request has been fulfilled");
+            else
+                return BadRequest("Failed to fulfill request");
         }
 
         [HttpPost("fulfillrequest")]
@@ -698,13 +731,21 @@ namespace Epson.Controllers.API
         {
             var response = new GenericResponseModel<PagedResult<RequestDTO>>();
 
+            string divisionHeadUserEmail = _userService.GetCoverplusTeamHierarchyEmail();
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            bool isDivisionHeadUser = false;
+            if (user.Email == divisionHeadUserEmail)
+            {
+                isDivisionHeadUser = true;
+            }
+
             var roles = await _userManager.GetRolesAsync(user);
             var isCoverplusUser = roles.Contains(RoleEnum.Coverplus.ToString());
             var isProductUser = roles.Contains(RoleEnum.Product.ToString());
             var isAdminUser = roles.Contains(RoleEnum.Admin.ToString()) || roles.Contains(RoleEnum.Director.ToString());
 
-            var requests = _requestService.GetUnfulfilledRequests(user, isCoverplusUser, isProductUser, isAdminUser, search, page, itemsPerPage);
+            var requests = _requestService.GetUnfulfilledRequests(user, isDivisionHeadUser, isCoverplusUser, isProductUser, isAdminUser, search, page, itemsPerPage);
 
             //var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests.Items);
 

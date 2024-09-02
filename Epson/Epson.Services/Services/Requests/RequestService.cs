@@ -308,14 +308,14 @@ namespace Epson.Services.Services.Requests
             return requestDTOs;
         }
 
-        public RequestDTO GetUnfulfilledRequestProducts(RequestDTO request, ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
+        public RequestDTO GetUnfulfilledRequestProducts(RequestDTO request, ApplicationUser user, bool isDivisionHeadUser, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
         {
             var backupFulfillers = GetBackupFulfillers(user.Id);
             var authorizedRequestProducts = new List<RequestProductDTO>();
 
             foreach (var rp in request.RequestProducts.Where(x => x.HasFulfilled == false))
             {
-                rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isCoverplusUser, isProductUser, isAdminUser, backupFulfillers);
+                rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isDivisionHeadUser, isCoverplusUser, isProductUser, isAdminUser, backupFulfillers);
                 //if (!rp.HasFulfilled && rp.AuthorizedToFulfill)
                 //{
                 //    authorizedRequestProducts.Add(rp);
@@ -327,7 +327,7 @@ namespace Epson.Services.Services.Requests
         }
 
 
-        public PagedResult<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser, string search = null, int? page = null, int? itemsPerPage = null)
+        public PagedResult<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isDivisionHeadUser, bool isCoverplusUser, bool isProductUser, bool isAdminUser, string search = null, int? page = null, int? itemsPerPage = null)
         {
             var requests = GetRequests(search)
                 .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
@@ -340,7 +340,7 @@ namespace Epson.Services.Services.Requests
 
             foreach (var rp in requestProducts)
             {
-                rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isCoverplusUser, isProductUser, isAdminUser, backupFulfillers);
+                rp.AuthorizedToFulfill = DetermineAuthorization(rp, user, isDivisionHeadUser, isCoverplusUser, isProductUser, isAdminUser, backupFulfillers);
                 if (!rp.HasFulfilled && rp.AuthorizedToFulfill)
                 {
                     authorizedRequestProducts.Add(rp);
@@ -368,9 +368,14 @@ namespace Epson.Services.Services.Requests
             };
         }
 
-        private bool DetermineAuthorization(RequestProductDTO rp, ApplicationUser user, bool isCoverplusUser, bool isProductUser, bool isAdminUser, HashSet<int> backupFulfillers)
+        private bool DetermineAuthorization(RequestProductDTO rp, ApplicationUser user, bool isDivisionHeadUser, bool isCoverplusUser, bool isProductUser, bool isAdminUser, HashSet<int> backupFulfillers)
         {
             if (isAdminUser)
+            {
+                return true;
+            }
+
+            if (rp.Status == (int)RequestProductStatusEnum.PendingDivisionHeadApproval && rp.IsCoverplus)
             {
                 return true;
             }
@@ -884,6 +889,80 @@ namespace Epson.Services.Services.Requests
             }
         }
 
+        public bool FulfillDivisionCoverplusRequest(ApplicationUser user, RequestProduct requestProduct, Product product, string remarks)
+        {
+            var existingRequest = GetRequestById(requestProduct.RequestId);
+            var existingProduct = _productService.GetProductById(product.Id);
+
+            if (existingRequest == null || existingProduct == null || existingRequest.ApprovalState != (int)ApprovalStateEnum.PendingFulfillerAction)
+                return false;
+
+            var requestProducts = _RequestProductRepository.GetAll().Where(x => x.RequestId == existingRequest.Id).ToList();
+            var requestProductToFulfill = requestProducts.FirstOrDefault(x => x.Id == requestProduct.Id);
+
+            if (requestProductToFulfill == null)
+                return false;
+
+            requestProductToFulfill.DealerPrice = requestProductToFulfill.DealerPrice;
+            requestProductToFulfill.FulfillerId = user.Id;
+            requestProductToFulfill.HasFulfilled = true;
+            requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
+            requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;
+            requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate,
+                                                                                existingRequest.AmendQuotationTime ?? (DateTime)existingRequest.ApprovedTime,
+                                                                                _slaService.GetSLAStaffLeavesByStaffId(user.Id),
+                                                                                _slaService.GetSLAHolidays());
+            requestProductToFulfill.Remarks = remarks;
+            requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
+
+            requestProductToFulfill.Breached = requestProductToFulfill.Breached;
+
+            try
+            {
+                _RequestProductRepository.Update(requestProductToFulfill);
+                _logger.Information("Fulfilling request product {id}", requestProductToFulfill.Id);
+
+                // Calculate total price for all requested products
+                decimal totalUpdatedPrice = requestProducts.Sum(x => x.FulfilledPrice);
+                existingRequest.TotalPrice = totalUpdatedPrice;
+
+                // Check if all products are fulfilled
+                bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled);
+
+                var request = _mapper.Map<Request>(existingRequest);
+                if (allProductsFulfilled)
+                {
+                    request.ApprovalState = (int)ApprovalStateEnum.Approved;
+                    _RequestRepository.Update(request);
+
+                }
+                else
+                {
+                    _RequestRepository.Update(request);
+                }
+
+                // Run email notification in the background
+                Task.Run(() => _scopedTaskRunner.RunInScope(provider =>
+                {
+                    var emailService = provider.GetRequiredService<IEmailService>();
+
+                    NotifyFulfillment(request, requestProducts, requestProductToFulfill, allProductsFulfilled, emailService);
+                }));
+
+
+                string actionDetails = $"{user.UserName} fulfilled request {request.Id} of product {requestProduct.ProductName} ";
+                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, user.Id, actionDetails, "Fulfill");
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error fulfilling request {id}", requestProductToFulfill.Id);
+                return false;
+            }
+        }
+
+
         public bool FulfillRequest(ApplicationUser user, RequestProduct requestProduct, Product product, decimal totalPrice, string remarks)
         {
             var existingRequest = GetRequestById(requestProduct.RequestId);
@@ -908,19 +987,28 @@ namespace Epson.Services.Services.Requests
                                                                                 _slaService.GetSLAStaffLeavesByStaffId(user.Id),
                                                                                 _slaService.GetSLAHolidays());
             requestProductToFulfill.Remarks = remarks;
-            requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
+
+            if (requestProductToFulfill.IsCoverplus == true)
+            {
+                requestProductToFulfill.Status = (int)RequestProductStatusEnum.PendingDivisionHeadApproval;
+                requestProductToFulfill.HasFulfilled = false;
+            }
+            else
+            {
+                requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
+            }
 
             int workingDays = 0;
 
-            if (requestProduct.SLA == "Local")
+            if (requestProductToFulfill.SLA == "Local")
             {
                 workingDays = 5;
             }
-            else if (requestProduct.SLA == "Regional")
+            else if (requestProductToFulfill.SLA == "Regional")
             {
                 workingDays = 8;
             }
-            else if (requestProduct.SLA == "SEC")
+            else if (requestProductToFulfill.SLA == "SEC")
             {
                 workingDays = 14;
             }
@@ -996,7 +1084,16 @@ namespace Epson.Services.Services.Requests
                                                                 existingRequest.AmendQuotationTime ?? (DateTime)existingRequest.ApprovedTime,
                                                                 _slaService.GetSLAStaffLeavesByStaffId(user.Id),
                                                                 _slaService.GetSLAHolidays());
-                rp.Status = (int)RequestProductStatusEnum.Approved;
+
+                if (rp.IsCoverplus == true)
+                {
+                    rp.Status = (int)RequestProductStatusEnum.PendingDivisionHeadApproval;
+                    rp.HasFulfilled = false;
+                }
+                else
+                {
+                    rp.Status = (int)RequestProductStatusEnum.Approved;
+                }
 
                 if (DateTime.UtcNow > existingRequest.ApprovedTime.AddWorkingDays(5))
                     rp.Breached = true;
