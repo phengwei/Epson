@@ -27,9 +27,15 @@ namespace Epson.Data
 
         public IQueryable<T> Table => GetAll().AsQueryable();
 
+        public async Task<IEnumerable<T>> GetAllAsync()
+        {
+            using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
+            return await db.QueryAsync<T>($"SELECT * FROM {typeof(T).Name}");
+        }
+
+
         public IEnumerable<T> GetAll()
         {
-            var tt = typeof(T).Name;
             using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
             return db.Query<T>($"SELECT * FROM {typeof(T).Name}");
         }

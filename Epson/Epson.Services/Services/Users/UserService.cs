@@ -56,10 +56,123 @@ namespace Epson.Services.Services.Users
             return _mapper.Map<List<TeamDTO>>(_TeamRepository.GetAll());
         }
 
+        public async Task<List<TeamDTO>> GetTeamsAsync()
+        {
+            var teamDTO = await _TeamRepository.GetAllAsync();
+            return _mapper.Map<List<TeamDTO>>(teamDTO.ToList());
+        }
+
         public List<ApplicationUser> GetAllUsers()
         {
             List<ApplicationUser> users = _userManager.Users.ToList();
             return users;
+        }
+
+        public List<ApplicationUser> GetAllUsersByRoles(string role)
+        {
+            return _userManager.GetUsersInRoleAsync(role).Result.ToList();
+        }
+        public async Task<bool> DeleteHierarchy(int id)
+        {
+            var teamHierarchy = _TeamHierarchyRepository.GetById(id);
+
+            if (teamHierarchy == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                _TeamHierarchyRepository.Delete(id);
+            }
+            catch (Exception ex)
+            {
+
+                _logger.Error($"failed to delete team hierarchy.");
+                return false;
+            }
+
+            return true;
+        }
+        public async Task<bool> AddHierarchy(TeamHierarchy teamHierarchy)
+        {
+            if (teamHierarchy == null)
+            {
+                return false;
+            }
+
+            var duplicate = _TeamHierarchyRepository.GetAll()
+                .Any(th => th.RequestingTeam == teamHierarchy.RequestingTeam
+                           && th.ApproverTeam == teamHierarchy.ApproverTeam
+                           && th.IsSalesHead == teamHierarchy.IsSalesHead
+                           && th.ApprovalLevel == teamHierarchy.ApprovalLevel
+                           && th.EmailRecipient == teamHierarchy.EmailRecipient);
+
+            if (duplicate)
+            {
+                _logger.Error("Duplicate team hierarchy found.");
+                return false; 
+            }
+
+            try
+            {
+                _TeamHierarchyRepository.Add(teamHierarchy);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to add team hierarchy: {ex.Message}");
+                return false;
+            }
+
+            return true;
+        }
+
+        public async Task<bool> UpdateHierarchy(TeamHierarchy teamHierarchy)
+        {
+            if (teamHierarchy == null)
+            {
+                return false;
+            }
+
+            var duplicate = _TeamHierarchyRepository.GetAll()
+                .Any(th => th.RequestingTeam == teamHierarchy.RequestingTeam
+                           && th.ApproverTeam == teamHierarchy.ApproverTeam
+                           && th.IsSalesHead == teamHierarchy.IsSalesHead
+                           && th.ApprovalLevel == teamHierarchy.ApprovalLevel
+                           && th.EmailRecipient == teamHierarchy.EmailRecipient);
+
+            if (duplicate)
+            {
+                _logger.Error("Duplicate team hierarchy found.");
+                return false;
+            }
+            try
+            {
+                _TeamHierarchyRepository.Update(teamHierarchy);
+            }catch(Exception ex)
+            {
+
+                _logger.Error($"failed to update team hierarchy.");
+                return false;
+            }
+
+            return true;
+        }
+
+        public List<TeamHierarchyDTO> GetTeamHierarchies()
+        {
+            return _TeamHierarchyRepository.GetAll().Select(x =>
+            {
+                return new TeamHierarchyDTO
+                {
+                    ID = x.ID,
+                    ApprovalLevel = x.ApprovalLevel,
+                    ApproverTeam = x.ApproverTeam,
+                    RequestingTeam = x.RequestingTeam,
+                    EmailRecipient = x.EmailRecipient,
+                    IsSalesHead = x.IsSalesHead
+                };
+            }).ToList();
         }
 
         public List<ApplicationUser> GetGovtUsersWithProductRole()
@@ -84,9 +197,14 @@ namespace Epson.Services.Services.Users
 
         public string GetCoverplusTeamHierarchyEmail()
         {
-            return _TeamHierarchyRepository.GetAll().Where(x => x.ApprovalLevel == 99).First().EmailRecipient;
+            return _TeamHierarchyRepository.GetAll().Where(x => x.ApprovalLevel == 10).First().EmailRecipient;
         }
 
+        public async Task<List<TeamHierarchy>> GetTeamHierarchyAsync()
+        {
+            var hierarchies = await _TeamHierarchyRepository.GetAllAsync();
+            return hierarchies.ToList();
+        }
         public List<TeamHierarchy> GetTeamHierarchy()
         {
             return _TeamHierarchyRepository.GetAll().ToList();

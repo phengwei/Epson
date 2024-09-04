@@ -81,7 +81,8 @@
           links.push(
             { route: '/userManagement', label: 'MANAGE USERS', icon: '👥' },
             { route: '/categoryManagement', label: 'MANAGE PRODUCT CATEGORIES', icon: '📚' },
-            { route: '/sla', label: 'SLA CONFIGURATION', icon: '⚙️' }
+            { route: '/sla', label: 'SLA CONFIGURATION', icon: '⚙️' },
+            { route: '/hierarchy', label: 'ROUTE CONFIGURATION', icon: '⚙️' }
           );
         }
         return links;

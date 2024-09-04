@@ -13,6 +13,7 @@ namespace Epson.Data
     {
         IQueryable<T> Table { get; }
         public IEnumerable<T> GetAll();
+        Task<IEnumerable<T>> GetAllAsync();
         public T GetById(int id);
         public int Add(T entity);
         public int Update(T entity);

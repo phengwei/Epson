@@ -13,6 +13,7 @@ using Epson.Infrastructure;
 using Epson.Services.Interface.Users;
 using AutoMapper;
 using Epson.Extensions;
+using Epson.Services.DTO.Users;
 
 namespace Epson.Controllers.API
 {
@@ -65,6 +66,112 @@ namespace Epson.Controllers.API
         ///}
         /// </remarks>
         /// <param name="login">User login.</param>
+
+        [HttpGet("GetUsersByRole")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        public async Task<IActionResult> GetUsersByRole(string role)
+        {
+            var result = _userService.GetAllUsersByRoles(role);
+
+            return Ok(result);
+        }
+
+
+        [HttpGet("GetHierarchy")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        public async Task<IActionResult> GetHierarchies()
+        {
+            var result = await _userService.GetTeamHierarchyAsync();
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("AddHierarchy")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        public async Task<IActionResult> AddHierarchy([FromBody] BaseQueryModel<TeamHierarchyDTO> queryModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var model = queryModel.Data;
+
+            var hierarchy = new TeamHierarchy
+            {
+                RequestingTeam = model.RequestingTeam,
+                ApproverTeam = model.ApproverTeam,
+                IsSalesHead = model.IsSalesHead,
+                ApprovalLevel = model.ApprovalLevel,
+                EmailRecipient = model.EmailRecipient
+            };
+
+            var result = await _userService.AddHierarchy(hierarchy);
+
+            if (result == true)
+            {
+                return Ok(true);
+            }
+            else
+            {
+                return Conflict(new { success = false, message = "Failed to add hierarchy. A duplicate hierarchy may exist." });
+            }
+        }
+
+        [HttpPost("UpdateHierarchy")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        public async Task<IActionResult> UpdateHierarchy([FromBody] BaseQueryModel<TeamHierarchyDTO> queryModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var model = queryModel.Data;
+
+            var hierarchy = new TeamHierarchy
+            {
+                ID = model.ID,
+                RequestingTeam = model.RequestingTeam,
+                ApproverTeam = model.ApproverTeam,
+                IsSalesHead = model.IsSalesHead,
+                ApprovalLevel = model.ApprovalLevel,
+                EmailRecipient = model.EmailRecipient
+            };
+
+            var result = await _userService.UpdateHierarchy(hierarchy);
+
+            if (result == true)
+            {
+                return Ok(true);
+            }
+            else
+            {
+                return Conflict(new { success = false, message = "Failed to add hierarchy. A duplicate hierarchy may exist." });
+            }
+        }
+
+        [HttpPost("DeleteHierarchy")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        public async Task<IActionResult> DeleteHierarchy([FromBody] int id)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _userService.DeleteHierarchy(id);
+
+            if (result == true)
+            {
+                return Ok(true);
+            }
+            else
+            {
+                return Ok(false);
+            }
+        }
 
         [HttpPost("login")]
         [AllowAnonymous]
@@ -290,7 +397,7 @@ namespace Epson.Controllers.API
         {
             var response = new GenericResponseModel<List<TeamModel>>();
 
-            var teams = _userService.GetTeams();
+            var teams = await _userService.GetTeamsAsync();
 
             foreach (var team in teams)
             {

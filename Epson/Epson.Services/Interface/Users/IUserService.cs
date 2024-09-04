@@ -20,5 +20,12 @@ namespace Epson.Services.Interface.Users
         Task<List<ApplicationUser>> GetUserSalesHead(int teamID, string createdById, bool isSalesHead = false);
         List<TeamHierarchy> GetTeamHierarchy();
         string GetCoverplusTeamHierarchyEmail();
+        Task<bool> AddHierarchy(TeamHierarchy teamHierarchy);
+        Task<bool> UpdateHierarchy(TeamHierarchy teamHierarchy);
+        Task<bool> DeleteHierarchy(int id);
+        Task<List<TeamDTO>> GetTeamsAsync();
+        List<TeamHierarchyDTO> GetTeamHierarchies();
+        Task<List<TeamHierarchy>> GetTeamHierarchyAsync();
+        List<ApplicationUser> GetAllUsersByRoles(string role);
     }
 }
