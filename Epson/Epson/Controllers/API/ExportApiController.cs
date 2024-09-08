@@ -125,13 +125,13 @@ namespace Epson.Controllers.API
                 }
             }
 
-            var uniqueRequests = requestSet.ToList().Distinct(new RequestDTOComparer()).ToList();
+            List<RequestDTO> uniqueRequests = requestSet.ToList().Distinct(new RequestDTOComparer()).ToList();
 
             ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
             using var package = new ExcelPackage();
 
             await PopulateRequestWorksheet(package.Workbook.Worksheets.Add("Request"), uniqueRequests);
-            //await PopulateRequestProductWorksheet(package.Workbook.Worksheets.Add("Request Products"), request.RequestProducts);
+            await PopulateRequestProductWorksheet(package.Workbook.Worksheets.Add("Request Products"), uniqueRequests);
             //PopulateCompetitorInformationWorksheet(package.Workbook.Worksheets.Add("Competitor Informations"), request.CompetitorInformations);
             //PopulateRequestSubmissionDetailWorksheet(package.Workbook.Worksheets.Add("Request Submission Detail"), request.RequestSubmissionDetail);
             //PopulateProjectInformationWorksheet(package.Workbook.Worksheets.Add("Project Information"), request.ProjectInformation);
@@ -228,7 +228,7 @@ namespace Epson.Controllers.API
 
 
 
-        private async Task PopulateRequestProductWorksheet(ExcelWorksheet ws, List<RequestProductDTO> requestProducts)
+        private async Task PopulateRequestProductWorksheet(ExcelWorksheet ws, List<RequestDTO> requests)
         {
             setBorder(ws.Cells[1, 1, 1, 13]); 
             setTitleStyle(ws.Cells[1, 1, 1, 13]);
@@ -237,7 +237,7 @@ namespace Epson.Controllers.API
             ws.Cells[1, 1].Value = "Request Products Data";
             ws.Row(3).Height = 50;
 
-            ws.Cells[3, 1].Value = "Id";
+            ws.Cells[3, 1].Value = "Request ID";
             ws.Cells[3, 2].Value = "Product";
             ws.Cells[3, 3].Value = "Quantity";
             ws.Cells[3, 4].Value = "Disty Price";
@@ -254,22 +254,29 @@ namespace Epson.Controllers.API
             setBorder(ws.Cells[3, 1, 3, 13]);
 
             int rowStart = 4;
-            foreach (var requestProduct in requestProducts)
+            foreach (var request in requests)
             {
-                ws.Cells[rowStart, 1].Value = requestProduct.Id;
-                ws.Cells[rowStart, 2].Value = _productService.GetProductById(requestProduct.ProductId).Name;
-                ws.Cells[rowStart, 3].Value = requestProduct.Quantity;
-                ws.Cells[rowStart, 4].Value = requestProduct.DistyPrice;
-                ws.Cells[rowStart, 5].Value = requestProduct.DealerPrice;
-                ws.Cells[rowStart, 6].Value = requestProduct.EndUserPrice;
-                ws.Cells[rowStart, 7].Value = await _userManager.FindByIdAsync(requestProduct.FulfillerId);
-                ws.Cells[rowStart, 8].Value = requestProduct.HasFulfilled? "Fulfilled" : "Not Fulfilled";
-                ws.Cells[rowStart, 9].Value = requestProduct.FulfilledDate.ToString("yyyy-MM-dd HH:mm:ss");
-                ws.Cells[rowStart, 10].Value = $"{requestProduct.TimeToResolution.Hours}h {requestProduct.TimeToResolution.Minutes}m {requestProduct.TimeToResolution.Seconds}s";
-                ws.Cells[rowStart, 11].Value = requestProduct.Status;
-                ws.Cells[rowStart, 12].Value = requestProduct.Breached ? "Breached" : "Not Breached";
-                ws.Cells[rowStart, 13].Value = requestProduct.IsCoverplus ? "Coverplus": "Not Coverplus";
-                rowStart++;
+                foreach (var requestProduct in request.RequestProducts)
+                {
+                    ws.Cells[rowStart, 1].Value = request.Id;
+                    ws.Cells[rowStart, 2].Value = _productService.GetProductById(requestProduct.ProductId).Name;
+                    ws.Cells[rowStart, 3].Value = requestProduct.Quantity;
+                    ws.Cells[rowStart, 4].Value = requestProduct.DistyPrice;
+                    ws.Cells[rowStart, 5].Value = requestProduct.DealerPrice;
+                    ws.Cells[rowStart, 6].Value = requestProduct.EndUserPrice;
+                    ws.Cells[rowStart, 7].Value = await _userManager.FindByIdAsync(requestProduct.FulfillerId);
+                    ws.Cells[rowStart, 8].Value = requestProduct.HasFulfilled ? "Fulfilled" : "Not Fulfilled";
+                    ws.Cells[rowStart, 9].Value = requestProduct.FulfilledDate.ToString("yyyy-MM-dd HH:mm:ss");
+                    var resolutionTime = CalculateBusinessTimeDifference(request.CreatedOnUTC.AddHours(-8), requestProduct.UpdatedOnUTC);
+                    ws.Cells[rowStart, 10].Value = $"{resolutionTime.Days}d {resolutionTime.Hours}h {resolutionTime.Minutes}m {resolutionTime.Seconds}s";
+                    ws.Cells[rowStart, 11].Value = requestProduct.Status;
+                    ws.Cells[rowStart, 12].Value = requestProduct.Breached ? "Breached" : "Not Breached";
+                    ws.Cells[rowStart, 13].Value = requestProduct.IsCoverplus ? "Coverplus" : "Not Coverplus";
+                    rowStart++;
+
+
+                    setBorder(ws.Cells[rowStart, 1, rowStart, 13]);
+                }
             }
 
             ws.Cells.AutoFitColumns(0);
