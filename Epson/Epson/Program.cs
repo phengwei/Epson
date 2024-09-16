@@ -185,6 +185,7 @@ builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IAuditTrailService, AuditTrailService>();
+builder.Services.AddScoped<IDraftService, DraftService>();
 builder.Services.AddScoped<ISLAService, SLAService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IWorkContext, WorkContext>();

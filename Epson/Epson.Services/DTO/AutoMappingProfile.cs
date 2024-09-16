@@ -66,6 +66,11 @@ namespace Epson.Services.DTO
             CreateMap<TeamDTO, Team>();
             CreateMap<Team, TeamDTO>();
             #endregion
+
+            #region Draft
+            CreateMap<DraftDTO, Draft>();
+            CreateMap<Draft, DraftDTO>();
+            #endregion
         }
     }
 }

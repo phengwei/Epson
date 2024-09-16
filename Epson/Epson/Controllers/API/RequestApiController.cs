@@ -21,6 +21,7 @@ using Microsoft.EntityFrameworkCore;
 using Epson.Data;
 using System.Web.Razor.Generator;
 using Newtonsoft.Json;
+using Epson.Services.Services.Requests;
 
 namespace Epson.Controllers.API
 {
@@ -36,6 +37,7 @@ namespace Epson.Controllers.API
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IRepository<Team> _teamRepository;
         private readonly IConfiguration _configuration;
+        private readonly IDraftService _draftService;
 
         public RequestApiController(
             IRequestService requestService,
@@ -46,7 +48,8 @@ namespace Epson.Controllers.API
             IMapper mapper,
             UserManager<ApplicationUser> userManager,
             IRepository<Team> teamRepository,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IDraftService draftService)
         {
             _requestService = requestService;
             _productService = productService;
@@ -57,6 +60,7 @@ namespace Epson.Controllers.API
             _userManager = userManager;
             _teamRepository = teamRepository;
             _configuration = configuration;
+            _draftService = draftService;
         }
         [HttpGet("getrequestbyid")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin,Director,Sales Operation,Coverplus,Sales Section Head")]
@@ -104,7 +108,7 @@ namespace Epson.Controllers.API
         {
             var response = new GenericResponseModel<List<RequestDTO>>();
             var currentUser = _workContext.CurrentUser;
-            var currentUserDetail = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id); 
+            var currentUserDetail = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
             Func<Request, bool> filter = null;
             int totalItems;
@@ -199,6 +203,204 @@ namespace Epson.Controllers.API
             }
         }
 
+        [HttpGet("getdrafts")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
+        public async Task<IActionResult> GetDrafts(string search = null, int? page = null, int? itemsPerPage = null)
+        {
+            var response = new GenericResponseModel<List<DraftDTO>>();
+            var user = _workContext.CurrentUser;
+            int totalItems;
+
+            var drafts = _draftService.GetDrafts(out totalItems, x => x.UserId == user.Id, search, page, itemsPerPage);
+
+            response.Data = drafts;
+            response.Count = totalItems;
+
+            return Ok(response);
+        }
+
+        [HttpGet("getdraftbyid/{id}")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
+        public async Task<IActionResult> GetDraftById(int id)
+        {
+            if (id == 0)
+                return BadRequest("Invalid draft ID!");
+
+            var draft = _draftService.GetDraftById(id);
+            if (draft == null)
+                return NotFound("Draft not found!");
+
+            return Ok(draft);
+        }
+
+        [HttpPost("editdraft")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
+        public async Task<IActionResult> EditDraft([FromBody] BaseQueryModel<DraftDTO> queryModel)
+        {
+            if (queryModel == null || queryModel.Data == null)
+            {
+                return BadRequest("Invalid draft request.");
+            }
+
+            var model = queryModel.Data;
+
+            if (model.Id == 0 || model.Id == null)
+                return BadRequest("Draft ID must not be empty!");
+
+            var draft = _draftService.GetDraftById(model.Id);
+            if (draft == null)
+                return NotFound("Draft not found!");
+
+            var user = _workContext.CurrentUser;
+            draft.UpdatedOnUTC = DateTime.UtcNow;
+            draft.SelectedCategories = model.SelectedCategories;
+            draft.ProductsToShow = model.ProductsToShow;
+            draft.CompetitorsToShow = model.CompetitorsToShow;
+            draft.CoverplusesToShow = model.CoverplusesToShow;
+            draft.SubmissionDetail = model.SubmissionDetail;
+            draft.ProjectInformation = model.ProjectInformation;
+            draft.Reasons = model.Reasons;
+            draft.Priority = model.Priority;
+            draft.Comments = model.Comments;
+            draft.CustomerName = model.CustomerName;
+            draft.DealJustification = model.DealJustification;
+            draft.Deadline = model.Deadline;
+            draft.SLA = model.SLA;
+
+            if (_draftService.UpdateDraft(draft))
+                return Ok();
+            else
+                return BadRequest("Failed to update draft.");
+        }
+
+        [HttpPost("createdraft")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
+        public async Task<IActionResult> CreateDraft([FromBody] BaseQueryModel<DraftDTO> queryModel)
+        {
+            if (queryModel == null || queryModel.Data == null)
+            {
+                return BadRequest("Invalid draft request.");
+            }
+
+            var model = queryModel.Data;
+            var user = _workContext.CurrentUser;
+
+            var draft = new DraftDTO
+            {
+                CreatedOnUTC = DateTime.UtcNow,
+                UpdatedOnUTC = DateTime.UtcNow,
+                UserId = user.Id,
+                SelectedCategories = model.SelectedCategories,
+                ProductsToShow = model.ProductsToShow,
+                CompetitorsToShow = model.CompetitorsToShow,
+                CoverplusesToShow = model.CoverplusesToShow,
+                SubmissionDetail = model.SubmissionDetail,
+                ProjectInformation = model.ProjectInformation,
+                Reasons = model.Reasons,
+                Priority = model.Priority,
+                Comments = model.Comments,
+                CustomerName = model.CustomerName,
+                DealJustification = model.DealJustification,
+                Deadline = model.Deadline,
+                SLA = model.SLA
+            };
+
+            if (_draftService.InsertDraft(draft))
+                return Ok();
+            else
+                return BadRequest("Failed to create draft.");
+        }
+
+        [HttpPost("savedraft")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
+        public async Task<IActionResult> SaveDraft([FromBody] BaseQueryModel<DraftDTO> queryModel)
+        {
+            if (queryModel == null || queryModel.Data == null)
+            {
+                return BadRequest("Invalid draft request.");
+            }
+
+            var model = queryModel.Data;
+            var user = _workContext.CurrentUser;
+
+            var existingDraft = _draftService.GetDraftByUserId(user.Id);
+
+            if (existingDraft != null)
+            {
+                existingDraft.UpdatedOnUTC = DateTime.UtcNow;
+                existingDraft.SelectedCategories = model.SelectedCategories;
+                existingDraft.ProductsToShow = model.ProductsToShow;
+                existingDraft.CompetitorsToShow = model.CompetitorsToShow;
+                existingDraft.CoverplusesToShow = model.CoverplusesToShow;
+                existingDraft.SubmissionDetail = model.SubmissionDetail;
+                existingDraft.ProjectInformation = model.ProjectInformation;
+                existingDraft.Reasons = model.Reasons;
+                existingDraft.Priority = model.Priority;
+                existingDraft.Comments = model.Comments;
+                existingDraft.CustomerName = model.CustomerName;
+                existingDraft.DealJustification = model.DealJustification;
+                existingDraft.Deadline = model.Deadline;
+                existingDraft.SLA = model.SLA;
+
+                if (_draftService.UpdateDraft(existingDraft))
+                {
+                    return Ok(new { message = "Draft updated successfully" });
+                }
+                else
+                {
+                    return BadRequest("Failed to update draft.");
+                }
+            }
+            else
+            {
+                var newDraft = new DraftDTO
+                {
+                    UserId = user.Id,
+                    CreatedOnUTC = DateTime.UtcNow,
+                    UpdatedOnUTC = DateTime.UtcNow,
+                    SelectedCategories = model.SelectedCategories,
+                    ProductsToShow = model.ProductsToShow,
+                    CompetitorsToShow = model.CompetitorsToShow,
+                    CoverplusesToShow = model.CoverplusesToShow,
+                    SubmissionDetail = model.SubmissionDetail,
+                    ProjectInformation = model.ProjectInformation,
+                    Reasons = model.Reasons,
+                    Priority = model.Priority,
+                    Comments = model.Comments,
+                    CustomerName = model.CustomerName,
+                    DealJustification = model.DealJustification,
+                    Deadline = model.Deadline,
+                    SLA = model.SLA
+                };
+
+                if (_draftService.InsertDraft(newDraft))
+                {
+                    return Ok(new { message = "Draft created successfully", id = newDraft.Id });
+                }
+                else
+                {
+                    return BadRequest("Failed to create draft.");
+                }
+            }
+        }
+
+        [HttpGet("loaddraft")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
+        public async Task<IActionResult> LoadDraft()
+        {
+            var user = _workContext.CurrentUser;
+
+            var draft = _draftService.GetDraftByUserId(user.Id);
+
+            if (draft != null)
+            {
+                return Ok(draft); 
+            }
+            else
+            {
+                return NotFound("No draft found for the current user.");
+            }
+        }
 
 
         [HttpPost("createrequest")]

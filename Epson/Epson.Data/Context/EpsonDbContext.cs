@@ -36,6 +36,7 @@ namespace Epson.Data.Context
         public DbSet<TeamHierarchy> TeamHierarchy { get; set; }
         public DbSet<SLAStaffLeave> SLAStaffLeave { get; set; }
         public DbSet<Team> Team { get; set; }
+        public DbSet<Draft> Draft{ get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

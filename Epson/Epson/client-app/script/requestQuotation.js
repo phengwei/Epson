@@ -47,7 +47,7 @@ export default {
       months: ['None', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
       product: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null, remarks: null },
       products: [],
-      coverplus: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null , remarks: null, warrantyRequest: null, warrantyRequestPeriod: null, status: 0 },
+      coverplus: { category: null, productId: null, quantity: null, distyPrice: null, dealerPrice: null, endUserPrice: null, remarks: null, warrantyRequest: null, warrantyRequestPeriod: null, status: 0 },
       coverpluses: [],
       competitor: { model: null, brand: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
       competitors: [],
@@ -235,7 +235,7 @@ export default {
       this.dialogProductFulfillment = true;
     },
     openAddProductDialog() {
-      this.selectedProduct = {}; 
+      this.selectedProduct = {};
       this.dialogProduct = true;
     },
     openEditProductDialog(product) {
@@ -253,12 +253,12 @@ export default {
         updatedProduct.distyPrice = updatedProduct.distyPrice || 0;
         updatedProduct.dealerPrice = updatedProduct.dealerPrice || 0;
         updatedProduct.endUserPrice = updatedProduct.endUserPrice || 0;
-        
+
         this.$set(this.productsToShow, index, updatedProduct);
       } else {
         console.error("Product not found for editing.");
       }
-      
+
       this.dialogProduct = false;
     },
     addProductRow(product) {
@@ -363,7 +363,7 @@ export default {
         cancelButtonColor: '#d33',
         confirmButtonText: 'Approve',
         cancelButtonText: 'Reject',
-        allowOutsideClick: true 
+        allowOutsideClick: true
       }).then((result) => {
         if (result.isConfirmed) {
           const requestUrl = `${this.$config.restUrl}/api/request/approvefinalrequest?requestId=${this.currentRequest.id}&isAccept=true`;
@@ -378,7 +378,7 @@ export default {
               console.log('error', error);
               Swal.fire('Error', 'Failed to process the request', 'error');
             });
-            
+
         } else if (result.isDismissed && result.dismiss === 'cancel') {
           const requestUrl = `${this.$config.restUrl}/api/request/approvefinalrequest?requestId=${this.currentRequest.id}&isAccept=false`;
 
@@ -512,7 +512,7 @@ export default {
     },
     showUpdatedProducts(updatedProduct) {
       const index = this.productsToShow.findIndex(product => product.id === updatedProduct.id);
-      
+
       if (index !== -1) {
         this.$set(this.productsToShow, index, updatedProduct);
       } else {
@@ -571,7 +571,7 @@ export default {
             productName: productModel.productName,
             remarks: (productModel.remarks === null || productModel.remarks === "null") ? 'N/A' : productModel.remarks,
             status: productModel.status,
-            statusStr: statusMapping[productModel.status] || 'Pendings', 
+            statusStr: statusMapping[productModel.status] || 'Pendings',
             fulfilledPrice: productModel.fulfilledPrice,
             warrantyRequest: productModel.warrantyRequest,
             warrantyRequestPeriod: productModel.warrantyRequestPeriod,
@@ -661,45 +661,75 @@ export default {
         console.error(error);
       }
     },
-    loadDraft() {
+    async loadDraft() {
       try {
-        this.selectedCategories = JSON.parse(localStorage.getItem("savedItem-selectedCategories")) || [];
-        this.productsToShow = JSON.parse(localStorage.getItem("savedItem-productsToShowList")) || [];
-        this.competitorsToShow = JSON.parse(localStorage.getItem("savedItem-competitorsToShowList")) || [];
-        this.coverplusesToShow = JSON.parse(localStorage.getItem("savedItem-coverplusesToShowList")) || [];
-        this.submissionDetail = JSON.parse(localStorage.getItem("savedItem-submissionDetail")) || this.submissionDetail;
-        this.projectInformation = JSON.parse(localStorage.getItem("savedItem-projectInformation")) || this.projectInformation;
-        this.projectInformationReasonsToInsert = JSON.parse(localStorage.getItem("savedItem-projectInformationReasonsToInsert")) || [];
-        this.reasons = JSON.parse(localStorage.getItem("savedItem-reasons")) || this.reasons;
-        this.priority = JSON.parse(localStorage.getItem("savedItem-priority")) || this.priority;
-        this.comments = localStorage.getItem("savedItem-comments") || this.comments;
-        this.customerName = localStorage.getItem("savedItem-customerName") || this.customerName;
-        this.dealJustification = localStorage.getItem("savedItem-dealJustification") || this.dealJustification;
-        this.deadline = localStorage.getItem("savedItem-deadline") || this.deadline;
-        this.sla = localStorage.getItem("savedItem-sla") || this.sla;
+        const response = await this.$axios.get('/api/request/loaddraft');
+
+        if (response && response.data) {
+          const draft = response.data;
+
+          try {
+            this.selectedCategories = draft.selectedCategories ? JSON.parse(draft.selectedCategories) : [];
+            this.productsToShow = draft.productsToShow ? JSON.parse(draft.productsToShow) : [];
+            this.competitorsToShow = draft.competitorsToShow ? JSON.parse(draft.competitorsToShow) : [];
+            this.coverplusesToShow = draft.coverplusesToShow ? JSON.parse(draft.coverplusesToShow) : [];
+            this.submissionDetail = draft.submissionDetail ? JSON.parse(draft.submissionDetail) : {};
+            this.projectInformation = draft.projectInformation ? JSON.parse(draft.projectInformation) : {};
+            this.reasons = draft.reasons ? JSON.parse(draft.reasons) : [];
+            this.priority = draft.priority ? JSON.parse(draft.priority) : {};
+
+            this.comments = draft.comments || '';
+            this.customerName = draft.customerName || '';
+            this.dealJustification = draft.dealJustification || '';
+            this.deadline = draft.deadline || '';
+            this.sla = draft.sla || '';
+
+
+            this.$swal('Success', 'Draft loaded successfully', 'success');
+          } catch (error) {
+            console.error('Error parsing draft data:', error);
+            this.$swal('Error', 'Failed to parse draft data', 'error');
+          }
+        } else {
+          this.$swal('Error', 'Failed to load draft', 'error');
+        }
       } catch (error) {
-        console.error(error);
+        console.error('Error loading draft:', error);
+        if (error.response && error.response.status === 404) {
+          this.$swal('Error', 'No draft found for the current user', 'error');
+        } else {
+          this.$swal('Error', 'Failed to load draft', 'error');
+        }
       }
     },
-    saveDraft() {
+    async saveDraft() {
       try {
-        localStorage.setItem("savedItem-selectedCategories", JSON.stringify(this.selectedCategories));
-        localStorage.setItem("savedItem-productsToShowList", JSON.stringify(this.productsToShow));
-        localStorage.setItem("savedItem-competitorsToShowList", JSON.stringify(this.competitorsToShow));
-        localStorage.setItem("savedItem-coverplusesToShowList", JSON.stringify(this.coverplusesToShow));
-        localStorage.setItem("savedItem-submissionDetail", JSON.stringify(this.submissionDetail));
-        localStorage.setItem("savedItem-projectInformation", JSON.stringify(this.projectInformation));
-        localStorage.setItem("savedItem-projectInformationReasonsToInsert", JSON.stringify(this.projectInformationReasonsToInsert));
-        localStorage.setItem("savedItem-reasons", JSON.stringify(this.reasons));
-        localStorage.setItem("savedItem-priority", JSON.stringify(this.priority));
-        localStorage.setItem("savedItem-comments", this.comments);
-        localStorage.setItem("savedItem-customerName", this.customerName);
-        localStorage.setItem("savedItem-dealJustification", this.dealJustification);
-        localStorage.setItem("savedItem-deadline", this.deadline);
-        localStorage.setItem("savedItem-sla", this.sla);
-        this.$swal('Form saved');
+        const draftData = {
+          SelectedCategories: JSON.stringify(this.selectedCategories),
+          ProductsToShow: JSON.stringify(this.productsToShow),
+          CompetitorsToShow: JSON.stringify(this.competitorsToShow),
+          CoverplusesToShow: JSON.stringify(this.coverplusesToShow),
+          SubmissionDetail: JSON.stringify(this.submissionDetail),
+          ProjectInformation: JSON.stringify(this.projectInformation),
+          Reasons: JSON.stringify(this.reasons),
+          Priority: JSON.stringify(this.priority),
+          Comments: this.comments,
+          CustomerName: this.customerName,
+          DealJustification: this.dealJustification,
+          Deadline: this.deadline,
+          SLA: this.sla
+        };
+
+        const response = await this.$axios.post('/api/request/savedraft', { data: draftData });
+
+        if (response && response.status === 200) {
+          this.$swal('Success', response.data.message, 'success');
+        } else {
+          this.$swal('Error', 'Failed to save draft', 'error');
+        }
       } catch (error) {
-        console.error(error);
+        console.error('Error saving draft:', error);
+        this.$swal('Error', 'Failed to save draft', 'error');
       }
     },
     async submitForm(selectedCategory) {
@@ -798,9 +828,9 @@ export default {
       } else if (this.productsToShow.length > 0 && this.competitorsToShow.length === 0) {
         return "At least one competitor is required!";
       } else if (this.projectInformation.closingDate == null) {
-          return "Closing Date must not be empty!";
+        return "Closing Date must not be empty!";
       } else if (this.projectInformation.deliveryDate == null) {
-          return "Delivery Date must not be empty!";
+        return "Delivery Date must not be empty!";
       } else {
         return "";
       }
@@ -851,7 +881,7 @@ export default {
 
       if (this.isMode('editable')) {
         quotationData.id = this.currentRequest.id;
-      }     
+      }
 
       for (const product in this.productsToShow) {
         const productToInsert = {
@@ -911,7 +941,7 @@ export default {
         contactPersonName: this.projectInformation.contactPersonName,
         telephoneNo: this.projectInformation.telephoneNo,
         email: this.projectInformation.email,
-        requirements: this.projectInformation.requirements, 
+        requirements: this.projectInformation.requirements,
         customerApplications: this.projectInformation.customerApplications,
         budget: this.projectInformation.budget,
         staggeredMonth: this.projectInformation.staggeredMonth === 'None' ? '' : this.projectInformation.staggeredMonth,
@@ -933,7 +963,7 @@ export default {
         return;
       }
       if (this.submitting) {
-          return;
+        return;
       }
       this.submitting = true;
 
@@ -972,7 +1002,7 @@ export default {
           console.log(err);
           const errorMessage = err.response && err.response.data && err.response.data.message
             ? err.response.data.message
-            : 'An unknown error occurred'; 
+            : 'An unknown error occurred';
           vm.$swal('Failed to submit request', errorMessage, 'error');
         })
       } catch (error) {
