@@ -29,6 +29,7 @@
       <tr>
         <td>{{ item.id }}</td>
         <td>{{ item.requestedBy }}</td>
+        <td>{{ item.categories }}</td>
         <td>{{ item.projectName }}</td>
         <td>{{ item.lastFulfilledDate }}</td>
         <td>{{ item.overallRequestStatusStr }}</td>
@@ -51,6 +52,7 @@
         headers: [
           { text: 'Request #', value: 'id' },
           { text: 'Requester', value: 'requestedBy' },
+          { text: 'Categories', value: 'categories' },
           { text: 'End User', value: 'projectName' },
           { text: 'Last Fulfilled', value: 'lastFulfilledDate' },
           { text: 'Request Status', value: 'overallRequestStatusStr' },
@@ -187,7 +189,8 @@
                 requestedBy: item.createdByStr,
                 projectName: item.projectInformation.projectName,
                 lastFulfilledDate: moment(lastFulfilledDate).format('DD MMM YY HH:mm'),
-                overallRequestStatusStr: overallRequestStatusString
+                overallRequestStatusStr: overallRequestStatusString,
+                categories: item.categories
               };
 
               this.fulfilledItems.push(newItem);

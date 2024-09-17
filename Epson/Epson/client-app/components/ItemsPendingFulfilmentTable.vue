@@ -30,6 +30,7 @@
       <tr>
         <td>{{ item.requestId }}</td>
         <td>{{ item.createdOnUTC }}</td>
+        <td>{{ item.categories }}</td>
         <td>{{ item.projectName }}</td>
         <td>{{ item.createdByStr }}</td>
         <td>
@@ -52,6 +53,7 @@
         headers: [
           { text: 'Request #', value: 'requestId' },
           { text: 'Requested On', value: 'createdOnUTC' },
+          { text: 'Categories', value: 'categories' },
           { text: 'End User', align: 'start', value: 'projectName' },
           { text: 'Requested By', value: 'createdByStr' },
           { text: 'Fulfill Request', value: 'actions', sortable: false }
@@ -131,7 +133,8 @@
               requestId: item.id,
               projectName: item.projectInformation && item.projectInformation.projectName ? item.projectInformation.projectName : 'N/A',
               createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm'),
-              createdByStr: item.createdByStr
+              createdByStr: item.createdByStr,
+              categories: item.categories
             }
             
             this.itemsPendingFulfilment.push(newItem);

@@ -278,6 +278,7 @@ namespace Epson.Services.Services.Requests
                     Comments = x.Comments,
                     TeamId = x.TeamId,
                     TeamName = x.TeamName,
+                    Categories = GetProductCategories(x.RequestProducts.ToList()),
                     RequestProducts = _mapper.Map<List<RequestProductDTO>>(x.RequestProducts.ToList()),
                     RequestSubmissionDetail = _mapper.Map<RequestSubmissionDetailDTO>(x.RequestSubmissionDetail),
                     ProjectInformation = x.ProjectInformation != null ? new ProjectInformationDTO
@@ -307,6 +308,23 @@ namespace Epson.Services.Services.Requests
 
             return requestDTOs;
         }
+
+        private string GetProductCategories(List<RequestProduct> requestProducts)
+        {
+            var categoryIds = requestProducts
+                .Where(x => x.IsCoverplus == false)
+                .Select(x => x.CategoryId)
+                .Distinct();
+
+            var categories = categoryIds
+                .Select(id => _CategoryRepository.GetById(id).Name)
+                .ToList();
+
+            string categoryString = string.Join(", ", categories);
+
+            return categoryString;
+        }
+
 
         public RequestDTO GetUnfulfilledRequestProducts(RequestDTO request, ApplicationUser user, bool isDivisionHeadUser, bool isCoverplusUser, bool isProductUser, bool isAdminUser)
         {
