@@ -235,7 +235,6 @@ export default {
       this.dialogProduct = true;
     },
     openEditProductDialog(product) {
-      console.log("product", product);
       this.selectedProduct = { ...product };
       this.$nextTick(() => {
         this.dialogProduct = true;
@@ -610,7 +609,6 @@ export default {
         });
       });
 
-      console.log("requestproducts", this.productsToShow);
     },
     async fetchRequestById(id) {
       try {
@@ -835,7 +833,6 @@ export default {
       });
     },
     processQuotation() {
-      console.log("productsToShow", this.productsToShow);
       const quotationData = {
         ApprovalState: 20,
         Priority: this.priority,
