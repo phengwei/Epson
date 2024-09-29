@@ -80,10 +80,10 @@ namespace Epson.Controllers.API
                 // Log the entire request including headers and body
                 var requestHeaders = Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString());
                 var requestBody = new Dictionary<string, string>
-                {
-                    { "SAMLResponse", Request.Form["SAMLResponse"] },
-                    { "RelayState", Request.Form["RelayState"] }
-                };
+        {
+            { "SAMLResponse", Request.Form["SAMLResponse"] },
+            { "RelayState", Request.Form["RelayState"] }
+        };
 
                 var fullRequestLog = new
                 {
@@ -112,8 +112,6 @@ namespace Epson.Controllers.API
                 var claims = saml2AuthnResponse.ClaimsIdentity.Claims;
                 var email = claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
                 var uniqueIdentifier = claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value;
-                var givenName = claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname")?.Value;
-                var surname = claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname")?.Value;
 
                 if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(uniqueIdentifier))
                 {
@@ -122,51 +120,25 @@ namespace Epson.Controllers.API
                 }
 
                 var user = await _userManager.FindByEmailAsync(email);
-                if (user != null)
+                if (user == null)
                 {
-                    logger.Information($"User found for email {email}, updating SSO identifier if necessary...");
-                    if (string.IsNullOrEmpty(user.ssoIdentifier))
-                    {
-                        user.ssoIdentifier = uniqueIdentifier;
-                        await _userManager.UpdateAsync(user);
-                    }
+                    logger.Information($"No user found for email {email}. Login not allowed.");
+                    var r = "https://ums.epson.com.my/unauthorized";
+                    return Redirect($"{r}");
                 }
-                else
-                {
-                    logger.Information($"No user found for email {email}, creating new user...");
-                    user = new ApplicationUser
-                    {
-                        UserName = email,
-                        Email = email,
-                        ssoIdentifier = uniqueIdentifier,
-                        firstName = givenName,
-                        lastName = surname,
-                        TeamId = 7,
-                        IsActive = true,
-                        PasswordHash = "AQAAAAEAACcQAAAAELy+Nrpvnl30xC4PFbeQHJ9vjAweE9AHi6h1+uMGE50+l8AuiEIDlsHpCv14xv3WKw=="
-                    };
 
-                    var result = await _userManager.CreateAsync(user);
-                    if (!result.Succeeded)
-                    {
-                        logger.Error($"Error creating new user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
-                        return StatusCode(500, "Internal server error: Unable to create new user.");
-                    }
-                    else
-                    {
-                        await _userManager.AddToRoleAsync(user, "Sales");
-                    }
+                logger.Information($"User found for email {email}, updating SSO identifier if necessary...");
+                if (string.IsNullOrEmpty(user.ssoIdentifier))
+                {
+                    user.ssoIdentifier = uniqueIdentifier;
+                    await _userManager.UpdateAsync(user);
                 }
 
                 logger.Information("Creating session for the authenticated user...");
                 await saml2AuthnResponse.CreateSession(HttpContext, claimsTransform: (claimsPrincipal) => ClaimsTransform.Transform(claimsPrincipal));
 
-                //var relayStateQuery = binding.GetRelayStateQuery();
-                //var returnUrl = relayStateQuery.ContainsKey(relayStateReturnUrl) ? relayStateQuery[relayStateReturnUrl] : Url.Content("~/");
-
                 var relayState = Request.Form["RelayState"].ToString();
                 logger.Information($"RelayState received: {relayState}");
-                //var returnUrl = !string.IsNullOrEmpty(relayState) ? relayState : "https://ums.epson.com.my/handle-sso";
                 var returnUrl = "https://ums.epson.com.my/handle-sso";
 
                 logger.Information($"Generating JWT token for user {user.Email}...");
@@ -174,7 +146,6 @@ namespace Epson.Controllers.API
 
                 logger.Information($"Redirecting to {returnUrl}");
                 return Redirect($"{returnUrl}?token={generatedToken}");
-
             }
             catch (Exception ex)
             {

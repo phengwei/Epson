@@ -1,6 +1,6 @@
 <template>
   <main class="w-full h-full flex items-center justify-center">
-    <form ref="samlForm" action="https://ums.epson.com.my/auth/AssertionConsumerService" method="POST">
+    <form ref="samlForm" action="https://localhost:7223/auth/AssertionConsumerService" method="POST">
       <input type="hidden" name="SAMLResponse" :value="samlResponse">
       <input type="hidden" name="RelayState" :value="relayState">
     </form>
