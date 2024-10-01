@@ -36,6 +36,7 @@ namespace Epson.Factories
                 var categoryModel = new CategoryModel();
                 categoryModel.Id = category.Id;
                 categoryModel.Name = category.Name;
+                categoryModel.Type = category.Type;
 
                 return categoryModel;
             }
@@ -93,7 +94,8 @@ namespace Epson.Factories
                     Products = productsByCategory.TryGetValue(category.Id, out var products) ? products : new List<Product>(),
                     BackupFulfiller1 = category.BackupFulfiller1,
                     BackupFulfiller2 = category.BackupFulfiller2,
-                    EscalationFulfiller = category.EscalationFulfiller
+                    EscalationFulfiller = category.EscalationFulfiller,
+                    Type = category.Type
                 });
             }
 

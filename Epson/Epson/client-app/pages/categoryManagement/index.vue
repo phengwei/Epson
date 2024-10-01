@@ -19,7 +19,7 @@
           {{ item }}
         </v-tab>
         <v-spacer></v-spacer>
-        <v-btn class="mr-5 blue-button" color="primary" dark @click="initializeUser, dialog = true">
+        <v-btn class="mr-5 blue-button" color="primary" dark @click="initializeCategory, dialog = true">
           <v-icon left>mdi-plus</v-icon>
           ADD CATEGORY
         </v-btn>
@@ -32,10 +32,21 @@
           </v-card-title>
           <v-card-text>
             <v-col cols="12">
+              <!-- Category Name Input -->
               <div class="form-group">
                 <label>Category Name</label>
                 <input v-model="newCategory.name" class="border-input" required></input>
               </div>
+
+              <!-- Type Dropdown Input -->
+              <div class="form-group">
+                <label>Type</label>
+                <select v-model="newCategory.type" class="border-input">
+                  <option :value="0">Main Unit</option>
+                  <option :value="1">Coverplus</option>
+                </select>
+              </div>
+
               <div class="form-group">
                 <label>Primary Fulfiller</label>
                 <select v-model="newCategory.backupFulfiller1" class="border-input">
@@ -75,6 +86,9 @@
 
       <v-card-text>
         <v-data-table :headers="headers" :items="categories" class="elevation-1">
+          <template v-slot:item.type="{ item }">
+            {{ item.type === 0 ? 'Main Unit' : 'Coverplus' }} <!-- Display Main Unit or Coverplus -->
+          </template>
           <template v-slot:item.actions="{ item }">
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
@@ -83,14 +97,12 @@
               <span>Edit Category</span>
             </v-tooltip>
           </template>
-
         </v-data-table>
       </v-card-text>
 
     </v-card>
   </div>
 </template>
-
 <script>
   export default {
     name: 'CategoryManagement',
@@ -100,19 +112,16 @@
         editedIndex: -1,
         newCategory: {
           name: '',
-          products: [],
+          type: 0, // Default to 'Main Unit'
           backupFulfiller1: '',
           backupFulfiller2: '',
           escalationFulfiller: ''
         },
         users: [],
-        salesHeadUsers: [],
-        backupFulfiller1: null,
-        backupFulfiller2: null,
-        escalationFulfiller: null,
         categories: [],
         headers: [
           { text: 'Category', value: 'name' },
+          { text: 'Type', value: 'type' }, // Show type as Main Unit or Coverplus
           { text: 'Actions', value: 'actions', sortable: false },
         ],
         isEditing: false,
@@ -186,6 +195,7 @@
         this.isEditing = false;
         this.newCategory = {
           name: '',
+          type: 0, // Reset type to 'Main Unit'
           backupFulfiller1: '',
           backupFulfiller2: '',
           escalationFulfiller: ''
@@ -205,6 +215,7 @@
         this.$axios.post(`${this.$config.restUrl}/api/category/addcategory`, {
           data: {
             name: this.newCategory.name,
+            type: this.newCategory.type, // Include type in the payload
             backupFulfiller1: this.newCategory.backupFulfiller1,
             backupFulfiller2: this.newCategory.backupFulfiller2,
             escalationFulfiller: this.newCategory.escalationFulfiller
@@ -224,6 +235,7 @@
         this.editedIndex = this.categories.indexOf(item)
         this.newCategory = Object.assign({}, item)
         this.newCategory.name = item.name;
+        this.newCategory.type = item.type; // Load the type for editing
         this.newCategory.products = [];
         this.dialog = true;
       },
@@ -233,6 +245,7 @@
             data: {
               id: this.newCategory.id,
               name: this.newCategory.name,
+              type: this.newCategory.type, // Include type in the payload
               backupFulfiller1: this.newCategory.backupFulfiller1,
               backupFulfiller2: this.newCategory.backupFulfiller2,
               escalationFulfiller: this.newCategory.escalationFulfiller
@@ -281,7 +294,6 @@
     },
   };
 </script>
-
 <style scoped>
   @import '~@/../wwwroot/css/general-table.css';
 </style>

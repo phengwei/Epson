@@ -11,5 +11,6 @@ namespace Epson.Model.Categories
         public string? BackupFulfiller1 { get; set; }
         public string? BackupFulfiller2 { get; set; }
         public string? EscalationFulfiller { get; set; }
+        public int Type { get; set; }
     }
 }

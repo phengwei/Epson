@@ -47,7 +47,8 @@ namespace Epson.Services.Services.Categories
                 Name = x.Name,
                 BackupFulfiller1 = x.BackupFulfiller1,
                 BackupFulfiller2 = x.BackupFulfiller2,
-                EscalationFulfiller = x.EscalationFulfiller
+                EscalationFulfiller = x.EscalationFulfiller,
+                Type = x.Type
             })
             .OrderBy(x => x.Name)
             .ToList();
