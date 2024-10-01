@@ -101,11 +101,13 @@
       async updateCategories() {
         try {
           const response = await this.$axios.get(`${this.$config.restUrl}/api/category/getvalidcategories`);
-          this.categories = response.data.data;
+
+          this.categories = response.data.data.filter(category => category.type === 1);
         } catch (error) {
           console.error(error);
         }
       },
+
       async updateCoverplusOptions() {
         const category = this.localCoverplus.category;
 

@@ -95,7 +95,8 @@ namespace Epson.Controllers.API
                 Name = model.Name,
                 BackupFulfiller1 = model.BackupFulfiller1,
                 BackupFulfiller2 = model.BackupFulfiller2,
-                EscalationFulfiller = model.EscalationFulfiller
+                EscalationFulfiller = model.EscalationFulfiller,
+                Type = model.Type,
             };
 
             if (_categoryService.InsertCategory(category, user.Id))
@@ -128,7 +129,8 @@ namespace Epson.Controllers.API
                 Name = model.Name,
                 BackupFulfiller1 = model.BackupFulfiller1,
                 BackupFulfiller2 = model.BackupFulfiller2,
-                EscalationFulfiller =  model.EscalationFulfiller
+                EscalationFulfiller =  model.EscalationFulfiller,
+                Type = model.Type
             };
 
             if (_categoryService.UpdateCategory(updatedCategory, user.Id))
