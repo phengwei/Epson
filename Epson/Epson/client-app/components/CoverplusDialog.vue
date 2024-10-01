@@ -195,33 +195,56 @@
 <style scoped>
   @import '~@/../wwwroot/css/general-table.css';
 
-  .mini-table {
+  input[type="text"], select {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+
+  .products-title {
+    font-size: 2em;
+    text-align: center;
+  }
+
+  .custom-radio {
+    border: 1px solid #000;
+    margin: 2px;
+    width: 1.2em;
+    height: 1.2em;
+    border-radius: 50%;
+  }
+
+  .header-row {
+    background-color: #C0C0C0;
+  }
+
+    .header-row th {
+      text-align: center;
+      vertical-align: middle;
+    }
+
+  table {
     width: 100%;
     margin-top: 2rem;
     border-collapse: collapse;
   }
 
-    .mini-table th, .mini-table td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-
-    .mini-table tr:nth-child(even) {
-      background-color: #f2f2f2;
-    }
-
-  .form-group {
-    margin-bottom: 1rem;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
   }
 
-  label {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    color: black;
+  h1 {
+    margin-top: 0;
+    font-size: 2rem;
+    text-align: center;
   }
 
   .border-input {
@@ -231,8 +254,75 @@
     width: 100%;
   }
 
+  .form-container {
+    max-width: 400px;
+    padding: 2rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .create-quotation-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: black;
+  }
+
+  .blue-checkbox {
+    margin-bottom: 1rem;
+  }
+
+    .blue-checkbox input[type="checkbox"]:checked {
+      background-color: #4285f4;
+      border-color: #4285f4;
+    }
+
+  input[type="checkbox"] {
+    margin-right: 0.5rem;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 3px;
+    border: 2px solid #ccc;
+    width: 1.2em;
+    height: 1.2em;
+    margin-left: 5%
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    background-color: #003399;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+  }
+
   .readonly-field {
     background-color: #ddd;
+  }
+
+  @media (max-width: 768px) {
+    form {
+      max-width: 300px;
+      padding: 1rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+    }
   }
 </style>
 

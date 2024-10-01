@@ -347,7 +347,10 @@ namespace Epson.Services.Services.Requests
 
         public PagedResult<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isDivisionHeadUser, bool isCoverplusUser, bool isProductUser, bool isAdminUser, string search = null, int? page = null, int? itemsPerPage = null)
         {
-            var requests = GetRequests(search)
+            List<RequestDTO> requests = new List<RequestDTO>();
+
+
+            requests = GetRequests(search)
                 .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction)
                 .ToList();
 
@@ -393,9 +396,13 @@ namespace Epson.Services.Services.Requests
                 return true;
             }
 
-            if (rp.Status == (int)RequestProductStatusEnum.PendingDivisionHeadApproval && rp.IsCoverplus)
+            if (rp.Status == (int)RequestProductStatusEnum.PendingDivisionHeadApproval && isDivisionHeadUser)
             {
                 return true;
+            }
+            else if (rp.Status == (int)RequestProductStatusEnum.PendingDivisionHeadApproval && !isDivisionHeadUser)
+            {
+                return false;
             }
 
             if (rp.IsCoverplus && !isCoverplusUser)
@@ -1105,8 +1112,15 @@ namespace Epson.Services.Services.Requests
 
                 if (rp.IsCoverplus == true)
                 {
-                    rp.Status = (int)RequestProductStatusEnum.PendingDivisionHeadApproval;
-                    rp.HasFulfilled = false;
+                    if (rp.Status == (int)RequestProductStatusEnum.PendingDivisionHeadApproval)
+                    {
+                        rp.Status = (int)RequestProductStatusEnum.Approved;
+                    }
+                    else
+                    {
+                        rp.Status = (int)RequestProductStatusEnum.PendingDivisionHeadApproval;
+                        rp.HasFulfilled = false;
+                    }
                 }
                 else
                 {
