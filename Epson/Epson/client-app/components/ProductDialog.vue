@@ -81,7 +81,8 @@
       async updateCategories() {
         try {
           const response = await this.$axios.get(`${this.$config.restUrl}/api/category/getvalidcategories`);
-          this.categories = response.data.data;
+
+          this.categories = response.data.data.filter(category => category.type === 0);
         } catch (error) {
           console.error(error);
         }
