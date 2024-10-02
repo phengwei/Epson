@@ -2,7 +2,7 @@
   <div class="d-flex justify-content-center align-items-center vh-100" data-app="true">
     <v-card class="mx-auto card-round" style="width: 90%; padding: 20px;">
       <v-toolbar flat>
-        <v-toolbar-title><h2 class="blue-text big-bold">REJECTION AUDIT TRAIL</h2></v-toolbar-title>
+        <v-toolbar-title><h2 class="blue-text big-bold">REQUEST AUDIT TRAIL</h2></v-toolbar-title>
         <v-spacer></v-spacer>
         <v-text-field v-model="searchTerm"
                       append-icon="mdi-magnify"
@@ -89,7 +89,7 @@
           });
       },
       formatDate(dateString) {
-        return moment(dateString).format('DD MMM YY HH:mm');
+        return moment(dateString).add(8, 'hours').format('DD MMM YY HH:mm');
       }
     },
   };
