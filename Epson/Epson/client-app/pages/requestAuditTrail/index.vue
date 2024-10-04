@@ -70,6 +70,7 @@
         this.getRequestAuditTrail();
       },
       getRequestAuditTrail() {
+        console.log("test");
         const params = {
           search: this.search,
           page: this.options.page,
