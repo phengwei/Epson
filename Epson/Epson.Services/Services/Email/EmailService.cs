@@ -966,11 +966,8 @@ namespace Epson.Services.Services.Email
             {
                 var category = _categoryService.GetCategoryById(pc.CategoryId);
 
-                var backupFulfiller1Task = _userManager.FindByIdAsync(category.BackupFulfiller1);
-                var backupFulfiller2Task = _userManager.FindByIdAsync(category.BackupFulfiller2);
-
-                var backupFulfiller1 = await backupFulfiller1Task;
-                var backupFulfiller2 = await backupFulfiller2Task;
+                var backupFulfiller1 = await _userManager.FindByIdAsync(category.BackupFulfiller1);
+                var backupFulfiller2 = await _userManager.FindByIdAsync(category.BackupFulfiller2);
 
                 if (backupFulfiller1 != null)
                 {
@@ -1124,145 +1121,164 @@ namespace Epson.Services.Services.Email
         }
 
 
-
-        public EmailQueue CreateFulfillEmailQueue(Request request, RequestProduct requestProduct, bool hasFulfillmentComplete)
+        public List<EmailQueue> CreateFulfillEmailQueue(Request request, List<RequestProduct> requestProducts, bool hasFulfillmentComplete)
         {
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
             if (emailAccount == null)
-                return new EmailQueue();
-            var requester = _userManager.FindByIdAsync(request.CreatedById);
-            var fulfiller = _userManager.FindByIdAsync(requestProduct.FulfillerId);
-            var product = _productService.GetProductById(requestProduct.ProductId);
+                return new List<EmailQueue>();
 
-            var productCategories = _productService.GetCategoryIdsByProductId(requestProduct.ProductId);
-            List<string> backupFulfillerEmails = new List<string>();
+            var requester = _userManager.FindByIdAsync(request.CreatedById).Result;
 
-            foreach (var pc in productCategories)
+            Dictionary<string, List<RequestProduct>> productsByFulfillerGroup = new Dictionary<string, List<RequestProduct>>();
+            Dictionary<string, HashSet<string>> fulfillerGroups = new Dictionary<string, HashSet<string>>();
+
+            foreach (var productRequest in requestProducts)
             {
-                var category = _categoryService.GetCategoryById(pc.CategoryId);
+                var productCategories = _productService.GetCategoryIdsByProductId(productRequest.ProductId);
+                HashSet<string> backupFulfillerEmails = new HashSet<string>(); 
 
-                var backupFulfiller1 = _userManager.FindByIdAsync(category.BackupFulfiller1);
-                var backupFulfiller2 = _userManager.FindByIdAsync(category.BackupFulfiller2);
+                foreach (var pc in productCategories)
+                {
+                    var category = _categoryService.GetCategoryById(pc.CategoryId);
 
-                if (backupFulfiller1 != null)
-                {
-                    backupFulfillerEmails.Add(backupFulfiller1.Result.Email);
+                    var backupFulfiller1 = _userManager.FindByIdAsync(category.BackupFulfiller1).Result;
+                    var backupFulfiller2 = _userManager.FindByIdAsync(category.BackupFulfiller2).Result;
+
+                    if (backupFulfiller1 != null)
+                    {
+                        backupFulfillerEmails.Add(backupFulfiller1.Email);
+                    }
+                    if (backupFulfiller2 != null)
+                    {
+                        backupFulfillerEmails.Add(backupFulfiller2.Email);
+                    }
                 }
-                if (backupFulfiller2 != null)
+
+                string fulfillerGroupKey = string.Join(",", backupFulfillerEmails.OrderBy(email => email));
+
+                if (!productsByFulfillerGroup.ContainsKey(fulfillerGroupKey))
                 {
-                    backupFulfillerEmails.Add(backupFulfiller2.Result.Email);
+                    productsByFulfillerGroup[fulfillerGroupKey] = new List<RequestProduct>();
+                    fulfillerGroups[fulfillerGroupKey] = new HashSet<string>(backupFulfillerEmails);
                 }
+
+                productsByFulfillerGroup[fulfillerGroupKey].Add(productRequest);
             }
 
-            var subject = "";
-            if (hasFulfillmentComplete)
-                subject = $"Request {request.Id} completed fulfillment";
-            else
-                subject = $"Request {request.Id} partial fulfillment";
+            List<EmailQueue> emailQueueList = new List<EmailQueue>();
 
-            var body = $@"
-                <!DOCTYPE html>
-                <html lang='en'>
-                <head>
-                    <meta charset='UTF-8'>
-                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-                    <style>
-                        body {{
-                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                            margin: 0;
-                            padding: 0;
-                            background-color: #f4f4f4;
-                        }}
-                        .email-container {{
-                            max-width: 600px;
-                            margin: auto;
-                            background: #ffffff;
-                            padding: 20px;
-                            border: 1px solid #dddddd;
-                        }}
-                        .email-header {{
-                            background-color: #004aad;
-                            color: white;
-                            padding: 10px 20px;
-                            text-align: center;
-                        }}
-                        .email-body {{
-                            padding: 20px;
-                            line-height: 1.5;
-                            color: #333333;
-                        }}
-                        table {{
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-top: 20px;
-                        }}
-                        th, td {{
-                            padding: 10px;
-                            border: 1px solid #dddddd;
-                            text-align: left;
-                        }}
-                        th {{
-                            background-color: #f2f2f2;
-                        }}
-                    </style>
-                </head>
-                <body>
-                    <div class='email-container'>
-                        <div class='email-header'>
-                            <h1>Request Fulfillment</h1>
-                        </div>
-                        <div class='email-body'> 
-                            <p>Request {request.Id} is fulfilled by {fulfiller.Result.UserName} with the following details:</p>
-                            <table>                            
-                                <tr>
-                                    <th>Org</th>
-                                    <td>EMSB - {_userService.GetTeamById(requester.Result.TeamId).Name}</td>
-                                </tr>
-                                <tr>
-                                    <th>Requester</th>
-                                    <td>{requester.Result.UserName}</td>
-                                </tr>
+            foreach (var fulfillerGroup in productsByFulfillerGroup)
+            {
+                var fulfillerGroupKey = fulfillerGroup.Key;
+                var productsForGroup = fulfillerGroup.Value;
+
+                string productDetails = "";
+                foreach (var productRequest in productsForGroup)
+                {
+                    var product = _productService.GetProductById(productRequest.ProductId);
+                    var projectInfo = _ProjectInformationRepository
+                        .GetAll()
+                        .FirstOrDefault(x => x.RequestId == productRequest.RequestId);
+
+                    productDetails += $@"
+                <tr>
+                    <td>{product.Name}</td>
+                    <td>{productRequest.Quantity}</td>
+                    <td>RM {productRequest.FulfilledPrice}</td>
+                    <td>{projectInfo?.ProjectName ?? "N/A"}</td>
+                </tr>";
+                }
+
+                var body = $@"
+            <!DOCTYPE html>
+            <html lang='en'>
+            <head>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <style>
+                    body {{
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        margin: 0;
+                        padding: 0;
+                        background-color: #f4f4f4;
+                    }}
+                    .email-container {{
+                        max-width: 600px;
+                        margin: auto;
+                        background: #ffffff;
+                        padding: 20px;
+                        border: 1px solid #dddddd;
+                    }}
+                    .email-header {{
+                        background-color: #004aad;
+                        color: white;
+                        padding: 10px 20px;
+                        text-align: center;
+                    }}
+                    .email-body {{
+                        padding: 20px;
+                        line-height: 1.5;
+                        color: #333333;
+                    }}
+                    table {{
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }}
+                    th, td {{
+                        padding: 10px;
+                        border: 1px solid #dddddd;
+                        text-align: left;
+                    }}
+                    th {{
+                        background-color: #f2f2f2;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class='email-container'>
+                    <div class='email-header'>
+                        <h1>Request Fulfillment</h1>
+                    </div>
+                    <div class='email-body'>
+                        <p>Request {request.Id} is fulfilled with the following details:</p>
+                        <table>
+                            <thead>
                                 <tr>
                                     <th>Product</th>
-                                    <td>{product.Name}</td>
-                                </tr>
-                                <tr>
                                     <th>Quantity</th>
-                                    <td>{requestProduct.Quantity}</td>
-                                </tr>
-                                <tr>
                                     <th>Price Fulfilled</th>
-                                    <td>RM {requestProduct.FulfilledPrice}</td>
-                                </tr>
-                                <tr>
                                     <th>End User</th>
-                                    <td>{_ProjectInformationRepository.GetAll().Where(x => x.RequestId == requestProduct.RequestId).FirstOrDefault().ProjectName}</td>
                                 </tr>
-                            </table>
-                        </div>
+                            </thead>
+                            <tbody>
+                                {productDetails}
+                            </tbody>
+                        </table>
                     </div>
-                </body>
-                </html>";
+                </div>
+            </body>
+            </html>";
 
-            HashSet<string> uniqueEmails = new HashSet<string>(backupFulfillerEmails);
+                var emailQueue = new EmailQueue
+                {
+                    FromEmail = emailAccount.Username,
+                    ToEmail = requester.Email, 
+                    Subject = hasFulfillmentComplete ? $"Request {request.Id} completed fulfillment" : $"Request {request.Id} partial fulfillment",
+                    Body = body,
+                    ScheduleTime = DateTime.UtcNow,
+                    SendAttempts = 0,
+                    SentTime = null,
+                    Cc = string.Join(", ", fulfillerGroups[fulfillerGroupKey]), 
+                    EmailAccountId = emailAccount.Id
+                };
 
-            string ccEmails = string.Join(" ", uniqueEmails);
+                emailQueueList.Add(emailQueue);
+            }
 
-            var emailQueue = new EmailQueue
-            {
-                FromEmail = emailAccount.Username,
-                ToEmail = requester.Result.Email,
-                Subject = subject,
-                Body = body,
-                ScheduleTime = DateTime.UtcNow,
-                SendAttempts = 0,
-                SentTime = null,
-                Cc = ccEmails,
-                EmailAccountId = emailAccount.Id
-            };
-
-            return emailQueue;
+            return emailQueueList;
         }
+
 
         public EmailQueue CreateAmendQuotationEmailQueue(Request request, RequestProduct requestProduct)
         {

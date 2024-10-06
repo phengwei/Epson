@@ -931,7 +931,7 @@ namespace Epson.Services.Services.Requests
                 {
                     var emailService = provider.GetRequiredService<IEmailService>();
 
-                    NotifyFulfillment(request, requestProducts, requestProductToFulfill, allProductsFulfilled, emailService);
+                    NotifyFulfillment(request, requestProducts, allProductsFulfilled, emailService);
                 }));
 
                 return true;
@@ -955,6 +955,10 @@ namespace Epson.Services.Services.Requests
             List<RequestProduct> allRequestProducts = _RequestProductRepository.GetAll()
                            .Where(x => x.RequestId == existingRequest.Id)
                            .ToList(); ;
+
+            bool allProductsFulfilled = false;
+
+            var request = _mapper.Map<Request>(existingRequest);
 
             foreach (var rp in requestProducts)
             {
@@ -994,9 +998,8 @@ namespace Epson.Services.Services.Requests
                     existingRequest.TotalPrice = totalUpdatedPrice;
 
                     // Check if all products are fulfilled
-                    bool allProductsFulfilled = allRequestProducts.All(x => x.HasFulfilled);
+                    allProductsFulfilled = allRequestProducts.All(x => x.HasFulfilled);
 
-                    var request = _mapper.Map<Request>(existingRequest);
                     if (allProductsFulfilled)
                     {
                         request.ApprovalState = (int)ApprovalStateEnum.Approved;
@@ -1006,13 +1009,6 @@ namespace Epson.Services.Services.Requests
                     {
                         _RequestRepository.Update(request);
                     }
-
-                    _scopedTaskRunner.RunInScope(provider =>
-                    {
-                        var emailService = provider.GetRequiredService<IEmailService>();
-
-                        NotifyFulfillment(request, requestProducts, rp, allProductsFulfilled, emailService);
-                    });
                 }
                 catch (Exception ex)
                 {
@@ -1021,13 +1017,20 @@ namespace Epson.Services.Services.Requests
                 }
             }
 
+            _scopedTaskRunner.RunInScope(provider =>
+            {
+                var emailService = provider.GetRequiredService<IEmailService>();
+
+                NotifyFulfillment(request, requestProducts, allProductsFulfilled, emailService);
+            });
+
             return true;
             
         }
 
 
 
-        private void NotifyFulfillment(Request request, List<RequestProduct> requestProducts, RequestProduct requestProductToFulfill, bool allProductsFulfilled, IEmailService emailService)
+        private void NotifyFulfillment(Request request, List<RequestProduct> requestProducts, bool allProductsFulfilled, IEmailService emailService)
         {
             try
             {
@@ -1040,8 +1043,8 @@ namespace Epson.Services.Services.Requests
                     emailQueues.Add(emailService.CreateApprovedEmailQueue(request, requestProducts));
                 }
 
-                var fulfillRequestQueue = emailService.CreateFulfillEmailQueue(request, requestProductToFulfill, allProductsFulfilled);
-                emailQueues.Add(fulfillRequestQueue);
+                var fulfillRequestQueue = emailService.CreateFulfillEmailQueue(request, requestProducts, allProductsFulfilled);
+                emailQueues.AddRange(fulfillRequestQueue);
 
                 foreach (var emailQueue in emailQueues)
                 {
