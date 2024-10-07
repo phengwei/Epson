@@ -69,7 +69,8 @@ export default {
         { text: "Additional Purchase", info: "Quotation No.", isChecked: false, additionalText: "" },
         { text: "Renewal of Quotation", info: "Quotation No.", isChecked: false, additionalText: "" },
         { text: "Revision (Price/Model/Qty/Other)", info: "Quotation No.", isChecked: false, additionalText: "" },
-        { text: "Replacement of old machine", info: "", isChecked: false, additionalText: "" }
+        { text: "Replacement of old machine", info: "", isChecked: false, additionalText: "" },
+        { text: "Demo Unit Price Requisition", info: "", isChecked: false, additionalText: "" }
       ],
       options: {},
       priority: {
