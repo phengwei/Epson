@@ -777,9 +777,10 @@ export default {
       }
     },
     validateForm() {
-      const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-
-      const phoneRegex = /^[\d-]{8,12}$/;
+      const hasReasonChecked = this.reasons.some(reason => reason.isChecked);
+      if (!hasReasonChecked) {
+        return "At least one reason must be selected!";
+      }
 
       if (this.projectInformation.budget == null || this.projectInformation.budget === "0" || this.projectInformation.budget === "") {
         return "Customer's budget must not be empty!";
@@ -792,9 +793,9 @@ export default {
       } else if (this.productsToShow.length > 0 && this.competitorsToShow.length === 0) {
         return "At least one competitor is required!";
       } else if (this.projectInformation.closingDate == null) {
-          return "Closing Date must not be empty!";
+        return "Closing Date must not be empty!";
       } else if (this.projectInformation.deliveryDate == null) {
-          return "Delivery Date must not be empty!";
+        return "Delivery Date must not be empty!";
       } else {
         return "";
       }
@@ -921,11 +922,12 @@ export default {
       clientErr = this.validateForm();
 
       if (clientErr) {
-          this.$swal(clientErr);
-          return;
+        this.$swal(clientErr);
+        this.loading = false;
+        return;
       }
       if (this.submitting) {
-          return;
+        return;
       }
       this.submitting = true;
 
