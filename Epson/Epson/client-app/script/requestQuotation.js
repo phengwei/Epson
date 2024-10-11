@@ -816,9 +816,12 @@ export default {
       }
     },
     validateForm() {
-      if (this.sla == null || this.sla === "") {
-        return "An SLA type must be selected!";
-      } else if (this.projectInformation.budget == null || this.projectInformation.budget === "0" || this.projectInformation.budget === "") {
+      const hasReasonChecked = this.reasons.some(reason => reason.isChecked);
+      if (!hasReasonChecked) {
+        return "At least one reason must be selected!";
+      }
+
+      if (this.projectInformation.budget == null || this.projectInformation.budget === "0" || this.projectInformation.budget === "") {
         return "Customer's budget must not be empty!";
       } else if (this.projectInformation.type == null) {
         return "Type must not be empty!";

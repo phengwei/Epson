@@ -375,7 +375,7 @@
                   </td>
                 </tr>
                 <tr>
-                  <td class="td-header reason-header">Reason</td>
+                  <td class="td-header reason-header">Reason <span class="required-asterisk">*</span></td>
                   <td class="td-content">
                     <div class="form-group" v-for="(reason, index) in reasons" :key="index">
                       <div class="form-check">
@@ -384,6 +384,9 @@
                       </div>
                       <div v-if="reason.isChecked && (reason.text === 'Additional Purchase' || reason.text === 'Renewal of Quotation' || reason.text === 'Revision (Price/Model/Qty/Other)')">
                         <input type="text" v-model="reason.additionalText" placeholder="Enter Quotation No." class="border-input mt-2" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
+                      </div>
+                      <div v-if="reason.isChecked && (reason.text === 'Demo Unit Price Requisition')">
+                        <input type="text" v-model="reason.additionalText" placeholder="Enter Reason" class="border-input mt-2" :class="{'readonly-field': isViewMode}" :readonly="isViewMode">
                       </div>
                     </div>
                   </td>
