@@ -40,6 +40,7 @@
                   <th>End User Price</th>
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
+                  <th>SLA Type</th> 
                   <th v-if="isViewMode">Approved Time</th>
                   <th v-if="isFulfillMode">Fulfill</th>
                   <th v-if="!isViewMode">Action</th>
@@ -66,6 +67,16 @@
                     <span v-else>
                       {{ product.statusStr || 'N/A' }}
                     </span>
+                  </td>
+                  <td>
+                    <template v-if="isFulfillMode && product.statusStr != 'Approved'">
+                      <select v-model="product.sla" class="sla-select">
+                        <option v-for="type in slaTypes" :key="type" :value="type">{{ type }}</option>
+                      </select>
+                    </template>
+                    <template v-else>
+                      {{ product.sla }}
+                    </template>
                   </td>
                   <td v-if="isViewMode">
                     <span v-if="product.statusStr === 'Approved'">
@@ -129,6 +140,7 @@
                   <th>End User Price</th>
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
+                  <th>SLA Type</th>
                   <th v-if="isViewMode">Approved Time</th>
                   <th v-if="isFulfillMode">Fulfill</th>
                   <th v-if="!isViewMode">Action</th>
@@ -159,6 +171,16 @@
                     <span v-else>
                       {{ coverplus.statusStr || 'N/A' }}
                     </span>
+                  </td>
+                  <td>
+                    <template v-if="isFulfillMode && coverplus.statusStr != 'Approved'">
+                      <select v-model="coverplus.sla" class="sla-select">
+                        <option v-for="type in slaTypes" :key="type" :value="type">{{ type }}</option>
+                      </select>
+                    </template>
+                    <template v-else>
+                      {{ coverplus.sla }}
+                    </template>
                   </td>
                   <td v-if="isViewMode">
                     <span v-if="coverplus.statusStr === 'Approved'">
@@ -256,16 +278,6 @@
                            type="datetime-local"
                            v-model="submissionDetail.createdOnUTC"
                            class="border-input" readonly />
-                  </td>
-                </tr>
-                <tr>
-                  <td class="td-header">Request SLA type</td>
-                  <td>
-                    <select v-model="sla" class="border-input" :class="{'readonly-field': isViewMode}" :disabled="isViewMode">
-                      <option v-for="sla in slas" :key="sla" :value="sla">
-                        {{ sla }}
-                      </option>
-                    </select>
                   </td>
                 </tr>
                 <tr>
@@ -500,6 +512,22 @@
   .highlighted {
     background-color: #ffcccc;
   }
+
+  select.sla-select {
+    background-color: inherit;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 4px;
+    width: 100%;
+    box-shadow: none;
+    font-size: inherit;
+    color: inherit; 
+  }
+
+    select.sla-select:focus {
+      outline: none; 
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1); 
+    }
 
   .products-title {
     font-size: 2em;

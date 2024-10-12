@@ -85,6 +85,11 @@
             { route: '/hierarchy', label: 'ROUTE CONFIGURATION', icon: '⚙️' }
           );
         }
+        if (this.loggedInUser.roles.includes('Sales') || this.loggedInUser.roles.includes('Admin') || this.loggedInUser.roles.includes('Sales Section Head') || this.loggedInUser.roles.includes('Director')) {
+          links.push(
+            { route: '/draft', label: 'DRAFT MANAGEMENT', icon: 'mdi-file-document-edit-outline' },
+          );
+        }
         return links;
       },
       auditTrailLinks() {

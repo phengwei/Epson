@@ -39,6 +39,7 @@ export default {
   },
   data() {
     return {
+      slaTypes: ['Local', 'Regional', 'SEC'],
       categories: [],
       selectedCategories: [],
       isChecked: [],
@@ -81,7 +82,6 @@ export default {
           { value: 3, label: 'Low' }
         ]
       },
-      slas: ['Local', 'Regional', 'SEC'],
       distributors: ['Servex', 'Ingram', 'VSTECs', 'Etech IT', 'GOS', 'EDAP'],
       quantity: {},
       budget: {},
@@ -98,7 +98,6 @@ export default {
       dialogCoverplus: false,
       dialogProductFulfillment: false,
       comments: '',
-      sla: '',
       nonCoverplusRequestItem: {},
       coverplusRequestItem: {},
       itemsPendingFulfillment: [],
@@ -185,10 +184,20 @@ export default {
         confirmButtonText: 'Yes, fulfill it!'
       }).then((result) => {
         if (result.isConfirmed) {
-          this.fulfillProducts(this.selectedProducts);
+          // Create the payload as an array of FulfillRequestDTO objects
+          const payload = this.selectedProducts.map(productId => {
+            const product = this.productsToShow.find(p => p.id === productId);
+            return {
+              id: productId,
+              sla: product ? product.sla : 'Local' // Default to 'Local' if sla is not defined
+            };
+          });
+
+          this.fulfillRequests(payload);
         }
-      })
+      });
     },
+
     fulfillSelectedCoverpluses() {
       this.$swal({
         title: 'Fulfill Requests?',
@@ -199,32 +208,30 @@ export default {
         confirmButtonText: 'Yes, fulfill it!'
       }).then((result) => {
         if (result.isConfirmed) {
-          this.fulfillProducts(this.selectedCoverpluses);
+          // Create the payload as an array of FulfillRequestDTO objects
+          const payload = this.selectedCoverpluses.map(coverplusId => {
+            const coverplus = this.coverplusesToShow.find(c => c.id === coverplusId);
+            return {
+              id: coverplusId,
+              sla: coverplus ? coverplus.sla : 'Local' // Default to 'Local' if sla is not defined
+            };
+          });
+
+          this.fulfillRequests(payload);
         }
-      })
+      });
     },
-    fulfillProducts(product) {
-      const payload = product;
 
-      this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequests`, payload)
-        .then(response => {
-          this.selectedProducts.forEach(productId => {
-            const index = this.productsToShow.findIndex(product => product.productId === productId);
-            if (index !== -1) {
-              this.productsToShow.splice(index, 1);
-            }
-          });
-
-          this.$swal('Success', 'Request fulfilled successfully.', 'success').then(() => {
-            location.reload();
-          });
-
-          this.selectedProducts = [];
-        })
-        .catch(error => {
-          console.error('Error fulfilling requests:', error);
-          this.$swal('Failed to fulfill request', error.response.data.message, 'error');
+    async fulfillRequests(payload) {
+      try {
+        await this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequests`, payload);
+        this.$swal('Success', 'Request fulfilled successfully.', 'success').then(() => {
+          location.reload();
         });
+      } catch (error) {
+        console.error('Error fulfilling requests:', error);
+        this.$swal('Failed to fulfill request', error.response.data.message, 'error');
+      }
     },
     isMode(mode) {
       return this.decodedQueryParams[mode] === true;
@@ -263,18 +270,19 @@ export default {
       this.dialogProduct = false;
     },
     addProductRow(product) {
-      const newProduct = { ...product };
-      newProduct.distyPrice = newProduct.distyPrice || 0;
-      newProduct.dealerPrice = newProduct.dealerPrice || 0;
-      newProduct.endUserPrice = newProduct.endUserPrice || 0;
+      const newProduct = { ...product, slaType: 'Local' };
       this.products.push(newProduct);
       this.showAddedProducts(newProduct);
-      this.product.category = null;
-      this.product.productId = null;
-      this.product.quantity = null;
-      this.product.distyPrice = null;
-      this.product.dealerPrice = null;
-      this.product.endUserPrice = null;
+      this.product = {
+        category: null,
+        productId: null,
+        quantity: null,
+        distyPrice: null,
+        dealerPrice: null,
+        endUserPrice: null,
+        remarks: null,
+        slaType: 'Local'
+      };
       this.dialogProduct = false;
     },
     confirmAmmendQuotation() {
@@ -474,22 +482,22 @@ export default {
       this.dialogProduct = false;
     },
     addCoverplusRow(coverplus) {
-      const newCoverplus = { ...coverplus };
-      newCoverplus.distyPrice = newCoverplus.distyPrice || 0;
-      newCoverplus.dealerPrice = newCoverplus.dealerPrice || 0;
-      newCoverplus.endUserPrice = newCoverplus.endUserPrice || 0;
-      newCoverplus.warrantyRequest = newCoverplus.warrantyRequest || 0;
-      newCoverplus.warrantyRequestPeriod = newCoverplus.warrantyRequestPeriod || 0;
+      const newCoverplus = { ...coverplus, slaType: 'Local' };
       this.coverpluses.push(newCoverplus);
       this.showAddedCoverpluses(newCoverplus);
-      this.product.category = null;
-      this.product.productId = null;
-      this.product.quantity = null;
-      this.product.distyPrice = null;
-      this.product.dealerPrice = null;
-      this.product.endUserPrice = null;
-      this.product.warrantyRequest = null;
-      this.product.warrantyRequestPeriod = null;
+      this.coverplus = {
+        category: null,
+        productId: null,
+        quantity: null,
+        distyPrice: null,
+        dealerPrice: null,
+        endUserPrice: null,
+        remarks: null,
+        warrantyRequest: null,
+        warrantyRequestPeriod: null,
+        status: 0,
+        slaType: 'Local'
+      };
       this.dialogCoverplus = false;
     },
     removeCoverplus(index) {
@@ -531,7 +539,6 @@ export default {
       return 'N/A';
     },
     populateForm(requestData) {
-      this.sla = requestData.sla;
       this.currentRequest = requestData;
       for (const productModel of requestData.requestProducts) {
         const categoryFound = productModel.categoryId
@@ -576,7 +583,8 @@ export default {
             fulfilledPrice: productModel.fulfilledPrice,
             warrantyRequest: productModel.warrantyRequest,
             warrantyRequestPeriod: productModel.warrantyRequestPeriod,
-            breached: productModel.breached
+            breached: productModel.breached,
+            sla: productModel.sla
           };
           if (productModel.isCoverplus === true) {
             this.coverplusesToShow.push(p);
@@ -616,7 +624,7 @@ export default {
           additionalInfo: populatedReason.additionalText || null
         });
       });
-
+      console.log("awd", this.productsToShow);
     },
     async fetchRequestById(id) {
       try {
@@ -683,7 +691,6 @@ export default {
             this.customerName = draft.customerName || '';
             this.dealJustification = draft.dealJustification || '';
             this.deadline = draft.deadline || '';
-            this.sla = draft.sla || '';
 
 
             this.$swal('Success', 'Draft loaded successfully', 'success');
@@ -717,8 +724,7 @@ export default {
           Comments: this.comments,
           CustomerName: this.customerName,
           DealJustification: this.dealJustification,
-          Deadline: this.deadline,
-          SLA: this.sla
+          Deadline: this.deadline
         };
 
         const response = await this.$axios.post('/api/request/savedraft', { data: draftData });
@@ -879,8 +885,7 @@ export default {
         Priority: this.priority,
         requestProducts: [],
         competitorInformations: [],
-        comments: this.comments,
-        sla: this.sla
+        comments: this.comments
       };
 
       if (this.isMode('editable')) {
@@ -987,8 +992,7 @@ export default {
             requestSubmissionDetail: quotationData.submissionDetail,
             ProjectInformation: quotationData.projectInformation,
             Id: quotationData.id,
-            comments: quotationData.comments,
-            sla: quotationData.sla
+            comments: quotationData.comments
           }
         }).then(response => {
           const successMessage = apiEndpoint.endsWith('/editrequest')

@@ -16,6 +16,7 @@ namespace Epson.Services.Interface.Requests
         DraftDTO GetDraftById(int id);
         bool DeleteDraft(DraftDTO draft);
         DraftDTO GetDraftByUserId(string userId);
+        List<DraftDTO> GetDraftsByUserId(string userId);
     }
 
 }

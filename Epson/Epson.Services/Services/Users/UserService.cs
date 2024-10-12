@@ -224,6 +224,26 @@ namespace Epson.Services.Services.Users
             return teamHierarchyDict;
         }
 
+        public List<KeyValuePair<string, string>> InitializeTeamHierarchyPairs(bool isSalesHead = false, bool multiRole = false)
+        {
+            List<TeamHierarchy> teamHierarchies = GetTeamHierarchy();
+
+            var filteredHierarchies = teamHierarchies
+                .Where(th => th.IsSalesHead == isSalesHead)
+                .ToList();
+
+            var uniquePairs = new HashSet<KeyValuePair<string, string>>();
+
+            foreach (var th in filteredHierarchies)
+            {
+                var pair = new KeyValuePair<string, string>(th.RequestingTeam, th.ApproverTeam);
+                uniquePairs.Add(pair);
+            }
+
+            return uniquePairs.ToList();
+        }
+
+
 
         //public Dictionary<string, string> InitializeTeamHierarchy(bool isSalesHead = false, bool multiRole = false)
         //{
@@ -303,6 +323,24 @@ namespace Epson.Services.Services.Users
 
             return childTeamIds;
         }
+
+        public List<int> GetChildTeamIdsV2(List<KeyValuePair<string, string>> teamHierarchy, int parentTeamId, IRepository<Team> teamRepository)
+        {
+            var parentTeamName = teamRepository.GetAll().FirstOrDefault(t => t.Id == parentTeamId)?.Name;
+
+            var childTeamNames = teamHierarchy
+                .Where(kvp => kvp.Value == parentTeamName) 
+                .Select(kvp => kvp.Key)                     
+                .ToList();
+
+            var childTeamIds = teamRepository.GetAll()
+                .Where(t => childTeamNames.Contains(t.Name))
+                .Select(t => t.Id)
+                .ToList();
+
+            return childTeamIds;
+        }
+
 
         public async Task<List<ApplicationUser>> GetUserSalesHead(int teamID, string userId, bool isSalesHead = false)
         {

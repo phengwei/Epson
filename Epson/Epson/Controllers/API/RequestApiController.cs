@@ -139,9 +139,9 @@ namespace Epson.Controllers.API
                     {
                         bool multiRoles = currentUser.Roles.Count > 1;
 
-                        var teamHierarchy = _userService.InitializeTeamHierarchy(true, multiRoles);
+                        var teamHierarchy = _userService.InitializeTeamHierarchyPairs(true, multiRoles);
 
-                        var relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUserDetail.TeamId, _teamRepository);
+                        var relevantTeamIds = _userService.GetChildTeamIdsV2(teamHierarchy, currentUserDetail.TeamId, _teamRepository);
                         relevantTeamIds.Add(currentUserDetail.TeamId);
 
                         var usersInRelevantTeams = _userManager.Users
@@ -219,7 +219,7 @@ namespace Epson.Controllers.API
             var user = _workContext.CurrentUser;
             int totalItems;
 
-            var drafts = _draftService.GetDrafts(out totalItems, x => x.UserId == user.Id, search, page, itemsPerPage);
+            var drafts = _draftService.GetDrafts(out totalItems, x => x.UserId == user.Id, search, page, itemsPerPage).Where(x => x.UserId == user.Id).ToList();
 
             response.Data = drafts;
             response.Count = totalItems;
@@ -331,66 +331,110 @@ namespace Epson.Controllers.API
             var model = queryModel.Data;
             var user = _workContext.CurrentUser;
 
-            var existingDraft = _draftService.GetDraftByUserId(user.Id);
-
-            if (existingDraft != null)
+            var existingDrafts = _draftService.GetDraftsByUserId(user.Id);
+            if (existingDrafts != null && existingDrafts.Count > 0)
             {
-                existingDraft.UpdatedOnUTC = DateTime.UtcNow;
-                existingDraft.SelectedCategories = model.SelectedCategories;
-                existingDraft.ProductsToShow = model.ProductsToShow;
-                existingDraft.CompetitorsToShow = model.CompetitorsToShow;
-                existingDraft.CoverplusesToShow = model.CoverplusesToShow;
-                existingDraft.SubmissionDetail = model.SubmissionDetail;
-                existingDraft.ProjectInformation = model.ProjectInformation;
-                existingDraft.Reasons = model.Reasons;
-                existingDraft.Priority = model.Priority;
-                existingDraft.Comments = model.Comments;
-                existingDraft.CustomerName = model.CustomerName;
-                existingDraft.DealJustification = model.DealJustification;
-                existingDraft.Deadline = model.Deadline;
-                existingDraft.SLA = model.SLA;
+                existingDrafts = existingDrafts.Where(d => d.isDefault)
+                                               .ToList();
 
-                if (_draftService.UpdateDraft(existingDraft))
+                foreach (var draft in existingDrafts)
                 {
-                    return Ok(new { message = "Draft updated successfully" });
+                    draft.isDefault = false;
+                    draft.UpdatedOnUTC = DateTime.UtcNow;
+                    _draftService.UpdateDraft(draft);
                 }
-                else
-                {
-                    return BadRequest("Failed to update draft.");
-                }
+            }
+
+            var newDraft = new DraftDTO
+            {
+                UserId = user.Id,
+                CreatedOnUTC = DateTime.UtcNow,
+                UpdatedOnUTC = DateTime.UtcNow,
+                SelectedCategories = model.SelectedCategories,
+                ProductsToShow = model.ProductsToShow,
+                CompetitorsToShow = model.CompetitorsToShow,
+                CoverplusesToShow = model.CoverplusesToShow,
+                SubmissionDetail = model.SubmissionDetail,
+                ProjectInformation = model.ProjectInformation,
+                Reasons = model.Reasons,
+                Priority = model.Priority,
+                Comments = model.Comments,
+                CustomerName = model.CustomerName,
+                DealJustification = model.DealJustification,
+                Deadline = model.Deadline,
+                SLA = model.SLA,
+                isDefault = true
+            };
+
+            if (_draftService.InsertDraft(newDraft))
+            {
+                return Ok(new { message = "Draft created successfully", id = newDraft.Id });
             }
             else
             {
-                var newDraft = new DraftDTO
-                {
-                    UserId = user.Id,
-                    CreatedOnUTC = DateTime.UtcNow,
-                    UpdatedOnUTC = DateTime.UtcNow,
-                    SelectedCategories = model.SelectedCategories,
-                    ProductsToShow = model.ProductsToShow,
-                    CompetitorsToShow = model.CompetitorsToShow,
-                    CoverplusesToShow = model.CoverplusesToShow,
-                    SubmissionDetail = model.SubmissionDetail,
-                    ProjectInformation = model.ProjectInformation,
-                    Reasons = model.Reasons,
-                    Priority = model.Priority,
-                    Comments = model.Comments,
-                    CustomerName = model.CustomerName,
-                    DealJustification = model.DealJustification,
-                    Deadline = model.Deadline,
-                    SLA = model.SLA
-                };
-
-                if (_draftService.InsertDraft(newDraft))
-                {
-                    return Ok(new { message = "Draft created successfully", id = newDraft.Id });
-                }
-                else
-                {
-                    return BadRequest("Failed to create draft.");
-                }
+                return BadRequest("Failed to create draft.");
             }
         }
+
+
+        [HttpPost("defaultdraft")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
+        public async Task<IActionResult> DefaultDraft(int id)
+        {
+            if (id == 0)
+            {
+                return BadRequest("Invalid draft request.");
+            }
+
+            var user = _workContext.CurrentUser;
+
+            var existingDrafts = _draftService.GetDraftsByUserId(user.Id)
+                                              .Where(d => d.isDefault)
+                                              .ToList();
+
+            foreach (var draft in existingDrafts)
+            {
+                draft.isDefault = false;
+                draft.UpdatedOnUTC = DateTime.UtcNow;
+                _draftService.UpdateDraft(draft);
+            }
+
+            DraftDTO existingDraft = _draftService.GetDraftById(id);
+            existingDraft.isDefault = true;
+
+            if (_draftService.UpdateDraft(existingDraft))
+            {
+                return Ok(new { message = "Draft set to default successfully", id });
+            }
+            else
+            {
+                return BadRequest("Failed to default draft.");
+            }
+        }
+
+        [HttpPost("deletedraft")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
+        public async Task<IActionResult> DeleteDraft(int id)
+        {
+            if (id == 0)
+            {
+                return BadRequest("Invalid draft request.");
+            }
+
+            var user = _workContext.CurrentUser;
+
+            DraftDTO existingDraft = _draftService.GetDraftById(id);
+
+            if (_draftService.DeleteDraft(existingDraft))
+            {
+                return Ok(new { message = "Draft deleted successfully", id });
+            }
+            else
+            {
+                return BadRequest("Failed to delete draft.");
+            }
+        }
+
 
         [HttpGet("loaddraft")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
@@ -435,8 +479,7 @@ namespace Epson.Controllers.API
                 Segment = model.Segment,
                 ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction,
                 TeamId = dbUser.TeamId,
-                TeamName = _teamRepository.GetById(dbUser.TeamId).Name,
-                sla = model.sla
+                TeamName = _teamRepository.GetById(dbUser.TeamId).Name
             };
 
             if (_requestService.InsertRequest(request, model.RequestProducts, model.CompetitorInformations, model.RequestSubmissionDetail, model.ProjectInformation))
@@ -563,7 +606,7 @@ namespace Epson.Controllers.API
 
         [HttpPost("fulfillrequest")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Coverplus,Sales Section Head")]
-        public async Task<IActionResult> FulfillRequest(int id, int productId, decimal fulfilledPrice, string remarks)
+        public async Task<IActionResult> FulfillRequest(int id, string sla, int productId, decimal fulfilledPrice, string remarks)
         {
             if (id == 0 || productId == 0)
                 return NotFound("Resources not found!");
@@ -579,17 +622,35 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (_requestService.FulfillRequest(user, _mapper.Map<RequestProduct>(requestProduct), _mapper.Map<Product>(product), fulfilledPrice, remarks))
+            if (_requestService.FulfillRequest(user, sla, _mapper.Map<RequestProduct>(requestProduct), _mapper.Map<Product>(product), fulfilledPrice, remarks))
                 return Ok("Request has been fulfilled");
             else
                 return BadRequest("Failed to fulfill request");
         }
 
+        //[HttpPost("fulfillrequests")]
+        //[Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Coverplus,Sales Section Head")]
+        //public async Task<IActionResult> FulfillRequests([FromBody] List<int> ids)
+        //{
+        //    if (ids.Count == 0)
+        //        return NotFound("Resources not found!");
+
+        //    var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+        //    if (user == null)
+        //        return Unauthorized("User not authorized to perform this operation");
+
+        //    if (_requestService.FulfillRequests(ids, user))
+        //        return Ok("Request has been fulfilled");
+        //    else
+        //        return BadRequest("Failed to fulfill request");
+        //}
+
         [HttpPost("fulfillrequests")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Coverplus,Sales Section Head")]
-        public async Task<IActionResult> FulfillRequests([FromBody] List<int> ids)
+        public async Task<IActionResult> FulfillRequests([FromBody] List<FulfillRequestDTO> requests)
         {
-            if (ids.Count == 0)
+            if (requests.Count == 0)
                 return NotFound("Resources not found!");
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
@@ -597,7 +658,7 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (_requestService.FulfillRequests(ids, user))
+            if (_requestService.FulfillRequests(requests, user))
                 return Ok("Request has been fulfilled");
             else
                 return BadRequest("Failed to fulfill request");
@@ -984,9 +1045,9 @@ namespace Epson.Controllers.API
             if (userRoles.Count > 1)
                 multiRoles = true;
 
-            var teamHierarchy = _userService.InitializeTeamHierarchy(true, multiRoles);
+            var teamHierarchy = _userService.InitializeTeamHierarchyPairs(true, multiRoles);
 
-            var relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUser.TeamId, _teamRepository);
+            var relevantTeamIds = _userService.GetChildTeamIdsV2(teamHierarchy, currentUser.TeamId, _teamRepository);
             relevantTeamIds.Add(currentUser.TeamId);
 
             var usersInRelevantTeams = _userManager.Users
@@ -1032,9 +1093,9 @@ namespace Epson.Controllers.API
             var roles = await _userManager.GetRolesAsync(currentUser);
             var isAdminUser = roles.Contains(RoleEnum.Admin.ToString()) || roles.Contains(RoleEnum.Director.ToString());
 
-            var teamHierarchy = _userService.InitializeTeamHierarchy();
+            var teamHierarchy = _userService.InitializeTeamHierarchyPairs();
 
-            var relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUser.TeamId, _teamRepository);
+            var relevantTeamIds = _userService.GetChildTeamIdsV2(teamHierarchy, currentUser.TeamId, _teamRepository);
             relevantTeamIds.Add(currentUser.TeamId); 
 
             var usersInRelevantTeams = _userManager.Users

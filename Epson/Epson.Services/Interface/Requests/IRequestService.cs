@@ -28,8 +28,10 @@ namespace Epson.Services.Interface.Requests
         public Task<bool> ApproveFirstLevelRequest(string userId, string userName, Request request);
         public bool RejectFirstLevelRequest(string userID, string userName, Request request);
         public bool ApproveFinalLevelRequest(Request request, bool isApprove);
-        public bool FulfillRequest(ApplicationUser user, RequestProduct requestProduct, Product product, decimal totalPrice, string remarks);
-        bool FulfillRequests(List<int> requestProductIds, ApplicationUser user);
+        //public bool FulfillRequest(ApplicationUser user, RequestProduct requestProduct, Product product, decimal totalPrice, string remarks);
+        //bool FulfillRequests(List<int> requestProductIds, ApplicationUser user);
+        bool FulfillRequests(List<FulfillRequestDTO> requests, ApplicationUser user);
+        bool FulfillRequest(ApplicationUser user, string sla, RequestProduct requestProduct, Product product, decimal totalPrice, string remarks);
         public List<FulfillmentSummary> GetFulfillmentSummary(DateTime startDate, DateTime endDate, string granularity, string userId);
         public List<SalesSummary> GetRequestSummary(DateTime startDate, DateTime endDate, string granularity, string userId);
         public List<NoOfRequestSummary> GetTotalRequestSummary(DateTime startDate, DateTime endDate, string granularity, string userId);

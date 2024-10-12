@@ -23,7 +23,6 @@ namespace Epson.Services.DTO.Requests
         public string Comments { get; set; }
         public int TeamId { get; set; }
         public string TeamName { get; set; }
-        public string sla { get; set; }
         public string Categories { get; set; }
         public List<RequestProductDTO> RequestProducts { get; set; } = new List<RequestProductDTO>();
         public List<CompetitorInformationDTO> CompetitorInformations { get; set; } = new List<CompetitorInformationDTO>();

@@ -25,6 +25,7 @@ namespace Epson.Services.DTO.Requests
         public string? DealJustification { get; set; }
         public DateTime? Deadline { get; set; }
         public string? SLA { get; set; }
+        public bool isDefault { get; set; }
     }
 
 }

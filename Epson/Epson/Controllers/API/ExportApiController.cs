@@ -94,9 +94,9 @@ namespace Epson.Controllers.API
                 {
                     bool multiRoles = currentUser.Roles.Count > 1;
 
-                    var teamHierarchy = _userService.InitializeTeamHierarchy(true, multiRoles);
+                    var teamHierarchy = _userService.InitializeTeamHierarchyPairs(true, multiRoles);
 
-                    var relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUserDetail.TeamId, _teamRepository);
+                    var relevantTeamIds = _userService.GetChildTeamIdsV2(teamHierarchy, currentUserDetail.TeamId, _teamRepository);
                     relevantTeamIds.Add(currentUserDetail.TeamId);
 
                     var usersInRelevantTeams = _userManager.Users

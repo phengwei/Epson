@@ -237,7 +237,7 @@ namespace Epson.Controllers.API
             if (salesUsers.Where(x => x.Equals(currentUser)).Count() > 0)
                 isSalesSectionHeadUser = true;
 
-            Dictionary<string, string> teamHierarchy = new Dictionary<string, string>();
+            List<KeyValuePair<string, string>> teamHierarchy = new List<KeyValuePair<string, string>>();
             List<int> relevantTeamIds = new List<int>();
             List<string> usersInRelevantTeams = new List<string>();
             List<RequestDTO> requests = new List<RequestDTO>();
@@ -249,8 +249,8 @@ namespace Epson.Controllers.API
             }
             if (isSalesSectionHeadUser)
             {
-                teamHierarchy = _userService.InitializeTeamHierarchy();
-                relevantTeamIds = _userService.GetChildTeamIds(teamHierarchy, currentUser.TeamId, _teamRepository);
+                teamHierarchy = _userService.InitializeTeamHierarchyPairs();
+                relevantTeamIds = _userService.GetChildTeamIdsV2(teamHierarchy, currentUser.TeamId, _teamRepository);
                 relevantTeamIds.Add(currentUser.TeamId);
 
                 usersInRelevantTeams = _userManager.Users

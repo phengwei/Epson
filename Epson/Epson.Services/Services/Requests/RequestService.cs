@@ -105,7 +105,6 @@ namespace Epson.Services.Services.Requests
             var requestDTO = new RequestDTO
             {
                 Id = request.Id,
-                sla = request.SLA,
                 ApprovedBy = request.ApprovedBy,
                 ApprovedTime = request.ApprovedTime,
                 AmendQuotationTime = request.AmendQuotationTime,
@@ -260,7 +259,6 @@ namespace Epson.Services.Services.Requests
                 return new RequestDTO
                 {
                     Id = x.Id,
-                    sla = x.SLA,
                     ApprovedBy = x.ApprovedBy,
                     ApprovedTime = x.ApprovedTime,
                     AmendQuotationTime = x.AmendQuotationTime,
@@ -515,7 +513,6 @@ namespace Epson.Services.Services.Requests
                     requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
                     requestProduct.RequestId = request.Id;
                     requestProduct.Status = (int)RequestProductStatusEnum.Pending;
-                    requestProduct.sla = request.sla;
 
                     var requestProductToInsert = _mapper.Map<RequestProduct>(requestProduct);
                     InsertRequestProduct(requestProductToInsert);
@@ -988,110 +985,220 @@ namespace Epson.Services.Services.Requests
         }
 
 
-        public bool FulfillRequest(ApplicationUser user, RequestProduct requestProduct, Product product, decimal totalPrice, string remarks)
+        //public bool FulfillRequest(ApplicationUser user, RequestProduct requestProduct, Product product, decimal totalPrice, string remarks)
+        //{
+        //    var existingRequest = GetRequestById(requestProduct.RequestId);
+        //    var existingProduct = _productService.GetProductById(product.Id);
+
+        //    if (existingRequest == null || existingProduct == null || existingRequest.ApprovalState != (int)ApprovalStateEnum.PendingFulfillerAction)
+        //        return false;
+
+        //    var requestProducts = _RequestProductRepository.GetAll().Where(x => x.RequestId == existingRequest.Id).ToList();
+        //    var requestProductToFulfill = requestProducts.FirstOrDefault(x => x.Id == requestProduct.Id);
+
+        //    if (requestProductToFulfill == null)
+        //        return false;
+
+        //    requestProductToFulfill.DealerPrice = totalPrice;
+        //    requestProductToFulfill.FulfillerId = user.Id;
+        //    requestProductToFulfill.HasFulfilled = true;
+        //    requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
+        //    requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;
+        //    requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate,
+        //                                                                        existingRequest.AmendQuotationTime ?? (DateTime)existingRequest.ApprovedTime,
+        //                                                                        _slaService.GetSLAStaffLeavesByStaffId(user.Id),
+        //                                                                        _slaService.GetSLAHolidays());
+        //    requestProductToFulfill.Remarks = remarks;
+
+        //    if (requestProductToFulfill.IsCoverplus == true)
+        //    {
+        //        requestProductToFulfill.Status = (int)RequestProductStatusEnum.PendingDivisionHeadApproval;
+        //        requestProductToFulfill.HasFulfilled = false;
+        //    }
+        //    else
+        //    {
+        //        requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
+        //    }
+
+        //    int workingDays = 0;
+
+        //    if (requestProductToFulfill.SLA == "Local")
+        //    {
+        //        workingDays = 5;
+        //    }
+        //    else if (requestProductToFulfill.SLA == "Regional")
+        //    {
+        //        workingDays = 8;
+        //    }
+        //    else if (requestProductToFulfill.SLA == "SEC")
+        //    {
+        //        workingDays = 14;
+        //    }
+
+        //    if (DateTime.UtcNow > requestProductToFulfill.CreatedOnUTC.AddWorkingDays(workingDays))
+        //        requestProductToFulfill.Breached = true;
+
+        //    try
+        //    {
+        //        _RequestProductRepository.Update(requestProductToFulfill);
+        //        _logger.Information("Fulfilling request product {id}", requestProductToFulfill.Id);
+
+        //        // Calculate total price for all requested products
+        //        decimal totalUpdatedPrice = requestProducts.Sum(x => x.FulfilledPrice);
+        //        existingRequest.TotalPrice = totalUpdatedPrice;
+
+        //        // Check if all products are fulfilled
+        //        bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled);
+
+        //        var request = _mapper.Map<Request>(existingRequest);
+        //        if (allProductsFulfilled)
+        //        {
+        //            request.ApprovalState = (int)ApprovalStateEnum.Approved;
+        //            _RequestRepository.Update(request);
+
+        //        }
+        //        else
+        //        {
+        //            _RequestRepository.Update(request);
+        //        }
+
+        //        // Run email notification in the background
+        //        Task.Run(() => _scopedTaskRunner.RunInScope(provider =>
+        //        {
+        //            var emailService = provider.GetRequiredService<IEmailService>();
+
+        //            NotifyFulfillment(request, requestProducts, allProductsFulfilled, emailService);
+        //        }));
+
+
+        //        string actionDetails = $"{user.UserName} fulfilled request {request.Id} of product { requestProduct.ProductName } ";
+        //        _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, user.Id, actionDetails, "Fulfill");
+
+        //        return true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.Error(ex, "Error fulfilling request {id}", requestProductToFulfill.Id);
+        //        return false;
+        //    }
+        //}
+
+        //public bool FulfillRequests(List<int> requestProductIds, ApplicationUser user)
+        //{
+        //    //get list of request products by ids
+        //    var requestProducts = _RequestProductRepository.GetAll()
+        //                                                   .Where(x => requestProductIds.Contains(x.Id))
+        //                                                   .ToList();
+
+        //    var existingRequest = GetRequestById(requestProducts.First().RequestId);
+
+        //    List<RequestProduct> allRequestProducts = _RequestProductRepository.GetAll()
+        //                   .Where(x => x.RequestId == existingRequest.Id)
+        //                   .ToList(); ;
+
+        //    bool allProductsFulfilled = false;
+
+        //    var request = _mapper.Map<Request>(existingRequest);
+        //    foreach (var rp in requestProducts)
+        //    {
+        //        rp.FulfillerId = user.Id;
+        //        rp.HasFulfilled = true;
+        //        rp.FulfilledDate = DateTime.UtcNow;
+        //        rp.UpdatedOnUTC = DateTime.UtcNow;
+        //        rp.TimeToResolution = CalculateResolutionTime(rp.FulfilledDate,
+        //                                                        existingRequest.AmendQuotationTime ?? (DateTime)existingRequest.ApprovedTime,
+        //                                                        _slaService.GetSLAStaffLeavesByStaffId(user.Id),
+        //                                                        _slaService.GetSLAHolidays());
+
+        //        if (rp.IsCoverplus == true)
+        //        {
+        //            if (rp.Status == (int)RequestProductStatusEnum.PendingDivisionHeadApproval)
+        //            {
+        //                rp.Status = (int)RequestProductStatusEnum.Approved;
+        //            }
+        //            else
+        //            {
+        //                rp.Status = (int)RequestProductStatusEnum.PendingDivisionHeadApproval;
+        //                rp.HasFulfilled = false;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            rp.Status = (int)RequestProductStatusEnum.Approved;
+        //        }
+
+        //        if (DateTime.UtcNow > existingRequest.ApprovedTime.AddWorkingDays(5))
+        //            rp.Breached = true;
+
+        //        try
+        //        {
+        //            _RequestProductRepository.Update(rp);
+        //            _logger.Information("Fulfilling request product {id}", rp.Id);
+
+        //            var existingProduct = allRequestProducts.FirstOrDefault(x => x.Id == rp.Id);
+        //            if (existingProduct != null)
+        //            {
+        //                existingProduct.FulfillerId = rp.FulfillerId;
+        //                existingProduct.HasFulfilled = rp.HasFulfilled;
+        //                existingProduct.FulfilledDate = rp.FulfilledDate;
+        //                existingProduct.UpdatedOnUTC = rp.UpdatedOnUTC;
+        //                existingProduct.TimeToResolution = rp.TimeToResolution;
+        //                existingProduct.Status = rp.Status;
+        //                existingProduct.Breached = rp.Breached;
+        //            }
+
+        //            // Calculate total price for all requested products
+        //            decimal totalUpdatedPrice = requestProducts.Sum(x => x.FulfilledPrice);
+        //            existingRequest.TotalPrice = totalUpdatedPrice;
+
+        //            // Check if all products are fulfilled
+        //            allProductsFulfilled = allRequestProducts.All(x => x.HasFulfilled);
+
+        //            if (allProductsFulfilled)
+        //            {
+        //                request.ApprovalState = (int)ApprovalStateEnum.Approved;
+        //                _RequestRepository.Update(request);
+        //            }
+        //            else
+        //            {
+        //                _RequestRepository.Update(request);
+        //            }
+
+
+
+
+        //            string actionDetails = $"{user.UserName} fulfilled request {request.Id} of product {existingProduct.ProductName} ";
+        //            _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, user.Id, actionDetails, "Fulfill");
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            _logger.Error(ex, "Error fulfilling request {id}", rp.Id);
+        //            return false;
+        //        }
+        //    }
+
+        //    _scopedTaskRunner.RunInScope(provider =>
+        //    {
+        //        var emailService = provider.GetRequiredService<IEmailService>();
+
+        //        NotifyFulfillment(request, requestProducts, allProductsFulfilled, emailService);
+        //    });
+
+        //    return true;
+
+        //}
+
+        public bool FulfillRequests(List<FulfillRequestDTO> requests, ApplicationUser user)
         {
-            var existingRequest = GetRequestById(requestProduct.RequestId);
-            var existingProduct = _productService.GetProductById(product.Id);
+            var requestSlaMapping = requests.ToDictionary(r => r.Id, r => r.SLA);
+            // Extract the list of ids from the requests
+            var requestIds = requests.Select(r => r.Id).ToList();
 
-            if (existingRequest == null || existingProduct == null || existingRequest.ApprovalState != (int)ApprovalStateEnum.PendingFulfillerAction)
-                return false;
-
-            var requestProducts = _RequestProductRepository.GetAll().Where(x => x.RequestId == existingRequest.Id).ToList();
-            var requestProductToFulfill = requestProducts.FirstOrDefault(x => x.Id == requestProduct.Id);
-
-            if (requestProductToFulfill == null)
-                return false;
-
-            requestProductToFulfill.DealerPrice = totalPrice;
-            requestProductToFulfill.FulfillerId = user.Id;
-            requestProductToFulfill.HasFulfilled = true;
-            requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
-            requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;
-            requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate,
-                                                                                existingRequest.AmendQuotationTime ?? (DateTime)existingRequest.ApprovedTime,
-                                                                                _slaService.GetSLAStaffLeavesByStaffId(user.Id),
-                                                                                _slaService.GetSLAHolidays());
-            requestProductToFulfill.Remarks = remarks;
-
-            if (requestProductToFulfill.IsCoverplus == true)
-            {
-                requestProductToFulfill.Status = (int)RequestProductStatusEnum.PendingDivisionHeadApproval;
-                requestProductToFulfill.HasFulfilled = false;
-            }
-            else
-            {
-                requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
-            }
-
-            int workingDays = 0;
-
-            if (requestProductToFulfill.SLA == "Local")
-            {
-                workingDays = 5;
-            }
-            else if (requestProductToFulfill.SLA == "Regional")
-            {
-                workingDays = 8;
-            }
-            else if (requestProductToFulfill.SLA == "SEC")
-            {
-                workingDays = 14;
-            }
-
-            if (DateTime.UtcNow > requestProductToFulfill.CreatedOnUTC.AddWorkingDays(workingDays))
-                requestProductToFulfill.Breached = true;
-
-            try
-            {
-                _RequestProductRepository.Update(requestProductToFulfill);
-                _logger.Information("Fulfilling request product {id}", requestProductToFulfill.Id);
-
-                // Calculate total price for all requested products
-                decimal totalUpdatedPrice = requestProducts.Sum(x => x.FulfilledPrice);
-                existingRequest.TotalPrice = totalUpdatedPrice;
-
-                // Check if all products are fulfilled
-                bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled);
-
-                var request = _mapper.Map<Request>(existingRequest);
-                if (allProductsFulfilled)
-                {
-                    request.ApprovalState = (int)ApprovalStateEnum.Approved;
-                    _RequestRepository.Update(request);
-
-                }
-                else
-                {
-                    _RequestRepository.Update(request);
-                }
-
-                // Run email notification in the background
-                Task.Run(() => _scopedTaskRunner.RunInScope(provider =>
-                {
-                    var emailService = provider.GetRequiredService<IEmailService>();
-
-                    NotifyFulfillment(request, requestProducts, allProductsFulfilled, emailService);
-                }));
-
-
-                string actionDetails = $"{user.UserName} fulfilled request {request.Id} of product { requestProduct.ProductName } ";
-                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, user.Id, actionDetails, "Fulfill");
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Error fulfilling request {id}", requestProductToFulfill.Id);
-                return false;
-            }
-        }
-
-        public bool FulfillRequests(List<int> requestProductIds, ApplicationUser user)
-        {
-            //get list of request products by ids
+            // Get list of request products by ids
             var requestProducts = _RequestProductRepository.GetAll()
-                                                           .Where(x => requestProductIds.Contains(x.Id))
+                                                           .Where(x => requestIds.Contains(x.Id))
                                                            .ToList();
+
 
             var existingRequest = GetRequestById(requestProducts.First().RequestId);
 
@@ -1104,6 +1211,11 @@ namespace Epson.Services.Services.Requests
             var request = _mapper.Map<Request>(existingRequest);
             foreach (var rp in requestProducts)
             {
+                if (requestSlaMapping.TryGetValue(rp.Id, out var sla))
+                {
+                    rp.SLA = sla;
+                }
+
                 rp.FulfillerId = user.Id;
                 rp.HasFulfilled = true;
                 rp.FulfilledDate = DateTime.UtcNow;
@@ -1130,8 +1242,24 @@ namespace Epson.Services.Services.Requests
                     rp.Status = (int)RequestProductStatusEnum.Approved;
                 }
 
-                if (DateTime.UtcNow > existingRequest.ApprovedTime.AddWorkingDays(5))
+                int workingDays = 0;
+
+                if (rp.SLA == "Local")
+                {
+                    workingDays = 3;
+                }
+                else if (rp.SLA == "Regional")
+                {
+                    workingDays = 8;
+                }
+                else if (rp.SLA == "SEC")
+                {
+                    workingDays = 14;
+                }
+
+                if (DateTime.UtcNow > rp.CreatedOnUTC.AddWorkingDays(workingDays))
                     rp.Breached = true;
+
 
                 try
                 {
@@ -1188,10 +1316,109 @@ namespace Epson.Services.Services.Requests
             });
 
             return true;
-            
+
         }
 
 
+        public bool FulfillRequest(ApplicationUser user, string sla, RequestProduct requestProduct, Product product, decimal totalPrice, string remarks)
+        {
+            var existingRequest = GetRequestById(requestProduct.RequestId);
+            var existingProduct = _productService.GetProductById(product.Id);
+
+            if (existingRequest == null || existingProduct == null || existingRequest.ApprovalState != (int)ApprovalStateEnum.PendingFulfillerAction)
+                return false;
+
+            var requestProducts = _RequestProductRepository.GetAll().Where(x => x.RequestId == existingRequest.Id).ToList();
+            var requestProductToFulfill = requestProducts.FirstOrDefault(x => x.Id == requestProduct.Id);
+
+            if (requestProductToFulfill == null)
+                return false;
+
+            requestProductToFulfill.DealerPrice = totalPrice;
+            requestProductToFulfill.FulfillerId = user.Id;
+            requestProductToFulfill.HasFulfilled = true;
+            requestProductToFulfill.FulfilledDate = DateTime.UtcNow;
+            requestProductToFulfill.UpdatedOnUTC = DateTime.UtcNow;
+            requestProductToFulfill.TimeToResolution = CalculateResolutionTime(requestProductToFulfill.FulfilledDate,
+                                                                                existingRequest.AmendQuotationTime ?? (DateTime)existingRequest.ApprovedTime,
+                                                                                _slaService.GetSLAStaffLeavesByStaffId(user.Id),
+                                                                                _slaService.GetSLAHolidays());
+            requestProductToFulfill.SLA = sla;
+
+            requestProductToFulfill.Remarks = remarks;
+
+            if (requestProductToFulfill.IsCoverplus == true)
+            {
+                requestProductToFulfill.Status = (int)RequestProductStatusEnum.PendingDivisionHeadApproval;
+                requestProductToFulfill.HasFulfilled = false;
+            }
+            else
+            {
+                requestProductToFulfill.Status = (int)RequestProductStatusEnum.Approved;
+            }
+
+            int workingDays = 0;
+
+            if (requestProductToFulfill.SLA == "Local")
+            {
+                workingDays = 3;
+            }
+            else if (requestProductToFulfill.SLA == "Regional")
+            {
+                workingDays = 8;
+            }
+            else if (requestProductToFulfill.SLA == "SEC")
+            {
+                workingDays = 14;
+            }
+
+            if (DateTime.UtcNow > requestProductToFulfill.CreatedOnUTC.AddWorkingDays(workingDays))
+                requestProductToFulfill.Breached = true;
+
+            try
+            {
+                _RequestProductRepository.Update(requestProductToFulfill);
+                _logger.Information("Fulfilling request product {id}", requestProductToFulfill.Id);
+
+                // Calculate total price for all requested products
+                decimal totalUpdatedPrice = requestProducts.Sum(x => x.FulfilledPrice);
+                existingRequest.TotalPrice = totalUpdatedPrice;
+
+                // Check if all products are fulfilled
+                bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled);
+
+                var request = _mapper.Map<Request>(existingRequest);
+                if (allProductsFulfilled)
+                {
+                    request.ApprovalState = (int)ApprovalStateEnum.Approved;
+                    _RequestRepository.Update(request);
+
+                }
+                else
+                {
+                    _RequestRepository.Update(request);
+                }
+
+                // Run email notification in the background
+                Task.Run(() => _scopedTaskRunner.RunInScope(provider =>
+                {
+                    var emailService = provider.GetRequiredService<IEmailService>();
+
+                    NotifyFulfillment(request, requestProducts, allProductsFulfilled, emailService);
+                }));
+
+
+                string actionDetails = $"{user.UserName} fulfilled request {request.Id} of product {requestProduct.ProductName} ";
+                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, user.Id, actionDetails, "Fulfill");
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error fulfilling request {id}", requestProductToFulfill.Id);
+                return false;
+            }
+        }
 
         private void NotifyFulfillment(Request request, List<RequestProduct> requestProducts, bool allProductsFulfilled, IEmailService emailService)
         {

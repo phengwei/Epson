@@ -30,6 +30,14 @@
           <input v-model="localEditedItem.quantity" class="border-input readonly-field" label="Quantity" readonly></input>
         </div>
         <div class="form-group">
+          <label>SLA Type</label>
+          <select v-model="localEditedItem.sla" class="border-input">
+            <option value="Local">Local</option>
+            <option value="Regional">Regional</option>
+            <option value="SEC">SEC</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>Remarks</label>
           <input v-model="localEditedItem.remarks" class="border-input" label="Remarks"></input>
         </div>
@@ -49,6 +57,7 @@
   </v-dialog>
 </template>
 
+
 <script>
   import Swal from 'sweetalert2';
   export default {
@@ -65,7 +74,7 @@
       return {
         localDialogProductFulfillment: this.dialogProductFulfillment,
         localEditedItem: {},
-        
+
       };
     },
     watch: {
@@ -79,7 +88,7 @@
         handler(newValue) {
           this.localEditedItem = { ...newValue };
           this.localEditedItem.remarks = '';
-          
+
         },
         immediate: true,
       },
@@ -107,14 +116,9 @@
             confirmButtonText: 'Fulfill',
           }).then((result) => {
             if (result.isConfirmed) {
-              console.log("awd", this.localEditedItem);
-              this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?id=${this.localEditedItem.id}&productId=${this.localEditedItem.productId}&fulfilledPrice=${this.localEditedItem.fulfilledPrice}&remarks=${this.localEditedItem.remarks}`)
+              this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequest?id=${this.localEditedItem.id}&sla=${this.localEditedItem.sla}&productId=${this.localEditedItem.productId}&fulfilledPrice=${this.localEditedItem.fulfilledPrice}&remarks=${this.localEditedItem.remarks}`)
                 .then(response => {
-                  this.close(); 
-                  Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success')
-                    .then(() => {
-                      this.$router.push('/productDashboard');
-                    });
+                  location.reload();
                 }).catch(error => {
                   console.log('error', error);
                   Swal.fire('Error', 'Failed to fulfill request', 'error');
@@ -143,7 +147,7 @@
                   this.close();
                   Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success')
                     .then(() => {
-                      this.$router.push('/productDashboard');
+                      location.reload();
                     });
                 }).catch(error => {
                   console.log('error', error);
