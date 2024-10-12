@@ -120,6 +120,7 @@ export default {
     if (this.$route.query.params) {
       this.decodedQueryParams = JSON.parse(Base64.decode(this.$route.query.params));
       const queryParams = JSON.parse(Base64.decode(this.$route.query.params));
+      console.log("awd", queryParams);
       if (this.decodedQueryParams.view || this.decodedQueryParams.editable) {
         const requestId = queryParams.requestId;
         await this.fetchRequestById(requestId);
@@ -153,6 +154,9 @@ export default {
     },
     isFulfillMode() {
       return this.decodedQueryParams.isFulfill === true || this.decodedQueryParams.isFulfillCoverplus === true;
+    },
+    isFinalApproveMode() {
+      return this.decodedQueryParams.isFinalApprove === true
     },
     currentRequestApprovalState() {
       return this.currentRequest ? this.currentRequest.approvalState : null;
@@ -365,13 +369,13 @@ export default {
     approveRequest() {
       Swal.fire({
         title: 'Confirmation',
-        text: 'Do you want to approve the request?',
+        text: 'Do you want to approve the demo request?',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
         confirmButtonText: 'Approve',
-        cancelButtonText: 'Reject',
+        cancelButtonText: 'Cancel',
         allowOutsideClick: true
       }).then((result) => {
         if (result.isConfirmed) {
@@ -387,21 +391,7 @@ export default {
               console.log('error', error);
               Swal.fire('Error', 'Failed to process the request', 'error');
             });
-
-        } else if (result.isDismissed && result.dismiss === 'cancel') {
-          const requestUrl = `${this.$config.restUrl}/api/request/approvefinalrequest?requestId=${this.currentRequest.id}&isAccept=false`;
-
-          this.$axios.post(requestUrl)
-            .then(response => {
-              Swal.fire('Done!', 'Request is successfully rejected.', 'success')
-                .then(() => {
-                  window.location.href = '/request';
-                });
-            }).catch(error => {
-              console.log('error', error);
-              Swal.fire('Error', 'Failed to process the request', 'error');
-            });
-        }
+        } 
       });
     },
 

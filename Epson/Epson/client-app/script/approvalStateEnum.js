@@ -9,5 +9,6 @@ export const ApprovalStateEnum = {
   RejectedByRequester: 80,
   RejectedBySalesSectionHead: 90,
   Cancelled: 100,
-  DealExited: 110
+  DealExited: 110,
+  PendingDemoRequisitionApproval: 120,
 };

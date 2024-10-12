@@ -1287,8 +1287,17 @@ namespace Epson.Services.Services.Requests
 
                     if (allProductsFulfilled)
                     {
-                        request.ApprovalState = (int)ApprovalStateEnum.Approved;
-                        _RequestRepository.Update(request);
+                        //check if is demo requisition request
+                        if (request.ProjectInformation.ProjectInformationReasons.Any(x => x.SelectedReason == "Demo Unit Price Requisition"))
+                        {
+                            request.ApprovalState = (int)ApprovalStateEnum.PendingDemoRequisitionApproval;
+                            _RequestRepository.Update(request);
+                        }
+                        else
+                        {
+                            request.ApprovalState = (int)ApprovalStateEnum.Approved;
+                            _RequestRepository.Update(request);
+                        }
                     }
                     else
                     {
@@ -1390,9 +1399,17 @@ namespace Epson.Services.Services.Requests
                 var request = _mapper.Map<Request>(existingRequest);
                 if (allProductsFulfilled)
                 {
-                    request.ApprovalState = (int)ApprovalStateEnum.Approved;
-                    _RequestRepository.Update(request);
-
+                    //check if is demo requisition request
+                    if (request.ProjectInformation.ProjectInformationReasons.Any(x => x.SelectedReason == "Demo Unit Price Requisition"))
+                    {
+                        request.ApprovalState = (int)ApprovalStateEnum.PendingDemoRequisitionApproval;
+                        _RequestRepository.Update(request);
+                    }
+                    else
+                    {
+                        request.ApprovalState = (int)ApprovalStateEnum.Approved;
+                        _RequestRepository.Update(request);
+                    }
                 }
                 else
                 {

@@ -41,7 +41,7 @@
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
                   <th>SLA Type</th> 
-                  <th v-if="isViewMode">Approved Time</th>
+                  <th v-if="isViewMode">Sales Head Approved Time</th>
                   <th v-if="isFulfillMode">Fulfill</th>
                   <th v-if="!isViewMode">Action</th>
                 </tr>
@@ -473,7 +473,7 @@
         <button type="submit" @click="acceptDeal" v-if="isMode('dealable')">Accept Deal</button>
         <button type="submit" @click="rejectDeal" v-if="isMode('dealable')">Reject Deal</button>
         <button type="submit" @click="exitDeal" v-if="isMode('amendable')">Exit Deal</button>
-        <button type="submit" @click="approveRequest" v-if="isMode('isFinalApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadFinalAction">Approve Request</button>
+        <button type="submit" @click="approveRequest" v-if="isMode('isFinalApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingDemoRequisitionApproval">Approve Demo Pricing Request</button>
         <button type="submit" @click="confirmAmmendQuotation" v-if="isMode('amendable')">Set Request to Amend</button>
         <button type="submit" @click="approveQuotation()" v-if="isMode('isApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadAction">Approve Quotation</button>
         <button type="submit" @click="rejectQuotation()" v-if="isMode('isApprove') && currentRequestApprovalState === ApprovalStateEnum.PendingSalesSectionHeadAction">Reject Quotation</button>
