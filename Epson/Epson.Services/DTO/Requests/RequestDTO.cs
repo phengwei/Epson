@@ -7,6 +7,7 @@ namespace Epson.Services.DTO.Requests
         public int Id { get; set; }
         public DateTime ApprovedTime { get; set; }
         public string ApprovedBy { get; set; }
+        public string? FinalApprovedBy { get; set; }
         public string ApprovedByName { get; set; }
         public string CreatedByStr { get; set; }
         public string Segment { get; set; }

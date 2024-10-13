@@ -343,6 +343,7 @@ namespace Epson.Services.Services.Requests
         }
 
 
+
         public PagedResult<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isDivisionHeadUser, bool isCoverplusUser, bool isProductUser, bool isAdminUser, string search = null, int? page = null, int? itemsPerPage = null)
         {
             List<RequestDTO> requests = new List<RequestDTO>();
@@ -1567,7 +1568,7 @@ namespace Epson.Services.Services.Requests
             }
         }
 
-        public bool ApproveFinalLevelRequest(Request request, bool isApprove)
+        public bool ApproveFinalLevelRequest(Request request, ApplicationUser user, bool isApprove)
         {
             var req = GetRequestById(request.Id);
 
@@ -1582,7 +1583,11 @@ namespace Epson.Services.Services.Requests
             try
             {
                 _RequestRepository.Update(request);
-                _logger.Information("Completing first level approval for request {id}", request.Id);
+                _logger.Information("Completing final level approval for request {id}", request.Id);
+
+
+                string actionDetails = $"{user.UserName} appoved demo request of ID {request.Id}";
+                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, user.Id, actionDetails, "Fulfill");
 
                 return true;
             }

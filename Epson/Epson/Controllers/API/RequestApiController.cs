@@ -744,13 +744,15 @@ namespace Epson.Controllers.API
 
             var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
+            request.FinalApprovedBy = user.Id;
+
             if (request == null)
                 return NotFound("Resources not found!");
 
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
-            if (_requestService.ApproveFinalLevelRequest(_mapper.Map<Request>(request), isAccept))
+            if (_requestService.ApproveFinalLevelRequest(_mapper.Map<Request>(request), user, isAccept))
                 return Ok("Request has been approved");
             else
                 return BadRequest("Failed to set approved request");
@@ -835,6 +837,67 @@ namespace Epson.Controllers.API
             //var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(requests);
 
             response.Data = requests;
+            response.Count = totalItems;
+
+            return Ok(response);
+        }
+
+
+        [HttpGet("getpendingdirectoritem")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin, Director")]
+        public async Task<IActionResult> GetPendingDirectorItem(string search = null, int? page = null, int? itemsPerPage = null)
+        {
+            var response = new GenericResponseModel<List<RequestDTO>>();
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            bool multiRoles = false;
+            if (userRoles.Count > 1)
+                multiRoles = true;
+
+            Func<Request, bool> filter = x => true;
+            int totalItems;
+
+            if (userRoles.Contains("Admin") || userRoles.Contains("Director"))
+            {
+                filter = x => x.ApprovalState == (int)ApprovalStateEnum.PendingDemoRequisitionApproval;
+            }
+
+            var filteredRequests = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage).ToList();
+
+            response.Data = filteredRequests;
+            response.Count = totalItems;
+
+            return Ok(response);
+        }
+
+        [HttpGet("getapproveddirectoritems")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin, Director")]
+        public async Task<IActionResult> GetApprovedDirectorItems(string search = null, int? page = null, int? itemsPerPage = null)
+        {
+            var response = new GenericResponseModel<List<RequestDTO>>();
+
+            var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            bool multiRoles = false;
+            if (userRoles.Count > 1)
+                multiRoles = true;
+
+            Func<Request, bool> filter = x => true;
+            int totalItems;
+
+            if (userRoles.Contains("Admin") || userRoles.Contains("Director"))
+            {
+                filter = x => x.FinalApprovedBy == user.Id;
+            }
+
+            var filteredRequests = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage).ToList();
+
+            response.Data = filteredRequests;
             response.Count = totalItems;
 
             return Ok(response);

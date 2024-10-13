@@ -108,7 +108,8 @@
           links.push(
             { route: '/productDashboard', label: 'FULFILLER DASHBOARD', icon: '📦' },
             { route: '/salesDashboard', label: 'REQUESTER DASHBOARD', icon: '📊' },
-            { route: '/shDashboard', label: 'SALES HEAD DASHBOARD', icon: '🏷️' }
+            { route: '/shDashboard', label: 'SALES HEAD DASHBOARD', icon: '🏷️' },
+            { route: '/directorDashboard', label: 'DIRECTOR DASHBOARD', icon: '🏷️' }
           );
         } else {
           if (this.loggedInUser.roles.includes('Sales')) {
