@@ -224,29 +224,36 @@ namespace Epson.Services.Services.SLA
 
         public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {
-            List<RequestProduct> ticketsBreached = new List<RequestProduct>();
+            List<int> breachedRequests = new List<int>();
 
             if (isAdminUser)
             {
-                ticketsBreached = _requestProductRepository.Table
+                breachedRequests = _requestProductRepository.Table
                     .Where(x => x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .Select(x => x.RequestId)
+                    .Distinct()
                     .ToList();
             }
             else if (isSalesHeadUser)
             {
-                ticketsBreached = _requestProductRepository.Table
+                breachedRequests = _requestProductRepository.Table
                     .Where(x => users.Contains(x.FulfillerId) && x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .Select(x => x.RequestId)
+                    .Distinct()
                     .ToList();
             }
             else
             {
-                ticketsBreached = _requestProductRepository.Table
+                breachedRequests = _requestProductRepository.Table
                     .Where(x => x.FulfillerId == user.Id && x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .Select(x => x.RequestId)
+                    .Distinct()
                     .ToList();
             }
 
-            return ticketsBreached.Count;
+            return breachedRequests.Count;
         }
+
 
         public int GetTotalTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
         {
