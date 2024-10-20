@@ -86,6 +86,14 @@ namespace Epson.Controllers.API
             return Ok(result);
         }
 
+        [HttpGet("GetSalesHeadByTeam")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetSalesHeadByTeam(int teamID)
+        {
+            var result = _userService.GetAllSalesHeadUsersByTeam(teamID);
+
+            return Ok(result);
+        }
 
         [HttpPost("AddHierarchy")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]

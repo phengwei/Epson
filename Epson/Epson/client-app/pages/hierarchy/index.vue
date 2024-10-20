@@ -33,7 +33,7 @@
               </div>
               <div class="form-group">
                 <label>Approver Team</label>
-                <select v-model="newHierarchy.approverTeam" class="border-input" required>
+                <select v-model="newHierarchy.approverTeam" @change="onApproverTeamChange" class="border-input" required>
                   <option value="">Select Team</option>
                   <option v-for="team in availableTeams" :key="team.id" :value="team.name">{{ team.name }}</option>
                 </select>
@@ -130,6 +130,30 @@
       }
     },
     methods: {
+      onApproverTeamChange() {
+        const selectedTeam = this.newHierarchy.approverTeam;
+
+        const team = this.availableTeams.find(team => team.name === selectedTeam);
+
+        this.newHierarchy.emailRecipient = '';
+        if (team) {
+          this.getSalesHeadByTeam(team.id);
+        } else {
+          this.availableApprovers = [];
+        }
+      },
+      getSalesHeadByTeam(teamId) {
+        this.$axios.get(`${this.$config.restUrl}/api/customer/GetSalesHeadByTeam`, {
+          params: { teamId }
+        })
+          .then(response => {
+            this.availableApprovers = response.data; 
+          })
+          .catch(error => {
+            console.error('Error fetching sales head users:', error);
+            this.availableApprovers = [];
+          });
+      },
       getTeams() {
         this.$axios.get(`${this.$config.restUrl}/api/customer/getavailableteams`)
           .then(response => {
@@ -177,10 +201,20 @@
           });
       },
       saveHierarchyConfirmation() {
-        if (!this.newHierarchy.requestingTeam || !this.newHierarchy.approverTeam || this.newHierarchy.approvalLevel === null || !this.newHierarchy.emailRecipient) {
+        if (!this.newHierarchy.requestingTeam || !this.newHierarchy.approverTeam || this.newHierarchy.approvalLevel === null) {
           this.$swal({
             title: 'Validation Error',
             text: "All fields are required!",
+            icon: 'error',
+            confirmButtonColor: '#3085d6',
+          });
+          return;
+        }
+
+        if (!this.newHierarchy.emailRecipient) {
+          this.$swal({
+            title: 'Validation Error',
+            text: "Please select a tagged approver!",
             icon: 'error',
             confirmButtonColor: '#3085d6',
           });
@@ -198,12 +232,12 @@
         }).then((result) => {
           if (result.isConfirmed) {
             if (this.newHierarchy.id && this.newHierarchy.id > 0) {
-              this.updateHierarchy(); 
+              this.updateHierarchy();
             } else {
-              this.saveHierarchy();  
+              this.saveHierarchy();
             }
           }
-        })
+        });
       },
       initializeHierarchy() {
         this.newHierarchy = {

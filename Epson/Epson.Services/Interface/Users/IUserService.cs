@@ -29,5 +29,6 @@ namespace Epson.Services.Interface.Users
         List<TeamHierarchyDTO> GetTeamHierarchies();
         Task<List<TeamHierarchy>> GetTeamHierarchyAsync();
         List<ApplicationUser> GetAllUsersByRoles(string role);
+        List<ApplicationUser> GetAllSalesHeadUsersByTeam(int teamId);
     }
 }

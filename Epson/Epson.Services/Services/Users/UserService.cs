@@ -386,6 +386,23 @@ namespace Epson.Services.Services.Users
             return null;
         }
 
+        public List<ApplicationUser> GetAllSalesHeadUsersByTeam(int teamId)
+        {
+            var team = _TeamRepository.GetById(teamId);
+
+            if (team == null)
+            {
+                _logger.Information($"Team with ID {teamId} not found.");
+                return new List<ApplicationUser>();
+            }
+
+            var salesHeadUsers = _userManager.GetUsersInRoleAsync("Sales Section Head").Result;
+
+            var teamSalesHeadUsers = salesHeadUsers.Where(user => user.TeamId == teamId).ToList();
+
+            return teamSalesHeadUsers;
+        }
+
 
 
         //public async Task<List<ApplicationUser>> GetUserSalesHead(int teamID, string userId, bool isSalesHead = false)
