@@ -150,7 +150,7 @@ export default {
           autoFetch: true
         },
         endpoints: {
-          login: { url: 'api/customer/login', method: 'post' },
+          login: { url: 'api/customer/validateTwoFactor', method: 'post' },
           user: { url: 'api/customer/getcurrentuser', method: 'get' },
           logout: { url: 'auth/AuthLogout', method: 'post' },
         }

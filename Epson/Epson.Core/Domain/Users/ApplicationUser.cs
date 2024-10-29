@@ -14,5 +14,6 @@ namespace Epson.Core.Domain.Users
         public string? ssoIdentifier { get; set; }
         public string? firstName { get; set; }
         public string? lastName { get; set; }
+        public string? secretKey { get; set; }
     }
 }

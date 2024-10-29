@@ -96,51 +96,33 @@
       async login() {
         try {
           this.loginDisabled = true;
-          await this.$auth.loginWith('local', {
+          const response = await this.$axios.post('/api/customer/login', {
             data: {
-              data: {
-                userName: this.userName,
-                password: this.password
-              }
+              userName: this.userName,
+              password: this.password
             }
-          }).then(response => {
-            const userRoles = this.$auth.user.data.roles;
-            if (userRoles.includes('Admin')) {
-              this.$router.push('/dashboard');
-            } else if (userRoles.includes('Sales Operation')) {
-              this.$router.push('/request');
-            } else if (userRoles.includes('Product')) {
-              this.$router.push('/dashboard');
-            } else if (userRoles.includes('Sales')) {
-              this.$router.push('/dashboard');
-            } else if (userRoles.includes('Coverplus')) {
-              this.$router.push('/dashboard');
-            } else if (userRoles.includes('Sales Section Head')) {
-              this.$router.push('/dashboard');
-            } else if (userRoles.includes('Director')) {
-              this.$router.push('/dashboard');
-            } else {
-              Swal.fire({
-                title: 'Error!',
-                text: 'Unknown user role',
-                icon: 'error',
-                confirmButtonText: 'OK'
-              });
-            }
-          }).catch(error => {
-            setTimeout(() => {
-              this.loginDisabled = false;
-            }, 5000);
-            const errorMessage = error.response.data.error;
-            Swal.fire({
-              title: 'Error!',
-              text: errorMessage,
-              icon: 'error',
-              confirmButtonText: 'OK'
-            });
           });
-        } catch (err) {
-          console.log(err);
+
+          if (response.data.isShowQR) {
+            this.$router.push({
+              path: '/qr',
+              query: { qrCode: response.data.qrCode, email: response.data.email }
+            });
+          } else {
+            this.$router.push({
+              path: '/validateTwoFactor',
+              query: { email: response.data.email }
+            });
+          }
+        } catch (error) {
+          this.loginDisabled = false;
+          const errorMessage = error.response.data.error;
+          Swal.fire({
+            title: 'Login Unsuccessful!',
+            text: errorMessage,
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
         } finally {
           this.loginDisabled = false;
         }

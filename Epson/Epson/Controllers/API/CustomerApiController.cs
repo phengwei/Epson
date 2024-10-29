@@ -14,6 +14,8 @@ using Epson.Services.Interface.Users;
 using AutoMapper;
 using Epson.Extensions;
 using Epson.Services.DTO.Users;
+using Epson.Helpers;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace Epson.Controllers.API
 {
@@ -213,11 +215,45 @@ namespace Epson.Controllers.API
                 user.AccessFailedCount = 0; 
                 await _userManager.UpdateAsync(user);
 
-                var generatedToken = await _jwtService.GenerateToken(user);
-                return Ok(new
+                if (user.secretKey == null)
                 {
-                    token = generatedToken
-                });
+                    //generate mfa qr
+                    string issuer = "Epson-UMS";
+                    string accountName = user.Email;
+                    string secretKey = SecurityHelper.GenerateBase32Key();
+
+                    TOTPManager otp = new TOTPManager(issuer, accountName, secretKey);
+
+                    string qr = otp.GenerateMSOTP();
+
+                    user.secretKey = secretKey;
+                    await _userManager.UpdateAsync(user);
+
+                    byte[] imgArray = Convert.FromBase64String(qr);
+                    using MemoryStream ms = new MemoryStream(imgArray);
+
+
+
+                    return Ok(new
+                    {
+                        isShowQR = true,
+                        email = user.Email,
+                        qrCode = $"data:image/png;base64,{qr}"
+                    });
+                }
+                else
+                {
+                    return Ok(new
+                    {
+                        email = user.Email,
+                        isShowQR = false
+                    });
+                }
+                //var generatedToken = await _jwtService.GenerateToken(user);
+                //return Ok(new
+                //{
+                //    token = generatedToken
+                //});
             }
             else
             {
@@ -226,6 +262,80 @@ namespace Epson.Controllers.API
                 if (user.AccessFailedCount >= 12)
                 {
                     user.LockoutEnd = DateTime.Now.AddHours(24); 
+                }
+
+                await _userManager.UpdateAsync(user);
+
+                return Unauthorized(new { error = "Invalid username or password" });
+            }
+        }
+
+        [HttpPost("validateTwoFactor")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ValidateTwoFactor([FromBody] BaseQueryModel<ValidateTwoFactorModel> queryModel)
+        {
+            var model = queryModel.Data;
+            var user = await _userManager.FindByEmailAsync(model.email);
+
+            if (user == null)
+            {
+                return Unauthorized(new { error = "Invalid username or password" });
+            }
+
+            if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.Now)
+            {
+                if (DateTime.Now >= user.LockoutEnd.Value.AddDays(1))
+                {
+                    user.LockoutEnd = null;
+                    user.AccessFailedCount = 0;
+                    await _userManager.UpdateAsync(user);
+                }
+                else
+                {
+                    return Unauthorized(new { error = "Account locked. Please try again later." });
+
+                }
+            }
+
+            string issuer = "Epson-UMS";
+            string accountName = user.Email;
+            string secretKey = user.secretKey;
+
+            TOTPManager manager = new TOTPManager(issuer, accountName, secretKey);
+
+            if (model.OTP != null)
+            {
+                bool result = manager.Validate(model.OTP);
+
+                if (result)
+                {
+                    var generatedToken = await _jwtService.GenerateToken(user);
+                    return Ok(new
+                    {
+                        token = generatedToken
+                    });
+                }
+                else
+                {
+                    user.AccessFailedCount++;
+
+                    if (user.AccessFailedCount >= 12)
+                    {
+                        user.LockoutEnd = DateTime.Now.AddHours(24);
+                    }
+
+                    await _userManager.UpdateAsync(user);
+
+                    return Unauthorized(new { error = "Invalid username or password" });
+                }
+            }
+            else
+            {
+                user.AccessFailedCount++;
+
+                if (user.AccessFailedCount >= 12)
+                {
+                    user.LockoutEnd = DateTime.Now.AddHours(24);
                 }
 
                 await _userManager.UpdateAsync(user);
