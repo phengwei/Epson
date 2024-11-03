@@ -308,7 +308,6 @@
         this.dialog = true
       },
       saveUser() {
-        console.log("awd", this.newUser);
         if (this.editedIndex > -1) {
           this.$axios.post(`${this.$config.restUrl}/api/customer/edituser`, {
             data: {

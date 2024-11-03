@@ -467,7 +467,6 @@
           itemsPerPage: this.options.itemsPerPage,
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getpendingfulfillmentasrequester`, { params }).then(result => {
-          console.log("aw", result);
           this.requests = result.data.data.map(request => {
             return {
               ...request,
@@ -478,7 +477,6 @@
           });
           this.totalItems = result.data.count;
           this.loading = false;
-          console.log("this.request", this.requests);
         }).catch(error => {
           this.loading = false;
           console.error('Error fetching pending fulfillment as requester items:', error);

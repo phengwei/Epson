@@ -187,86 +187,95 @@ namespace Epson.Controllers.API
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] BaseQueryModel<LoginModel> queryModel)
         {
-            var model = queryModel.Data;
-            var user = await _userManager.FindByNameAsync(model.UserName);
-
-            if (user == null)
+            try
             {
-                return Unauthorized(new { error = "Invalid username or password" });
-            }
 
-            if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.Now)
-            {
-                if (DateTime.Now >= user.LockoutEnd.Value.AddDays(1))
+
+                var model = queryModel.Data;
+                var user = await _userManager.FindByNameAsync(model.UserName);
+
+                if (user == null)
                 {
-                    user.LockoutEnd = null;
-                    user.AccessFailedCount = 0; 
+                    return Unauthorized(new { error = "Invalid username or password" });
+                }
+
+                if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.Now)
+                {
+                    if (DateTime.Now >= user.LockoutEnd.Value.AddDays(1))
+                    {
+                        user.LockoutEnd = null;
+                        user.AccessFailedCount = 0;
+                        await _userManager.UpdateAsync(user);
+                    }
+                    else
+                    {
+                        return Unauthorized(new { error = "Account locked. Please try again later." });
+
+                    }
+                }
+
+                if (await _userManager.CheckPasswordAsync(user, model.Password))
+                {
+                    user.AccessFailedCount = 0;
                     await _userManager.UpdateAsync(user);
+
+                    if (user.secretKey == null)
+                    {
+                        //generate mfa qr
+                        string issuer = "Epson-UMS";
+                        string accountName = user.Email;
+                        string secretKey = SecurityHelper.GenerateBase32Key();
+
+                        TOTPManager otp = new TOTPManager(issuer, accountName, secretKey);
+
+                        string qr = otp.GenerateMSOTP();
+
+                        user.secretKey = secretKey;
+                        await _userManager.UpdateAsync(user);
+
+                        byte[] imgArray = Convert.FromBase64String(qr);
+                        using MemoryStream ms = new MemoryStream(imgArray);
+
+
+
+                        return Ok(new
+                        {
+                            isShowQR = true,
+                            email = user.Email,
+                            qrCode = $"data:image/png;base64,{qr}"
+                        });
+                    }
+                    else
+                    {
+                        return Ok(new
+                        {
+                            email = user.Email,
+                            isShowQR = false
+                        });
+                    }
+                    //var generatedToken = await _jwtService.GenerateToken(user);
+                    //return Ok(new
+                    //{
+                    //    token = generatedToken
+                    //});
                 }
                 else
                 {
-                    return Unauthorized(new { error = "Account locked. Please try again later." });
+                    user.AccessFailedCount++;
 
-                }
-            }
+                    if (user.AccessFailedCount >= 12)
+                    {
+                        user.LockoutEnd = DateTime.Now.AddHours(24);
+                    }
 
-            if (await _userManager.CheckPasswordAsync(user, model.Password))
-            {
-                user.AccessFailedCount = 0; 
-                await _userManager.UpdateAsync(user);
-
-                if (user.secretKey == null)
-                {
-                    //generate mfa qr
-                    string issuer = "Epson-UMS";
-                    string accountName = user.Email;
-                    string secretKey = SecurityHelper.GenerateBase32Key();
-
-                    TOTPManager otp = new TOTPManager(issuer, accountName, secretKey);
-
-                    string qr = otp.GenerateMSOTP();
-
-                    user.secretKey = secretKey;
                     await _userManager.UpdateAsync(user);
 
-                    byte[] imgArray = Convert.FromBase64String(qr);
-                    using MemoryStream ms = new MemoryStream(imgArray);
-
-
-
-                    return Ok(new
-                    {
-                        isShowQR = true,
-                        email = user.Email,
-                        qrCode = $"data:image/png;base64,{qr}"
-                    });
+                    return Unauthorized(new { error = "Invalid username or password" });
                 }
-                else
-                {
-                    return Ok(new
-                    {
-                        email = user.Email,
-                        isShowQR = false
-                    });
-                }
-                //var generatedToken = await _jwtService.GenerateToken(user);
-                //return Ok(new
-                //{
-                //    token = generatedToken
-                //});
             }
-            else
+            catch(Exception ex)
             {
-                user.AccessFailedCount++;
-
-                if (user.AccessFailedCount >= 12)
-                {
-                    user.LockoutEnd = DateTime.Now.AddHours(24); 
-                }
-
-                await _userManager.UpdateAsync(user);
-
-                return Unauthorized(new { error = "Invalid username or password" });
+                return Ok(ex.Message);
             }
         }
 

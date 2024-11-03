@@ -120,7 +120,6 @@ export default {
     if (this.$route.query.params) {
       this.decodedQueryParams = JSON.parse(Base64.decode(this.$route.query.params));
       const queryParams = JSON.parse(Base64.decode(this.$route.query.params));
-      console.log("awd", queryParams);
       if (this.decodedQueryParams.view || this.decodedQueryParams.editable) {
         const requestId = queryParams.requestId;
         await this.fetchRequestById(requestId);
@@ -261,7 +260,6 @@ export default {
       return this.decodedQueryParams[mode] === true;
     },
     openFulfillProductDialog(product) {
-      console.log("product", product);
       this.editedItem = { ...product };
       this.editedItem.createdByStr = this.submissionDetail.createdByStr;
       this.dialogProductFulfillment = true;
@@ -271,7 +269,6 @@ export default {
       this.dialogProduct = true;
     },
     openEditProductDialog(product) {
-      console.log("product", product);
       this.selectedProduct = { ...product };
       this.$nextTick(() => {
         this.dialogProduct = true;
@@ -634,7 +631,6 @@ export default {
           additionalInfo: populatedReason.additionalText || null
         });
       });
-      console.log("awd", this.productsToShow);
     },
     async fetchRequestById(id) {
       try {

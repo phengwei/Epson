@@ -1,20 +1,18 @@
 ﻿using OtpNet;
-using System.Runtime.InteropServices;
-using ZXing;
-using ZXing.Common;
+using QRCoder;
 using System;
-using System.Drawing;
-using System.Linq;
-using System.Drawing.Imaging;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
+using System.IO;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Png;
 using ZXing.QrCode;
-using ZXing.Windows.Compatibility;
+using ZXing;
 
 namespace Epson.Extensions
 {
     public class TOTPManager
     {
-
         private readonly string _issuer;
         private readonly string _accountName;
         private readonly byte[] _secretKey;
@@ -38,46 +36,25 @@ namespace Epson.Extensions
             return totpUrl;
         }
 
-        private Bitmap GenerateQrCode(string provisioningUri)
+        public string GenerateQRString(string provisioningUri)
         {
-            QrCodeEncodingOptions options = new()
-            {
-                DisableECI = true,
-                CharacterSet = "UTF-8",
-                Width = 500,
-                Height = 500
-            };
-
-            BarcodeWriter writer = new()
+            var qrWriter = new BarcodeWriterPixelData
             {
                 Format = BarcodeFormat.QR_CODE,
-                Options = options
+                Options = new QrCodeEncodingOptions
+                {
+                    Height = 500,
+                    Width = 500,
+                    Margin = 0
+                }
             };
 
-            Bitmap qrcode = writer.Write(provisioningUri);
-            return qrcode;
-        }
+            var pixelData = qrWriter.Write(provisioningUri);
 
-        private string GenerateQRString(string provisioningUri)
-        {
-            QrCodeEncodingOptions options = new()
+            using (var image = Image.LoadPixelData<Rgba32>(pixelData.Pixels, pixelData.Width, pixelData.Height))
+            using (var ms = new MemoryStream())
             {
-                DisableECI = true,
-                CharacterSet = "UTF-8",
-                Width = 500,
-                Height = 500
-            };
-
-            BarcodeWriter writer = new()
-            {
-                Format = BarcodeFormat.QR_CODE,
-                Options = options
-            };
-
-            Bitmap qrcode = writer.Write(provisioningUri);
-            using (MemoryStream ms = new MemoryStream())
-            {
-                qrcode.Save(ms, ImageFormat.Png);
+                image.Save(ms, new PngEncoder());
                 byte[] qrCodeBytes = ms.ToArray();
                 return Convert.ToBase64String(qrCodeBytes);
             }
@@ -92,7 +69,6 @@ namespace Epson.Extensions
         public string GenerateMSOTP()
         {
             string totpUrl = $"otpauth://totp/{Uri.EscapeDataString(_issuer)}:{Uri.EscapeDataString(_accountName)}?secret={Uri.EscapeDataString(Base32Encoding.ToString(_secretKey))}&issuer={Uri.EscapeDataString(_issuer)}";
-
             return GenerateQRString(totpUrl);
         }
 
@@ -101,6 +77,5 @@ namespace Epson.Extensions
             var validator = new Totp(_secretKey);
             return validator.VerifyTotp(code, out long timeStepMatched);
         }
-
     }
 }
