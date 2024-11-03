@@ -5,7 +5,11 @@
         <h4>HOLIDAY CALENDAR</h4>
       </div>
       <div class="holiday-calendar">
-        <holidaydatepicker :existing-holidays="existingHolidays" :is-editable="false" class="full-width-datepicker"></holidaydatepicker>
+        <holidaydatepicker :existing-holidays="existingHolidays"
+                           :is-editable="false"
+                           class="full-width-datepicker"
+                           @input="updateHolidayDate"></holidaydatepicker>
+
       </div>
       <form class="form-container">
         <div class="form-group">
@@ -46,40 +50,33 @@
       };
     },
     methods: {
+      updateHolidayDate(date) {
+        const adjustedDate = new Date(date);
+        adjustedDate.setDate(adjustedDate.getDate() + 1);
+        adjustedDate.setHours(0, 0, 0, 0);
+        this.holidayDate = adjustedDate;
+      },
       resetForm() {
         this.description = '';
         this.isAdhoc = false;
+        this.holidayDate = null; 
       },
       async saveSLAHoliday() {
+        if (!this.holidayDate) {
+          Swal.fire({
+            title: 'Error!',
+            text: 'Please select a holiday date.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+          return;
+        }
+        const formattedDate = this.holidayDate.toISOString().split('T')[0];
+
         try {
-          const holidayDateString = new Date(this.holidayDate).toISOString();
-          const holidayDate = new Date(holidayDateString);
-          holidayDate.setHours(holidayDate.getHours() - 8);
-          const updatedHolidayDateString = holidayDate.toISOString();
-
-          if (this.existingHolidays.includes(updatedHolidayDateString)) {
-            Swal.fire({
-              title: 'Error!',
-              text: 'This date is already a holiday.',
-              icon: 'error',
-              confirmButtonText: 'OK'
-            });
-            return;
-          }
-
-          if (!this.holidayDate) {
-            Swal.fire({
-              title: 'Error!',
-              text: 'Please select a holiday date.',
-              icon: 'error',
-              confirmButtonText: 'OK'
-            });
-            return;
-          }
-
           await this.$axios.post(`${this.$config.restUrl}/api/sla/addslaholiday`, {
             data: {
-              Date: this.holidayDate,
+              Date: formattedDate, 
               Description: this.description,
               IsAdhoc: this.isAdhoc
             }

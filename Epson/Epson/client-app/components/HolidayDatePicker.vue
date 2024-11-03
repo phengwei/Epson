@@ -1,5 +1,7 @@
 <template>
-  <Datepicker :disabled-dates="disabledDatesObject" inline></Datepicker>
+  <Datepicker :disabled-dates="disabledDatesObject"
+              inline
+              @selected="onDateSelected"></Datepicker>
 </template>
 
 <script>
@@ -23,6 +25,11 @@
       disabledDatesObject() {
         const dates = this.existingHolidays.map(date => new Date(date));
         return { dates };
+      }
+    },
+    methods: {
+      onDateSelected(date) {
+        this.$emit('input', date); 
       }
     }
   }

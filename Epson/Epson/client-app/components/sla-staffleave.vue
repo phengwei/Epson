@@ -131,12 +131,15 @@
       },
       async saveSLAStaffLeave() {
         try {
-          await this.$axios.post(`${this.$config.restUrl}/api/sla/addslastaffleave`, {
-            startDate: this.startDate,
-            endDate: this.endDate,
-            reason: this.reason,
-            staffId: this.selectedStaff
-          });
+          const payload = {
+            Data: {
+              StaffId: this.selectedStaff,
+              StartDate: this.startDate,
+              EndDate: this.endDate,
+              Reason: this.reason
+            }
+          };
+          await this.$axios.post(`${this.$config.restUrl}/api/sla/addslastaffleave`, payload);
           Swal.fire({
             title: 'Success!',
             text: 'SLA staff leave added successfully.',
