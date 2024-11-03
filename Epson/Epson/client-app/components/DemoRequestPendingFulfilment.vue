@@ -131,22 +131,22 @@
           .then(result => {
             this.itemsPendingFulfilment = [];
 
-            if (result.data && result.data.data && result.data.data.items && result.data.data.items.length > 0) {
-              result.data.data.items.forEach(item => {
+            if (result.data && result.data.data) {
+              result.data.data.forEach(item => {
                 const newItem = {
                   requestId: item.id,
                   projectName: item.projectInformation && item.projectInformation.projectName ? item.projectInformation.projectName : 'N/A',
                   createdOnUTC: moment(item.createdOnUTC).format('DD MMM YY HH:mm'),
                   createdByStr: item.createdByStr,
                   categories: item.categories
-                }
+                };
 
                 this.itemsPendingFulfilment.push(newItem);
               });
-              this.totalItems = result.data.data.total;
+              this.totalItems = result.data.count || this.itemsPendingFulfilment.length;
             } else {
               this.itemsPendingFulfilment = [];
-              this.totalItems = 0; 
+              this.totalItems = 0;
             }
 
             this.loading = false;

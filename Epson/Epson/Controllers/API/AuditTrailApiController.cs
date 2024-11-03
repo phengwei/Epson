@@ -51,7 +51,7 @@ namespace Epson.Controllers.API
 
             int totalItems;
 
-            var auditTrails = _auditTrailService.GetRequestAuditTrails(out totalItems, null, search, page, itemsPerPage).OrderByDescending(x => x.CreatedOnUTC).ToList();
+            var auditTrails = _auditTrailService.GetRequestAuditTrails(out totalItems, null, search, page, itemsPerPage).Where(x => x.Entity == "Request").OrderByDescending(x => x.CreatedOnUTC).ToList();
 
             response.Data = auditTrails;
             response.Count = totalItems;

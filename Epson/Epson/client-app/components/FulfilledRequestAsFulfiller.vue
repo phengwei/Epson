@@ -176,7 +176,7 @@
               }, new Date(0));
 
               let overallRequestStatusString;
-              if (item.approvalState > 50) {
+              if (item.approvalState > 50 && item.approvalState !== 120) {
                 overallRequestStatusString = 'Failed';
               } else if (item.approvalState === 50) {
                 overallRequestStatusString = 'Approved';

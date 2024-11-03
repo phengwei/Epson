@@ -41,7 +41,7 @@
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
                   <th>SLA Type</th> 
-                  <th v-if="isViewMode">Sales Head Approved Time</th>
+                  <th v-if="isViewMode">Approved Time</th>
                   <th v-if="isFulfillMode">Fulfill</th>
                   <th v-if="!isViewMode">Action</th>
                 </tr>
@@ -69,10 +69,12 @@
                     </span>
                   </td>
                   <td>
-                    <template v-if="isFulfillMode && product.statusStr != 'Approved'">
-                      <select v-model="product.sla" class="sla-select">
-                        <option v-for="type in slaTypes" :key="type" :value="type">{{ type }}</option>
-                      </select>
+                    <template v-if="isFulfillMode && product.statusStr != 'Approved' && product.authorizedToFulfill">
+                      <div class="sla-select-wrapper">
+                        <select v-model="product.sla" class="sla-select" :disabled="!product.authorizedToFulfill">
+                          <option v-for="type in slaTypes" :key="type" :value="type">{{ type }}</option>
+                        </select>
+                      </div>
                     </template>
                     <template v-else>
                       {{ product.sla }}
@@ -173,10 +175,12 @@
                     </span>
                   </td>
                   <td>
-                    <template v-if="isFulfillMode && coverplus.statusStr != 'Approved'">
-                      <select v-model="coverplus.sla" class="sla-select">
-                        <option v-for="type in slaTypes" :key="type" :value="type">{{ type }}</option>
-                      </select>
+                    <template v-if="isFulfillMode && coverplus.statusStr != 'Approved' && coverplus.authorizedToFulfill">
+                      <div class="sla-select-wrapper">
+                        <select v-model="coverplus.sla" class="sla-select" :disabled="!coverplus.authorizedToFulfill">
+                          <option v-for="type in slaTypes" :key="type" :value="type">{{ type }}</option>
+                        </select>
+                      </div>
                     </template>
                     <template v-else>
                       {{ coverplus.sla }}
@@ -689,6 +693,37 @@
     width: 100vw;
     height: 100vh;
     z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  select.sla-select {
+    background-color: transparent;
+    border: 1px solid #FFF;
+    border-radius: 4px;
+    padding: 4px 8px;
+    width: 100%;
+    font-size: inherit;
+    color: #333;
+    appearance: none; 
+    text-align: center;
+    cursor: pointer;
+  }
+
+    select.sla-select:focus {
+      outline: none;
+      border-color: #003399;
+      box-shadow: 0 0 4px rgba(0, 51, 153, 0.3);
+    }
+
+    select.sla-select option {
+      color: #333;
+      font-size: 1rem;
+      padding: 4px;
+    }
+
+  .sla-select-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;

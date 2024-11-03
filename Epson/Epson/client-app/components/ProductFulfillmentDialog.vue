@@ -105,7 +105,12 @@
         return `${year}-${month}-${day}T${hours}:${minutes}`;
       },
       fulfillRequest() {
-        if (this.localEditedItem && this.localEditedItem.fulfilledPrice !== null && this.localEditedItem.fulfilledPrice > 0) {
+        if (!this.localEditedItem.sla) {
+          this.$swal('Error', 'Please select an SLA Type before fulfilling the request.', 'error');
+          return;
+        }
+
+        if (this.localEditedItem.fulfilledPrice !== null && this.localEditedItem.fulfilledPrice > 0) {
           Swal.fire({
             title: 'Fulfill Request',
             text: 'Are you sure you want to fulfill this request?',
@@ -125,40 +130,39 @@
                 });
             }
           });
-        }
-        else {
+        } else {
           this.$swal('Error', 'Please fill in all fields!', 'error');
         }
       },
       fulfillCoverplusDivisionRequest() {
-        if (this.localEditedItem) {
-          Swal.fire({
-            title: 'Approve Request',
-            text: 'Are you sure you want to approve this request?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Fulfill',
-          }).then((result) => {
-            if (result.isConfirmed) {
-              this.$axios.post(`${this.$config.restUrl}/api/request/fulfilldivisioncoverplusrequest?id=${this.localEditedItem.id}&productId=${this.localEditedItem.productId}&remarks=${this.localEditedItem.remarks}`)
-                .then(response => {
-                  this.close();
-                  Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success')
-                    .then(() => {
-                      location.reload();
-                    });
-                }).catch(error => {
-                  console.log('error', error);
-                  Swal.fire('Error', 'Failed to fulfill request', 'error');
-                });
-            }
-          });
+        if (!this.localEditedItem.sla) {
+          this.$swal('Error', 'Please select an SLA Type before approving the request.', 'error');
+          return;
         }
-        else {
-          this.$swal('Error', 'Please fill in all fields!', 'error');
-        }
+
+        Swal.fire({
+          title: 'Approve Request',
+          text: 'Are you sure you want to approve this request?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Fulfill',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.$axios.post(`${this.$config.restUrl}/api/request/fulfilldivisioncoverplusrequest?id=${this.localEditedItem.id}&productId=${this.localEditedItem.productId}&remarks=${this.localEditedItem.remarks}`)
+              .then(response => {
+                this.close();
+                Swal.fire('Fulfilled!', 'Request has been fulfilled.', 'success')
+                  .then(() => {
+                    location.reload();
+                  });
+              }).catch(error => {
+                console.log('error', error);
+                Swal.fire('Error', 'Failed to fulfill request', 'error');
+              });
+          }
+        });
       },
       rejectRequest() {
         if (this.localEditedItem.remarks !== "" && this.localEditedItem.remarks !== null) {

@@ -179,6 +179,18 @@ export default {
   },
   methods: {
     fulfillSelectedProducts() {
+      // Check if all selected products have an SLA type
+      const missingSla = this.selectedProducts.some(productId => {
+        const product = this.productsToShow.find(p => p.id === productId);
+        return !product || !product.sla;
+      });
+
+      if (missingSla) {
+        this.$swal('Error', 'Please select an SLA Type for all selected products before fulfilling.', 'error');
+        return;
+      }
+
+      // Existing fulfillment logic
       this.$swal({
         title: 'Fulfill Requests?',
         icon: 'warning',
@@ -188,12 +200,11 @@ export default {
         confirmButtonText: 'Yes, fulfill it!'
       }).then((result) => {
         if (result.isConfirmed) {
-          // Create the payload as an array of FulfillRequestDTO objects
           const payload = this.selectedProducts.map(productId => {
             const product = this.productsToShow.find(p => p.id === productId);
             return {
               id: productId,
-              sla: product ? product.sla : 'Local' // Default to 'Local' if sla is not defined
+              sla: product.sla
             };
           });
 
@@ -201,8 +212,19 @@ export default {
         }
       });
     },
-
     fulfillSelectedCoverpluses() {
+      // Check if all selected coverpluses have an SLA type
+      const missingSla = this.selectedCoverpluses.some(coverplusId => {
+        const coverplus = this.coverplusesToShow.find(c => c.id === coverplusId);
+        return !coverplus || !coverplus.sla;
+      });
+
+      if (missingSla) {
+        this.$swal('Error', 'Please select an SLA Type for all selected coverpluses before fulfilling.', 'error');
+        return;
+      }
+
+      // Existing fulfillment logic
       this.$swal({
         title: 'Fulfill Requests?',
         icon: 'warning',
@@ -212,12 +234,11 @@ export default {
         confirmButtonText: 'Yes, fulfill it!'
       }).then((result) => {
         if (result.isConfirmed) {
-          // Create the payload as an array of FulfillRequestDTO objects
           const payload = this.selectedCoverpluses.map(coverplusId => {
             const coverplus = this.coverplusesToShow.find(c => c.id === coverplusId);
             return {
               id: coverplusId,
-              sla: coverplus ? coverplus.sla : 'Local' // Default to 'Local' if sla is not defined
+              sla: coverplus.sla
             };
           });
 
@@ -225,7 +246,6 @@ export default {
         }
       });
     },
-
     async fulfillRequests(payload) {
       try {
         await this.$axios.post(`${this.$config.restUrl}/api/request/fulfillrequests`, payload);

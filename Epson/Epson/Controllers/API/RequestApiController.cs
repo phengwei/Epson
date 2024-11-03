@@ -335,7 +335,7 @@ namespace Epson.Controllers.API
             if (existingDrafts != null && existingDrafts.Count > 0)
             {
                 existingDrafts = existingDrafts.Where(d => d.isDefault)
-                                               .ToList();
+                                                .ToList();
 
                 foreach (var draft in existingDrafts)
                 {
@@ -374,7 +374,7 @@ namespace Epson.Controllers.API
             {
                 return BadRequest("Failed to create draft.");
             }
-        }
+    }
 
 
         [HttpPost("defaultdraft")]

@@ -1086,6 +1086,7 @@ namespace Epson.Services.Services.Email
 
             HashSet<string> uniqueEmails = new HashSet<string>(backupFulfillerEmails);
             uniqueEmails.Add("hanson.ong@emsb.epson.com.my");
+            uniqueEmails.Add("michelle.yau@emsb.epson.com.my");
 
             if (uniqueEmails.Contains(fulfillerTask.Result.Email))
             {

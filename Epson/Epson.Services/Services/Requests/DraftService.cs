@@ -115,9 +115,9 @@ namespace Epson.Services.Services.Requests
 
         public List<DraftDTO> GetDraftsByUserId(string userId)
         {
-            var draft = _context.Draft.Where(d => d.UserId == userId).ToList();
+            var draft = _context.Draft?.Where(d => d.UserId == userId).ToList();
 
-            return draft.Count > 0 ? _mapper.Map<List<DraftDTO>>(draft) : null;
+            return draft != null && draft.Count > 0 ? _mapper.Map<List<DraftDTO>>(draft) : null;
         }
 
 
