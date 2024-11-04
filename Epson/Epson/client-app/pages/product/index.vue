@@ -314,7 +314,8 @@
                   try {
                       if (this.editedIndex > -1) {
                           await this.$axios.post(`${this.$config.restUrl}/api/product/editproduct`, {
-                              data: {
+                            data: {
+                                sku: this.editedItem.sku,
                                   id: this.editedItem.id,
                                   name: this.editedItem.name,
                                   price: this.editedItem.price,

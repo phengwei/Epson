@@ -35,6 +35,6 @@ namespace Epson.Model.Request
         public bool AuthorizedToFulfill { get; set; }
         public bool HasReminded { get; set; }
         public string ProjectName { get; set; }
-        public string sla { get; set; }
+        public string? sla { get; set; }
     }
 }
