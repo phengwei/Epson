@@ -53,46 +53,50 @@ namespace Epson.Job
                                  && dbContext.ProjectInformation.Any(p => p.RequestId == r.Id)))
                 .ToListAsync();
 
-            List<RequestProduct> requestProductsToNotify = new List<RequestProduct>();
+            var groupedRequestProducts = requestProducts
+                .GroupBy(rp => rp.RequestId)
+                .ToList();
 
-            foreach (var rp in requestProducts)
+            List<EmailQueue> emailQueues = new List<EmailQueue>();
+
+            foreach (var requestProductGroup in groupedRequestProducts)
             {
-                var request = await dbContext.Request.Where(x => x.Id == rp.RequestId).FirstAsync();
+                var requestId = requestProductGroup.Key;
+                var request = await dbContext.Request.FirstOrDefaultAsync(x => x.Id == requestId);
 
                 if (request != null)
                 {
                     var referenceTime = request.AmendQuotationTime ?? request.ApprovedTime;
                     int workingDays = 0;
 
-                    if (rp.SLA == "Local")
+                    List<RequestProduct> productsToNotify = new List<RequestProduct>();
+                    foreach (var rp in requestProductGroup)
                     {
-                        workingDays = 3;
-                    }
-                    else if (rp.SLA == "Regional")
-                    {
-                        workingDays = 5;
-                    }
-                    else if (rp.SLA == "SEC")
-                    {
-                        workingDays = 10;
+                        if (rp.SLA == "Local")
+                            workingDays = 3;
+                        else if (rp.SLA == "Regional")
+                            workingDays = 5;
+                        else if (rp.SLA == "SEC")
+                            workingDays = 10;
+
+                        if (referenceTime != DateTime.MinValue && referenceTime.AddWorkingDays(workingDays) <= DateTime.UtcNow)
+                        {
+                            productsToNotify.Add(rp);
+                        }
                     }
 
-                    if (referenceTime != DateTime.MinValue && referenceTime.AddWorkingDays(workingDays) <= DateTime.UtcNow)
+                    if (productsToNotify.Any())
                     {
-                        requestProductsToNotify.Add(rp);
+                        var queues = await emailService.CreateReminderEmailQueue(productsToNotify);
+                        emailQueues.AddRange(queues);
+
+                        foreach (var rp in productsToNotify)
+                        {
+                            rp.HasReminded = true;
+                            requestProductRepository.Update(rp);
+                        }
                     }
                 }
-            }
-
-
-            List<EmailQueue> emailQueues = new List<EmailQueue>();
-
-            foreach (var requestProduct in requestProductsToNotify)
-            {
-                var queues = await emailService.CreateReminderEmailQueue(requestProduct);
-                emailQueues.AddRange(queues);
-                requestProduct.HasReminded = true;
-                requestProductRepository.Update(requestProduct);
             }
 
             foreach (var emailQueue in emailQueues)
@@ -100,6 +104,7 @@ namespace Epson.Job
                 emailService.InsertEmailQueue(emailQueue);
             }
         }
+
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
