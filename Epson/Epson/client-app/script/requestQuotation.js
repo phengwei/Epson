@@ -322,7 +322,7 @@ export default {
             .then(response => {
               Swal.fire('Amended!', 'Request is in amend stage.', 'success')
                 .then(() => {
-                  window.location.href = '/request';
+                  location.reload();
                 });
             }).catch(error => {
               console.log('error', error);
@@ -348,7 +348,7 @@ export default {
               this.closeDialogProductFulfillment();
               Swal.fire('Approved!', 'Quotation is successfully approved.', 'success')
                 .then(() => {
-                  window.location.href = '/request';
+                  location.reload();
                 });
             }).catch(error => {
               console.log('error', error);
@@ -374,7 +374,7 @@ export default {
               this.closeDialogProductFulfillment();
               Swal.fire('Approved!', 'Quotation is successfully rejected.', 'success')
                 .then(() => {
-                  window.location.href = '/request';
+                  location.reload();
                 });
             }).catch(error => {
               console.log('error', error);
@@ -402,7 +402,7 @@ export default {
             .then(response => {
               Swal.fire('Done!', 'Request is successfully approved.', 'success')
                 .then(() => {
-                  window.location.href = '/request';
+          location.reload();
                 });
             }).catch(error => {
               console.log('error', error);
@@ -782,7 +782,7 @@ export default {
             if (response.status === 200) {
               Swal.fire('Closed deal!', '', 'success')
                 .then(() => {
-                  window.location.href = '/request';
+                  location.reload();
                 });
             }
           } else if (result.isDenied) {
@@ -811,7 +811,7 @@ export default {
             if (response.status === 200) {
               Swal.fire('Closed!', '', 'success')
                 .then(() => {
-                  window.location.href = '/request';
+                  location.reload();
                 });
             }
           } else if (result.isDenied) {
