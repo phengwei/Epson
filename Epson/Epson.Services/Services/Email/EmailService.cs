@@ -954,171 +954,125 @@ namespace Epson.Services.Services.Email
             }
         }
 
-        public async Task<List<EmailQueue>> CreateReminderEmailQueue(RequestProduct requestProduct)
+        public async Task<List<EmailQueue>> CreateReminderEmailQueue(List<RequestProduct> requestProducts)
         {
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
-            var fulfillerTask = _userManager.FindByIdAsync(requestProduct.FulfillerId);
-            var product = _productService.GetProductById(requestProduct.ProductId);
-            var productCategories = _productService.GetCategoryIdsByProductId(requestProduct.ProductId);
-            List<string> backupFulfillerEmails = new List<string>();
+            if (emailAccount == null)
+                return new List<EmailQueue>();
 
-            foreach (var pc in productCategories)
+            List<EmailQueue> emailQueueList = new List<EmailQueue>();
+
+            var groupedRequestProducts = requestProducts
+                .GroupBy(rp => rp.RequestId)
+                .ToList();
+
+            foreach (var requestGroup in groupedRequestProducts)
             {
-                var category = _categoryService.GetCategoryById(pc.CategoryId);
+                var requestId = requestGroup.Key;
+                var productsForRequest = requestGroup.ToList();
 
-                var backupFulfiller1 = await _userManager.FindByIdAsync(category.BackupFulfiller1);
-                var backupFulfiller2 = await _userManager.FindByIdAsync(category.BackupFulfiller2);
+                var requesterTask = _userManager.FindByIdAsync(_RequestRepository.GetById(requestId).CreatedById);
+                var requester = await requesterTask;
+                string productDetails = "";
 
-                if (backupFulfiller1 != null)
+                foreach (var requestProduct in productsForRequest)
                 {
-                    backupFulfillerEmails.Add(backupFulfiller1.Email);
-                }
-                if (backupFulfiller2 != null)
-                {
-                    backupFulfillerEmails.Add(backupFulfiller2.Email);
-                }
-            }
+                    var product = _productService.GetProductById(requestProduct.ProductId);
+                    var projectInfo = _ProjectInformationRepository
+                        .GetAll()
+                        .FirstOrDefault(x => x.RequestId == requestProduct.RequestId);
 
-            var requesterTask = _userManager.FindByIdAsync(_RequestRepository.GetById(requestProduct.RequestId).CreatedById);
-            var requester = await requesterTask;
+                    productDetails += $@"
+                    <tr>
+                        <td>{product.Name}</td>
+                        <td>{requestProduct.Quantity}</td>
+                        <td>RM {requestProduct.EndUserPrice}</td>
+                        <td>{projectInfo?.ProjectName ?? "N/A"}</td>
+                    </tr>";
+                        }
 
-            var subject = $"Request {requestProduct.RequestId} due soon!";
-
-            var body = $@"
+                        var body = $@"
                 <!DOCTYPE html>
                 <html lang='en'>
-                <head>
-                <meta charset='UTF-8'>
-                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-                <style>
-                    body {{
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        margin: 0;
-                        padding: 0;
-                        background-color: #f4f4f4;
-                    }}
-                    .email-container {{
-                        max-width: 600px;
-                        margin: auto;
-                        background: #ffffff;
-                        padding: 20px;
-                        border: 1px solid #dddddd;
-                    }}
-                    .email-header {{
-                        background-color: #004aad;
-                        color: white;
-                        padding: 10px 20px;
-                        text-align: center;
-                    }}
-                    .email-body {{
-                        padding: 20px;
-                        line-height: 1.5;
-                        color: #333333;
-                    }}
-                    .email-footer {{
-                        text-align: center;
-                        padding: 10px 20px;
-                        background-color: #004aad;
-                        color: white;
-                    }}
-                    table {{
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-top: 20px;
-                    }}
-                    th, td {{
-                        padding: 10px;
-                        border: 1px solid #dddddd;
-                        text-align: left;
-                    }}
-                    th {{
-                        background-color: #f2f2f2;
-                    }}
-                </style>
-                </head>
+                <head> ... </head>
                 <body>
                     <div class='email-container'>
                         <div class='email-header'>
                             <h1>Reminder</h1>
                         </div>
                         <div class='email-body'>
-                            <p><strong>Request {requestProduct.RequestId}</strong> is due soon with the following details:</p>
-                            <table>                    
-                                <tr>
-                                    <th>Org</th>
-                                    <td>EMSB - {_userService.GetTeamById(requester.TeamId).Name}</td>
-                                </tr>
-                                <tr>
-                                    <th>Requester</th>
-                                    <td>{requester.UserName}</td>
-                                </tr>
-                                <tr>
-                                    <th>Product</th>
-                                    <td>{product.Name}</td>
-                                </tr>
-                                <tr>
-                                    <th>Quantity</th>
-                                    <td>{requestProduct.Quantity}</td>
-                                </tr>
-                                <tr>
-                                    <th>End User Price</th>
-                                    <td>RM {requestProduct.EndUserPrice}</td>
-                                </tr>
-                                <tr>
-                                    <th>Request Created On</th>
-                                    <td>{requestProduct.CreatedOnUTC:MM/dd/yyyy HH:mm:ss}</td>
-                                </tr>
-                                <tr>
-                                    <th>End User</th>
-                                    <td>{_ProjectInformationRepository.GetAll().FirstOrDefault(x => x.RequestId == requestProduct.RequestId)?.ProjectName}</td>
-                                </tr>
+                            <p><strong>Request {requestId}</strong> is due soon with the following details:</p>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>End User Price</th>
+                                        <th>End User</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {productDetails}
+                                </tbody>
                             </table>
                         </div>
                     </div>
                 </body>
                 </html>";
 
-            if (emailAccount == null)
-                return new List<EmailQueue>();
+                var fulfillerTask = _userManager.FindByIdAsync(productsForRequest[0].FulfillerId);
+                var fulfiller = await fulfillerTask;
+                List<string> backupFulfillerEmails = new List<string>();
 
-            List<EmailQueue> emailQueues = new List<EmailQueue>();
-            List<ApplicationUser> ccSalesHead = await _userService.GetUserSalesHead(fulfillerTask.Result.TeamId, requester.Id);
+                foreach (var product in productsForRequest)
+                {
+                    var productCategories = _productService.GetCategoryIdsByProductId(product.ProductId);
+                    foreach (var pc in productCategories)
+                    {
+                        var category = _categoryService.GetCategoryById(pc.CategoryId);
+                        var backupFulfiller1 = await _userManager.FindByIdAsync(category.BackupFulfiller1);
+                        var backupFulfiller2 = await _userManager.FindByIdAsync(category.BackupFulfiller2);
 
-            HashSet<string> uniqueEmails = new HashSet<string>(backupFulfillerEmails);
-            uniqueEmails.Add("hanson.ong@emsb.epson.com.my");
-            uniqueEmails.Add("michelle.yau@emsb.epson.com.my");
+                        if (backupFulfiller1 != null) backupFulfillerEmails.Add(backupFulfiller1.Email);
+                        if (backupFulfiller2 != null) backupFulfillerEmails.Add(backupFulfiller2.Email);
+                    }
+                }
 
-            if (uniqueEmails.Contains(fulfillerTask.Result.Email))
-            {
-                uniqueEmails.Remove(fulfillerTask.Result.Email);
-            }
+                HashSet<string> uniqueEmails = new HashSet<string>(backupFulfillerEmails);
+                uniqueEmails.Add("hanson.ong@emsb.epson.com.my");
+                uniqueEmails.Add("michelle.yau@emsb.epson.com.my");
 
-            foreach (var user in ccSalesHead)
-            {
-                if (!uniqueEmails.Contains(user.Email))
+                if (uniqueEmails.Contains(fulfiller.Email))
+                {
+                    uniqueEmails.Remove(fulfiller.Email);
+                }
+
+                // Add original CC logic as is
+                List<ApplicationUser> ccSalesHead = await _userService.GetUserSalesHead(fulfiller.TeamId, requester.Id);
+                foreach (var user in ccSalesHead)
                 {
                     uniqueEmails.Add(user.Email);
                 }
+
+                string ccEmails = string.Join(",", uniqueEmails);
+
+                var emailQueue = new EmailQueue
+                {
+                    FromEmail = emailAccount.Username,
+                    ToEmail = fulfiller.Email,
+                    Subject = $"Request {requestId} due soon!",
+                    Body = body,
+                    ScheduleTime = DateTime.UtcNow,
+                    SendAttempts = 0,
+                    SentTime = null,
+                    Cc = ccEmails,
+                    EmailAccountId = emailAccount.Id
+                };
+
+                emailQueueList.Add(emailQueue);
             }
 
-            string ccEmails = string.Join(",", uniqueEmails);
-
-            var emailQueue = new EmailQueue
-            {
-                FromEmail = emailAccount.Username,
-                ToEmail = fulfillerTask.Result.Email,
-                Subject = subject,
-                Body = body,
-                ScheduleTime = DateTime.UtcNow,
-                SendAttempts = 0,
-                SentTime = null,
-                Cc = ccEmails,
-                EmailAccountId = emailAccount.Id
-            };
-
-            emailQueues.Add(emailQueue);
-
-            return emailQueues;
+            return emailQueueList;
         }
 
 
