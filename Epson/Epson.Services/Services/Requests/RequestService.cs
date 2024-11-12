@@ -887,7 +887,7 @@ namespace Epson.Services.Services.Requests
             var projectInformation = _ProjectInformationRepository.GetAll()
                  .FirstOrDefault(x => x.RequestId == request.Id) ?? new ProjectInformation { ClosingDate = DateTime.MinValue };
 
-            request.ApprovalState = (int)ApprovalStateEnum.DealExited;
+            request.ApprovalState = (int)ApprovalStateEnum.Cancelled;
             request.ApprovedBy = user.Id;
             request.ApprovedTime = DateTime.UtcNow;
             request.UpdatedOnUTC = DateTime.UtcNow;
@@ -895,19 +895,23 @@ namespace Epson.Services.Services.Requests
             request.TimeToResolution = CalculateResolutionTime(request.ApprovedTime, request.CreatedOnUTC, _slaService.GetSLAStaffLeavesByStaffId(user.Id), _slaService.GetSLAHolidays());
             request.Comments = comments;
 
-            if (DateTime.UtcNow > request.CreatedOnUTC.AddWorkingDays(5))
-                request.Breached = true;
+            //if (DateTime.UtcNow > request.CreatedOnUTC.AddWorkingDays(5))
+            //    request.Breached = true;
 
             try
             {
                 _RequestRepository.Update(request);
-                _logger.Information("Rejecting deal of request {id}", request.Id);
-                
+                _logger.Information("Cancelling request {id}", request.Id);
+
+
+                string actionDetails = $"{user.UserName} cancelled request {request.Id} ";
+                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, user.Id, actionDetails, "Cancel");
+
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error rejecting deal of request {requestid}", request.Id);
+                _logger.Error(ex, "Error cancelling request {requestid}", request.Id);
                 return false;
             }
         }

@@ -772,7 +772,7 @@ export default {
     exitDeal() {
       try {
         Swal.fire({
-          title: 'Are you sure you want to close this deal?',
+          title: 'Are you sure you want to cancel this request?',
           showDenyButton: true,
           confirmButtonText: `Proceed`,
           denyButtonText: `Cancel`,
@@ -780,13 +780,13 @@ export default {
           if (result.isConfirmed) {
             const response = await this.$axios.post(`${this.$config.restUrl}/api/request/exitdeal?id=${this.currentRequest.id}`);
             if (response.status === 200) {
-              Swal.fire('Closed deal!', '', 'success')
+              Swal.fire('Cancelled Request!', '', 'success')
                 .then(() => {
                   location.reload();
                 });
             }
           } else if (result.isDenied) {
-            Swal.fire('Deal not closed', '', 'info')
+            Swal.fire('Request not cancelled', '', 'info')
           }
         })
       } catch (err) {
@@ -794,7 +794,7 @@ export default {
         Swal.fire({
           icon: 'error',
           title: 'Oops...',
-          text: err.response ? err.response.data.message : "Failed to close deal!"
+          text: err.response ? err.response.data.message : "Failed to cancel request!"
         });
       }
     },
