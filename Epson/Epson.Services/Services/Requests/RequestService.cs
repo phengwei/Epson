@@ -1251,7 +1251,7 @@ namespace Epson.Services.Services.Requests
                 }
                 else if (rp.SLA == "Regional")
                 {
-                    workingDays = 8;
+                    workingDays = 5;
                 }
                 else if (rp.SLA == "SEC")
                 {
@@ -1375,7 +1375,7 @@ namespace Epson.Services.Services.Requests
             }
             else if (requestProductToFulfill.SLA == "Regional")
             {
-                workingDays = 8;
+                workingDays = 5;
             }
             else if (requestProductToFulfill.SLA == "SEC")
             {
