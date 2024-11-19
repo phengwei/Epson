@@ -79,6 +79,14 @@ namespace Epson.Data.Context
                     .HasForeignKey<ProjectInformation>(pi => pi.RequestId);
             });
 
+            builder.Entity<Product>(entity =>
+            {
+                entity.ToTable("Product");
+                entity.HasMany(r => r.ProductCategories)
+                    .WithOne(ci => ci.Product)
+                    .HasForeignKey(ci => ci.ProductId);
+            });
+
             builder.Entity<RequestProduct>(entity =>
             {
                 entity.ToTable("RequestProduct");

@@ -15,6 +15,7 @@ namespace Epson.Services.Interface.Products
         public List<ProductDTO> GetProductsByIds(List<int> ids);
         public List<ProductCategory> GetCategoryIdsByProductId(int id);
         public List<ProductCategory> GetProductCategoriesByProductIds(List<int> productIds);
+        Task<List<ProductDTO>> GetProductsV2();
         public List<ProductDTO> GetProducts();
         public List<ProductDTO> GetProductsByCategory(int categoryId);
         public List<ProductCategory> GetProductCategoriesByProductId(int productId);

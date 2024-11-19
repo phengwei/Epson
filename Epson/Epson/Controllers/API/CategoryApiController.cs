@@ -9,6 +9,7 @@ using Epson.Model.Categories;
 using Epson.Core.Domain.Categories;
 using Epson.Services.Interface.Products;
 using Microsoft.IdentityModel.Abstractions;
+using Epson.Services.DTO.Categories;
 
 namespace Epson.Controllers.API
 {
@@ -50,6 +51,27 @@ namespace Epson.Controllers.API
             var categoryModel = _categoryModelFactory.PrepareCategoryModel(category);
 
             response.Data = categoryModel;
+            return Ok(response);
+        }
+
+        [HttpGet("getProductManagerCategories")]
+        public async Task<IActionResult> GetProductManagerCategories()
+        {
+            var currentUser = _workContext.CurrentUser;
+            var response = new GenericResponseModel<List<CategoryModel>>();
+
+            List<CategoryDTO> categories = new List<CategoryDTO>();
+
+            if (currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Director"))
+                categories = _categoryService.GetCategories();
+            else
+                categories = _categoryService.GetCategories().Where(x => x.BackupFulfiller1 == currentUser.Id).ToList();
+
+
+            var categoryModels = _categoryModelFactory.PrepareCategoryModels(categories);
+
+            response.Data = categoryModels;
+
             return Ok(response);
         }
 

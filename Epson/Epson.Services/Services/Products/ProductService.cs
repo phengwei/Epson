@@ -8,12 +8,15 @@ using Epson.Services.Interface.AuditTrails;
 using Epson.Core.Domain.Categories;
 using Epson.Core.Domain.Requests;
 using Epson.Services.Interface.Categories;
+using Microsoft.EntityFrameworkCore;
+using Epson.Data.Context;
 
 namespace Epson.Services.Services.Products
 {
     public class ProductService : IProductService
     {
         private readonly IMapper _mapper;
+        private readonly EpsonDbContext _context;
         private readonly IRepository<Product> _ProductRepository;
         private readonly IRepository<ProductCategory> _ProductCategoryRepository;
         private readonly ILogger _logger;
@@ -22,6 +25,7 @@ namespace Epson.Services.Services.Products
 
         public ProductService
             (IMapper mapper,
+            EpsonDbContext context,
             IRepository<Product> productRepository,
             IRepository<ProductCategory> productCategoryRepository,
             ILogger logger,
@@ -29,6 +33,7 @@ namespace Epson.Services.Services.Products
             ICategoryService categoryService)
         {
             _mapper = mapper;
+            _context = context;
             _ProductRepository = productRepository;
             _ProductCategoryRepository = productCategoryRepository;
             _logger = logger;
@@ -67,7 +72,31 @@ namespace Epson.Services.Services.Products
             return _ProductCategoryRepository.GetAll().Where(x => x.ProductId == id).ToList();
         }
 
+        public async Task<List<ProductDTO>> GetProductsV2()
+        {
+            var query = _context.Product
+                .Include(x => x.ProductCategories)
+                .AsQueryable();
 
+            var productDTOs = query.Select(x => new ProductDTO
+            {
+                Id = x.Id,
+                SKU = x.SKU,
+                Name = x.Name,
+                Price = x.Price.HasValue ? (decimal)x.Price.Value : 0,
+                DealerPrice = x.DealerPrice.HasValue ? (decimal)x.DealerPrice.Value : 0,
+                IsActive = x.IsActive,
+                CreatedById = x.CreatedById,
+                CreatedOnUTC = x.CreatedOnUTC,
+                UpdatedById = x.UpdatedById,
+                UpdatedOnUTC = x.UpdatedOnUTC,
+                ProductCategories = _mapper.Map<List<ProductCategory>>(x.ProductCategories.ToList())
+            })
+            .OrderBy(x => x.Name)
+            .ToList();
+
+            return productDTOs;
+        }
         public List<ProductDTO> GetProducts()
         {
             var products = _ProductRepository.GetAll();
@@ -77,8 +106,8 @@ namespace Epson.Services.Services.Products
                 Id = x.Id,
                 SKU = x.SKU,
                 Name = x.Name,
-                Price = x.Price,
-                DealerPrice = x.DealerPrice,
+                Price = x.Price.HasValue ? (decimal)x.Price.Value : 0,
+                DealerPrice = x.DealerPrice.HasValue ? (decimal)x.DealerPrice.Value : 0,
                 IsActive = x.IsActive,
                 CreatedById = x.CreatedById,
                 CreatedOnUTC = x.CreatedOnUTC, 
@@ -101,8 +130,8 @@ namespace Epson.Services.Services.Products
                 Id = x.Id,
                 SKU = x.SKU,
                 Name = x.SKU + " - " + x.Name,
-                Price = x.Price,
-                DealerPrice = x.DealerPrice,
+                Price = x.Price.HasValue ? (decimal)x.Price.Value : 0,
+                DealerPrice = x.DealerPrice.HasValue ? (decimal)x.DealerPrice.Value : 0,
                 IsActive = x.IsActive,
                 CreatedById = x.CreatedById,
                 CreatedOnUTC = x.CreatedOnUTC,

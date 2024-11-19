@@ -8,6 +8,7 @@ using Epson.Factories;
 using Epson.Core.Domain.Products;
 using AutoMapper;
 using Epson.Services.DTO.Products;
+using Epson.Services.Interface.Categories;
 
 namespace Epson.Controllers.API
 {
@@ -16,6 +17,7 @@ namespace Epson.Controllers.API
     public class ProductApiController : BaseApiController
     {
         private readonly IProductService _productService;
+        private readonly ICategoryService _categoryService;
         private readonly IProductModelFactory _productModelFactory;
         private readonly IWorkContext _workContext;
         private readonly IMapper _mapper;
@@ -23,11 +25,13 @@ namespace Epson.Controllers.API
 
         public ProductApiController(
             IProductService productService,
+            ICategoryService categoryService,
             IProductModelFactory productModelFactory,
             IWorkContext workContext,
             IMapper mapper)
         {
             _productService = productService;
+            _categoryService = categoryService;
             _productModelFactory = productModelFactory;
             _workContext = workContext;
             _mapper = mapper;
@@ -75,9 +79,27 @@ namespace Epson.Controllers.API
             List<ProductDTO> products = new List<ProductDTO>();
 
             if (currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Director"))
+            {
                 products = _productService.GetProducts();
+            }
             else
-                products = _productService.GetProducts().Where(x => x.CreatedById == currentUser.Id).ToList();
+            {
+                var listProducts = await _productService.GetProductsV2();
+
+                products = listProducts
+                    .Where(product =>
+                    {
+                        var category = product.ProductCategories.FirstOrDefault();
+                        if (category == null)
+                        {
+                            return false;
+                        }
+
+                        var categoryDetails = _categoryService.GetCategoryById(category.CategoryId);
+                        return categoryDetails.BackupFulfiller1 == currentUser.Id;
+                    })
+                    .ToList();
+            }
 
             var productModels = _productModelFactory.PrepareAllProductModels(products);
 

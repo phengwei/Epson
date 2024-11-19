@@ -203,7 +203,7 @@
           async getCategoryFromApi() {
               this.loading = true;
               try {
-                  const result = await this.$axios.get(`${this.$config.restUrl}/api/category/getcategories`);
+                const result = await this.$axios.get(`${this.$config.restUrl}/api/category/getProductManagerCategories`);
                   this.categories = result.data.data;
               } catch (error) {
                   console.error(error);
