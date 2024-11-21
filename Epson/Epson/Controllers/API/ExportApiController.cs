@@ -63,7 +63,7 @@ namespace Epson.Controllers.API
 
         [HttpGet("toExcel")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
-        public async Task<IActionResult> ExportToExcel(string search = null, bool breached = false, int month = 0)
+        public async Task<IActionResult> ExportToExcel(string search = null, bool breached = false, int month = 0, int approvalState = 0)
         {
             var response = new GenericResponseModel<List<RequestDTO>>();
             var currentUser = _workContext.CurrentUser;
@@ -76,11 +76,12 @@ namespace Epson.Controllers.API
 
             Func<Request, bool> monthFilter = x => month == 0 || (x.CreatedOnUTC.Month == month);
             Func<Request, bool> breachedFilter = x => !breached || x.RequestProducts.Any(rp => rp.Breached);
+            Func<Request, bool> approvalStateFilter = x => approvalState == 0 || x.ApprovalState == approvalState;
 
             if (currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Director"))
             {
                 Func<Request, bool> adminFilter = x => true;
-                requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => adminFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => adminFilter(x) && monthFilter(x) && breachedFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
             }
             else
             {
@@ -151,7 +152,7 @@ namespace Epson.Controllers.API
             setTitleStyle(ws.Cells[1, 1, 1, 9]);
 
             ws.Cells[1, 1, 1, 9].Merge = true;
-            ws.Cells[1, 1].Value = "Request Data";
+            ws.Cells[1, 1].Value = "Request";
             ws.Row(3).Height = 50;
 
             ws.Cells[3, 1].Value = "Id";
@@ -234,7 +235,7 @@ namespace Epson.Controllers.API
             setTitleStyle(ws.Cells[1, 1, 1, 13]);
 
             ws.Cells[1, 1, 1, 13].Merge = true;
-            ws.Cells[1, 1].Value = "Request Products Data";
+            ws.Cells[1, 1].Value = "Request Products";
             ws.Row(3).Height = 50;
 
             ws.Cells[3, 1].Value = "Request ID";
@@ -269,7 +270,7 @@ namespace Epson.Controllers.API
                     ws.Cells[rowStart, 9].Value = requestProduct.FulfilledDate.ToString("yyyy-MM-dd HH:mm:ss");
                     var resolutionTime = CalculateBusinessTimeDifference(request.CreatedOnUTC.AddHours(-8), requestProduct.UpdatedOnUTC);
                     ws.Cells[rowStart, 10].Value = $"{resolutionTime.Days}d {resolutionTime.Hours}h {resolutionTime.Minutes}m {resolutionTime.Seconds}s";
-                    ws.Cells[rowStart, 11].Value = requestProduct.Status;
+                    ws.Cells[rowStart, 11].Value = ((RequestProductStatusEnum)requestProduct.Status).GetDescription();
                     ws.Cells[rowStart, 12].Value = requestProduct.Breached ? "Breached" : "Not Breached";
                     ws.Cells[rowStart, 13].Value = requestProduct.IsCoverplus ? "Coverplus" : "Not Coverplus";
                     rowStart++;
