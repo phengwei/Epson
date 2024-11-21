@@ -6,9 +6,7 @@ export const ApprovalStateEnum = {
   Approved: 50,
   AmendQuotation: 60,
   RejectedByFulfiller: 70,
-  RejectedByRequester: 80,
   RejectedBySalesSectionHead: 90,
   Cancelled: 100,
-  DealExited: 110,
   PendingDemoRequisitionApproval: 120,
 };

@@ -150,7 +150,6 @@
         });
       },
       async editItem(item) {
-        console.log("awd", item);
         const result = await Swal.fire({
           title: 'Set Default Draft',
           icon: 'question',

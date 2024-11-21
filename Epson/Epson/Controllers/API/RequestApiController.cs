@@ -104,28 +104,25 @@ namespace Epson.Controllers.API
 
         [HttpGet("getrequests")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
-        public async Task<IActionResult> GetRequests(string search = null, int? page = null, int? itemsPerPage = null, bool breached = false, int month = 0)
+        public async Task<IActionResult> GetRequests(string search = null, int? page = null, int? itemsPerPage = null, bool breached = false, int month = 0, int approvalState = 0)
         {
             try
             {
-
-
                 var response = new GenericResponseModel<List<RequestDTO>>();
                 var currentUser = _workContext.CurrentUser;
                 var currentUserDetail = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
 
-                Func<Request, bool> filter = null;
-                int totalItems;
-
-                HashSet<RequestDTO> requestSet = new HashSet<RequestDTO>(new RequestDTOComparer());
-
                 Func<Request, bool> monthFilter = x => month == 0 || (x.CreatedOnUTC.Month == month);
                 Func<Request, bool> breachedFilter = x => !breached || x.RequestProducts.Any(rp => rp.Breached);
+                Func<Request, bool> approvalStateFilter = x => approvalState == 0 || x.ApprovalState == approvalState;
+
+                HashSet<RequestDTO> requestSet = new HashSet<RequestDTO>(new RequestDTOComparer());
+                int totalItems;
 
                 if (currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Director"))
                 {
                     Func<Request, bool> adminFilter = x => true;
-                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => adminFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => adminFilter(x) && monthFilter(x) && breachedFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
                 }
                 else
                 {
@@ -176,23 +173,22 @@ namespace Epson.Controllers.API
                 if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value != -1)
                 {
                     uniqueRequests = uniqueRequests
-                                        .Skip((page.Value - 1) * itemsPerPage.Value)
-                                        .Take(itemsPerPage.Value)
-                                        .ToList();
+                                     .Skip((page.Value - 1) * itemsPerPage.Value)
+                                     .Take(itemsPerPage.Value)
+                                     .ToList();
                 }
-
-                //var requestModels = await _requestModelFactory.PrepareRequestModelsAsync(uniqueRequests.OrderByDescending(x => x.CreatedOnUTC).ToList());
 
                 response.Data = uniqueRequests;
                 response.Count = actualTotalItems;
 
                 return Ok(response);
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
-                return Ok();
+                // Log the exception message for debugging purposes
+                return StatusCode(500, new { message = "An error occurred while fetching requests.", error = ex.Message });
             }
         }
-
 
 
         public class RequestDTOComparer : IEqualityComparer<RequestDTO>

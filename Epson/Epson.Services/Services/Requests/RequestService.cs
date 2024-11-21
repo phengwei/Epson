@@ -1297,6 +1297,13 @@ namespace Epson.Services.Services.Requests
                         {
                             request.ApprovalState = (int)ApprovalStateEnum.PendingDemoRequisitionApproval;
                             _RequestRepository.Update(request);
+
+                            List<EmailQueue> emailQueues = _emailService.NotifyDemoRequisitionFulfiller(request, requestProducts);
+
+                            foreach (var emailQueue in emailQueues)
+                            {
+                                _emailService.InsertEmailQueue(emailQueue);
+                            }
                         }
                         else
                         {
@@ -1409,6 +1416,14 @@ namespace Epson.Services.Services.Requests
                     {
                         request.ApprovalState = (int)ApprovalStateEnum.PendingDemoRequisitionApproval;
                         _RequestRepository.Update(request);
+
+
+                        List<EmailQueue> emailQueues = _emailService.NotifyDemoRequisitionFulfiller(request, requestProducts);
+
+                        foreach (var emailQueue in emailQueues)
+                        {
+                            _emailService.InsertEmailQueue(emailQueue);
+                        }
                     }
                     else
                     {

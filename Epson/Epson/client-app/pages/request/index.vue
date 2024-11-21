@@ -18,12 +18,19 @@
                       @click:append="triggerSearch"></v-text-field>
       </v-toolbar>
       <div class="filter-container">
-        <div class="month-selector">
-          <v-select v-model="selectedMonth" :items="months" @change="triggerSearch" class="month-select"></v-select>
+        <div class="filter-dropdowns">
+          <div class="dropdown-group">
+            <label class="filter-label">Month</label>
+            <v-select v-model="selectedMonth" :items="months" @change="triggerSearch" class="month-select"></v-select>
+          </div>
+          <div class="dropdown-group">
+            <label class="filter-label">Approval State</label>
+            <v-select v-model="selectedApprovalState" :items="approvalStates" @change="triggerSearch" class="approval-select"></v-select>
+          </div>
         </div>
         <div class="create-quotation">
           <v-btn v-if="loggedInUser && loggedInUser.roles.includes('Sales')" class="request-btn" @click="redirectToCreateQuotation">Create Quotation</v-btn>
-          <v-btn class="blue-button" @click="exportToExcel">Export</v-btn> 
+          <v-btn class="blue-button" @click="exportToExcel">Export</v-btn>
         </div>
       </div>
       <v-card-text>
@@ -95,6 +102,7 @@
         searchTerm: '',
         breached: false,
         selectedMonth: new Date().getMonth() + 1,
+        selectedApprovalState: '',
         months: [
           { value: 0, text: 'All' },
           { value: 1, text: 'January' },
@@ -116,6 +124,14 @@
     },
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser']),
+      approvalStates() {
+        return [
+          { value: '', text: 'All' },
+          ...Object.entries(ApprovalStateEnum).map(([key, value]) => {
+            return { value, text: approvalStateMapping[value] }; // Using shorthand here
+          }),
+        ];
+      },
     },
     watch: {
       options: {
@@ -171,6 +187,7 @@
           page: this.options.page,
           itemsPerPage: this.options.itemsPerPage,
           month: this.selectedMonth,
+          approvalState: this.selectedApprovalState,
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getrequests`, { params })
           .then(response => {
@@ -254,9 +271,10 @@
         const params = {
           month: this.selectedMonth,
           breached: this.breached,
+          approvalState: this.selectedApprovalState,
         };
 
-        const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, ''); 
+        const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
         const randomGuid = ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
           (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
         );
@@ -280,7 +298,6 @@
             console.error('Error exporting to Excel:', error);
           });
       }
-
     },
   };
 </script>
@@ -299,9 +316,25 @@
     margin-bottom: 16px;
   }
 
-  .month-selector {
-    width: 20%;
-    min-width: 150px;
+  .filter-dropdowns {
+    display: flex;
+    align-items: center;
+  }
+
+  .dropdown-group {
+    display: flex;
+    flex-direction: column;
+    margin-right: 16px;
+  }
+
+  .filter-label {
+    font-style: italic;
+    margin-bottom: 1px;
+  }
+
+  .month-select,
+  .approval-select {
+    width: 150px;
   }
 
   .create-quotation {
