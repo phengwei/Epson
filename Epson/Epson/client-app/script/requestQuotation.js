@@ -689,6 +689,11 @@ export default {
             this.competitorsToShow = draft.competitorsToShow ? JSON.parse(draft.competitorsToShow) : [];
             this.coverplusesToShow = draft.coverplusesToShow ? JSON.parse(draft.coverplusesToShow) : [];
             this.submissionDetail = draft.submissionDetail ? JSON.parse(draft.submissionDetail) : {};
+            if (this.submissionDetail) {
+              const currentDate = new Date();
+              const formattedDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}T${String(currentDate.getHours()).padStart(2, '0')}:${String(currentDate.getMinutes()).padStart(2, '0')}`;
+              this.submissionDetail.createdOnUTC = formattedDate;
+            }
             this.projectInformation = draft.projectInformation ? JSON.parse(draft.projectInformation) : {};
             this.reasons = draft.reasons ? JSON.parse(draft.reasons) : [];
             this.priority = draft.priority ? JSON.parse(draft.priority) : {};
