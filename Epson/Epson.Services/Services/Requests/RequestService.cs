@@ -310,7 +310,6 @@ namespace Epson.Services.Services.Requests
         private string GetProductCategories(List<RequestProduct> requestProducts)
         {
             var categoryIds = requestProducts
-                .Where(x => x.IsCoverplus == false)
                 .Select(x => x.CategoryId)
                 .Distinct();
 

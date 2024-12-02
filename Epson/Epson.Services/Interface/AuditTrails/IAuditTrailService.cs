@@ -12,7 +12,7 @@ namespace Epson.Services.Interface.AuditTrails
         public void CreateAuditTrail(int entityId, string entity, DateTime actionTime, string actor, string actionDetails, string action);
         public List<AuditTrail> GetProductAuditTrails();
         public List<AuditTrail> GetRequestAuditTrails(out int totalItems, Func<AuditTrail, bool> filter = null, string search = null, int? page = null, int? itemsPerPage = null);
-
+        List<int> GetFulfilledRequestsByUser(string userId, string[] actions);
 
         //public List<AuditTrail> GetRejectionAuditTrails();
     }

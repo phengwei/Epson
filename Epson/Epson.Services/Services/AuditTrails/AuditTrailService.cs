@@ -40,6 +40,17 @@ namespace Epson.Services.Services.AuditTrails
             return _auditTrailRepository.Table.Where(x => x.Entity == "Product").ToList();
         }
 
+        public List<int> GetFulfilledRequestsByUser(string userId, string[] actions)
+        {
+            var fulfilledRequestIds = _auditTrailRepository.Table
+                .Where(log => log.Actor == userId && actions.Contains(log.Action))
+                .Select(log => log.EntityId)
+                .Distinct()
+                .ToList();
+
+            return fulfilledRequestIds;
+        }
+
         public List<AuditTrail> GetRequestAuditTrails(out int totalItems, Func<AuditTrail, bool> filter = null, string search = null, int? page = null, int? itemsPerPage = null)
         {
             var query = _context.AuditTrail.AsQueryable();

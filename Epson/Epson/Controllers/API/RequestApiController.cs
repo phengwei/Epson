@@ -22,6 +22,8 @@ using Epson.Data;
 using System.Web.Razor.Generator;
 using Newtonsoft.Json;
 using Epson.Services.Services.Requests;
+using Epson.Services.Interface.AuditTrails;
+using Epson.Services.Services.AuditTrails;
 
 namespace Epson.Controllers.API
 {
@@ -30,6 +32,7 @@ namespace Epson.Controllers.API
     {
         private readonly IRequestService _requestService;
         private readonly IProductService _productService;
+        private readonly IAuditTrailService _auditService;
         private readonly IUserService _userService;
         private readonly IRequestModelFactory _requestModelFactory;
         private readonly IWorkContext _workContext;
@@ -42,6 +45,7 @@ namespace Epson.Controllers.API
         public RequestApiController(
             IRequestService requestService,
             IProductService productService,
+            IAuditTrailService auditService,
             IUserService userService,
             IRequestModelFactory requestModelFactory,
             IWorkContext workContext,
@@ -53,6 +57,7 @@ namespace Epson.Controllers.API
         {
             _requestService = requestService;
             _productService = productService;
+            _auditService = auditService;
             _userService = userService;
             _requestModelFactory = requestModelFactory;
             _workContext = workContext;
@@ -899,7 +904,6 @@ namespace Epson.Controllers.API
             return Ok(response);
         }
 
-
         [HttpGet("getfulfilledrequestasfulfiller")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin, Director")]
         public async Task<IActionResult> GetFulfilledRequestAsFulfiller(int? page = null, int? itemsPerPage = null, string? search = null)
@@ -911,6 +915,9 @@ namespace Epson.Controllers.API
 
             List<RequestDTO> requests;
             int totalItems;
+
+            var fulfilledRequestIds = _auditService.GetFulfilledRequestsByUser(user.Id, new[] { "Fulfill", "Reject" });
+
 
             if (search == null)
             {
@@ -928,14 +935,12 @@ namespace Epson.Controllers.API
                 {
                     requests = _requestService.GetRequests(
                         out totalItems,
-                        r => r.RequestProducts.Any(rp => rp.FulfillerId == user.Id && rp.HasFulfilled == true),
+                        r => fulfilledRequestIds.Contains(r.Id),
                         search,
                         page,
                         itemsPerPage
                     );
                 }
-
-                //requestModels = await _requestModelFactory.PrepareRequestProductModelAsync(requestProducts);
             }
             else
             {
@@ -953,17 +958,16 @@ namespace Epson.Controllers.API
                 {
                     requests = _requestService.GetRequests(
                         out totalItems,
-                        r => r.RequestProducts.Any(rp => rp.HasFulfilled) && r.RequestProducts.Any(rp => rp.FulfillerId == user.Id),
+                        r => r.RequestProducts.Any(rp => rp.HasFulfilled) && fulfilledRequestIds.Contains(r.Id),
                         search,
                         page,
                         itemsPerPage
                     );
                 }
 
-                //var requestProductModels = await _requestModelFactory.PrepareRequestProductModelAsync(requestProducts);
                 var requestQueryable = requests.AsQueryable();
 
-                if (page.HasValue && itemsPerPage.HasValue )
+                if (page.HasValue && itemsPerPage.HasValue)
                 {
                     requestQueryable = requestQueryable.ToList().Where(x =>
                         (x.ProjectInformation.ProjectName != null && x.ProjectInformation.ProjectName.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
@@ -981,13 +985,101 @@ namespace Epson.Controllers.API
                 }
             }
 
-
             response.Data = requests;
             response.Count = totalItems;
 
-
             return Ok(response);
         }
+
+
+        //[HttpGet("getfulfilledrequestasfulfiller")]
+        //[Authorize(AuthenticationSchemes = "Bearer", Roles = "Product, Coverplus, Admin, Director")]
+        //public async Task<IActionResult> GetFulfilledRequestAsFulfiller(int? page = null, int? itemsPerPage = null, string? search = null)
+        //{
+        //    var response = new GenericResponseModel<List<RequestDTO>>();
+
+        //    var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+        //    var isAdminUser = await _userManager.IsInRoleAsync(user, RoleEnum.Admin.ToString()) || await _userManager.IsInRoleAsync(user, RoleEnum.Director.ToString());
+
+        //    List<RequestDTO> requests;
+        //    int totalItems;
+
+        //    if (search == null)
+        //    {
+        //        if (isAdminUser)
+        //        {
+        //            requests = _requestService.GetRequests(
+        //                out totalItems,
+        //                r => r.RequestProducts.Any(rp => rp.HasFulfilled),
+        //                search,
+        //                page,
+        //                itemsPerPage
+        //            );
+        //        }
+        //        else
+        //        {
+        //            requests = _requestService.GetRequests(
+        //                out totalItems,
+        //                r => r.RequestProducts.Any(rp => rp.FulfillerId == user.Id && rp.HasFulfilled == true),
+        //                search,
+        //                page,
+        //                itemsPerPage
+        //            );
+        //        }
+
+        //        //requestModels = await _requestModelFactory.PrepareRequestProductModelAsync(requestProducts);
+        //    }
+        //    else
+        //    {
+        //        if (isAdminUser)
+        //        {
+        //            requests = _requestService.GetRequests(
+        //                out totalItems,
+        //                r => r.RequestProducts.Any(rp => rp.HasFulfilled),
+        //                search,
+        //                page,
+        //                itemsPerPage
+        //            );
+        //        }
+        //        else
+        //        {
+        //            requests = _requestService.GetRequests(
+        //                out totalItems,
+        //                r => r.RequestProducts.Any(rp => rp.HasFulfilled) && r.RequestProducts.Any(rp => rp.FulfillerId == user.Id),
+        //                search,
+        //                page,
+        //                itemsPerPage
+        //            );
+        //        }
+
+        //        //var requestProductModels = await _requestModelFactory.PrepareRequestProductModelAsync(requestProducts);
+        //        var requestQueryable = requests.AsQueryable();
+
+        //        if (page.HasValue && itemsPerPage.HasValue )
+        //        {
+        //            requestQueryable = requestQueryable.ToList().Where(x =>
+        //                (x.ProjectInformation.ProjectName != null && x.ProjectInformation.ProjectName.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
+        //                x.Id.ToString().Contains(search)).AsQueryable();
+
+        //            totalItems = requestQueryable.Count();
+
+        //            if (itemsPerPage.Value != -1)
+        //            {
+        //                requests = requests
+        //                    .OrderByDescending(rp => rp.CreatedOnUTC)
+        //                    .Skip((page.Value - 1) * itemsPerPage.Value)
+        //                    .Take(itemsPerPage.Value).ToList();
+        //            }
+        //        }
+        //    }
+
+
+        //    response.Data = requests;
+        //    response.Count = totalItems;
+
+
+        //    return Ok(response);
+        //}
 
         [HttpGet("getpendingfulfillmentasrequester")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Director")]
