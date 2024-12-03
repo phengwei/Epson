@@ -188,7 +188,7 @@
                 id: item.id,
                 requestedBy: item.createdByStr,
                 projectName: item.projectInformation.projectName,
-                lastFulfilledDate: moment(lastFulfilledDate).add(8, 'hours').format('DD MMM YY HH:mm').,
+                lastFulfilledDate: moment(lastFulfilledDate).add(8, 'hours').format('DD MMM YY HH:mm'),
                 overallRequestStatusStr: overallRequestStatusString,
                 categories: item.categories
               };
