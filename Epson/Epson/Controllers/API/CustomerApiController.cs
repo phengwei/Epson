@@ -374,6 +374,13 @@ namespace Epson.Controllers.API
                 IsActive = true
             };
 
+            var existingUser = await _userManager.FindByNameAsync(model.Username);
+            if (existingUser != null)
+            {
+                return BadRequest(new { message = "User with this username already exists." });
+            }
+
+
             var result = await _userManager.CreateAsync(user, model.Password);
             try
             {

@@ -56,6 +56,20 @@
                   </template>
                   <span>Unlock Account</span>
                 </v-tooltip>
+
+                <v-tooltip bottom v-if="loggedInUser.roles.includes('Admin')">
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-icon small
+                            class="mr-2"
+                            color="red"
+                            v-bind="attrs"
+                            v-on="on"
+                            @click="deleteUserConfirmation(item)">
+                      mdi-delete
+                    </v-icon>
+                  </template>
+                  <span>Delete User</span>
+                </v-tooltip>
               </template>
             </v-data-table>
           </v-tab-item>
@@ -132,6 +146,8 @@
 </template>
 
 <script>
+  import { mapGetters } from 'vuex';
+
   export default {
     name: 'UserManagement',
     data() {
@@ -163,6 +179,7 @@
       };
     },
     computed: {
+      ...mapGetters(['isAuthenticated', 'loggedInUser']),
       formTitle() {
         return this.editedIndex === -1 ? 'ADD USER' : 'EDIT USER'
       },
@@ -366,6 +383,22 @@
         const hasMinimumLength = password.length >= 8;
 
         return hasUppercase && hasLowercase && hasNumeric && hasNonNumeric && hasMinimumLength;
+      },
+      deleteUserConfirmation(item) {
+        this.$swal({
+          title: 'Are you sure?',
+          text: "This action will permanently delete the user!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const index = this.users.indexOf(item);
+            this.deleteUser(index);
+          }
+        })
       },
       deleteUser(index) {
         this.$axios.delete(`${this.$config.restUrl}/api/customer/deleteuser?userId=${this.users[index].id}`)
