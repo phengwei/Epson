@@ -41,6 +41,8 @@ namespace Epson.Services.DTO
             #region Request
             CreateMap<RequestDTO, Request>();
             CreateMap<Request, RequestDTO>();
+            CreateMap<ServiceRequestDTO, ServiceRequest>();
+            CreateMap<ServiceRequest, ServiceRequestDTO>();
             CreateMap<RequestProductDTO, RequestProduct>();
             CreateMap<RequestProduct, RequestProductDTO>();
             CreateMap<RequestSubmissionDetail, RequestSubmissionDetailDTO>();

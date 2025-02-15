@@ -33,7 +33,7 @@ namespace Epson.Job
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.Information("[{0}] Begin executing process.", "RequestDeadlineReminderBackgroundProcess");
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromHours(24));
+            //_timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromHours(24));
             _logger.Information("[{0}] Finished executing process.", "RequestDeadlineReminderBackgroundProcess");
             return Task.CompletedTask;
         }

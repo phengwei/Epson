@@ -37,6 +37,7 @@ namespace Epson.Data.Context
         public DbSet<SLAStaffLeave> SLAStaffLeave { get; set; }
         public DbSet<Team> Team { get; set; }
         public DbSet<Draft> Draft{ get; set; }
+        public DbSet<ServiceRequest> ServiceRequest { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -90,6 +91,11 @@ namespace Epson.Data.Context
             builder.Entity<RequestProduct>(entity =>
             {
                 entity.ToTable("RequestProduct");
+            });          
+            
+            builder.Entity<ServiceRequest>(entity =>
+            {
+                entity.ToTable("ServiceRequest");
             });
 
             builder.Entity<CompetitorInformation>(entity =>
