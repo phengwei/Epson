@@ -139,7 +139,11 @@ namespace Epson.Services.Services.Requests
                 approvedByName = request.approvedByName,
                 checkedBy = request.checkedBy,
                 checkedByName = request.checkedByName,
-                serviceRequestStatus = request.serviceRequestStatus
+                serviceRequestStatus = request.serviceRequestStatus,
+                createdByID = request.CreatedById,
+                createdOnUTC = request.CreatedOnUTC,
+                updatedByID = request.UpdatedById,
+                updatedOnUTC = request.UpdatedOnUTC
             };
 
             return requestDTO;
@@ -307,7 +311,72 @@ namespace Epson.Services.Services.Requests
             }
         }
 
+        public bool MakerServiceRequest(ServiceRequestDTO serviceRequestDTO)
+        {
+            if (serviceRequestDTO == null)
+                throw new ArgumentNullException(nameof(serviceRequestDTO));
 
+            try
+            {
+                var serviceRequestEntity = _mapper.Map<ServiceRequest>(serviceRequestDTO);
 
+                _ServiceRequestRepository.Update(serviceRequestEntity);
+
+                _logger.Information("Updating service request with Id: {id}", serviceRequestEntity.Id);
+
+                string actionDetails = $"{serviceRequestDTO.updatedByStr} acted on service request {serviceRequestEntity.Id}";
+                _auditTrailService.CreateAuditTrail(
+                    serviceRequestEntity.Id,
+                    "ServiceRequest",
+                    DateTime.UtcNow,
+                    serviceRequestDTO.updatedByID,
+                    actionDetails,
+                    "Maker"
+                );
+
+                _logger.Information("Maker Successfully acted on service request with Id: {id}", serviceRequestEntity.Id);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error creating service request for {serviceRequestNo}", serviceRequestDTO.serviceRequestNo);
+                return false;
+            }
+        }
+
+        public bool CheckerServiceRequest(ServiceRequestDTO serviceRequestDTO)
+        {
+            if (serviceRequestDTO == null)
+                throw new ArgumentNullException(nameof(serviceRequestDTO));
+
+            try
+            {
+                var serviceRequestEntity = _mapper.Map<ServiceRequest>(serviceRequestDTO);
+
+                _ServiceRequestRepository.Update(serviceRequestEntity);
+
+                _logger.Information("Updating service request with Id: {id}", serviceRequestEntity.Id);
+
+                string actionDetails = $"{serviceRequestDTO.updatedByStr} acted on service request {serviceRequestEntity.Id}";
+                _auditTrailService.CreateAuditTrail(
+                    serviceRequestEntity.Id,
+                    "ServiceRequest",
+                    DateTime.UtcNow,
+                    serviceRequestDTO.updatedByID,
+                    actionDetails,
+                    "Checker"
+                );
+
+                _logger.Information("Checker Successfully acted on service request with Id: {id}", serviceRequestEntity.Id);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error creating service request for {serviceRequestNo}", serviceRequestDTO.serviceRequestNo);
+                return false;
+            }
+        }
     }
 }

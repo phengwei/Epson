@@ -4,7 +4,7 @@
       <div class="row">
         <div class="grid-item full-width request-table">
           <v-app>
-            <ItemsPendingFulfilmentTable />
+            <ItemsPendingCheckerDecision />
           </v-app>
         </div>
       </div>
@@ -28,11 +28,11 @@
 
 <script>
   import { mapGetters } from 'vuex';
-  import ItemsPendingFulfilmentTable from '~/components/ItemsPendingFulfilmentTable.vue';
+  import ItemsPendingCheckerDecision from '~/components/ItemsPendingCheckerDecision.vue';
   import FulfilledRequestAsFulfiller from '~/components/FulfilledRequestAsFulfiller.vue';
 
   export default {
-    name: 'ProductDashboard',
+    name: 'CheckerDashboard',
     middleware: 'auth',
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser'])
@@ -41,7 +41,7 @@
       return {};
     },
     components: {
-      ItemsPendingFulfilmentTable,
+      ItemsPendingCheckerDecision,
       FulfilledRequestAsFulfiller
     }
   };

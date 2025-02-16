@@ -15,5 +15,7 @@ namespace Epson.Services.Interface.Requests
         List<ServiceRequestDTO> GetServiceRequests(string search = null, Func<ServiceRequest, bool> filter = null, int? page = null, int? itemsPerPage = null);
         List<ServiceRequestDTO> GetServiceRequests(out int totalItems, Func<ServiceRequest, bool> filter = null, string search = null, int? page = null, int? itemsPerPage = null);
         bool AssignServiceRequestMaker(int requestId, ApplicationUser user);
+        bool MakerServiceRequest(ServiceRequestDTO serviceRequestDTO);
+        bool CheckerServiceRequest(ServiceRequestDTO serviceRequestDTO);
     }
 }

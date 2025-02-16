@@ -77,7 +77,7 @@
                   <td>
                     <select v-model="serviceRequest.fixStatus"
                             class="border-input"
-                            disabled>
+                            :disabled="!isMakerMode">
                       <option value="">-- Select --</option>
                       <option value="PERMANENTFIX">PERMANENTFIX</option>
                       <option value="TEMPORARYFIX">TEMPORARYFIX</option>
@@ -90,7 +90,7 @@
                     <input type="datetime-local"
                            v-model="serviceRequest.fixStatusDate"
                            class="border-input"
-                           readonly />
+                           :readonly="!isMakerMode" />
                   </td>
                 </tr>
                 <tr>
@@ -98,7 +98,7 @@
                   <td>
                     <select v-model="serviceRequest.paymentStatus"
                             class="border-input"
-                            disabled>
+                            :disabled="!isCheckerMode">
                       <option value="">-- Select --</option>
                       <option value="PAID">PAID</option>
                       <option value="UNPAID">UNPAID</option>
@@ -111,7 +111,7 @@
                     <input type="datetime-local"
                            v-model="serviceRequest.paymentStatusDate"
                            class="border-input"
-                           readonly />
+                           :readonly="!isCheckerMode"/>
                   </td>
                 </tr>
               </tbody>
@@ -329,7 +329,7 @@
                     <textarea v-model="serviceRequest.workNotes"
                               class="border-input"
                               rows="3"
-                              readonly></textarea>
+                              :readonly="!isMakerMode"></textarea>
                   </td>
                 </tr>
                 <tr>
@@ -338,7 +338,7 @@
                     <textarea v-model="serviceRequest.verificationNotes"
                               class="border-input"
                               rows="3"
-                              readonly></textarea>
+                              :readonly="isCheckerMode"></textarea>
                   </td>
                 </tr>
                 <!-- END NEW FIELDS -->
@@ -405,7 +405,7 @@
                     <input type="datetime-local"
                            v-model="serviceRequest.actualFinishDate"
                            class="border-input"
-                           readonly />
+                           :readonly="!isCheckerMode" />
                   </td>
                 </tr>
               </tbody>
@@ -438,10 +438,20 @@
 
         <!-- ACTION BUTTONS -->
         <div class="mt-4">
-          <button v-if="!isViewMode"
+          <button v-if="!isViewMode && !isMakerMode"
                   type="button"
                   @click="submitServiceRequest">
             Submit
+          </button>
+          <button v-if="isMakerMode"
+                  type="button"
+                  @click="submitMakerRequest">
+            Maker Submit
+          </button>
+          <button v-if="isCheckerMode"
+                  type="button"
+                  @click="submitCheckerRequest">
+            Checker Submit
           </button>
           <button v-if="isViewMode"
                   type="button"
@@ -462,22 +472,11 @@
   export default {
     name: 'ServiceRequestForm',
     data() {
-      const now = new Date();
-
-      // Helper to format a Date into "YYYY-MM-DDTHH:MM" for datetime-local.
-      const toDateTimeLocal = (dateObj) => {
-        const pad = (n) => (n < 10 ? '0' + n : n);
-        const yyyy = dateObj.getFullYear();
-        const mm = pad(dateObj.getMonth() + 1);
-        const dd = pad(dateObj.getDate());
-        const hh = pad(dateObj.getHours());
-        const min = pad(dateObj.getMinutes());
-        return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
-      };
-
       return {
         loading: false,
         isViewMode: false,
+        isMakerMode: false,
+        isCheckerMode: false,
         targetFinish: '',
         serviceRequest: {
           id: 0,
@@ -485,7 +484,7 @@
           owner: '',
           ownerGroup: '',
           status: 'NEW',
-          statusDate: toDateTimeLocal(now),
+          statusDate: '',
           fixStatus: '',
           fixStatusDate: '',
           paymentStatus: '',
@@ -505,11 +504,11 @@
           timeTracking: '',
           summary: '',
           details: '',
-          reportedDate: toDateTimeLocal(now),
-          requesterAffectedDate: toDateTimeLocal(now),
+          reportedDate: '',
+          requesterAffectedDate: '',
           targetFinishDate: '',
           standardTAT: '',
-          actualStartDate: toDateTimeLocal(now),
+          actualStartDate: '',
           actualFinishDate: '',
           workNotes: '',
           verificationNotes: ''
@@ -655,16 +654,42 @@
           if (this.decodedQueryParams.view === true) {
             this.isViewMode = true;
           }
+          if (this.decodedQueryParams.maker === true) {
+            this.isMakerMode = true;
+          }
+          if (this.decodedQueryParams.checker === true) {
+            this.isCheckerMode = true;
+          }
         }
         // 2) Otherwise, check for plain ?id=2&view=true
         else {
-          const { id, view } = this.$route.query;
+          const { id, view, maker, checker } = this.$route.query;
           if (id) {
             await this.fetchServiceRequest(id);
           }
           if (view === 'true') {
             this.isViewMode = true;
           }
+          if (maker === 'true') {
+            this.isMakerMode = true;
+          }
+          if (checker === 'true') {
+            this.isCheckerMode = true;
+          }
+        }
+
+        const now = new Date();
+        this.serviceRequest.statusDate = this.toDateTimeLocal(now);  // ✅ Use `this.toDateTimeLocal()`
+        this.serviceRequest.reportedDate = this.toDateTimeLocal(now);
+        this.serviceRequest.requesterAffectedDate = this.toDateTimeLocal(now);
+        this.serviceRequest.actualStartDate = this.toDateTimeLocal(now);
+
+        if (this.isMakerMode) {
+          this.serviceRequest.fixStatusDate = this.toDateTimeLocal(now); // ✅ No more errors
+        }
+        if (this.isCheckerMode) {
+          this.serviceRequest.paymentStatusDate = this.toDateTimeLocal(now); // ✅ No more errors
+          this.serviceRequest.actualFinishDate = this.toDateTimeLocal(now); // ✅ No more errors
         }
       } catch (error) {
         console.error('Error parsing query params:', error);
@@ -672,6 +697,72 @@
       this.loading = false;
     },
     methods: {
+      // Helper to format a Date into "YYYY-MM-DDTHH:MM" for datetime-local.
+      toDateTimeLocal(dateObj) {
+        const pad = (n) => (n < 10 ? '0' + n : n);
+        const yyyy = dateObj.getFullYear();
+        const mm = pad(dateObj.getMonth() + 1);
+        const dd = pad(dateObj.getDate());
+        const hh = pad(dateObj.getHours());
+        const min = pad(dateObj.getMinutes());
+        return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+      },
+      async submitMakerRequest() {
+        if (!this.serviceRequest.fixStatus) {
+          Swal.fire("Warning", "Fix Status is required!", "warning");
+          return;
+        }
+
+        try {
+          this.loading = true;
+          await this.$axios.post(`${this.$config.restUrl}/api/serviceRequest/makerRequest`, {
+            data: {
+              id: this.serviceRequest.id,
+              fixStatus: this.serviceRequest.fixStatus,
+              fixStatusDate: this.serviceRequest.fixStatusDate,
+              workNotes: this.serviceRequest.workNotes,
+              targetFinishDate: this.serviceRequest.targetFinishDate || new Date().toISOString()
+            }
+          });
+
+          Swal.fire("Success", "Maker request submitted successfully!", "success").then(() => {
+            this.$router.push({ path: "/request" });
+          });
+        } catch (error) {
+          console.error("Error submitting maker request:", error);
+          Swal.fire("Error", "Failed to submit the maker request.", "error");
+        } finally {
+          this.loading = false;
+        }
+      },
+      async submitCheckerRequest() {
+        if (!this.serviceRequest.fixStatus) {
+          Swal.fire("Warning", "Payment Status is required!", "warning");
+          return;
+        }
+
+        try {
+          this.loading = true;
+          await this.$axios.post(`${this.$config.restUrl}/api/serviceRequest/checkerRequest`, {
+            data: {
+              id: this.serviceRequest.id,
+              paymentStatus: this.serviceRequest.paymentStatus,
+              paymentStatusDate: this.serviceRequest.paymentStatusDate,
+              verificationNotes: this.serviceRequest.verificationNotes,
+              actualFinishDate: this.serviceRequest.actualFinishDate || new Date().toISOString()
+            }
+          });
+
+          Swal.fire("Success", "Checker request submitted successfully!", "success").then(() => {
+            this.$router.push({ path: "/request" });
+          });
+        } catch (error) {
+          console.error("Error submitting checker request:", error);
+          Swal.fire("Error", "Failed to submit the checker request.", "error");
+        } finally {
+          this.loading = false;
+        }
+      },
       // This is only used in the table, if you do a "View" button
       viewRequest(item) {
         const queryParams = {

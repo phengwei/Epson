@@ -159,6 +159,178 @@ namespace Epson.Controllers.API
                 return BadRequest("Failed to create request");
         }
 
+        [HttpPost("makerRequest")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        public async Task<IActionResult> SubmitMakerRequest([FromBody] BaseQueryModel<MakerDTO> queryModel)
+        {
+            if (queryModel == null || queryModel.Data == null)
+            {
+                return BadRequest("Invalid request.");
+            }
+
+            var model = queryModel.Data;
+
+            var user = _workContext.CurrentUser;
+            var dbUser = await _userManager.FindByIdAsync(user.Id);
+
+            var serviceRequest = _serviceRequestService.GetRequestById(model.id);
+
+            serviceRequest.fixStatus = model.fixStatus;
+            serviceRequest.fixStatusDate = model.fixStatusDate;
+            serviceRequest.workNotes = model.workNotes;
+            serviceRequest.targetFinishDate = model.targetFinishDate;
+            serviceRequest.serviceRequestStatus = (int)ServiceRequestStatusEnum.PendingCheckerDecision;
+            serviceRequest.approvedBy = user.Id;
+            serviceRequest.approvedByName = user.Name;
+
+            serviceRequest.updatedOnUTC = DateTime.UtcNow;
+            serviceRequest.updatedByID = user.Id;
+            serviceRequest.updatedByStr = user.Name;
+
+            if (_serviceRequestService.MakerServiceRequest(serviceRequest))
+                return Ok();
+            else
+                return BadRequest("Failed to approve request");
+        }
+
+        [HttpPost("checkerRequest")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        public async Task<IActionResult> SubmitCheckerRequest([FromBody] BaseQueryModel<CheckerDTO> queryModel)
+        {
+            if (queryModel == null || queryModel.Data == null)
+            {
+                return BadRequest("Invalid request.");
+            }
+
+            var model = queryModel.Data;
+
+            var user = _workContext.CurrentUser;
+            var dbUser = await _userManager.FindByIdAsync(user.Id);
+
+            var serviceRequest = _serviceRequestService.GetRequestById(model.id);
+
+            serviceRequest.paymentStatus = model.paymentStatus;
+            serviceRequest.paymentStatusDate = model.paymentStatusDate;
+            serviceRequest.verificationNotes = model.verificationNotes;
+            serviceRequest.actualFinishDate = model.actualFinishDate;
+            serviceRequest.serviceRequestStatus = (int)ServiceRequestStatusEnum.Closed;
+            serviceRequest.approvedBy = user.Id;
+            serviceRequest.approvedByName = user.Name;
+
+            serviceRequest.updatedOnUTC = DateTime.UtcNow;
+            serviceRequest.updatedByID = user.Id;
+            serviceRequest.updatedByStr = user.Name;
+
+            if (_serviceRequestService.MakerServiceRequest(serviceRequest))
+                return Ok();
+            else
+                return BadRequest("Failed to verify request");
+        }
+
+        [HttpGet("GetPendingMakerItems")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        public async Task<IActionResult> GetPendingMakerItems(string search = null, int? page = null, int? itemsPerPage = null)
+        {
+            var response = new GenericResponseModel<List<ServiceRequestDTO>>();
+            var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (currentUser == null)
+            {
+                response.Data = new List<ServiceRequestDTO>();
+                response.Count = 0;
+                return Ok(response);
+            }
+
+            var userTeam = _teamRepository.GetAll().Where(x => x.Id == currentUser.TeamId).FirstOrDefault();
+
+            if (userTeam == null)
+            {
+                response.Data = new List<ServiceRequestDTO>();
+                response.Count = 0;
+                return Ok(response);
+            }
+
+            var classificationPath = userTeam.Name;
+
+            var unAssignedserviceRequests = _serviceRequestService.GetServiceRequests().Where(x => x.classificationPath == classificationPath && x.serviceRequestStatus == (int)ServiceRequestStatusEnum.PendingAssignment).ToList();
+
+            var ownServiceRequests = _serviceRequestService.GetServiceRequests().Where(x => x.approvedBy == currentUser.Id && x.serviceRequestStatus == (int)ServiceRequestStatusEnum.PendingMakerDecision).ToList();
+
+            var unionServiceRequests = unAssignedserviceRequests.Union(ownServiceRequests).ToList();
+
+
+            //if (!string.IsNullOrEmpty(search))
+            //{
+            //    serviceRequests = serviceRequests
+            //        .Where(sr => sr.SomeField.Contains(search, StringComparison.OrdinalIgnoreCase)
+            //                  || sr.AnotherField.Contains(search, StringComparison.OrdinalIgnoreCase))
+            //        .ToList();
+            //}
+
+            if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value > 0)
+            {
+                unionServiceRequests = unionServiceRequests
+                    .Skip((page.Value - 1) * itemsPerPage.Value)
+                    .Take(itemsPerPage.Value)
+                    .ToList();
+            }
+
+            response.Data = unionServiceRequests;
+            response.Count = unionServiceRequests.Count;
+
+            return Ok(response);
+        }
+
+
+        [HttpGet("GetPendingCheckerItems")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        public async Task<IActionResult> GetPendingCheckerItems(string search = null, int? page = null, int? itemsPerPage = null)
+        {
+            var response = new GenericResponseModel<List<ServiceRequestDTO>>();
+            var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (currentUser == null)
+            {
+                response.Data = new List<ServiceRequestDTO>();
+                response.Count = 0;
+                return Ok(response);
+            }
+
+            var userTeam = _teamRepository.GetAll().Where(x => x.Id == currentUser.TeamId).FirstOrDefault();
+
+            if (userTeam == null)
+            {
+                response.Data = new List<ServiceRequestDTO>();
+                response.Count = 0;
+                return Ok(response);
+            }
+
+            var classificationPath = userTeam.Name;
+
+            var ownServiceRequests = _serviceRequestService.GetServiceRequests().Where(x => x.serviceRequestStatus == (int)ServiceRequestStatusEnum.PendingCheckerDecision && x.classificationPath == classificationPath).ToList();
+
+            //if (!string.IsNullOrEmpty(search))
+            //{
+            //    serviceRequests = serviceRequests
+            //        .Where(sr => sr.SomeField.Contains(search, StringComparison.OrdinalIgnoreCase)
+            //                  || sr.AnotherField.Contains(search, StringComparison.OrdinalIgnoreCase))
+            //        .ToList();
+            //}
+
+            if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value > 0)
+            {
+                ownServiceRequests = ownServiceRequests
+                    .Skip((page.Value - 1) * itemsPerPage.Value)
+                    .Take(itemsPerPage.Value)
+                    .ToList();
+            }
+
+            response.Data = ownServiceRequests;
+            response.Count = ownServiceRequests.Count;
+
+            return Ok(response);
+        }
+
         [HttpGet("GetPendingManagerItems")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> GetPendingManagerItems(string search = null, int? page = null, int? itemsPerPage = null)
