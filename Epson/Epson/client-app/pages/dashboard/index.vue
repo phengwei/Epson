@@ -106,20 +106,22 @@
         const links = [];
         if (this.loggedInUser.roles.includes('Admin') || this.loggedInUser.roles.includes('Director')) {
           links.push(
-            { route: '/productDashboard', label: 'FULFILLER DASHBOARD', icon: '📦' },
-            { route: '/salesDashboard', label: 'REQUESTER DASHBOARD', icon: '📊' },
-            { route: '/shDashboard', label: 'SALES HEAD DASHBOARD', icon: '🏷️' },
-            { route: '/directorDashboard', label: 'DIRECTOR DASHBOARD', icon: '🏷️' }
+            { route: '/mgDashboard', label: 'MANAGER DASHBOARD', icon: '📦' },
+            { route: '/mkDashboard', label: 'MAKER DASHBOARD', icon: '📊' },
+            { route: '/ckDashboard', label: 'CHECKER DASHBOARD', icon: '🏷️' },
           );
         } else {
-          if (this.loggedInUser.roles.includes('Sales')) {
-            links.push({ route: '/salesDashboard', label: 'REQUESTER DASHBOARD', icon: '📊' });
+          if (this.loggedInUser.roles.includes('Manager')) {
+            links.push({ route: '/mgDashboard', label: 'MANAGER DASHBOARD', icon: '📊' });
           }
-          if (this.loggedInUser.roles.includes('Product') || this.loggedInUser.roles.includes('Coverplus')) {
-            links.push({ route: '/productDashboard', label: 'FULFILLER DASHBOARD', icon: '📦' });
+          if (this.loggedInUser.roles.includes('Maker')) {
+            links.push({ route: '/mkDashboard', label: 'MAKER DASHBOARD', icon: '📦' });
           }
-          if (this.loggedInUser.roles.includes('Sales Section Head')) {
-            links.push({ route: '/shDashboard', label: 'SALES HEAD DASHBOARD', icon: '🏷️' });
+          if (this.loggedInUser.roles.includes('Checker')) {
+            links.push({ route: '/ckDashboard', label: 'CHECKER DASHBOARD', icon: '🏷️' });
+          }
+          if (this.loggedInUser.roles.includes('Requester')) {
+            links.push({ route: '/request', label: 'REQUEST LIST', icon: '🏷️' });
           }
         }
         return links;

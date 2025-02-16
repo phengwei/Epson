@@ -5,6 +5,7 @@ using Epson.Services.DTO.SLA;
 using Epson.Core.Domain.Products;
 using Epson.Services.DTO.Report;
 using Epson.Data;
+using Epson.Core.Domain.Enum;
 
 namespace Epson.Services.Interface.Requests
 {
@@ -17,5 +18,11 @@ namespace Epson.Services.Interface.Requests
         bool AssignServiceRequestMaker(int requestId, ApplicationUser user);
         bool MakerServiceRequest(ServiceRequestDTO serviceRequestDTO);
         bool CheckerServiceRequest(ServiceRequestDTO serviceRequestDTO);
+        decimal GetAverageTimeToResolutionInHours(int month);
+        int GetTotalTicketCount(int month);
+        int GetBreachedTicketCount(int month);
+        decimal GetSuccessRateOfTickets(int month);
+        Task<List<RequesterSales>> GetMonthlySalesByRequesterByDonut(DateTime fromMonth, DateTime toMonth, bool allRequester = false);
+        Task<List<RequesterSales>> GetMonthlySalesByRequester(string requesterId, int month = 0, bool allRequester = false);
     }
 }

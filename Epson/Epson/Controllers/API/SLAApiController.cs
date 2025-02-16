@@ -26,10 +26,11 @@ using Epson.Services.DTO.Requests;
 
 namespace Epson.Controllers.API
 {
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin, Sales, Product, Sales Section Head,Director")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
     [Route("api/sla")]
     public class SLAApiController : BaseApiController
     {
+        private readonly IServiceRequestService _serviceRequestService;
         private readonly ISLAService _slaService;
         private readonly ISLAModelFactory _slaModelFactory;
         private readonly IWorkContext _workContext;
@@ -43,6 +44,7 @@ namespace Epson.Controllers.API
 
 
         public SLAApiController(
+            IServiceRequestService serviceRequestService,
             ISLAService slaService,
             ISLAModelFactory slaModelFactory,
             IWorkContext workContext,
@@ -54,6 +56,7 @@ namespace Epson.Controllers.API
             IRequestService requestService,
             IRepository<Team> teamRepository)
         {
+            _serviceRequestService = serviceRequestService;
             _slaService = slaService;
             _slaModelFactory = slaModelFactory;
             _workContext = workContext;
@@ -226,54 +229,68 @@ namespace Epson.Controllers.API
             }
         }
 
+        //[HttpGet("getslametrics")]
+        //public async Task<IActionResult> GetSLAMetricsModel(int month)
+        //{
+        //    var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser.Id);
+        //    var salesUsers = await _userManager.GetUsersInRoleAsync("Sales Section Head");
+
+        //    bool isAdminUser = false;
+        //    bool isSalesSectionHeadUser = false;
+        //    if (salesUsers.Where(x => x.Equals(currentUser)).Count() > 0)
+        //        isSalesSectionHeadUser = true;
+
+        //    List<KeyValuePair<string, string>> teamHierarchy = new List<KeyValuePair<string, string>>();
+        //    List<int> relevantTeamIds = new List<int>();
+        //    List<string> usersInRelevantTeams = new List<string>();
+        //    List<RequestDTO> requests = new List<RequestDTO>();
+
+
+        //    if ((await _userManager.IsInRoleAsync(currentUser, RoleEnum.Admin.ToString()))|| await _userManager.IsInRoleAsync(currentUser, RoleEnum.Director.ToString()))
+        //    {
+        //        isAdminUser = true;
+        //    }
+        //    if (isSalesSectionHeadUser)
+        //    {
+        //        teamHierarchy = _userService.InitializeTeamHierarchyPairs();
+        //        relevantTeamIds = _userService.GetChildTeamIdsV2(teamHierarchy, currentUser.TeamId, _teamRepository);
+        //        relevantTeamIds.Add(currentUser.TeamId);
+
+        //        usersInRelevantTeams = _userManager.Users
+        //                                               .Where(u => relevantTeamIds.Contains(u.TeamId))
+        //                                               .Select(u => u.Id)
+        //                                               .ToList();
+
+        //        requests = _requestService.GetRequests()
+        //            .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
+        //                        x.RequestProducts.Any(rp => usersInRelevantTeams.Contains(rp.FulfillerId)))
+
+        //            .ToList();
+        //    }
+
+        //    var response = new GenericResponseModel<SLAMetricsModel>();
+
+        //    response.Data.AverageTimeToResolutionInHours = _slaService.GetAverageTimeToResolutionInHours(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
+        //    response.Data.TotalTickets = _slaService.GetTotalTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
+        //    response.Data.BreachedTickets = _slaService.GetBreachedTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
+        //    response.Data.SuccessRate = _slaService.GetSuccessRateOfTickets(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
+
+        //    return Ok(response);
+        //}
+
         [HttpGet("getslametrics")]
         public async Task<IActionResult> GetSLAMetricsModel(int month)
         {
-            var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser.Id);
-            var salesUsers = await _userManager.GetUsersInRoleAsync("Sales Section Head");
-
-            bool isAdminUser = false;
-            bool isSalesSectionHeadUser = false;
-            if (salesUsers.Where(x => x.Equals(currentUser)).Count() > 0)
-                isSalesSectionHeadUser = true;
-
-            List<KeyValuePair<string, string>> teamHierarchy = new List<KeyValuePair<string, string>>();
-            List<int> relevantTeamIds = new List<int>();
-            List<string> usersInRelevantTeams = new List<string>();
-            List<RequestDTO> requests = new List<RequestDTO>();
-
-
-            if ((await _userManager.IsInRoleAsync(currentUser, RoleEnum.Admin.ToString()))|| await _userManager.IsInRoleAsync(currentUser, RoleEnum.Director.ToString()))
-            {
-                isAdminUser = true;
-            }
-            if (isSalesSectionHeadUser)
-            {
-                teamHierarchy = _userService.InitializeTeamHierarchyPairs();
-                relevantTeamIds = _userService.GetChildTeamIdsV2(teamHierarchy, currentUser.TeamId, _teamRepository);
-                relevantTeamIds.Add(currentUser.TeamId);
-
-                usersInRelevantTeams = _userManager.Users
-                                                       .Where(u => relevantTeamIds.Contains(u.TeamId))
-                                                       .Select(u => u.Id)
-                                                       .ToList();
-
-                requests = _requestService.GetRequests()
-                    .Where(x => x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction &&
-                                x.RequestProducts.Any(rp => usersInRelevantTeams.Contains(rp.FulfillerId)))
-
-                    .ToList();
-            }
-
             var response = new GenericResponseModel<SLAMetricsModel>();
 
-            response.Data.AverageTimeToResolutionInHours = _slaService.GetAverageTimeToResolutionInHours(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
-            response.Data.TotalTickets = _slaService.GetTotalTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
-            response.Data.BreachedTickets = _slaService.GetBreachedTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
-            response.Data.SuccessRate = _slaService.GetSuccessRateOfTickets(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
+            response.Data.AverageTimeToResolutionInHours = _serviceRequestService.GetAverageTimeToResolutionInHours(month);
+            response.Data.TotalTickets = _serviceRequestService.GetTotalTicketCount(month);
+            response.Data.BreachedTickets = _serviceRequestService.GetBreachedTicketCount(month);
+            response.Data.SuccessRate = _serviceRequestService.GetSuccessRateOfTickets(month);
 
             return Ok(response);
         }
+
 
         private void ReloadConfiguration()
         {

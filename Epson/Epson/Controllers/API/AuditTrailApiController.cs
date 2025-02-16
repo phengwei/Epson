@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using Epson.Core.Domain.AuditTrail;
+using Epson.Core.Domain.Categories;
 using Epson.Core.Domain.Users;
 using Epson.Factories;
 using Epson.Infrastructure;
 using Epson.Model.Common;
 using Epson.Model.Request;
+using Epson.Services.DTO.Requests;
 using Epson.Services.Interface.AuditTrails;
 using Epson.Services.Interface.Requests;
 using Microsoft.AspNetCore.Identity;
@@ -41,6 +43,46 @@ namespace Epson.Controllers.API
             var auditTrails = _auditTrailService.GetProductAuditTrails().OrderByDescending(x => x.CreatedOnUTC).ToList();
 
             response.Data = auditTrails;
+            return Ok(response);
+        }
+
+        [HttpGet("GetServiceRequestAuditTrail")]
+        public async Task<IActionResult> GetServiceRequestAuditTrail(int id)
+        {
+            var response = new GenericResponseModel<List<AuditTrailDTO>>();
+
+            // Fetch audit trails from the service
+            var auditTrails = _auditTrailService
+                                .GetServiceRequestAuditTrails()
+                                .Where(x => x.EntityId == id)
+                                .ToList();
+
+            var auditDtos = new List<AuditTrailDTO>();
+
+            foreach (var audit in auditTrails)
+            {
+                // Manually fetch user details for actorStr
+                var user = _userManager.FindByIdAsync(audit.Actor);
+                string actorStr = user != null ? user.Result.UserName : "Unknown User"; // Default if user not found
+
+                // Manually map the AuditTrailDTO
+                var auditDto = new AuditTrailDTO
+                {
+                    Id = audit.Id,
+                    EntityId = audit.EntityId,
+                    Entity = audit.Entity,
+                    Action = audit.Action,
+                    ActionTime = audit.ActionTime.AddHours(8),
+                    Actor = audit.Actor,
+                    ActorStr = actorStr, // Assign fetched user name
+                    ActionDetails = audit.ActionDetails,
+                    CreatedOnUTC = audit.CreatedOnUTC.AddHours(8)
+                };
+
+                auditDtos.Add(auditDto);
+            }
+
+            response.Data = auditDtos;
             return Ok(response);
         }
 

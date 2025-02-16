@@ -46,6 +46,8 @@ namespace Epson.Core.Domain.Requests
         public string checkedBy { get; set; }
         public string checkedByName { get; set; }
         public int serviceRequestStatus { get; set; }
+        public TimeSpan? timeToResolution { get; set; }
+        public bool? isBreached { get; set; }
     }
 
 }

@@ -1,5 +1,5 @@
 <template>
-  <main class="dashboard-header" v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')">
+  <main class="dashboard-header" v-if="loggedInUser.roles.includes('Maker') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')">
     <div class="grid-container">
       <div class="row">
         <div class="grid-item full-width request-table">
@@ -29,7 +29,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import ItemsPendingMakerDecision from '~/components/ItemsPendingMakerDecision.vue';
-  import FulfilledRequestAsFulfiller from '~/components/FulfilledRequestAsFulfiller.vue';
+  import FulfilledRequestAsFulfiller from '~/components/ActedMakerItems.vue';
 
   export default {
     name: 'ProductDashboard',

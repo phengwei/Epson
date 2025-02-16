@@ -35,7 +35,7 @@
 
       <!-- Action column slot -->
       <template v-slot:item.action="{ item }">
-        <v-btn color="primary" @click="openAssignDialog(item)">Assign</v-btn>
+        <v-btn @click="openAssignDialog(item)">Assign</v-btn>
       </template>
     </v-data-table>
 
@@ -85,7 +85,7 @@
         departmentUsers: [],
 
         headers: [
-          { text: "Request #", value: "serviceRequestNo", align: "center", sortable: false },
+          { text: "Request #", value: "id", align: "center", sortable: false },
           { text: "Owner", value: "owner", align: "center", sortable: false },
           { text: "Status", value: "status", align: "center", sortable: false },
           { text: "Reported Date", value: "reportedDate", align: "center", sortable: false },
@@ -196,18 +196,5 @@
 </script>
 
 <style scoped>
-  .search-bar {
-    width: 250px;
-    border-radius: 20px;
-    padding: 5px 10px;
-  }
-
-  .blue-text {
-    color: #003399 !important;
-  }
-
-  .big-bold {
-    font-size: 24px;
-    font-weight: bold;
-  }
+  @import '~@/../wwwroot/css/general-table.css';
 </style>

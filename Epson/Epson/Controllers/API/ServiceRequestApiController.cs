@@ -25,6 +25,10 @@ using Epson.Services.Services.Requests;
 using Epson.Services.Interface.AuditTrails;
 using Epson.Services.Services.AuditTrails;
 using Epson.Model.Users;
+using Azure;
+using AngleSharp.Io;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Text.RegularExpressions;
 
 namespace Epson.Controllers.API
 {
@@ -73,7 +77,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("GetServiceRequestByID")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
         public async Task<IActionResult> RequestById(int id)
         {
             var response = new GenericResponseModel<ServiceRequestDTO>();
@@ -95,7 +99,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("GetServiceRequests")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
         public async Task<IActionResult> GetRequests(string search = null, int? page = null, int? itemsPerPage = null, bool breached = false, int month = 0, int approvalState = 0)
         {
             try
@@ -109,7 +113,14 @@ namespace Epson.Controllers.API
 
                 List<ServiceRequestDTO> serviceRequests = new List<ServiceRequestDTO>();
 
-                serviceRequests = _serviceRequestService.GetServiceRequests();
+                if (currentUser.Roles.Contains("Admin"))
+                {
+                    serviceRequests = _serviceRequestService.GetServiceRequests();
+                }
+                else
+                {
+                    serviceRequests = _serviceRequestService.GetServiceRequests().Where(x => x.createdByID == currentUser.Id).ToList();
+                }
 
                 if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value != -1)
                 {
@@ -132,7 +143,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("CreateServiceRequest")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
         public async Task<IActionResult> CreateRequest([FromBody] BaseQueryModel<ServiceRequestDTO> queryModel)
         {
             if (queryModel == null || queryModel.Data == null)
@@ -160,7 +171,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("makerRequest")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
         public async Task<IActionResult> SubmitMakerRequest([FromBody] BaseQueryModel<MakerDTO> queryModel)
         {
             if (queryModel == null || queryModel.Data == null)
@@ -175,6 +186,8 @@ namespace Epson.Controllers.API
 
             var serviceRequest = _serviceRequestService.GetRequestById(model.id);
 
+            serviceRequest.status = "INPROG";
+            serviceRequest.statusDate = DateTime.UtcNow;
             serviceRequest.fixStatus = model.fixStatus;
             serviceRequest.fixStatusDate = model.fixStatusDate;
             serviceRequest.workNotes = model.workNotes;
@@ -194,41 +207,82 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("checkerRequest")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
         public async Task<IActionResult> SubmitCheckerRequest([FromBody] BaseQueryModel<CheckerDTO> queryModel)
         {
             if (queryModel == null || queryModel.Data == null)
-            {
                 return BadRequest("Invalid request.");
-            }
 
             var model = queryModel.Data;
-
             var user = _workContext.CurrentUser;
             var dbUser = await _userManager.FindByIdAsync(user.Id);
 
+            // Retrieve the existing service request
             var serviceRequest = _serviceRequestService.GetRequestById(model.id);
+            if (serviceRequest == null)
+                return NotFound("Service request not found.");
 
+            // Update standard fields
+            serviceRequest.status = "RESOLVED";
+            serviceRequest.statusDate = DateTime.UtcNow;
             serviceRequest.paymentStatus = model.paymentStatus;
             serviceRequest.paymentStatusDate = model.paymentStatusDate;
             serviceRequest.verificationNotes = model.verificationNotes;
             serviceRequest.actualFinishDate = model.actualFinishDate;
             serviceRequest.serviceRequestStatus = (int)ServiceRequestStatusEnum.Closed;
-            serviceRequest.approvedBy = user.Id;
-            serviceRequest.approvedByName = user.Name;
 
+            serviceRequest.checkedBy = user.Id;
+            serviceRequest.checkedByName = user.Name;
             serviceRequest.updatedOnUTC = DateTime.UtcNow;
             serviceRequest.updatedByID = user.Id;
             serviceRequest.updatedByStr = user.Name;
 
-            if (_serviceRequestService.MakerServiceRequest(serviceRequest))
+            // 1) Calculate the time to resolution (as before)
+            var now = DateTime.UtcNow;
+            if (serviceRequest.createdOnUTC.HasValue)
+            {
+                var timeSpan = now - serviceRequest.createdOnUTC.Value;
+                serviceRequest.timeToResolution = timeSpan;
+            }
+            else
+            {
+                serviceRequest.timeToResolution = TimeSpan.Zero;
+            }
+
+            // 2) Parse timeTracking: e.g. "3 working days" => 3 days => 3 * 24 hours
+            double thresholdHours = ParseTimeTrackingToHours(serviceRequest.timeTracking);
+
+            // 3) Compare timeToResolution// 1) Calculate the time to resolution (nullable)
+            serviceRequest.timeToResolution = now - serviceRequest.createdOnUTC;
+
+            serviceRequest.isBreached = (serviceRequest.timeToResolution?.TotalHours ?? 0) > thresholdHours;
+
+            // Attempt to update the request
+            if (_serviceRequestService.CheckerServiceRequest(serviceRequest))
                 return Ok();
             else
                 return BadRequest("Failed to verify request");
         }
 
+        private double ParseTimeTrackingToHours(string timeTracking)
+        {
+            if (string.IsNullOrEmpty(timeTracking))
+                return 0.0;
+
+            var pattern = new Regex(@"(\d+)");
+            var match = pattern.Match(timeTracking);
+
+            if (!match.Success)
+                return 0.0;  
+
+            if (!int.TryParse(match.Groups[1].Value, out int days))
+                return 0.0;
+
+            return days * 24.0;
+        }
+
         [HttpGet("GetPendingMakerItems")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
         public async Task<IActionResult> GetPendingMakerItems(string search = null, int? page = null, int? itemsPerPage = null)
         {
             var response = new GenericResponseModel<List<ServiceRequestDTO>>();
@@ -255,6 +309,11 @@ namespace Epson.Controllers.API
             var unAssignedserviceRequests = _serviceRequestService.GetServiceRequests().Where(x => x.classificationPath == classificationPath && x.serviceRequestStatus == (int)ServiceRequestStatusEnum.PendingAssignment).ToList();
 
             var ownServiceRequests = _serviceRequestService.GetServiceRequests().Where(x => x.approvedBy == currentUser.Id && x.serviceRequestStatus == (int)ServiceRequestStatusEnum.PendingMakerDecision).ToList();
+
+            if (_workContext.CurrentUser.Roles.Contains("Admin"))
+            {
+                _serviceRequestService.GetServiceRequests().Where(x => x.serviceRequestStatus == (int)ServiceRequestStatusEnum.PendingMakerDecision).ToList();
+            }
 
             var unionServiceRequests = unAssignedserviceRequests.Union(ownServiceRequests).ToList();
 
@@ -283,7 +342,7 @@ namespace Epson.Controllers.API
 
 
         [HttpGet("GetPendingCheckerItems")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
         public async Task<IActionResult> GetPendingCheckerItems(string search = null, int? page = null, int? itemsPerPage = null)
         {
             var response = new GenericResponseModel<List<ServiceRequestDTO>>();
@@ -308,7 +367,11 @@ namespace Epson.Controllers.API
             var classificationPath = userTeam.Name;
 
             var ownServiceRequests = _serviceRequestService.GetServiceRequests().Where(x => x.serviceRequestStatus == (int)ServiceRequestStatusEnum.PendingCheckerDecision && x.classificationPath == classificationPath).ToList();
-
+            
+            if (_workContext.CurrentUser.Roles.Contains("Admin"))
+            {
+                ownServiceRequests = _serviceRequestService.GetServiceRequests().Where(x => x.serviceRequestStatus == (int)ServiceRequestStatusEnum.PendingCheckerDecision).ToList();
+            }
             //if (!string.IsNullOrEmpty(search))
             //{
             //    serviceRequests = serviceRequests
@@ -331,8 +394,116 @@ namespace Epson.Controllers.API
             return Ok(response);
         }
 
+        [HttpGet("GetPendingManagerTeamRequests")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
+        public async Task<IActionResult> GetPendingManagerTeamRequests(string search = null, int? page = null, int? itemsPerPage = null)
+        {
+            var response = new GenericResponseModel<List<ServiceRequestDTO>>();
+            var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            var userTeam = _teamRepository.GetAll().Where(x => x.Id == currentUser.TeamId).FirstOrDefault();
+
+            var pendingRequests = _serviceRequestService.GetServiceRequests()
+                .Where(sr => sr.serviceRequestStatus != (int)ServiceRequestStatusEnum.PendingAssignment
+                            && sr.serviceRequestStatus != (int)ServiceRequestStatusEnum.Closed
+                            && sr.serviceRequestStatus != (int)ServiceRequestStatusEnum.CheckerRejected
+                            && sr.classificationPath == userTeam.Name)
+                .ToList();
+
+            if (_workContext.CurrentUser.Roles.Contains("Admin"))
+            {
+                pendingRequests = _serviceRequestService.GetServiceRequests()
+                .Where(sr => sr.serviceRequestStatus != (int)ServiceRequestStatusEnum.PendingAssignment
+                            && sr.serviceRequestStatus != (int)ServiceRequestStatusEnum.Closed
+                            && sr.serviceRequestStatus != (int)ServiceRequestStatusEnum.CheckerRejected)
+                .ToList();
+            }
+
+            if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value > 0)
+            {
+                pendingRequests = pendingRequests
+                    .Skip((page.Value - 1) * itemsPerPage.Value)
+                    .Take(itemsPerPage.Value)
+                    .ToList();
+            }
+
+            response.Data = pendingRequests;
+            response.Count = pendingRequests.Count;
+
+
+            return Ok(response);
+        }
+
+
+        [HttpGet("GetActedMakerRequest")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
+        public async Task<IActionResult> GetActedMakerRequest(string search = null, int? page = null, int? itemsPerPage = null)
+        {
+            var response = new GenericResponseModel<List<ServiceRequestDTO>>();
+            var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            var pendingRequests = _serviceRequestService.GetServiceRequests()
+                .Where(x => x.approvedBy == currentUser.Id && x.serviceRequestStatus != (int)ServiceRequestStatusEnum.PendingMakerDecision)
+                .ToList();
+
+            if (_workContext.CurrentUser.Roles.Contains("Admin"))
+            {
+                pendingRequests = _serviceRequestService.GetServiceRequests()
+                .Where(x => x.serviceRequestStatus != (int)ServiceRequestStatusEnum.PendingMakerDecision && x.serviceRequestStatus != (int)ServiceRequestStatusEnum.PendingAssignment)
+                .ToList();
+            }
+
+            if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value > 0)
+            {
+                pendingRequests = pendingRequests
+                    .Skip((page.Value - 1) * itemsPerPage.Value)
+                    .Take(itemsPerPage.Value)
+                    .ToList();
+            }
+
+            response.Data = pendingRequests;
+            response.Count = pendingRequests.Count;
+
+            return Ok(response);
+        }
+
+        [HttpGet("GetActedCheckerRequest")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
+        public async Task<IActionResult> GetActedCheckerRequest(string search = null, int? page = null, int? itemsPerPage = null)
+        {
+            var response = new GenericResponseModel<List<ServiceRequestDTO>>();
+            var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            var pendingRequests = _serviceRequestService.GetServiceRequests()
+                .Where(x => x.checkedBy == currentUser.Id && x.serviceRequestStatus != (int)ServiceRequestStatusEnum.PendingCheckerDecision)
+                .ToList();
+
+            if (_workContext.CurrentUser.Roles.Contains("Admin"))
+            {
+                pendingRequests = _serviceRequestService.GetServiceRequests()
+                .Where(x => x.serviceRequestStatus != (int)ServiceRequestStatusEnum.PendingCheckerDecision
+                && x.serviceRequestStatus != (int)ServiceRequestStatusEnum.PendingMakerDecision
+                && x.serviceRequestStatus != (int)ServiceRequestStatusEnum.PendingAssignment)
+                .ToList();
+            }
+
+            if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value > 0)
+            {
+                pendingRequests = pendingRequests
+                    .Skip((page.Value - 1) * itemsPerPage.Value)
+                    .Take(itemsPerPage.Value)
+                    .ToList();
+            }
+
+            response.Data = pendingRequests;
+            response.Count = pendingRequests.Count;
+
+            return Ok(response);
+        }
+
+
         [HttpGet("GetPendingManagerItems")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
         public async Task<IActionResult> GetPendingManagerItems(string search = null, int? page = null, int? itemsPerPage = null)
         {
             var response = new GenericResponseModel<List<ServiceRequestDTO>>();
@@ -362,6 +533,11 @@ namespace Epson.Controllers.API
                 .Where(sr => sr.classificationPath == classificationPath)
                 .ToList();
 
+            if (_workContext.CurrentUser.Roles.Contains("Admin"))
+            {
+                serviceRequests = _serviceRequestService.GetServiceRequests().Where(x => x.serviceRequestStatus == (int)ServiceRequestStatusEnum.PendingAssignment).ToList();
+            }
+
             //if (!string.IsNullOrEmpty(search))
             //{
             //    serviceRequests = serviceRequests
@@ -385,7 +561,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("GetDepartmentUsers")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
         public async Task<IActionResult> GetDepartmentUsers()
         {
             var response = new GenericResponseModel<List<UserModel>>();
@@ -446,7 +622,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("AssignServiceRequestMaker")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
         public async Task<IActionResult> AssignServiceRequestMaker(int requestId, string newOwnerId)
         {
             if (requestId == 0 || requestId == null || string.IsNullOrEmpty(newOwnerId) | newOwnerId == null)
@@ -464,6 +640,28 @@ namespace Epson.Controllers.API
             return Ok(new { message = "Service request successfully assigned to the Maker." });
         }
 
+        [HttpGet("getmonthlysalesbyrequester")]
+        public async Task<IActionResult> MonthlySalesByRequester(string requesterId, int month = 0, bool allRequester = false)
+        {
+            var response = new GenericResponseModel<List<RequesterSales>>();
+
+            var monthlySalesByRequester = await _serviceRequestService.GetMonthlySalesByRequester(requesterId, month, allRequester);
+
+            response.Data = monthlySalesByRequester;
+            return Ok(response);
+        }
+
+
+        [HttpGet("getmonthlysalesbyrequesterbydonut")]
+        public async Task<IActionResult> MonthlySalesByRequesterByDonut(DateTime fromMonth, DateTime toMonth)
+        {
+            var response = new GenericResponseModel<List<RequesterSales>>();
+
+            var monthlySalesByRequester = await _serviceRequestService.GetMonthlySalesByRequesterByDonut(fromMonth, toMonth);
+
+            response.Data = monthlySalesByRequester;
+            return Ok(response);
+        }
 
         public class RequestDTOComparer : IEqualityComparer<ServiceRequestDTO>
         {

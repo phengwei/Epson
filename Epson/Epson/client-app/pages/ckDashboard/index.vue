@@ -1,5 +1,5 @@
 <template>
-  <main class="dashboard-header" v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')">
+  <main class="dashboard-header" v-if="loggedInUser.roles.includes('Checker') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')">
     <div class="grid-container">
       <div class="row">
         <div class="grid-item full-width request-table">
@@ -29,7 +29,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import ItemsPendingCheckerDecision from '~/components/ItemsPendingCheckerDecision.vue';
-  import FulfilledRequestAsFulfiller from '~/components/FulfilledRequestAsFulfiller.vue';
+  import FulfilledRequestAsFulfiller from '~/components/ActedCheckerItems.vue';
 
   export default {
     name: 'CheckerDashboard',

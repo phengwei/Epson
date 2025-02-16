@@ -43,12 +43,7 @@
                 <v-icon class="top-center-icon">mdi-alert-circle-outline</v-icon>
                 <h2 class="number">{{ BreachedTickets }}</h2>
                 <p class="bottom-center-text">Breached Tickets</p>
-                <div class="bottom-reserved-space">
-                  <v-btn class="navigate-button" @click="goToBreachedTickets">
-                    Navigate
-                    <v-icon right>mdi-arrow-right-circle-outline</v-icon>
-                  </v-btn>
-                </div>
+                <div class="bottom-reserved-space"></div>
               </div>
             </div>
             <div class="card success-rate-card">
@@ -67,14 +62,13 @@
 </template>
 
 <script>
-  import { VIcon, VSelect, VBtn, VCard, VToolbar, VToolbarTitle, VCardText } from 'vuetify/lib';
+  import { VIcon, VSelect, VCard, VToolbar, VToolbarTitle, VCardText } from 'vuetify/lib';
 
   export default {
     name: 'SLA-Dashboard',
     components: {
       VIcon,
       VSelect,
-      VBtn,
       VCard,
       VToolbar,
       VToolbarTitle,

@@ -22,7 +22,7 @@
           <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Sales Section Head') || loggedInUser.roles.includes('Director')" to="/slaDashboard"
                      exact-active-class="nav-link-active"
                      class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">SLA OVERVIEW</nuxt-link>
-          <nuxt-link v-if="loggedInUser.roles.includes('Sales') || loggedInUser.roles.includes('Sales Section Head') || loggedInUser.roles.includes('Sales Operation') || loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')" to="/request"
+          <nuxt-link v-if="loggedInUser.roles.includes('Requester') || loggedInUser.roles.includes('Manager') || loggedInUser.roles.includes('Sales Operation') || loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')" to="/request"
                      exact-active-class="nav-link-active"
                      class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">REQUESTS</nuxt-link>
           <nuxt-link v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')" to="/product"

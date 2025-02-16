@@ -16,6 +16,7 @@ namespace Epson.Controllers.API
     public class ReportApiController : BaseApiController
     {
         private readonly IRequestService _requestService;
+        private readonly IServiceRequestService _serviceRequestService;
         private readonly IReportService _reportService;
         private readonly IRequestModelFactory _requestModelFactory;
         private readonly IWorkContext _workContext;
@@ -25,6 +26,7 @@ namespace Epson.Controllers.API
 
         public ReportApiController(
             IRequestService requestService,
+            IServiceRequestService serviceRequestService,
             IReportService reportService,
             IRequestModelFactory requestModelFactory,
             IWorkContext workContext,
@@ -32,6 +34,7 @@ namespace Epson.Controllers.API
             UserManager<ApplicationUser> userManager)
         {
             _requestService = requestService;
+            _serviceRequestService = serviceRequestService;
             _reportService = reportService;
             _requestModelFactory = requestModelFactory;
             _workContext = workContext;

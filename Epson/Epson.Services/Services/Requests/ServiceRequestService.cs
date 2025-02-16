@@ -17,6 +17,7 @@ using Epson.Services.Interface.Email;
 using Epson.Services.Interface.Products;
 using Epson.Services.Interface.Requests;
 using Epson.Services.Interface.SLA;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -47,6 +48,7 @@ namespace Epson.Services.Services.Requests
         private readonly ISLAService _slaService;
         private readonly IOptions<SLASetting> _slaSetting;
         private readonly ScopedTaskRunner _scopedTaskRunner;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public ServiceRequestService
             (IMapper mapper,
@@ -66,7 +68,8 @@ namespace Epson.Services.Services.Requests
             ILogger logger,
             ISLAService slaService,
             IOptions<SLASetting> slaSetting,
-            ScopedTaskRunner scopedTaskRunner)
+            ScopedTaskRunner scopedTaskRunner,
+            UserManager<ApplicationUser> userManager)
         {
             _mapper = mapper;
             _context = dbContext;
@@ -86,6 +89,7 @@ namespace Epson.Services.Services.Requests
             _slaService = slaService;
             _slaSetting = slaSetting;
             _scopedTaskRunner = scopedTaskRunner;
+            _userManager = userManager;
         }
 
         public const string Entity = "ServiceRequest";
@@ -143,7 +147,9 @@ namespace Epson.Services.Services.Requests
                 createdByID = request.CreatedById,
                 createdOnUTC = request.CreatedOnUTC,
                 updatedByID = request.UpdatedById,
-                updatedOnUTC = request.UpdatedOnUTC
+                updatedOnUTC = request.UpdatedOnUTC,
+                timeToResolution = request.timeToResolution,
+                isBreached = request.isBreached
             };
 
             return requestDTO;
@@ -227,7 +233,9 @@ namespace Epson.Services.Services.Requests
                     updatedOnUTC = request.UpdatedOnUTC,
                     checkedBy = request.checkedBy,
                     checkedByName = request.checkedByName,
-                    serviceRequestStatus = request.serviceRequestStatus
+                    serviceRequestStatus = request.serviceRequestStatus,
+                    timeToResolution = request.timeToResolution,
+                    isBreached = request.isBreached
                 };
             }).ToList();
 
@@ -263,7 +271,7 @@ namespace Epson.Services.Services.Requests
                     DateTime.UtcNow,
                     serviceRequest.UpdatedById,
                     actionDetails,
-                    "Update"
+                    "Assign"
                 );
 
                 _logger.Information("Successfully assigned Maker {userId} to Service Request {requestId}.", user.Id, requestId);
@@ -378,5 +386,131 @@ namespace Epson.Services.Services.Requests
                 return false;
             }
         }
+
+        // 1. Get Average Time to Resolution in Hours for a specific month
+        public decimal GetAverageTimeToResolutionInHours(int month)
+        {
+            var requests = _ServiceRequestRepository.GetAll()
+                .Where(x => x.timeToResolution.HasValue &&
+                            (month == 0 || x.CreatedOnUTC.Month == month))
+                .ToList();
+
+            if (requests.Count == 0)
+                return 0; // Avoid division by zero
+
+            return Math.Round((decimal)requests.Average(x => x.timeToResolution.Value.TotalHours), 2);
+        }
+
+
+        // 2. Get Total Ticket Count for a specific month
+        public int GetTotalTicketCount(int month)
+        {
+            return _ServiceRequestRepository.GetAll()
+                .Count(x => month == 0 || (x.CreatedOnUTC.Month == month));
+        }
+
+        // 3. Get Breached Ticket Count for a specific month
+        public int GetBreachedTicketCount(int month)
+        {
+            return _ServiceRequestRepository.GetAll()
+                .Count(x => x.isBreached == true &&
+                            (month == 0 || x.CreatedOnUTC.Month == month));
+        }
+
+
+        // 4. Get Success Rate of Tickets for a specific month
+        public decimal GetSuccessRateOfTickets(int month)
+        {
+            int totalTickets = GetTotalTicketCount(month);
+            int successfulTickets = _ServiceRequestRepository.GetAll()
+                .Count(x => x.serviceRequestStatus == (int)ServiceRequestStatusEnum.Closed &&
+                            (month == 0 || x.CreatedOnUTC.Month == month));
+
+            return totalTickets > 0 ? Math.Round((decimal)successfulTickets / totalTickets * 100, 2) : 0;
+        }
+
+        public async Task<List<RequesterSales>> GetMonthlySalesByRequester(string requesterId, int month = 0, bool allRequester = false)
+        {
+            var last12Months = new List<DateTime>();
+            for (int i = 0; i < 12; i++)
+            {
+                last12Months.Add(DateTime.UtcNow.AddMonths(-i));
+            }
+            last12Months = last12Months.Select(d => new DateTime(d.Year, d.Month, 1)).OrderBy(d => d).ToList();
+
+            var query = _ServiceRequestRepository.Table.AsQueryable();
+
+            if (month != 0)
+            {
+                query = query.Where(r => r.CreatedOnUTC.Month == month);
+            }
+
+            if (!allRequester)
+            {
+                query = query.Where(r => r.CreatedById == requesterId);
+            }
+
+            var salesData = query
+                .GroupBy(r => new
+                {
+                    YearMonth = new DateTime(r.CreatedOnUTC.Year, r.CreatedOnUTC.Month, 1),
+                    Requester = r.CreatedById
+                })
+                .Select(g => new RequesterSales
+                {
+                    Date = g.Key.YearMonth,
+                    RequesterName = _userManager.FindByIdAsync(g.Key.Requester).Result.UserName,
+                    MonthlySales = 50,
+                    TotalNumberOfSales = g.Count()
+                })
+                .OrderBy(x => x.Date)
+                .ToList();
+
+            var result = last12Months.Select(m => new RequesterSales
+            {
+                Date = m,
+                RequesterName = salesData.FirstOrDefault(s => s.Date == m)?.RequesterName ?? "",
+                MonthlySales = salesData.FirstOrDefault(s => s.Date == m)?.MonthlySales ?? 0,
+                TotalNumberOfSales = salesData.FirstOrDefault(s => s.Date == m)?.TotalNumberOfSales ?? 0
+            }).ToList();
+
+            return await Task.FromResult(result);
+
+        }
+
+        public async Task<List<RequesterSales>> GetMonthlySalesByRequesterByDonut(DateTime fromMonth, DateTime toMonth, bool allRequester = false)
+        {
+
+            var query = _ServiceRequestRepository.Table
+                    .Where(r => r.CreatedOnUTC >= fromMonth && r.CreatedOnUTC <= toMonth);
+
+            var groupedData = query
+                .GroupBy(r => r.CreatedById)
+                .Select(g => new
+                {
+                    RequesterId = g.Key,
+                    MonthlySales = 50,
+                    TotalNumberOfSales = g.Count()
+                })
+                .OrderByDescending(x => x.TotalNumberOfSales)
+                .ToList(); // Synchronously fetch the grouped data
+
+            var requesterSalesList = new List<RequesterSales>();
+
+            foreach (var data in groupedData)
+            {
+                var user = await _userManager.FindByIdAsync(data.RequesterId);
+                requesterSalesList.Add(new RequesterSales
+                {
+                    RequesterId = data.RequesterId,
+                    RequesterName = user?.UserName ?? "Unknown",
+                    MonthlySales = data.MonthlySales,
+                    TotalNumberOfSales = data.TotalNumberOfSales
+                });
+            }
+
+            return requesterSalesList;
+        }
+
     }
 }

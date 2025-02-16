@@ -29,7 +29,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import ItemsPendingSalesSectionHeadAction from '~/components/ItemsPendingManagerAction.vue';
-  import ItemsPendingSalesSectionHeadDepartment from '~/components/ItemsPendingSalesSectionHeadDepartment.vue';
+  import ItemsPendingSalesSectionHeadDepartment from '~/components/ItemsPendingManagerTeam.vue';
 
   export default {
     name: 'SHDashboard',

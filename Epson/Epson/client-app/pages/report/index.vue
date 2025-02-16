@@ -24,9 +24,6 @@
                   <v-list-item @click="selectedTab = 'requester'">
                     <v-list-item-title>Requester Performance</v-list-item-title>
                   </v-list-item>
-                  <v-list-item @click="selectedTab = 'product'">
-                    <v-list-item-title>Product Performance</v-list-item-title>
-                  </v-list-item>
                 </v-list>
               </v-menu>
             </div>
@@ -317,7 +314,7 @@
       },
       async fetchRequesters() {
         try {
-          const response = await this.$axios.get(`${this.$config.restUrl}/api/customer/getallrequesters`);
+          const response = await this.$axios.get(`${this.$config.restUrl}/api/customer/GetAllServiceRequesters`);
           const rawData = response.data.data;
           const formattedRequesters = rawData.map(item => ({
             text: item.userName,
@@ -339,7 +336,7 @@
             allRequester: false
           };
           try {
-            const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequester`, { params: selectedValues });
+            const response = await this.$axios.get(`${this.$config.restUrl}/api/serviceRequest/getmonthlysalesbyrequester`, { params: selectedValues });
             const data = response.data.data;
 
             const labels = data.map(item => new Date(item.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
@@ -371,7 +368,7 @@
             allRequester: true
           };
           try {
-            const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequesterbydonut`, { params: selectedValues });
+            const response = await this.$axios.get(`${this.$config.restUrl}/api/serviceRequest/getmonthlysalesbyrequesterbydonut`, { params: selectedValues });
             const data = response.data.data;
             const labels = data.map(item => item.requesterName);
             const values = data.map(item => item.totalNumberOfSales);
@@ -395,7 +392,7 @@
             allRequester: true
           };
           try {
-            const response = await this.$axios.get(`${this.$config.restUrl}/api/report/getmonthlysalesbyrequesterbydonut`, { params: selectedValues });
+            const response = await this.$axios.get(`${this.$config.restUrl}/api/serviceRequest/getmonthlysalesbyrequesterbydonut`, { params: selectedValues });
             const data = response.data.data;
             const labels = data.map(item => item.requesterName);
             const values = data.map(item => item.totalNumberOfSales);

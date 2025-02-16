@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Epson.Core.Domain.AuditTrail;
 using Epson.Core.Domain.Categories;
 using Epson.Core.Domain.Email;
 using Epson.Core.Domain.Products;
@@ -41,6 +42,8 @@ namespace Epson.Services.DTO
             #region Request
             CreateMap<RequestDTO, Request>();
             CreateMap<Request, RequestDTO>();
+            CreateMap<AuditTrailDTO, AuditTrail>();
+            CreateMap<AuditTrail, AuditTrailDTO>();
             CreateMap<ServiceRequestDTO, ServiceRequest>();
             CreateMap<ServiceRequest, ServiceRequestDTO>();
             CreateMap<RequestProductDTO, RequestProduct>();

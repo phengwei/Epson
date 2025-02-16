@@ -111,7 +111,7 @@
                     <input type="datetime-local"
                            v-model="serviceRequest.paymentStatusDate"
                            class="border-input"
-                           :readonly="!isCheckerMode"/>
+                           :readonly="!isCheckerMode" />
                   </td>
                 </tr>
               </tbody>
@@ -414,7 +414,7 @@
         </v-card>
 
         <!-- TIME TRACKING (TIMELINE) -->
-        <v-card class="mb-5 mt-2">
+        <v-card class="mb-5 mt-2" v-if="timeTracking.length > 0">
           <v-card-title>
             <span class="blue-text small-bold">TIME TRACKING</span>
           </v-card-title>
@@ -435,6 +435,7 @@
             </v-timeline>
           </v-card-text>
         </v-card>
+
 
         <!-- ACTION BUTTONS -->
         <div class="mt-4">
@@ -467,6 +468,7 @@
 <script>
   import { mapGetters } from 'vuex'
   import { Base64 } from 'js-base64'
+  import moment from 'moment';
   import Swal from 'sweetalert2'
 
   export default {
@@ -524,28 +526,72 @@
                 section: 'General Services (GS)',
                 categories: [
                   { name: 'New Request', tatDisplay: '3 working days' },
-                  {
-                    name: 'Request for visitor/vendor card',
-                    tatDisplay: '1 working day'
-                  },
-                  {
-                    name: 'Change/Add Access/Timezone',
-                    tatDisplay: '5 working days'
-                  }
+                  { name: 'Request for visitor/vendor/dept card', tatDisplay: '1 working day' },
+                  { name: 'Request for event report (attendance report)', tatDisplay: '5 working days' },
+                  { name: 'Change/Add Access/Timezone', tatDisplay: '5 working days' },
+                  { name: 'Request for Nursing Room Access', tatDisplay: '7 working days' },
+                  { name: 'Deletion', tatDisplay: '3 working days' }
                 ]
               },
               {
                 name: 'Telecommunication',
                 section: 'General Services (GS)',
                 categories: [
-                  {
-                    name: 'Request for new IP phones',
-                    tatDisplay: '7 working days'
-                  },
-                  {
-                    name: 'Request for new Telekom lines',
-                    tatDisplay: '5 working days'
-                  }
+                  { name: 'Request for new IP phones', tatDisplay: '7 working days' },
+                  { name: 'Request for new Telekom lines', tatDisplay: '5 working days' },
+                  { name: 'Relocation of IP phones (CSQ)', tatDisplay: '7 working days' },
+                  { name: 'Relocation of Telekom direct lines', tatDisplay: '10 working days' },
+                  { name: 'Faulty phone lines (sets, voice recording)', tatDisplay: '7 working days' },
+                  { name: 'Astro problems', tatDisplay: '3 working days' }
+                ]
+              },
+              {
+                name: 'Movers',
+                section: 'General Services (GS)',
+                categories: [
+                  { name: 'Seeking quotation', tatDisplay: '5 working days' }
+                ]
+              },
+              {
+                name: 'Water Dispenser',
+                section: 'General Services (GS)',
+                categories: [
+                  { name: 'Request for new Water Dispenser', tatDisplay: '7 working days' },
+                  { name: 'Water filter problems/replacement', tatDisplay: '3 working days' }
+                ]
+              },
+              {
+                name: 'Mailroom Arrangement',
+                section: 'General Services (GS)',
+                categories: [
+                  { name: 'Request for Despatch/Courier Service', tatDisplay: '1 working day' },
+                  { name: 'Request for courier material', tatDisplay: '3 working days' }
+                ]
+              },
+              {
+                name: 'Records Management',
+                section: 'General Services (GS)',
+                categories: [
+                  { name: 'Creation of new account', tatDisplay: '3 working days' },
+                  { name: 'Escalate Destruction Request', tatDisplay: '5 working days' },
+                  { name: 'Seeking quotation for ad-hoc destruction', tatDisplay: '5 working days' }
+                ]
+              },
+              {
+                name: 'Security Guarding Services',
+                section: 'General Services (GS)',
+                categories: [
+                  { name: 'Reporting guards absence', tatDisplay: '1 working day' },
+                  { name: 'Reporting guards service level', tatDisplay: '3 working days' }
+                ]
+              },
+              {
+                name: 'Photocopier',
+                section: 'General Services (GS)',
+                categories: [
+                  { name: 'New Request (New staff)', tatDisplay: '3 working days' },
+                  { name: 'Request for Color Access', tatDisplay: '5 working days' },
+                  { name: 'Deletion (Exit Staff)', tatDisplay: '3 working days' }
                 ]
               }
             ]
@@ -557,28 +603,120 @@
                 name: 'Lights Replacement',
                 section: 'Facilities Management (FM)',
                 categories: [
-                  {
-                    name: 'Light Tubes & Bulbs - CSQ & 3A',
-                    tatDisplay: '3 working days'
-                  },
-                  {
-                    name: 'Light Tubes & Bulbs - Branch',
-                    tatDisplay: '5 working days'
-                  }
+                  { name: 'Light Tubes & Bulbs - CSQ & 3A', tatDisplay: '3 working days' },
+                  { name: 'Light Tubes & Bulbs - Branch', tatDisplay: '5 working days' }
+                ]
+              },
+              {
+                name: 'Electrical Services',
+                section: 'Facilities Management (FM)',
+                categories: [
+                  { name: 'Power Trip - No Power Supply', tatDisplay: '1 working day' }
+                ]
+              },
+              {
+                name: 'Air Conditioning System',
+                section: 'Facilities Management (FM)',
+                categories: [
+                  { name: 'Temperature issue', tatDisplay: '1 working day' },
+                  { name: 'Air Cond leaking (faulty service)', tatDisplay: '3 working days' },
+                  { name: 'Repair Air Cond @ server - computer room', tatDisplay: '7 working days' },
+                  { name: 'Air Cond Replacement New', tatDisplay: '10 working days' },
+                  { name: 'Extend Centralised Air Cond Hours', tatDisplay: '3 working days' }
+                ]
+              },
+              {
+                name: 'Fire Fighting System',
+                section: 'Facilities Management (FM)',
+                categories: [
+                  { name: 'Fire Fighting System - Renewal license, Replace Extinguishers', tatDisplay: '10 working days' },
+                  { name: 'Fire Fighting System - Fire Panel & system', tatDisplay: '7 working days' },
+                  { name: 'Fire Fighting System - Emergency Lights Keluar sign', tatDisplay: '7 working days' }
+                ]
+              },
+              {
+                name: 'Genset/UPS',
+                section: 'Facilities Management (FM)',
+                categories: [
+                  { name: 'Genset & UPS System - No Power, Not Function, Diesel top up', tatDisplay: '1 working day' },
+                  { name: 'Genset & UPS System - Repair, Parts Replacement', tatDisplay: '5 working days' },
+                  { name: 'Genset & UPS System - New Replacement', tatDisplay: '10 working days' },
+                  { name: 'Genset & System - Deep rectification', tatDisplay: '14 working days' }
                 ]
               },
               {
                 name: 'Plumbing',
                 section: 'Facilities Management (FM)',
                 categories: [
-                  {
-                    name: 'Plumbing Sanitary - clog/leakage/drainage',
-                    tatDisplay: '2 working days'
-                  },
-                  {
-                    name: 'Water Supply Issue',
-                    tatDisplay: '1 working day'
-                  }
+                  { name: 'Plumbing Sanitary - Clog, leakage, drainage', tatDisplay: '2 working days' },
+                  { name: 'Plumbing Sanitary - Water Supply Issue', tatDisplay: '1 working day' }
+                ]
+              },
+              {
+                name: 'Card Access System (Hardware)',
+                section: 'Facilities Management (FM)',
+                categories: [
+                  { name: 'Door cannot access - beeping door, Magnetic door faulty', tatDisplay: '1 working day' },
+                  { name: 'Parts replacement', tatDisplay: '7 working days' }
+                ]
+              },
+              {
+                name: 'Security (CCTV / Alarm)',
+                section: 'Facilities Management (FM)',
+                categories: [
+                  { name: 'CCTV - Attend to Service Request', tatDisplay: '5 working days' },
+                  { name: 'CCTV - Request for Footage', tatDisplay: '7 working days' },
+                  { name: 'CCTV - Request for Additional Camera', tatDisplay: '10 working days' },
+                  { name: 'Alarm - Attend to Service Request', tatDisplay: '5 working days' },
+                  { name: 'Alarm - Change Requests', tatDisplay: '7 working days' },
+                  { name: 'Alarm - CMS down', tatDisplay: '1 working day' }
+                ]
+              }
+            ]
+          },
+          {
+            name: 'Administration Compliance & Finance',
+            services: [
+              {
+                name: 'Fixed Asset Disposal',
+                section: 'Administration Compliance & Finance',
+                categories: [
+                  { name: 'Disposal of Fixed Asset - Quotation', tatDisplay: '5 working days' },
+                  { name: 'Disposal of Fixed Asset - Seeking Approval', tatDisplay: '7 working days' },
+                  { name: 'Disposal of Fixed Asset - Disposal Arrangement', tatDisplay: '10 working days' }
+                ]
+              },
+              {
+                name: 'Utilities',
+                section: 'Administration Compliance & Finance',
+                categories: [
+                  { name: 'Termination of electricity and water supply', tatDisplay: '3 working days' }
+                ]
+              }
+            ]
+          },
+          {
+            name: 'Project Management',
+            services: [
+              {
+                name: 'Minor Renovation',
+                section: 'Project Management',
+                categories: [
+                  { name: 'Off the Shelf product', tatDisplay: '10 working days' },
+                  { name: 'Renovation (value above RM250k)', tatDisplay: '14 working days' }
+                ]
+              }
+            ]
+          },
+          {
+            name: 'Real Estate Management',
+            services: [
+              {
+                name: 'Real Estate Services',
+                section: 'Real Estate Management',
+                categories: [
+                  { name: 'Tenancy matters', tatDisplay: '7 working days' },
+                  { name: 'Repairs work (LL)', tatDisplay: '10 working days' }
                 ]
               }
             ]
@@ -586,30 +724,6 @@
         ],
 
         timeTracking: [
-          {
-            memo: 'Ticket created',
-            date: '2025-02-14 10:15',
-            person: 'System',
-            color: 'blue'
-          },
-          {
-            memo: 'Owner changed from Team A to Team B',
-            date: '2025-02-14 10:45',
-            person: 'Admin',
-            color: 'green'
-          },
-          {
-            memo: 'Status changed to INPROG',
-            date: '2025-02-14 11:00',
-            person: 'John Doe',
-            color: 'teal'
-          },
-          {
-            memo: 'Issue investigation started',
-            date: '2025-02-14 12:15',
-            person: 'John Doe',
-            color: 'teal'
-          }
         ],
 
         decodedQueryParams: {}
@@ -697,6 +811,33 @@
       this.loading = false;
     },
     methods: {
+      async fetchAuditTrail(requestId) {
+        try {
+          const responseAudit = await this.$axios.get(
+            `${this.$config.restUrl}/api/audittrail/GetServiceRequestAuditTrail`,
+            { params: { id: requestId } }
+          );
+
+          // responseAudit.data.data is presumably the array of AuditTrailDTO
+          const audits = Array.isArray(responseAudit.data.data) ? responseAudit.data.data : [];
+
+          // Simple list of colors to randomize from
+          const colorOptions = ['blue', 'green', 'teal', 'purple', 'orange', 'brown', 'red', 'pink'];
+
+          // Map each audit record to a timeline item
+          this.timeTracking = audits.map(audit => ({
+            memo: audit.action || `Action: ${audit.action}`,    // Or use something else
+            date: audit.actionTime
+              ? moment(audit.actionTime).format('DD MMM YY HH:mm')
+              : moment(audit.createdOnUTC).format('DD MMM YY HH:mm'),
+            person: audit.actorStr || 'System',
+            color: colorOptions[Math.floor(Math.random() * colorOptions.length)]
+          }));
+        } catch (error) {
+          console.error('Error fetching audit trail:', error);
+          // If it fails, timeTracking remains empty or as-is
+        }
+      },
       // Helper to format a Date into "YYYY-MM-DDTHH:MM" for datetime-local.
       toDateTimeLocal(dateObj) {
         const pad = (n) => (n < 10 ? '0' + n : n);
@@ -726,7 +867,11 @@
           });
 
           Swal.fire("Success", "Maker request submitted successfully!", "success").then(() => {
-            this.$router.push({ path: "/request" });
+            if (this.hasAccessToRequestPage()) {
+              this.$router.push({ path: '/request' });
+            } else {
+              this.$router.push({ path: '/dashboard' });
+            }
           });
         } catch (error) {
           console.error("Error submitting maker request:", error);
@@ -754,7 +899,11 @@
           });
 
           Swal.fire("Success", "Checker request submitted successfully!", "success").then(() => {
-            this.$router.push({ path: "/request" });
+            if (this.hasAccessToRequestPage()) {
+              this.$router.push({ path: '/request' });
+            } else {
+              this.$router.push({ path: '/dashboard' });
+            }
           });
         } catch (error) {
           console.error("Error submitting checker request:", error);
@@ -838,6 +987,8 @@
               ...sr
             };
           }
+
+          await this.fetchAuditTrail(id);
         } catch (error) {
           console.error('Error fetching service request:', error);
           Swal.fire('Error', 'Unable to load the service request.', 'error');
@@ -935,7 +1086,10 @@
           this.loading = false;
         }
       },
-
+      hasAccessToRequestPage() {
+        const allowedRoles = ['Manager', 'Admin', 'Requester']; // Change these to match your actual roles
+        return this.loggedInUser.roles && this.loggedInUser.roles.some(role => allowedRoles.includes(role));
+      },
       backToList() {
         this.$router.push({ path: '/request' });
       }

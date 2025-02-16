@@ -6,6 +6,9 @@
           <h2 class="blue-text big-bold">Service Requests</h2>
         </v-toolbar-title>
         <v-spacer></v-spacer>
+
+
+
         <!-- Search Field -->
         <v-text-field v-model="searchTerm"
                       append-icon="mdi-magnify"
@@ -17,6 +20,12 @@
                       class="search-bar"
                       @keyup.enter="triggerSearch"
                       @click:append="triggerSearch"></v-text-field>
+
+        <!-- Create Request Button -->
+        <v-btn class="mr-3" @click="createRequest">
+          Create Request
+        </v-btn>
+
       </v-toolbar>
 
       <v-card-text>
@@ -53,7 +62,7 @@
     data() {
       return {
         headers: [
-          { text: 'Request #', value: 'serviceRequestNo', align: 'center', sortable: false },
+          { text: 'Request #', value: 'id', align: 'center', sortable: false },
           { text: 'Owner', value: 'owner', align: 'center', sortable: false },
           { text: 'Status', value: 'status', align: 'center', sortable: false },
           { text: 'Reported Date', value: 'reportedDate', align: 'center', sortable: false },
@@ -76,12 +85,6 @@
     },
     computed: {
       ...mapGetters(['isAuthenticated', 'loggedInUser']),
-    },
-    props: {
-      routeKey: {
-        type: String,
-        default: () => ''
-      }
     },
     created() {
       this.getRequests();
@@ -138,8 +141,17 @@
        */
       viewRequest(request) {
         this.$router.push({
-          path: '/serviceQuotation', // Adjust to your actual form route
+          path: '/serviceQuotation',
           query: { id: request.id, view: true },
+        });
+      },
+
+      /**
+       * Redirect to Create Request page.
+       */
+      createRequest() {
+        this.$router.push({
+          path: '/serviceQuotation',
         });
       },
     },

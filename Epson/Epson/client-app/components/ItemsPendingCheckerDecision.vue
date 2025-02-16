@@ -60,7 +60,7 @@
         },
 
         headers: [
-          { text: "Request #", value: "serviceRequestNo", align: "center", sortable: false },
+          { text: "Request #", value: "id", align: "center", sortable: false },
           { text: "Owner", value: "owner", align: "center", sortable: false },
           { text: "Status", value: "status", align: "center", sortable: false },
           { text: "Reported Date", value: "reportedDate", align: "center", sortable: false },
