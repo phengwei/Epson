@@ -83,6 +83,7 @@ namespace Epson.Controllers.API
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> GetHierarchies()
         {
+            //var result = await _userService.GetTeamHierarchyAsync();
             var result = await _userService.GetTeamHierarchyAsync();
 
             return Ok(result);

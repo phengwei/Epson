@@ -24,6 +24,7 @@ using Newtonsoft.Json;
 using Epson.Services.Services.Requests;
 using Epson.Services.Interface.AuditTrails;
 using Epson.Services.Services.AuditTrails;
+using Epson.Model.Users;
 
 namespace Epson.Controllers.API
 {
@@ -72,7 +73,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("GetServiceRequestByID")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Product,Admin,Director,Sales Operation,Coverplus,Sales Section Head")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> RequestById(int id)
         {
             var response = new GenericResponseModel<ServiceRequestDTO>();
@@ -94,7 +95,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("GetServiceRequests")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> GetRequests(string search = null, int? page = null, int? itemsPerPage = null, bool breached = false, int month = 0, int approvalState = 0)
         {
             try
@@ -131,7 +132,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("CreateServiceRequest")]
-        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Sales Section Head, Admin")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> CreateRequest([FromBody] BaseQueryModel<ServiceRequestDTO> queryModel)
         {
             if (queryModel == null || queryModel.Data == null)
@@ -157,6 +158,140 @@ namespace Epson.Controllers.API
             else
                 return BadRequest("Failed to create request");
         }
+
+        [HttpGet("GetPendingManagerItems")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        public async Task<IActionResult> GetPendingManagerItems(string search = null, int? page = null, int? itemsPerPage = null)
+        {
+            var response = new GenericResponseModel<List<ServiceRequestDTO>>();
+            var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            if (currentUser == null)
+            {
+                response.Data = new List<ServiceRequestDTO>();
+                response.Count = 0;
+                return Ok(response);
+            }
+
+            var userTeam = _teamRepository.GetAll().Where(x => x.Id == currentUser.TeamId).FirstOrDefault();
+
+            if (userTeam == null)
+            {
+                response.Data = new List<ServiceRequestDTO>();
+                response.Count = 0;
+                return Ok(response);
+            }
+
+            var classificationPath = userTeam.Name;
+
+            var serviceRequests = _serviceRequestService.GetServiceRequests().Where(x => x.serviceRequestStatus == (int)ServiceRequestStatusEnum.PendingAssignment).ToList();
+
+            serviceRequests = serviceRequests
+                .Where(sr => sr.classificationPath == classificationPath)
+                .ToList();
+
+            //if (!string.IsNullOrEmpty(search))
+            //{
+            //    serviceRequests = serviceRequests
+            //        .Where(sr => sr.SomeField.Contains(search, StringComparison.OrdinalIgnoreCase)
+            //                  || sr.AnotherField.Contains(search, StringComparison.OrdinalIgnoreCase))
+            //        .ToList();
+            //}
+
+            if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value > 0)
+            {
+                serviceRequests = serviceRequests
+                    .Skip((page.Value - 1) * itemsPerPage.Value)
+                    .Take(itemsPerPage.Value)
+                    .ToList();
+            }
+
+            response.Data = serviceRequests;
+            response.Count = serviceRequests.Count;
+
+            return Ok(response);
+        }
+
+        [HttpGet("GetDepartmentUsers")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        public async Task<IActionResult> GetDepartmentUsers()
+        {
+            var response = new GenericResponseModel<List<UserModel>>();
+
+            // Get the current user
+            var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+            if (currentUser == null)
+            {
+                return Unauthorized(new { message = "User not found." });
+            }
+
+            // Get the current user's team
+            var userTeam = _teamRepository.GetAll()
+                                            .Where(x => x.Id == currentUser.TeamId)
+                                            .FirstOrDefault();
+
+            if (userTeam == null)
+            {
+                return NotFound(new { message = "User's team not found." });
+            }
+
+            // Get all users in the same team
+            var teamUsers = await _userManager.Users
+                .Where(u => u.TeamId == userTeam.Id)
+                .ToListAsync();
+
+            var allTeams = _userService.GetTeams();
+            var teamLookup = allTeams.ToDictionary(t => t.Id, t => t.Name);
+
+            // Filter only users with the role "Maker"
+            var departmentUsers = new List<UserModel>();
+            foreach (var user in teamUsers)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+
+                var filteredRoles = roles.Where(role => !role.Equals("admin", StringComparison.OrdinalIgnoreCase)).ToList();
+                if (roles.Contains("Maker"))
+                {
+                    departmentUsers.Add(new UserModel
+                    {
+                        Id = user.Id,
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        Roles = filteredRoles,
+                        Phone = user.PhoneNumber,
+                        Teams = teamLookup.TryGetValue(user.TeamId, out var teamName) ? teamName : null,
+                        TeamId = user.TeamId,
+                        LockoutEnd = user.LockoutEnd,
+                        IsActive = user.IsActive
+                    });
+                }
+            }
+
+            response.Data = departmentUsers;
+            response.Count = departmentUsers.Count;
+
+            return Ok(response);
+        }
+
+        [HttpPost("AssignServiceRequestMaker")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
+        public async Task<IActionResult> AssignServiceRequestMaker(int requestId, string newOwnerId)
+        {
+            if (requestId == 0 || requestId == null || string.IsNullOrEmpty(newOwnerId) | newOwnerId == null)
+                return BadRequest(new { message = "Invalid request. Request ID and User ID are required." });
+
+            var user = await _userManager.FindByIdAsync(newOwnerId);
+            if (user == null)
+                return NotFound(new { message = $"User with ID {newOwnerId} not found." });
+
+            bool result = _serviceRequestService.AssignServiceRequestMaker(requestId, user);
+
+            if (!result)
+                return BadRequest(new { message = "Failed to assign the service request to the user." });
+
+            return Ok(new { message = "Service request successfully assigned to the Maker." });
+        }
+
 
         public class RequestDTOComparer : IEqualityComparer<ServiceRequestDTO>
         {

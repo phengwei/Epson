@@ -240,35 +240,49 @@
                 <tr>
                   <td class="td-header">Services</td>
                   <td>
-                    <!-- Directly bind to serviceRequest.services -->
-                    <select v-model="serviceRequest.services"
-                            class="border-input"
-                            @change="onServiceChange"
-                            :disabled="isViewMode || !availableServices.length">
-                      <option value="">-- Select Service --</option>
-                      <option v-for="(svc, sidx) in availableServices"
-                              :key="sidx"
-                              :value="svc.name">
-                        {{ svc.name }}
-                      </option>
-                    </select>
+                    <template v-if="isViewMode">
+                      <input type="text"
+                             v-model="serviceRequest.services"
+                             class="border-input"
+                             :readonly="isViewMode" />
+                    </template>
+                    <template v-else>
+                      <select v-model="serviceRequest.services"
+                              class="border-input"
+                              @change="onServiceChange"
+                              :disabled="!availableServices.length">
+                        <option value="">-- Select Service --</option>
+                        <option v-for="(svc, sidx) in availableServices"
+                                :key="sidx"
+                                :value="svc.name">
+                          {{ svc.name }}
+                        </option>
+                      </select>
+                    </template>
                   </td>
                 </tr>
                 <tr>
                   <td class="td-header">Category</td>
                   <td>
-                    <!-- Directly bind to serviceRequest.category -->
-                    <select v-model="serviceRequest.category"
-                            class="border-input"
-                            @change="onCategoryChange"
-                            :disabled="isViewMode || !availableCategories.length">
-                      <option value="">-- Select Category --</option>
-                      <option v-for="(cat, cidx) in availableCategories"
-                              :key="cidx"
-                              :value="cat.name">
-                        {{ cat.name }}
-                      </option>
-                    </select>
+                    <template v-if="isViewMode">
+                      <input type="text"
+                             v-model="serviceRequest.category"
+                             class="border-input"
+                             :readonly="isViewMode" />
+                    </template>
+                    <template v-else>
+                      <select v-model="serviceRequest.category"
+                              class="border-input"
+                              @change="onCategoryChange"
+                              :disabled="!availableCategories.length">
+                        <option value="">-- Select Category --</option>
+                        <option v-for="(cat, cidx) in availableCategories"
+                                :key="cidx"
+                                :value="cat.name">
+                          {{ cat.name }}
+                        </option>
+                      </select>
+                    </template>
                   </td>
                 </tr>
                 <tr>
@@ -803,7 +817,10 @@
                 updatedByID: this.loggedInUser.id,
                 updatedByStr: this.loggedInUser.userName || '',
                 approvedBy: '',
-                approvedByName: ''
+                approvedByName: '',
+                checkedBy: '',
+                checkedByName: '',
+                serviceRequestStatus: 10
               }
             }
           );

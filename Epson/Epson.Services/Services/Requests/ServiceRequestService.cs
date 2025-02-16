@@ -136,7 +136,10 @@ namespace Epson.Services.Services.Requests
                 workNotes = request.workNotes,
                 verificationNotes = request.verificationNotes,
                 approvedBy = request.approvedBy,
-                approvedByName = request.approvedByName
+                approvedByName = request.approvedByName,
+                checkedBy = request.checkedBy,
+                checkedByName = request.checkedByName,
+                serviceRequestStatus = request.serviceRequestStatus
             };
 
             return requestDTO;
@@ -217,12 +220,58 @@ namespace Epson.Services.Services.Requests
                     createdByID = request.CreatedById,
                     createdOnUTC = request.CreatedOnUTC,
                     updatedByID = request.UpdatedById,
-                    updatedOnUTC = request.UpdatedOnUTC
+                    updatedOnUTC = request.UpdatedOnUTC,
+                    checkedBy = request.checkedBy,
+                    checkedByName = request.checkedByName,
+                    serviceRequestStatus = request.serviceRequestStatus
                 };
             }).ToList();
 
             return requestDTOs;
         }
+
+        public bool AssignServiceRequestMaker(int requestId, ApplicationUser user)
+        {
+            if (requestId == 0 || user == null)
+                throw new ArgumentException("Request ID and User ID must be provided.");
+
+            try
+            {
+                var serviceRequest = _ServiceRequestRepository.GetById(requestId);
+                if (serviceRequest == null)
+                {
+                    _logger.Warning("Service request with ID {requestId} not found.", requestId);
+                    return false;
+                }
+
+                serviceRequest.approvedBy = user.Id;
+                serviceRequest.approvedByName = user.UserName;
+                serviceRequest.serviceRequestStatus = (int)ServiceRequestStatusEnum.PendingMakerDecision;
+                
+                // Update entity
+                _ServiceRequestRepository.Update(serviceRequest);
+
+                // Log audit trail
+                string actionDetails = $"Assigned {user.UserName} (ID: {user.Id}) as Maker for Service Request {requestId}.";
+                _auditTrailService.CreateAuditTrail(
+                    requestId,
+                    "ServiceRequest",
+                    DateTime.UtcNow,
+                    serviceRequest.UpdatedById,
+                    actionDetails,
+                    "Update"
+                );
+
+                _logger.Information("Successfully assigned Maker {userId} to Service Request {requestId}.", user.Id, requestId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error assigning Maker {userId} to Service Request {requestId}.", user.Id, requestId);
+                return false;
+            }
+        }
+
 
         public bool InsertServiceRequest(ServiceRequestDTO serviceRequestDTO)
         {

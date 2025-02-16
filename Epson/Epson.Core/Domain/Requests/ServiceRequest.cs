@@ -43,6 +43,9 @@ namespace Epson.Core.Domain.Requests
         public string verificationNotes { get; set; }
         public string approvedBy { get; set; }
         public string approvedByName { get; set; }
+        public string checkedBy { get; set; }
+        public string checkedByName { get; set; }
+        public int serviceRequestStatus { get; set; }
     }
 
 }
