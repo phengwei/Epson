@@ -10,7 +10,7 @@
 
 
         <!-- Search Field -->
-        <v-text-field v-model="searchTerm"
+        <!--<v-text-field v-model="searchTerm"
                       append-icon="mdi-magnify"
                       placeholder="Search by request # or owner"
                       solo
@@ -19,7 +19,7 @@
                       dense
                       class="search-bar"
                       @keyup.enter="triggerSearch"
-                      @click:append="triggerSearch"></v-text-field>
+                      @click:append="triggerSearch"></v-text-field>-->
 
         <!-- Create Request Button -->
         <v-btn class="mr-3" @click="createRequest">

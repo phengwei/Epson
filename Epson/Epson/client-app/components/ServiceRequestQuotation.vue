@@ -376,9 +376,10 @@
                 <tr>
                   <td class="td-header">Target Finish</td>
                   <td>
-                    <input type="date"
-                           v-model="targetFinish"
-                           class="border-input" />
+                    <input type="datetime-local"
+                           v-model="serviceRequest.targetFinishDate"
+                           class="border-input"
+                           :readonly="isViewMode"/>
                   </td>
                 </tr>
                 <tr>

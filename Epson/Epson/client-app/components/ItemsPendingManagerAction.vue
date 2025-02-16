@@ -20,7 +20,7 @@
           <v-toolbar-title class="blue-text big-bold">NEW REQUEST</v-toolbar-title>
           <v-spacer></v-spacer>
           <!-- Search Field -->
-          <v-text-field v-model="searchTerm"
+          <!--<v-text-field v-model="searchTerm"
                         append-icon="mdi-magnify"
                         placeholder="Search by end user or request #"
                         solo
@@ -29,7 +29,7 @@
                         dense
                         class="search-bar"
                         @keyup.enter="triggerSearch"
-                        @click:append="triggerSearch"></v-text-field>
+                        @click:append="triggerSearch"></v-text-field>-->
         </v-toolbar>
       </template>
 

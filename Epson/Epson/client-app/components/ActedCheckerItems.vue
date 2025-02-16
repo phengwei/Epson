@@ -12,7 +12,7 @@
       <v-toolbar flat>
         <v-toolbar-title class="blue-text big-bold">ACTED CHECKER REQUESTS</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-text-field v-model="searchTerm"
+        <!--<v-text-field v-model="searchTerm"
                       append-icon="mdi-magnify"
                       placeholder="Search by request # or requested by"
                       solo
@@ -21,7 +21,7 @@
                       dense
                       class="search-bar"
                       @keyup.enter="triggerSearch"
-                      @click:append="triggerSearch"></v-text-field>
+                      @click:append="triggerSearch"></v-text-field>-->
       </v-toolbar>
     </template>
 

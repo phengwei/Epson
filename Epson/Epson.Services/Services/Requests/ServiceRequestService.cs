@@ -256,6 +256,7 @@ namespace Epson.Services.Services.Requests
                     return false;
                 }
 
+                serviceRequest.status = "INPROG";
                 serviceRequest.approvedBy = user.Id;
                 serviceRequest.approvedByName = user.UserName;
                 serviceRequest.serviceRequestStatus = (int)ServiceRequestStatusEnum.PendingMakerDecision;
