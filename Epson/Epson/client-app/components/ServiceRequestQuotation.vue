@@ -338,7 +338,7 @@
                     <textarea v-model="serviceRequest.verificationNotes"
                               class="border-input"
                               rows="3"
-                              :readonly="isCheckerMode"></textarea>
+                              :readonly="!isCheckerMode"></textarea>
                   </td>
                 </tr>
                 <!-- END NEW FIELDS -->

@@ -28,23 +28,6 @@
               </v-list>
             </v-menu>
 
-            <v-menu v-if="auditTrailLinks.length > 0" offset-y>
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn class="dashboard-card" v-bind="attrs" v-on="on">
-                  <div class="card-content">
-                    <div class="label">AUDIT TRAIL</div>
-                  </div>
-                </v-btn>
-              </template>
-              <v-list>
-                <nuxt-link v-for="link in auditTrailLinks" :key="link.route" :to="link.route">
-                  <v-list-item>
-                    <v-list-item-title>{{ link.label }}</v-list-item-title>
-                  </v-list-item>
-                </nuxt-link>
-              </v-list>
-            </v-menu>
-
             <v-menu v-if="dashboardLinks.length > 0" offset-y>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn class="dashboard-card" v-bind="attrs" v-on="on">
@@ -80,24 +63,6 @@
         if (this.loggedInUser.roles.includes('Admin')) {
           links.push(
             { route: '/userManagement', label: 'MANAGE USERS', icon: '👥' },
-            { route: '/categoryManagement', label: 'MANAGE PRODUCT CATEGORIES', icon: '📚' },
-            { route: '/sla', label: 'SLA CONFIGURATION', icon: '⚙️' },
-            { route: '/hierarchy', label: 'ROUTE CONFIGURATION', icon: '⚙️' }
-          );
-        }
-        if (this.loggedInUser.roles.includes('Sales') || this.loggedInUser.roles.includes('Admin') || this.loggedInUser.roles.includes('Sales Section Head') || this.loggedInUser.roles.includes('Director')) {
-          links.push(
-            { route: '/draft', label: 'DRAFT MANAGEMENT', icon: 'mdi-file-document-edit-outline' },
-          );
-        }
-        return links;
-      },
-      auditTrailLinks() {
-        const links = [];
-        if (this.loggedInUser.roles.includes('Admin') || this.loggedInUser.roles.includes('Director')) {
-          links.push(
-            { route: '/requestAuditTrail', label: 'REQUEST AUDIT TRAIL', icon: '📋' },
-            { route: '/productAuditTrail', label: 'PRODUCT AUDIT TRAIL', icon: '📝' }
           );
         }
         return links;

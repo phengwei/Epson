@@ -82,7 +82,7 @@
     },
     head() {
       return {
-        title: "UMS Login"
+        title: "GCS Login"
       }
     },
     beforeMount() {

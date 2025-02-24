@@ -25,9 +25,6 @@
           <nuxt-link v-if="loggedInUser.roles.includes('Requester') || loggedInUser.roles.includes('Manager') || loggedInUser.roles.includes('Sales Operation') || loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')" to="/request"
                      exact-active-class="nav-link-active"
                      class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">REQUESTS</nuxt-link>
-          <nuxt-link v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')" to="/product"
-                     exact-active-class="nav-link-active"
-                     class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">PRODUCTS</nuxt-link>
         </div>
 
         <!-- User Dropdown -->

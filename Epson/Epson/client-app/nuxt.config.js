@@ -15,7 +15,7 @@ export default {
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    title: 'epson-ums',
+    title: 'GCS',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -166,8 +166,8 @@ export default {
 
   
   publicRuntimeConfig: {
-    restUrl: 'https://localhost:7223',
-    baseURL: 'https://localhost:7223',
+    restUrl: 'http://poc-env.eba-ymc3eyi5.ap-southeast-1.elasticbeanstalk.com',
+    baseURL: 'http://poc-env.eba-ymc3eyi5.ap-southeast-1.elasticbeanstalk.com',
   },
   privateRuntimeConfig: {
     myPrivateToken: process.env.PRIVATE_TOKEN,
@@ -178,8 +178,8 @@ export default {
   },
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    baseURL: 'https://localhost:7223',
-    https: true,
+    baseURL: 'http://poc-env.eba-ymc3eyi5.ap-southeast-1.elasticbeanstalk.com',
+    https: false,
   },
   // PWA module configuration: https://go.nuxtjs.dev/pwa
   pwa: {
