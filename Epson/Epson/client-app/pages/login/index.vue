@@ -47,15 +47,7 @@
                     <i class="fas fa-arrow-right"></i>
                   </button>
                 </div>
-              </form>
-              <div class="text-center mt-6">
-                <a href="/auth/ssoLogin"
-                   class="w-full bg-white text-blue-800 hover:bg-blue-800 hover:text-white active:bg-blue-800 active:text-white text-sm font-bold uppercase px-6 py-3 rounded-full shadow hover:shadow-lg outline-none focus:outline-none flex items-center justify-center mx-auto"
-                   style="transition: all 0.15s ease 0s;">
-                  <span class="mr-2">SSO Login</span>
-                  <i class="fas fa-building"></i>
-                </a>
-              </div>
+              </form>         
             </div>
           </div>
         </div>
