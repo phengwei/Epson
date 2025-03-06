@@ -22,13 +22,30 @@
           <v-card-text>
             <div class="table-actions filter-container mb-4 d-flex align-center justify-space-between">
               <span class="blue-text small-bold">MAIN UNIT</span>
-              <v-btn v-if="!isViewMode" color="primary" @click="openAddProductDialog">
-                Add New
-              </v-btn>
-              <v-btn v-if="isFulfillMode && selectedProducts.length > 0" color="primary" @click="fulfillSelectedProducts">
-                Fulfill Selected
-              </v-btn>
+
+              <div class="d-flex flex-row">
+                <v-btn v-if="!isViewMode"
+                       color="primary"
+                       class="mr-2"
+                       @click="openAddProductDialog">
+                  Add New
+                </v-btn>
+
+                <v-btn v-if="isFulfillMode && selectedProducts.length > 0"
+                       color="primary"
+                       class="mr-2"
+                       @click="fulfillSelectedProducts">
+                  Fulfill Selected
+                </v-btn>
+
+                <v-btn v-if="isFulfillMode && selectedProducts.length > 0"
+                       color="error"
+                       @click="rejectSelectedProducts">
+                  Reject Selected
+                </v-btn>
+              </div>
             </div>
+
             <table class="mb-5 mt-2">
               <thead>
                 <tr>
@@ -40,7 +57,7 @@
                   <th>End User Price</th>
                   <th v-if="isViewMode">Remarks</th>
                   <th v-if="isViewMode">Status</th>
-                  <th>SLA Type</th> 
+                  <th>SLA Type</th>
                   <th v-if="isViewMode">Approved Time</th>
                   <th v-if="isFulfillMode">Fulfill</th>
                   <th v-if="!isViewMode">Action</th>
@@ -123,12 +140,19 @@
           <v-card-text>
             <div class="table-actions filter-container mb-4 d-flex align-center justify-space-between">
               <span class="blue-text small-bold">COVERPLUS</span>
-              <v-btn v-if="!isViewMode" color="primary" @click="openAddCoverplusDialog">
-                Add New
-              </v-btn>
-              <v-btn v-if="isFulfillMode && selectedCoverpluses.length > 0" color="primary" @click="fulfillSelectedCoverpluses">
-                Fulfill Selected
-              </v-btn>
+              <div class="d-flex flex-row">
+                <v-btn v-if="!isViewMode" color="primary" class="mr-2" @click="openAddCoverplusDialog">
+                  Add New
+                </v-btn>
+                <v-btn v-if="isFulfillMode && selectedCoverpluses.length > 0" class="mr-2" color="primary" @click="fulfillSelectedCoverpluses">
+                  Fulfill Selected
+                </v-btn>
+                <v-btn v-if="isFulfillMode && selectedCoverpluses.length > 0"
+                       color="error"
+                       @click="rejectSelectedCoverpluses">
+                  Reject Selected
+                </v-btn>
+              </div>
             </div>
             <table class="mb-5 mt-2">
               <thead>

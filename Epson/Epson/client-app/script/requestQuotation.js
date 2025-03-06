@@ -177,6 +177,117 @@ export default {
     }
   },
   methods: {
+    rejectSelectedCoverpluses() {
+      // 2) Prompt user for remarks
+      this.$swal({
+        title: 'Reject Coverplus Requests?',
+        text: 'Please provide remarks for rejection',
+        input: 'text',
+        inputPlaceholder: 'Enter remarks',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, reject them!',
+        preConfirm: (inputValue) => {
+          if (!inputValue) {
+            this.$swal.showValidationMessage('Remarks cannot be empty');
+          }
+          return inputValue;
+        }
+      }).then(result => {
+        if (result.isConfirmed && result.value) {
+          const remarks = result.value;
+
+          // 3) Build the payload => List<RejectRequestDTO>
+          const payload = this.selectedCoverpluses.map(coverplusId => {
+            const coverplus = this.coverplusesToShow.find(c => c.id === coverplusId);
+            return {
+              id: coverplusId,
+              sla: coverplus.sla // or '' if not needed
+            };
+          });
+
+          // 4) Send to new API endpoint
+          this.rejectCoverplusRequests(payload, remarks);
+        }
+      });
+    },
+
+    async rejectCoverplusRequests(payload, remarks) {
+      try {
+        // We assume a new endpoint: /api/request/rejectcoverplusrequests?remarks=...
+        const requestUrl = `${this.$config.restUrl}/api/request/rejectrequestproducts?remarks=${encodeURIComponent(remarks)}`;
+
+        await this.$axios.post(requestUrl, payload);
+        this.$swal('Success', 'Coverplus requests have been rejected.', 'success')
+          .then(() => {
+            // e.g. reload the page or refresh the data
+            location.reload();
+          });
+      } catch (error) {
+        console.error('Error rejecting coverpluses:', error);
+        const msg = (error.response && error.response.data && error.response.data.message)
+          ? error.response.data.message
+          : 'Failed to reject the coverplus request(s).';
+        this.$swal('Error', msg, 'error');
+      }
+    },
+    rejectSelectedProducts() {
+      // Prompt the user for remarks
+      this.$swal({
+        title: 'Reject Requests?',
+        text: 'Please provide remarks for rejection',
+        input: 'text',          // let user type in a remark
+        inputPlaceholder: 'Enter rejection remarks',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, reject them!',
+        preConfirm: (inputValue) => {
+          if (!inputValue) {
+            this.$swal.showValidationMessage('Remarks cannot be empty');
+          }
+          return inputValue;
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          const remarks = result.value;
+
+          // Create the payload (array of RejectRequestDTO)
+          const payload = this.selectedProducts.map(productId => {
+            const product = this.productsToShow.find(p => p.id === productId);
+            return {
+              id: productId,
+              sla: product.sla // or '' if you do not need SLA
+            };
+          });
+
+          this.rejectRequests(payload, remarks);
+        }
+      });
+    },
+    async rejectRequests(payload, remarks) {
+      try {
+        // We assume the endpoint accepts remarks as a query parameter:
+        // [HttpPost("rejectrequestproducts")] 
+        // public async Task<IActionResult> RejectRequests([FromBody] List<RejectRequestDTO> requests, string remarks)
+        // so we do '?remarks=...' 
+        const requestUrl = `${this.$config.restUrl}/api/request/rejectrequestproducts?remarks=${encodeURIComponent(remarks)}`;
+
+        await this.$axios.post(requestUrl, payload);
+        this.$swal('Success', 'Requests have been rejected.', 'success')
+          .then(() => {
+            // e.g. reload the page or update UI
+            location.reload();
+          });
+      } catch (error) {
+        console.error('Error rejecting requests:', error);
+        const msg = (error.response && error.response.data && error.response.data.message)
+          ? error.response.data.message
+          : 'Failed to reject request(s).';
+        this.$swal('Failed to reject request(s)', msg, 'error');
+      }
+    },
     fulfillSelectedProducts() {
       // Check if all selected products have an SLA type
       const missingSla = this.selectedProducts.some(productId => {

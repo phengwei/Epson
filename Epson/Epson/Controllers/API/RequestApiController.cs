@@ -805,6 +805,44 @@ namespace Epson.Controllers.API
                 return BadRequest("Failed to reject request!");
         }
 
+        [HttpPost("rejectrequestproducts")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Coverplus")]
+        public async Task<IActionResult> RejectRequests([FromBody] List<RejectRequestDTO> requests, string remarks)
+        {
+            int i = 0;
+            do
+            {
+                var current = requests[i];
+
+                if (current.Id == 0)
+                    return NotFound("Resources not found!");
+
+                var requestProduct = _requestService.GetRequestProducts()
+                    .FirstOrDefault(x => x.Id == current.Id);
+                if (requestProduct == null)
+                    return NotFound("Resources not found!");
+
+                var user = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+                if (user == null)
+                    return Unauthorized("User not authorized to perform this operation");
+
+                bool success = _requestService.RejectRequest(
+                    user,
+                    _mapper.Map<RequestProduct>(requestProduct),
+                    remarks
+                );
+
+                if (!success)
+                    return BadRequest("Failed to reject request!");
+
+                i++;
+            }
+            while (i < requests.Count);
+
+            return Ok("Request has been rejected");
+        }
+
+
         [HttpGet("getpendingrequesteritem")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales, Admin, Director")]
         public async Task<IActionResult> GetPendingRequesterItem(string search = null, int? page = null, int? itemsPerPage = null)
