@@ -21,6 +21,7 @@ export default {
     CompetitorInformationDialog: () => import('~/components/CompetitorInformationDialog.vue'),
     CoverplusDialog: () => import('~/components/CoverplusDialog.vue'),
     ProductFulfillmentDialog: () => import('~/components/ProductFulfillmentDialog.vue'),
+    CoverplusFulfillmentDialog: () => import('~/components/CoverplusFulfillmentDialog.vue'),
   },
   watch: {
     reasons: {
@@ -97,6 +98,7 @@ export default {
       dialogCompetitor: false,
       dialogCoverplus: false,
       dialogProductFulfillment: false,
+      dialogCoverplusFulfillment: false,
       comments: '',
       nonCoverplusRequestItem: {},
       coverplusRequestItem: {},
@@ -374,6 +376,11 @@ export default {
       this.editedItem = { ...product };
       this.editedItem.createdByStr = this.submissionDetail.createdByStr;
       this.dialogProductFulfillment = true;
+    },
+    openFulfillCoverplusDialog(product) {
+      this.editedItem = { ...product };
+      this.editedItem.createdByStr = this.submissionDetail.createdByStr;
+      this.dialogCoverplusFulfillment = true;
     },
     openAddProductDialog() {
       this.selectedProduct = {};

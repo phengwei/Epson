@@ -12,6 +12,9 @@
         <!-- Fulfiller Dialog -->
         <ProductFulfillmentDialog :editedItem="editedItem" :dialogProductFulfillment.sync="dialogProductFulfillment" />
 
+        <!-- Coverplus Fulfiller Dialog -->
+        <CoverplusFulfillmentDialog :editedItem="editedItem" :dialogCoverplusFulfillment.sync="dialogCoverplusFulfillment" />
+
         <!-- Product Dialog -->
         <ProductDialog ref="productDialog" :dialogProduct.sync="dialogProduct"
                        :product="product"
@@ -220,7 +223,7 @@
                   </td>
                   <td v-if="isFulfillMode">
                     <div class="d-flex align-center">
-                      <v-btn class="mr-3" v-if="coverplus.authorizedToFulfill === true" small color="primary" @click="openFulfillProductDialog(coverplus)">
+                      <v-btn class="mr-3" v-if="coverplus.authorizedToFulfill === true" small color="primary" @click="openFulfillCoverplusDialog(coverplus)">
                         <v-icon>mdi-pencil</v-icon>
                       </v-btn>
                       <v-checkbox v-if="coverplus.authorizedToFulfill === true"

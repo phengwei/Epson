@@ -24,6 +24,7 @@ using Newtonsoft.Json;
 using Epson.Services.Services.Requests;
 using Epson.Services.Interface.AuditTrails;
 using Epson.Services.Services.AuditTrails;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace Epson.Controllers.API
 {
@@ -133,8 +134,8 @@ namespace Epson.Controllers.API
                 {
                     if (currentUser.Roles.Contains("Sales Operation"))
                     {
-                        Func<Request, bool> salesOperationFilter = x => x.ApprovalState == (int)ApprovalStateEnum.Approved;
-                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesOperationFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                        Func<Request, bool> adminFilter = x => true;
+                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => adminFilter(x) && monthFilter(x) && breachedFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
                     }
 
                     if (currentUser.Roles.Contains("Sales Section Head"))
@@ -607,7 +608,7 @@ namespace Epson.Controllers.API
 
         [HttpPost("fulfillrequest")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Product,Coverplus,Sales Section Head")]
-        public async Task<IActionResult> FulfillRequest(int id, string sla, int productId, decimal fulfilledPrice, string remarks)
+        public async Task<IActionResult> FulfillRequest(int id, string sla, int productId, decimal fulfilledPrice, string remarks, decimal distyPrice, decimal dealerPrice, decimal endUserPrice)
         {
             if (id == 0 || productId == 0)
                 return NotFound("Resources not found!");
@@ -622,6 +623,20 @@ namespace Epson.Controllers.API
 
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
+
+            bool isCoverplus = false;
+
+            if (distyPrice != 0 || endUserPrice != 0 || dealerPrice != 0)
+            {
+                isCoverplus = true;
+            }
+
+            if (isCoverplus)
+            {
+                requestProduct.DistyPrice = distyPrice;
+                requestProduct.EndUserPrice = endUserPrice;
+                requestProduct.DealerPrice = dealerPrice;
+            }
 
             if (_requestService.FulfillRequest(user, sla, _mapper.Map<RequestProduct>(requestProduct), _mapper.Map<Product>(product), fulfilledPrice, remarks))
                 return Ok("Request has been fulfilled");

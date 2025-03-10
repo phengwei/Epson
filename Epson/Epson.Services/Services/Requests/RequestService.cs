@@ -1354,6 +1354,8 @@ namespace Epson.Services.Services.Requests
             if (requestProductToFulfill == null)
                 return false;
 
+            requestProductToFulfill.DistyPrice = requestProduct.DistyPrice;
+            requestProductToFulfill.EndUserPrice = requestProduct.EndUserPrice;
             requestProductToFulfill.DealerPrice = totalPrice;
             requestProductToFulfill.FulfillerId = user.Id;
             requestProductToFulfill.HasFulfilled = true;
