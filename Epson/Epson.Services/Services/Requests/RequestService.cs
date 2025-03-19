@@ -600,6 +600,8 @@ namespace Epson.Services.Services.Requests
 
                 foreach (var requestProduct in requestProducts)
                 {
+                    var existingRequestProduct = existingRequest.RequestProducts.FirstOrDefault(rp => rp.ProductId == requestProduct.ProductId);
+
                     var product = _productService.GetProductById(requestProduct.ProductId);
 
                     requestProduct.ProductName = product.SKU + product.Name;
@@ -608,10 +610,19 @@ namespace Epson.Services.Services.Requests
                     requestProduct.RequestId = request.Id;
                     requestProduct.CreatedOnUTC = request.CreatedOnUTC;
                     requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
+
                     if (requestProduct.Status == (int)RequestProductStatusEnum.Approved)
                     {
                         requestProduct.Status = (int)RequestProductStatusEnum.Approved;
                         requestProduct.HasFulfilled = true;
+
+                        requestProduct.FulfilledDate = existingRequestProduct.FulfilledDate;
+                        requestProduct.FulfillerId = existingRequestProduct.FulfillerId;
+                        requestProduct.FulfilledPrice = existingRequestProduct.FulfilledPrice;
+                        requestProduct.TimeToResolution = existingRequestProduct.TimeToResolution;
+                        requestProduct.sla = existingRequestProduct.SLA;
+                        requestProduct.Breached = existingRequestProduct.Breached;
+                        requestProduct.HasReminded = existingRequestProduct.HasReminded;
                     }
                     else
                     {
@@ -1504,15 +1515,13 @@ namespace Epson.Services.Services.Requests
             {
                 _RequestRepository.Update(request);
                 _logger.Information("Setting Approval state to amend quotation of request {id}", request.Id);
+                string actionDetails = $"{userName} set request {request.Id} to amendment mode";
+                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, userID, actionDetails, "Update");
 
                 foreach (var requestProduct in requestProducts)
                 {
                     var amendQuotationEmailQueue = _emailService.CreateAmendQuotationEmailQueue(request, requestProduct);
                     _emailService.InsertEmailQueue(amendQuotationEmailQueue);
-
-                    string actionDetails = $"{userName} set request {request.Id} to amendment mode";
-                    _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, userID, actionDetails, "Update");
-
                 }
                 return true;
             }

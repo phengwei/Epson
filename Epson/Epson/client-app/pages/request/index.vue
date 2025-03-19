@@ -44,13 +44,17 @@
                       @update:options="updateOptions"
                       class="elevation-1">
           <template v-slot:item.action="{ item }">
-            <v-btn @click="viewRequest(item)">View</v-btn>
+            <div class="action-buttons">
+              <v-btn class="btn-small view-btn" @click="viewRequest(item)">View</v-btn>
+              <v-btn class="btn-small export-btn" @click="exportSingleRequest(item.id)">Export</v-btn>
+            </div>
           </template>
         </v-data-table>
       </v-card-text>
     </v-card>
   </div>
 </template>
+
 
 <script>
   import { mapGetters } from 'vuex';
@@ -157,6 +161,26 @@
       this.modifyTextInputs();
     },
     methods: {
+      exportSingleRequest(requestId) {
+        this.$axios({
+          method: 'get',
+          url: `${this.$config.restUrl}/api/export/toSingleExcel`,
+          params: { id: requestId },
+          responseType: 'blob'
+        })
+          .then(response => {
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `request_${requestId}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          })
+          .catch(error => {
+            console.error('Error exporting single request:', error);
+          });
+      },
       modifyTextInputs() {
         const vSelects = this.$el.querySelectorAll('.v-text-field__slot');
         vSelects.forEach(vSelect => {
@@ -449,4 +473,30 @@
   .table-padding {
     padding: 20px;
   }
+
+  .action-buttons {
+    display: flex;
+    flex-direction: row; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 8px; 
+    white-space: nowrap; 
+  }
+
+  .btn-small {
+    font-size: 12px !important;
+    padding: 5px 10px !important;
+    min-width: 80px !important;
+  }
+
+  .view-btn {
+    background-color: #003399 !important;
+    color: white !important;
+  }
+
+  .export-btn {
+    background-color: green !important;
+    color: white !important;
+  }
+
 </style>

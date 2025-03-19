@@ -134,8 +134,8 @@ namespace Epson.Controllers.API
                 {
                     if (currentUser.Roles.Contains("Sales Operation"))
                     {
-                        Func<Request, bool> adminFilter = x => true;
-                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => adminFilter(x) && monthFilter(x) && breachedFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
+                        Func<Request, bool> salesOperationFilter = x => x.ApprovalState == (int)ApprovalStateEnum.Approved;
+                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesOperationFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
                     }
 
                     if (currentUser.Roles.Contains("Sales Section Head"))

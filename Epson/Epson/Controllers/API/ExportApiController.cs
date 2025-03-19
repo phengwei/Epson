@@ -61,6 +61,59 @@ namespace Epson.Controllers.API
             _configuration = configuration;
         }
 
+        [HttpGet("toSingleExcel")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
+        public async Task<IActionResult> ExportSingleToExcel(int id)
+        {
+            var currentUser = _workContext.CurrentUser;
+            var currentUserDetail = await _userManager.FindByIdAsync(_workContext.CurrentUser?.Id);
+
+            var request = _requestService.GetRequestById(id);
+
+            if (request == null)
+            {
+                return NotFound(new { message = "Request not found" });
+            }
+
+            bool hasAccess = false;
+
+            if (currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Director"))
+            {
+                hasAccess = true;
+            }
+            else if (currentUser.Roles.Contains("Sales Operation") && request.ApprovalState == (int)ApprovalStateEnum.Approved)
+            {
+                hasAccess = true;
+            }
+            else if ((currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus")))
+            {
+                hasAccess = true;
+            }
+
+            if (!hasAccess)
+            {
+                return Forbid();
+            }
+
+            var requestList = new List<RequestDTO> { request };
+
+            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+            using var package = new ExcelPackage();
+
+            await PopulateRequestWorksheet(package.Workbook.Worksheets.Add("Request"), requestList);
+            await PopulateRequestProductWorksheet(package.Workbook.Worksheets.Add("Request Products"), requestList);
+
+            var stream = new MemoryStream();
+            await package.SaveAsAsync(stream);
+
+            string fileName = $"request_{id}.xlsx";
+            string fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            stream.Position = 0;
+
+            return File(stream, fileType, fileName);
+        }
+
+
         [HttpGet("toExcel")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
         public async Task<IActionResult> ExportToExcel(string search = null, bool breached = false, int month = 0, int approvalState = 0)
@@ -228,10 +281,9 @@ namespace Epson.Controllers.API
 
 
 
-
         private async Task PopulateRequestProductWorksheet(ExcelWorksheet ws, List<RequestDTO> requests)
         {
-            setBorder(ws.Cells[1, 1, 1, 13]); 
+            setBorder(ws.Cells[1, 1, 1, 13]);
             setTitleStyle(ws.Cells[1, 1, 1, 13]);
 
             ws.Cells[1, 1, 1, 13].Merge = true;
@@ -252,7 +304,7 @@ namespace Epson.Controllers.API
             ws.Cells[3, 12].Value = "Has Breached";
             ws.Cells[3, 13].Value = "Is Coverplus";
 
-            setBorder(ws.Cells[3, 1, 3, 13]);
+            setBorder(ws.Cells[3, 1, 3, 13]); 
 
             int rowStart = 4;
             foreach (var request in requests)
@@ -265,23 +317,29 @@ namespace Epson.Controllers.API
                     ws.Cells[rowStart, 4].Value = requestProduct.DistyPrice;
                     ws.Cells[rowStart, 5].Value = requestProduct.DealerPrice;
                     ws.Cells[rowStart, 6].Value = requestProduct.EndUserPrice;
-                    ws.Cells[rowStart, 7].Value = await _userManager.FindByIdAsync(requestProduct.FulfillerId);
+
+                    var fulfiller = await _userManager.FindByIdAsync(requestProduct.FulfillerId);
+                    ws.Cells[rowStart, 7].Value = fulfiller?.Email ?? "N/A"; 
+
                     ws.Cells[rowStart, 8].Value = requestProduct.HasFulfilled ? "Fulfilled" : "Not Fulfilled";
                     ws.Cells[rowStart, 9].Value = requestProduct.FulfilledDate.ToString("yyyy-MM-dd HH:mm:ss");
+
                     var resolutionTime = CalculateBusinessTimeDifference(request.CreatedOnUTC.AddHours(-8), requestProduct.UpdatedOnUTC);
                     ws.Cells[rowStart, 10].Value = $"{resolutionTime.Days}d {resolutionTime.Hours}h {resolutionTime.Minutes}m {resolutionTime.Seconds}s";
+
                     ws.Cells[rowStart, 11].Value = ((RequestProductStatusEnum)requestProduct.Status).GetDescription();
                     ws.Cells[rowStart, 12].Value = requestProduct.Breached ? "Breached" : "Not Breached";
                     ws.Cells[rowStart, 13].Value = requestProduct.IsCoverplus ? "Coverplus" : "Not Coverplus";
-                    rowStart++;
-
 
                     setBorder(ws.Cells[rowStart, 1, rowStart, 13]);
+
+                    rowStart++; 
                 }
             }
 
-            ws.Cells.AutoFitColumns(0);
+            ws.Cells.AutoFitColumns();
         }
+
 
         private void PopulateCompetitorInformationWorksheet(ExcelWorksheet ws, List<CompetitorInformation> competitorInfos)
         {
