@@ -1184,6 +1184,12 @@ namespace Epson.Services.Services.Email
                     uniqueEmails.Remove(fulfiller.Email);
                 }
 
+                if (fulfiller == null || requester == null || fulfiller.TeamId == 0)
+                {
+                    _logger.Error($"Missing fulfiller/requester/teamId for requestId {requestId}");
+                    continue; 
+                }
+
                 // Add original CC logic as is
                 List<ApplicationUser> ccSalesHead = await _userService.GetUserSalesHead(fulfiller.TeamId, requester.Id);
                 foreach (var user in ccSalesHead)
