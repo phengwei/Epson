@@ -96,7 +96,9 @@ namespace Epson.Controllers.API
                         }
 
                         var categoryDetails = _categoryService.GetCategoryById(category.CategoryId);
-                        return categoryDetails.BackupFulfiller1 == currentUser.Id;
+
+                        return categoryDetails.BackupFulfiller1 == currentUser.Id
+                            || categoryDetails.BackupFulfiller2 == currentUser.Id;
                     })
                     .ToList();
             }
@@ -107,7 +109,7 @@ namespace Epson.Controllers.API
 
             return Ok(response);
         }
-        
+
 
         [HttpPost("addproduct")]
         public async Task<IActionResult> AddProduct([FromBody] BaseQueryModel<ProductModel> queryModel)

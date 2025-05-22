@@ -65,7 +65,7 @@ namespace Epson.Controllers.API
             if (currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Director"))
                 categories = _categoryService.GetCategories();
             else
-                categories = _categoryService.GetCategories().Where(x => x.BackupFulfiller1 == currentUser.Id).ToList();
+                categories = _categoryService.GetCategories().Where(x => x.BackupFulfiller1 == currentUser.Id || x.BackupFulfiller2 == currentUser.Id).ToList();
 
 
             var categoryModels = _categoryModelFactory.PrepareCategoryModels(categories);
