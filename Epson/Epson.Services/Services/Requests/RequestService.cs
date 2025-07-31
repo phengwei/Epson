@@ -1330,28 +1330,41 @@ namespace Epson.Services.Services.Requests
                     decimal totalUpdatedPrice = requestProducts.Sum(x => x.FulfilledPrice);
                     existingRequest.TotalPrice = totalUpdatedPrice;
 
+                    allRequestProducts = _RequestProductRepository.GetAll()
+                           .Where(x => x.RequestId == existingRequest.Id)
+                           .ToList(); ;
+
                     // Check if all products are fulfilled
                     allProductsFulfilled = allRequestProducts.All(x => x.HasFulfilled);
+                    bool anyProductNotApproved = allRequestProducts.Any(x => x.Status != (int)RequestProductStatusEnum.Approved);
 
                     if (allProductsFulfilled)
                     {
-                        //check if is demo requisition request
-                        if (request.ProjectInformation.ProjectInformationReasons.Any(x => x.SelectedReason == "Demo Unit Price Requisition"))
+                        if (anyProductNotApproved)
                         {
-                            request.ApprovalState = (int)ApprovalStateEnum.PendingDemoRequisitionApproval;
+                            request.ApprovalState = (int)ApprovalStateEnum.RejectedByFulfiller;
                             _RequestRepository.Update(request);
-
-                            List<EmailQueue> emailQueues = _emailService.NotifyDemoRequisitionFulfiller(request, requestProducts);
-
-                            foreach (var emailQueue in emailQueues)
-                            {
-                                _emailService.InsertEmailQueue(emailQueue);
-                            }
                         }
                         else
                         {
-                            request.ApprovalState = (int)ApprovalStateEnum.Approved;
-                            _RequestRepository.Update(request);
+                            //check if is demo requisition request
+                            if (request.ProjectInformation.ProjectInformationReasons.Any(x => x.SelectedReason == "Demo Unit Price Requisition"))
+                            {
+                                request.ApprovalState = (int)ApprovalStateEnum.PendingDemoRequisitionApproval;
+                                _RequestRepository.Update(request);
+
+                                List<EmailQueue> emailQueues = _emailService.NotifyDemoRequisitionFulfiller(request, requestProducts);
+
+                                foreach (var emailQueue in emailQueues)
+                                {
+                                    _emailService.InsertEmailQueue(emailQueue);
+                                }
+                            }
+                            else
+                            {
+                                request.ApprovalState = (int)ApprovalStateEnum.Approved;
+                                _RequestRepository.Update(request);
+                            }
                         }
                     }
                     else
@@ -1450,30 +1463,42 @@ namespace Epson.Services.Services.Requests
                 decimal totalUpdatedPrice = requestProducts.Sum(x => x.FulfilledPrice);
                 existingRequest.TotalPrice = totalUpdatedPrice;
 
+                requestProducts = _RequestProductRepository.GetAll().Where(x => x.RequestId == existingRequest.Id).ToList();
+
                 // Check if all products are fulfilled
                 bool allProductsFulfilled = requestProducts.All(x => x.HasFulfilled);
+
+                bool anyProductNotApproved = requestProducts.Any(x => x.Status != (int)RequestProductStatusEnum.Approved);
 
                 var request = _mapper.Map<Request>(existingRequest);
                 if (allProductsFulfilled)
                 {
-                    //check if is demo requisition request
-                    if (request.ProjectInformation.ProjectInformationReasons.Any(x => x.SelectedReason == "Demo Unit Price Requisition"))
+                    if (anyProductNotApproved)
                     {
-                        request.ApprovalState = (int)ApprovalStateEnum.PendingDemoRequisitionApproval;
+                        request.ApprovalState = (int)ApprovalStateEnum.RejectedByFulfiller;
                         _RequestRepository.Update(request);
-
-
-                        List<EmailQueue> emailQueues = _emailService.NotifyDemoRequisitionFulfiller(request, requestProducts);
-
-                        foreach (var emailQueue in emailQueues)
-                        {
-                            _emailService.InsertEmailQueue(emailQueue);
-                        }
                     }
                     else
                     {
-                        request.ApprovalState = (int)ApprovalStateEnum.Approved;
-                        _RequestRepository.Update(request);
+                        //check if is demo requisition request
+                        if (request.ProjectInformation.ProjectInformationReasons.Any(x => x.SelectedReason == "Demo Unit Price Requisition"))
+                        {
+                            request.ApprovalState = (int)ApprovalStateEnum.PendingDemoRequisitionApproval;
+                            _RequestRepository.Update(request);
+
+
+                            List<EmailQueue> emailQueues = _emailService.NotifyDemoRequisitionFulfiller(request, requestProducts);
+
+                            foreach (var emailQueue in emailQueues)
+                            {
+                                _emailService.InsertEmailQueue(emailQueue);
+                            }
+                        }
+                        else
+                        {
+                            request.ApprovalState = (int)ApprovalStateEnum.Approved;
+                            _RequestRepository.Update(request);
+                        }
                     }
                 }
                 else
@@ -1733,21 +1758,16 @@ namespace Epson.Services.Services.Requests
 
 
                 List<RequestProduct> requestProducts = _RequestProductRepository.Table.Where(x => x.RequestId == requestProduct.RequestId).ToList();
-                bool allRejected = requestProducts.All(rp => rp.Status == (int)RequestProductStatusEnum.Rejected);
+                bool anyRejected = requestProducts.Any(rp => rp.Status == (int)RequestProductStatusEnum.Rejected);
                 bool allFulfilled = requestProducts.All(rp => rp.HasFulfilled == true);
 
                 if (DateTime.UtcNow > requestProduct.CreatedOnUTC.AddWorkingDays(5))
                     requestProduct.Breached = true;
 
-                //if all products in a request is rejected, set status of request to reject
-                if (allRejected)
+                //if any products in a request is rejected, set status of request to reject
+                if (anyRejected && allFulfilled)
                 {
                     request.ApprovalState = (int)ApprovalStateEnum.RejectedByFulfiller;
-                    _RequestRepository.Update(_mapper.Map<Request>(request));
-                }
-                else if (allFulfilled)
-                {
-                    request.ApprovalState = (int)ApprovalStateEnum.Approved;
                     _RequestRepository.Update(_mapper.Map<Request>(request));
                 }
 
