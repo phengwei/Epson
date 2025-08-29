@@ -135,7 +135,7 @@ namespace Epson.Controllers.API
                     if (currentUser.Roles.Contains("Sales Operation"))
                     {
                         Func<Request, bool> salesOperationFilter = x => x.ApprovalState == (int)ApprovalStateEnum.Approved;
-                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesOperationFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesOperationFilter(x) && monthFilter(x) && breachedFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
                     }
 
                     if (currentUser.Roles.Contains("Sales Section Head"))
@@ -155,21 +155,21 @@ namespace Epson.Controllers.API
                         Func<Request, bool> salesSectionHeadFilter = x => usersInRelevantTeams.Contains(x.CreatedById) &&
                                                                     x.CreatedById != currentUser.Id;
 
-                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesSectionHeadFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesSectionHeadFilter(x) && monthFilter(x) && breachedFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
                     }
 
                     if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus"))
                     {
                         Func<Request, bool> fulfillerFilter = x => x.RequestProducts.Any(rp => rp.FulfillerId == currentUser.Id);
 
-                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => fulfillerFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => fulfillerFilter(x) && monthFilter(x) && breachedFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
                     }
 
                     if (currentUser.Roles.Contains("Sales"))
                     {
                         Func<Request, bool> salesFilter = x => x.CreatedById == currentUser.Id;
 
-                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesFilter(x) && monthFilter(x) && breachedFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
                     }
                 }
 
