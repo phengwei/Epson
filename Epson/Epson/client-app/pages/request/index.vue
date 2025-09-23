@@ -24,6 +24,13 @@
             <v-select v-model="selectedMonth" :items="months" @change="triggerSearch" class="month-select"></v-select>
           </div>
           <div class="dropdown-group">
+            <label class="filter-label">Year</label>
+            <v-select v-model="selectedYear"
+                      :items="years"
+                      @change="triggerSearch"
+                      class="year-select"></v-select>
+          </div>
+          <div class="dropdown-group">
             <label class="filter-label">Approval State</label>
             <v-select v-model="selectedApprovalState" :items="approvalStates" @change="triggerSearch" class="approval-select"></v-select>
           </div>
@@ -82,6 +89,12 @@
     name: 'RequestOverview',
     props: ['routeKey'],
     data() {
+      const thisYear = new Date().getFullYear();
+      const years = [{ value: 0, text: 'All' }];
+      for (let y = thisYear - 3; y <= thisYear + 3; y++) {
+        years.push({ value: y, text: String(y) });
+      }
+
       return {
         headers: [
           { text: 'Request #', value: 'id', align: 'center', sortable: false },
@@ -108,6 +121,7 @@
         breached: false,
         selectedMonth: new Date().getMonth() + 1,
         selectedApprovalState: '',
+        selectedYear: thisYear,
         months: [
           { value: 0, text: 'All' },
           { value: 1, text: 'January' },
@@ -123,6 +137,7 @@
           { value: 11, text: 'November' },
           { value: 12, text: 'December' }
         ],
+        years,
         ApprovalStateEnum,
         RequestProductStatusEnum,
       };
@@ -154,6 +169,7 @@
     created() {
       this.breached = this.$route.query.breached === 'true';
       this.selectedMonth = this.$route.query.month ? parseInt(this.$route.query.month) : new Date().getMonth() + 1;
+      this.selectedYear = this.$route.query.year ? parseInt(this.$route.query.year) : new Date().getFullYear();
       this.getRequests();
     },
     mounted() {
@@ -212,6 +228,7 @@
           page: this.options.page,
           itemsPerPage: this.options.itemsPerPage,
           month: this.selectedMonth,
+          year: this.selectedYear,
           approvalState: this.selectedApprovalState,
         };
         this.$axios.get(`${this.$config.restUrl}/api/request/getrequests`, { params })
@@ -296,6 +313,7 @@
         const params = {
           month: this.selectedMonth,
           breached: this.breached,
+          year: this.selectedYear,   
           approvalState: this.selectedApprovalState,
         };
 
@@ -358,6 +376,7 @@
   }
 
   .month-select,
+  .year-select,
   .approval-select {
     width: 150px;
   }
