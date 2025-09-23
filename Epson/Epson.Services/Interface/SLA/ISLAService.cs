@@ -24,9 +24,9 @@ namespace Epson.Services.Interface.SLA
         public bool DeleteSLAHoliday(SLAHoliday slaHoliday);
         public bool DeleteStaffLeaveHoliday(SLAStaffLeave slaStaffLeave);
         public SLASettingDTO GetSLASettings();
-        public decimal GetAverageTimeToResolutionInHours(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month);
-        public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month);
-        public int GetTotalTicketCount(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month);
-        public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month);
+        public decimal GetAverageTimeToResolutionInHours(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year);
+        public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year);
+        public int GetTotalTicketCount(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year);
+        public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year);
     }
 }

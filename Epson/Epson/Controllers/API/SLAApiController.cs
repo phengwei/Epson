@@ -227,7 +227,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getslametrics")]
-        public async Task<IActionResult> GetSLAMetricsModel(int month)
+        public async Task<IActionResult> GetSLAMetricsModel(int month, int year = 0)
         {
             var currentUser = await _userManager.FindByIdAsync(_workContext.CurrentUser.Id);
             var salesUsers = await _userManager.GetUsersInRoleAsync("Sales Section Head");
@@ -267,10 +267,10 @@ namespace Epson.Controllers.API
 
             var response = new GenericResponseModel<SLAMetricsModel>();
 
-            response.Data.AverageTimeToResolutionInHours = _slaService.GetAverageTimeToResolutionInHours(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
-            response.Data.TotalTickets = _slaService.GetTotalTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
-            response.Data.BreachedTickets = _slaService.GetBreachedTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
-            response.Data.SuccessRate = _slaService.GetSuccessRateOfTickets(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month);
+            response.Data.AverageTimeToResolutionInHours = _slaService.GetAverageTimeToResolutionInHours(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month, year);
+            response.Data.TotalTickets = _slaService.GetTotalTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month, year);
+            response.Data.BreachedTickets = _slaService.GetBreachedTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month, year);
+            response.Data.SuccessRate = _slaService.GetSuccessRateOfTickets(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month, year);
 
             return Ok(response);
         }

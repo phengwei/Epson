@@ -184,26 +184,26 @@ namespace Epson.Services.Services.SLA
             return _mapper.Map<SLASettingDTO>(_slaSetting.Value);
         }
 
-        public decimal GetAverageTimeToResolutionInHours(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
+        public decimal GetAverageTimeToResolutionInHours(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year)
         {
             List<RequestProduct> ticketsResolved = new List<RequestProduct>();
 
             if (isAdminUser)
             {
                 ticketsResolved = _requestProductRepository.Table
-                    .Where(x => x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .Where(x => x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month) && (year == 0 || x.CreatedOnUTC.Year == year))
                     .ToList();
             }
             else if (isSalesHeadUser)
             {
                 ticketsResolved = _requestProductRepository.Table
-                    .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month) && (year == 0 || x.CreatedOnUTC.Year == year))
                     .ToList();
             }
             else
             {
                 ticketsResolved = _requestProductRepository.Table
-                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month) && (year == 0 || x.CreatedOnUTC.Year == year))
                     .ToList();
             }
 
@@ -222,14 +222,14 @@ namespace Epson.Services.Services.SLA
             return averageTimeToResolution;
         }
 
-        public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
+        public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year)
         {
             List<int> breachedRequests = new List<int>();
 
             if (isAdminUser)
             {
                 breachedRequests = _requestProductRepository.Table
-                    .Where(x => x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .Where(x => x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month) && (year == 0 || x.CreatedOnUTC.Year == year))
                     .Select(x => x.RequestId)
                     .Distinct()
                     .ToList();
@@ -237,7 +237,7 @@ namespace Epson.Services.Services.SLA
             else if (isSalesHeadUser)
             {
                 breachedRequests = _requestProductRepository.Table
-                    .Where(x => users.Contains(x.FulfillerId) && x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .Where(x => users.Contains(x.FulfillerId) && x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month) && (year == 0 || x.CreatedOnUTC.Year == year))
                     .Select(x => x.RequestId)
                     .Distinct()
                     .ToList();
@@ -245,7 +245,7 @@ namespace Epson.Services.Services.SLA
             else
             {
                 breachedRequests = _requestProductRepository.Table
-                    .Where(x => x.FulfillerId == user.Id && x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .Where(x => x.FulfillerId == user.Id && x.Breached == true && (month == 0 || x.CreatedOnUTC.Month == month) && (year == 0 || x.CreatedOnUTC.Year == year))
                     .Select(x => x.RequestId)
                     .Distinct()
                     .ToList();
@@ -255,14 +255,14 @@ namespace Epson.Services.Services.SLA
         }
 
 
-        public int GetTotalTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
+        public int GetTotalTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year)
         {
             List<Request> totalTickets = new List<Request>();
 
             if (isAdminUser)
             {
                 totalTickets = _requestRepository.Table
-                    .Where(x => month == 0 || x.CreatedOnUTC.Month == month)
+                    .Where(x => (month == 0 || x.CreatedOnUTC.Month == month) && (year == 0 || x.CreatedOnUTC.Year == year))
                     .ToList();
             }
             else
@@ -311,26 +311,26 @@ namespace Epson.Services.Services.SLA
             return approvedTickets.Count;
         }
 
-        public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
+        public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year)
         {
             List<RequestProduct> successTickets = new List<RequestProduct>();
 
             if (isAdminUser)
             {
                 successTickets = _requestProductRepository.Table
-                    .Where(x => x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .Where(x => x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month) && (year == 0 || x.CreatedOnUTC.Year == year))
                     .ToList();
             }
             else if (isSalesHeadUser)
             {
                 successTickets = _requestProductRepository.Table
-                    .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month) && (year == 0 || x.CreatedOnUTC.Year == year))
                     .ToList();
             }
             else
             {
                 successTickets = _requestProductRepository.Table
-                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month))
+                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month) && (year == 0 || x.CreatedOnUTC.Year == year))
                     .ToList();
             }
 

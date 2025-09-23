@@ -12,14 +12,22 @@
 
         <v-card-text>
           <div class="filter-bar">
-            <label for="month-select">Select Month:</label>
+            <label for="month-select" class="filter-label">Select Month:</label>
             <v-select v-model="selectedMonth"
                       :items="months"
                       item-text="text"
                       item-value="value"
                       outlined
                       dense
-                      class="month-select"></v-select>
+                      class="month-select" />
+            <label for="year-select" class="filter-label year-label">Year:</label>
+            <v-select v-model="selectedYear"
+                      :items="years"
+                      item-text="text"
+                      item-value="value"
+                      outlined
+                      dense
+                      class="year-select" />
           </div>
           <div class="container">
             <div class="card average-time-card">
@@ -81,12 +89,18 @@
       VCardText,
     },
     data() {
+      const thisYear = new Date().getFullYear();
+      const years = [{ value: 0, text: 'All' }];
+      for (let y = thisYear - 3; y <= thisYear + 3; y++) {
+        years.push({ value: y, text: String(y) });
+      }
       return {
         AverageTimeToResolutionInHours: 0,
         BreachedTickets: 0,
         TotalTickets: 0,
         SuccessRate: 0,
         selectedMonth: new Date().getMonth() + 1,
+        selectedYear: thisYear, 
         months: [
           { value: 0, text: 'All' },
           { value: 1, text: 'January' },
@@ -102,11 +116,15 @@
           { value: 11, text: 'November' },
           { value: 12, text: 'December' },
         ],
+        years,
       };
     },
     watch: {
       selectedMonth(newMonth) {
         this.getSLAMetrics(newMonth);
+      },
+      selectedYear(newYear) {
+        this.getSLAMetrics(this.selectedMonth, newYear);
       },
     },
     mounted() {
@@ -123,10 +141,10 @@
           }
         });
       },
-      async getSLAMetrics(month = this.selectedMonth) {
+      async getSLAMetrics(month = this.selectedMonth, year = this.selectedYear) {
         try {
           const result = await this.$axios.get(`${this.$config.restUrl}/api/sla/getslametrics`, {
-            params: { month },
+            params: { month, year },
           });
 
           if (result.data.data) {
@@ -150,7 +168,7 @@
         console.log('Metrics reset.');
       },
       goToBreachedTickets() {
-        this.$router.push({ path: '/request', query: { breached: true, month: this.selectedMonth } });
+        this.$router.push({ path: '/request', query: { breached: true, month: this.selectedMonth, year: this.selectedYear } });
       },
     },
   };
@@ -185,8 +203,10 @@
     margin: auto;
     margin-bottom: 1rem;
     display: flex;
+    align-items: center;
+    gap: 8px;
     justify-content: center;
-    width: 35%;
+    width: 45%;
   }
 
     .filter-bar label {
@@ -194,8 +214,10 @@
       font-weight: bold;
     }
 
-  .month-select {
+  .month-select,
+  .year-select {
     width: 100%;
+    max-width: 180px;
   }
 
   .container {
