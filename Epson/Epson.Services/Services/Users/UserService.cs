@@ -344,14 +344,17 @@ namespace Epson.Services.Services.Users
 
         public async Task<List<ApplicationUser>> GetUserSalesHead(int teamID, string userId, bool isSalesHead = false)
         {
-            string fulfillerTeamName = _TeamRepository.GetAll()
-                .Where(x => x.Id == teamID)
-                .FirstOrDefault()?.Name;
+            var result = new List<ApplicationUser>();
 
-            if (string.IsNullOrEmpty(fulfillerTeamName))
+            var fulfillerTeamName = _TeamRepository.GetAll()
+                .Where(x => x.Id == teamID)
+                .Select(x => x.Name)
+                .FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(fulfillerTeamName))
             {
                 _logger.Information($"Team with ID {teamID} not found.");
-                return null;
+                return result; // empty
             }
 
             List<TeamHierarchy> teamHierarchies = GetTeamHierarchy();
@@ -363,28 +366,40 @@ namespace Epson.Services.Services.Users
 
             if (approverRecord == null)
             {
-                _logger.Information($"No approver team found for team {fulfillerTeamName} with IsSalesHead = {isSalesHead}");
-                return null;
+                _logger.Information($"No approver team for '{fulfillerTeamName}' with IsSalesHead = {isSalesHead}");
+                return result; // empty
             }
 
-            List<ApplicationUser> salesHeadUsers = new List<ApplicationUser>();
-
-            salesHeadUsers.Add(await _userManager.FindByEmailAsync(approverRecord.EmailRecipient));
-
-            if (salesHeadUsers.Count > 0)
+            if (string.IsNullOrWhiteSpace(approverRecord.EmailRecipient))
             {
-                if (salesHeadUsers.First() != null && salesHeadUsers.First().Id != userId)
-                {
-                    var isInRole = await _userManager.IsInRoleAsync(salesHeadUsers.First(), "Sales Section Head");
-                    if (isInRole)
-                    {
-                        return salesHeadUsers;
-                    }
-                }
-
+                _logger.Information($"Approver record for '{fulfillerTeamName}' has empty EmailRecipient.");
+                return result; // empty
             }
-            return null;
+
+            var user = await _userManager.FindByEmailAsync(approverRecord.EmailRecipient);
+            if (user == null)
+            {
+                _logger.Information($"No user found with email '{approverRecord.EmailRecipient}'.");
+                return result; // empty
+            }
+
+            if (user.Id == userId)
+            {
+                _logger.Information($"Approver '{user.Email}' is the same as requester '{userId}', skipping.");
+                return result; // empty
+            }
+
+            var isInRole = await _userManager.IsInRoleAsync(user, "Sales Section Head");
+            if (!isInRole)
+            {
+                _logger.Information($"User '{user.Email}' is not in role 'Sales Section Head'.");
+                return result; // empty
+            }
+
+            result.Add(user);
+            return result;
         }
+
 
         public List<ApplicationUser> GetAllSalesHeadUsersByTeam(int teamId)
         {

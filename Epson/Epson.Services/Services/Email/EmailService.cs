@@ -1094,110 +1094,130 @@ namespace Epson.Services.Services.Email
         public async Task<List<EmailQueue>> CreateReminderEmailQueue(List<RequestProduct> requestProducts)
         {
             var emailAccount = _EmailAccountRepository.GetAll().FirstOrDefault();
-            if (emailAccount == null)
-                return new List<EmailQueue>();
+            if (emailAccount == null) return new List<EmailQueue>();
+            if (requestProducts == null || requestProducts.Count == 0) return new List<EmailQueue>();
 
-            List<EmailQueue> emailQueueList = new List<EmailQueue>();
+            var emailQueueList = new List<EmailQueue>();
 
-            var groupedRequestProducts = requestProducts
-                .GroupBy(rp => rp.RequestId)
-                .ToList();
+            var groupedRequestProducts = requestProducts.GroupBy(rp => rp.RequestId).ToList();
 
             foreach (var requestGroup in groupedRequestProducts)
             {
                 var requestId = requestGroup.Key;
                 var productsForRequest = requestGroup.ToList();
+                if (productsForRequest.Count == 0) continue;
 
-                var requesterTask = _userManager.FindByIdAsync(_RequestRepository.GetById(requestId).CreatedById);
-                var requester = await requesterTask;
-                string productDetails = "";
-
-                foreach (var requestProduct in productsForRequest)
+                var request = _RequestRepository.GetById(requestId);
+                if (request == null)
                 {
-                    var product = _productService.GetProductById(requestProduct.ProductId);
-                    var projectInfo = _ProjectInformationRepository
-                        .GetAll()
-                        .FirstOrDefault(x => x.RequestId == requestProduct.RequestId);
+                    _logger.Error($"Request not found for requestId {requestId}");
+                    continue;
+                }
 
-                    productDetails += $@"
+                var requester = await _userManager.FindByIdAsync(request.CreatedById);
+                if (requester == null)
+                {
+                    _logger.Error($"Requester not found for requestId {requestId} (CreatedById={request.CreatedById})");
+                    continue;
+                }
+
+                // Build product rows
+                var sbRows = new System.Text.StringBuilder();
+                foreach (var rp in productsForRequest)
+                {
+                    var product = _productService.GetProductById(rp.ProductId);
+                    var projectInfo = _ProjectInformationRepository.GetAll()
+                                        .FirstOrDefault(x => x.RequestId == rp.RequestId);
+
+                    var productName = product?.Name ?? "Unknown";
+                    var qty = rp.Quantity;
+                    var price = rp.EndUserPrice;
+                    var endUser = projectInfo?.ProjectName ?? "N/A";
+
+                    sbRows.AppendLine($@"
+                <tr>
+                    <td>{productName}</td>
+                    <td>{qty}</td>
+                    <td>RM {price}</td>
+                    <td>{endUser}</td>
+                </tr>");
+                }
+
+                var body = $@"
+<!DOCTYPE html>
+<html lang='en'>
+<head>...</head>
+<body>
+    <div class='email-container'>
+        <div class='email-header'><h1>Reminder</h1></div>
+        <div class='email-body'>
+            <p><strong>Request {requestId}</strong> is due soon with the following details:</p>
+            <table>
+                <thead>
                     <tr>
-                        <td>{product.Name}</td>
-                        <td>{requestProduct.Quantity}</td>
-                        <td>RM {requestProduct.EndUserPrice}</td>
-                        <td>{projectInfo?.ProjectName ?? "N/A"}</td>
-                    </tr>";
-                        }
+                        <th>Product</th><th>Quantity</th><th>End User Price</th><th>End User</th>
+                    </tr>
+                </thead>
+                <tbody>{sbRows}</tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>";
 
-                        var body = $@"
-                <!DOCTYPE html>
-                <html lang='en'>
-                <head> ... </head>
-                <body>
-                    <div class='email-container'>
-                        <div class='email-header'>
-                            <h1>Reminder</h1>
-                        </div>
-                        <div class='email-body'>
-                            <p><strong>Request {requestId}</strong> is due soon with the following details:</p>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Product</th>
-                                        <th>Quantity</th>
-                                        <th>End User Price</th>
-                                        <th>End User</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {productDetails}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </body>
-                </html>";
+                // Fulfiller
+                var fulfillerId = productsForRequest[0].FulfillerId;
+                var fulfiller = string.IsNullOrWhiteSpace(fulfillerId)
+                    ? null
+                    : await _userManager.FindByIdAsync(fulfillerId);
 
-                var fulfillerTask = _userManager.FindByIdAsync(productsForRequest[0].FulfillerId);
-                var fulfiller = await fulfillerTask;
-                List<string> backupFulfillerEmails = new List<string>();
-
-                foreach (var product in productsForRequest)
+                if (fulfiller == null || fulfiller.TeamId == 0)
                 {
-                    var productCategories = _productService.GetCategoryIdsByProductId(product.ProductId);
+                    _logger.Error($"Missing fulfiller or teamId for requestId {requestId} (FulfillerId={fulfillerId})");
+                    continue;
+                }
+
+                // Build backup fulfiller emails
+                var uniqueEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var rp in productsForRequest)
+                {
+                    var productCategories = _productService.GetCategoryIdsByProductId(rp.ProductId);
                     foreach (var pc in productCategories)
                     {
                         var category = _categoryService.GetCategoryById(pc.CategoryId);
-                        var backupFulfiller1 = await _userManager.FindByIdAsync(category.BackupFulfiller1);
-                        var backupFulfiller2 = await _userManager.FindByIdAsync(category.BackupFulfiller2);
-
-                        if (backupFulfiller1 != null) backupFulfillerEmails.Add(backupFulfiller1.Email);
-                        if (backupFulfiller2 != null) backupFulfillerEmails.Add(backupFulfiller2.Email);
+                        if (!string.IsNullOrWhiteSpace(category?.BackupFulfiller1))
+                        {
+                            var u1 = await _userManager.FindByIdAsync(category.BackupFulfiller1);
+                            if (!string.IsNullOrWhiteSpace(u1?.Email)) uniqueEmails.Add(u1.Email);
+                        }
+                        if (!string.IsNullOrWhiteSpace(category?.BackupFulfiller2))
+                        {
+                            var u2 = await _userManager.FindByIdAsync(category.BackupFulfiller2);
+                            if (!string.IsNullOrWhiteSpace(u2?.Email)) uniqueEmails.Add(u2.Email);
+                        }
                     }
                 }
 
-                HashSet<string> uniqueEmails = new HashSet<string>(backupFulfillerEmails);
+                // Static CCs
                 uniqueEmails.Add("hanson.ong@emsb.epson.com.my");
                 uniqueEmails.Add("michelle.yau@emsb.epson.com.my");
 
-                if (uniqueEmails.Contains(fulfiller.Email))
+                // Only now safe to reference fulfiller.Email
+                if (!string.IsNullOrWhiteSpace(fulfiller.Email) && uniqueEmails.Contains(fulfiller.Email))
                 {
                     uniqueEmails.Remove(fulfiller.Email);
                 }
 
-                if (fulfiller == null || requester == null || fulfiller.TeamId == 0)
-                {
-                    _logger.Error($"Missing fulfiller/requester/teamId for requestId {requestId}");
-                    continue; 
-                }
-
-                // Add original CC logic as is
-                List<ApplicationUser> ccSalesHead = await _userService.GetUserSalesHead(fulfiller.TeamId, requester.Id);
+                // Sales head CCs – treat null as empty
+                var ccSalesHead = await _userService.GetUserSalesHead(fulfiller.TeamId, requester.Id)
+                                  ?? new List<ApplicationUser>();
                 foreach (var user in ccSalesHead)
                 {
-                    uniqueEmails.Add(user.Email);
+                    if (!string.IsNullOrWhiteSpace(user?.Email))
+                        uniqueEmails.Add(user.Email);
                 }
 
-                string ccEmails = string.Join(",", uniqueEmails);
+                var ccEmails = string.Join(",", uniqueEmails);
 
                 var emailQueue = new EmailQueue
                 {
