@@ -242,7 +242,7 @@ namespace Epson.Services.Services.Requests
             return requestDTOs;
         }
 
-        public bool AssignServiceRequestMaker(int requestId, ApplicationUser user)
+        public bool AssignServiceRequestMaker(int requestId, ApplicationUser user, string actorId)
         {
             if (requestId == 0 || user == null)
                 throw new ArgumentException("Request ID and User ID must be provided.");
@@ -270,7 +270,7 @@ namespace Epson.Services.Services.Requests
                     requestId,
                     "ServiceRequest",
                     DateTime.UtcNow,
-                    serviceRequest.UpdatedById,
+                    actorId,
                     actionDetails,
                     "Assign"
                 );

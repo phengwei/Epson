@@ -250,17 +250,16 @@ app.UseEndpoints(endpoints =>
 
 app.UseSpaStaticFiles();
 
-app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
+app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), spaApp =>
 {
-    builder.UseSpa(spa =>
+    spaApp.UseSpa(spa =>
     {
-        spa.Options.SourcePath = "client-app";
-        if (app.Environment.IsDevelopment())
-        {
-            // Launch development server for Nuxt
-            spa.UseNuxtDevelopmentServer();
-        }
+        spa.Options.SourcePath = Path.Combine(app.Environment.ContentRootPath, "client-app");
+#if DEBUG
+        spa.UseProxyToSpaDevelopmentServer("http://localhost:51000");
+#endif
     });
 });
+
 
 app.Run();

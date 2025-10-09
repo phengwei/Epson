@@ -623,7 +623,7 @@ namespace Epson.Controllers.API
 
         [HttpPost("AssignServiceRequestMaker")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin,Maker,Requester,Checker,Manager")]
-        public async Task<IActionResult> AssignServiceRequestMaker(int requestId, string newOwnerId)
+        public async Task<IActionResult> AssignServiceRequestMaker(int requestId, string newOwnerId, string actor)
         {
             if (requestId == 0 || requestId == null || string.IsNullOrEmpty(newOwnerId) | newOwnerId == null)
                 return BadRequest(new { message = "Invalid request. Request ID and User ID are required." });
@@ -632,7 +632,7 @@ namespace Epson.Controllers.API
             if (user == null)
                 return NotFound(new { message = $"User with ID {newOwnerId} not found." });
 
-            bool result = _serviceRequestService.AssignServiceRequestMaker(requestId, user);
+            bool result = _serviceRequestService.AssignServiceRequestMaker(requestId, user, actor);
 
             if (!result)
                 return BadRequest(new { message = "Failed to assign the service request to the user." });

@@ -16,10 +16,10 @@
           <nuxt-link to="/dashboard"
                      exact-active-class="nav-link-active"
                      class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">OVERVIEW</nuxt-link>
-          <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')" to="/report"
+          <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Manager')" to="/report"
                      exact-active-class="nav-link-active"
                      class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">REPORTS</nuxt-link>
-          <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Sales Section Head') || loggedInUser.roles.includes('Director')" to="/slaDashboard"
+          <nuxt-link v-if="loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Manager') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Sales Section Head') || loggedInUser.roles.includes('Director')" to="/slaDashboard"
                      exact-active-class="nav-link-active"
                      class="nav-link hover:bg-[#19212b] px-3 py-2 font-semibold transition duration-300">SLA OVERVIEW</nuxt-link>
           <nuxt-link v-if="loggedInUser.roles.includes('Requester') || loggedInUser.roles.includes('Manager') || loggedInUser.roles.includes('Sales Operation') || loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')" to="/request"

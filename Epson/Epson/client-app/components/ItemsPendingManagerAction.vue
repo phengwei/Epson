@@ -154,13 +154,29 @@
       assignRequest() {
         if (!this.selectedRequestId || !this.selectedUserId) return;
 
-        this.$axios
-          .post(`${this.$config.restUrl}/api/serviceRequest/AssignServiceRequestMaker`, null, {
+        const actor =
+          this.$auth?.state.user.data.id;
+
+        if (!actor) {
+          Swal.fire({
+            icon: "error",
+            title: "Missing actor",
+            text: "Could not determine the current user. Please re-login and try again.",
+          });
+          return;
+        }
+
+        this.$axios.post(
+          `${this.$config.restUrl}/api/serviceRequest/AssignServiceRequestMaker`,
+          null,
+          {
             params: {
               requestId: this.selectedRequestId,
               newOwnerId: this.selectedUserId,
+              actor,
             },
-          })
+          }
+        )
           .then(() => {
             this.assignDialog = false;
             Swal.fire({
@@ -168,9 +184,7 @@
               title: "Successfully Assigned!",
               text: "The service request has been assigned.",
               confirmButtonText: "OK",
-            }).then(() => {
-              window.location.reload(); // Reload the page after confirmation
-            });
+            }).then(() => window.location.reload());
           })
           .catch((error) => {
             console.error("Error assigning request:", error);

@@ -166,8 +166,8 @@ export default {
 
   
   publicRuntimeConfig: {
-    restUrl: 'http://poc-env.eba-ymc3eyi5.ap-southeast-1.elasticbeanstalk.com',
-    baseURL: 'http://poc-env.eba-ymc3eyi5.ap-southeast-1.elasticbeanstalk.com',
+    restUrl: 'https://localhost:7223',
+    baseURL: 'https://localhost:7223',
   },
   privateRuntimeConfig: {
     myPrivateToken: process.env.PRIVATE_TOKEN,
@@ -178,8 +178,8 @@ export default {
   },
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    baseURL: 'http://poc-env.eba-ymc3eyi5.ap-southeast-1.elasticbeanstalk.com',
-    https: false,
+    baseURL: 'https://localhost:7223',
+    https: true,
   },
   // PWA module configuration: https://go.nuxtjs.dev/pwa
   pwa: {
