@@ -297,6 +297,11 @@ namespace Epson.Services.Services.Requests
 
                 var newId = _ServiceRequestRepository.Add(serviceRequestEntity);
 
+                serviceRequestEntity.serviceRequestNo = $"SR-{newId:D6}";
+                serviceRequestEntity.Id = newId;
+
+                _ServiceRequestRepository.Update(serviceRequestEntity);
+
                 _logger.Information("Creating service request with Id: {id}", newId);
 
                 string actionDetails = $"{serviceRequestDTO.createdByStr} created service request {newId}";

@@ -163,7 +163,7 @@ namespace Epson.Controllers.API
             model.createdByStr = user.Name;
             model.updatedByID = user.Id;
             model.updatedByStr = user.Name;
-
+            model.owner = user.Name;
             if (_serviceRequestService.InsertServiceRequest(model))
                 return Ok();
             else

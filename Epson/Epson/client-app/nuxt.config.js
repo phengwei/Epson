@@ -166,8 +166,8 @@ export default {
 
   
   publicRuntimeConfig: {
-    restUrl: 'https://localhost:7223',
-    baseURL: 'https://localhost:7223',
+    restUrl: 'https://abmb-gcs-cp.com',
+    baseURL: 'https://abmb-gcs-cp.com',
   },
   privateRuntimeConfig: {
     myPrivateToken: process.env.PRIVATE_TOKEN,
@@ -178,7 +178,7 @@ export default {
   },
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    baseURL: 'https://localhost:7223',
+    baseURL: 'https://abmb-gcs-cp.com',
     https: true,
   },
   // PWA module configuration: https://go.nuxtjs.dev/pwa
