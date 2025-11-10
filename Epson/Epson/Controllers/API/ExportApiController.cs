@@ -116,7 +116,12 @@ namespace Epson.Controllers.API
 
         [HttpGet("toExcel")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Sales,Admin,Product,Sales Section Head,Coverplus,Sales Operation,Director")]
-        public async Task<IActionResult> ExportToExcel(string search = null, bool breached = false, int month = 0, int approvalState = 0)
+        public async Task<IActionResult> ExportToExcel(
+          string search = null,
+          bool breached = false,
+          int month = 0,
+          int year = 0,
+          int approvalState = 0) // kept for parity with GetRequests; harmless if unused by some branches
         {
             var response = new GenericResponseModel<List<RequestDTO>>();
             var currentUser = _workContext.CurrentUser;
@@ -128,20 +133,36 @@ namespace Epson.Controllers.API
             HashSet<RequestDTO> requestSet = new HashSet<RequestDTO>(new RequestDTOComparer());
 
             Func<Request, bool> monthFilter = x => month == 0 || (x.CreatedOnUTC.Month == month);
+            Func<Request, bool> yearFilter = x => year == 0 || (x.CreatedOnUTC.Year == year);
             Func<Request, bool> breachedFilter = x => !breached || x.RequestProducts.Any(rp => rp.Breached);
             Func<Request, bool> approvalStateFilter = x => approvalState == 0 || x.ApprovalState == approvalState;
 
             if (currentUser.Roles.Contains("Admin") || currentUser.Roles.Contains("Director"))
             {
                 Func<Request, bool> adminFilter = x => true;
-                requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => adminFilter(x) && monthFilter(x) && breachedFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
+                requestSet.UnionWith(
+                    _requestService.GetRequests(
+                        out totalItems,
+                        x => adminFilter(x)
+                             && monthFilter(x)
+                             && yearFilter(x)
+                             && breachedFilter(x)
+                             && approvalStateFilter(x),
+                        search, page: null, itemsPerPage: null));
             }
             else
             {
                 if (currentUser.Roles.Contains("Sales Operation"))
                 {
                     Func<Request, bool> salesOperationFilter = x => x.ApprovalState == (int)ApprovalStateEnum.Approved;
-                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesOperationFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                    requestSet.UnionWith(
+                        _requestService.GetRequests(
+                            out totalItems,
+                            x => salesOperationFilter(x)
+                                 && monthFilter(x)
+                                 && yearFilter(x)
+                                 && breachedFilter(x),
+                            search, page: null, itemsPerPage: null));
                 }
 
                 if (currentUser.Roles.Contains("Sales Section Head"))
@@ -149,33 +170,53 @@ namespace Epson.Controllers.API
                     bool multiRoles = currentUser.Roles.Count > 1;
 
                     var teamHierarchy = _userService.InitializeTeamHierarchyPairs(true, multiRoles);
-
                     var relevantTeamIds = _userService.GetChildTeamIdsV2(teamHierarchy, currentUserDetail.TeamId, _teamRepository);
                     relevantTeamIds.Add(currentUserDetail.TeamId);
 
                     var usersInRelevantTeams = _userManager.Users
-                                                            .Where(u => relevantTeamIds.Contains(u.TeamId))
-                                                            .Select(u => u.Id)
-                                                            .ToList();
+                        .Where(u => relevantTeamIds.Contains(u.TeamId))
+                        .Select(u => u.Id)
+                        .ToList();
 
-                    Func<Request, bool> salesSectionHeadFilter = x => usersInRelevantTeams.Contains(x.CreatedById) &&
-                                                                x.CreatedById != currentUser.Id;
+                    Func<Request, bool> salesSectionHeadFilter =
+                        x => usersInRelevantTeams.Contains(x.CreatedById) && x.CreatedById != currentUser.Id;
 
-                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesSectionHeadFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                    requestSet.UnionWith(
+                        _requestService.GetRequests(
+                            out totalItems,
+                            x => salesSectionHeadFilter(x)
+                                 && monthFilter(x)
+                                 && yearFilter(x)
+                                 && breachedFilter(x),
+                            search, page: null, itemsPerPage: null));
                 }
 
                 if (currentUser.Roles.Contains("Product") || currentUser.Roles.Contains("Coverplus"))
                 {
                     Func<Request, bool> fulfillerFilter = x => x.RequestProducts.Any(rp => rp.FulfillerId == currentUser.Id);
 
-                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => fulfillerFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                    requestSet.UnionWith(
+                        _requestService.GetRequests(
+                            out totalItems,
+                            x => fulfillerFilter(x)
+                                 && monthFilter(x)
+                                 && yearFilter(x)
+                                 && breachedFilter(x),
+                            search, page: null, itemsPerPage: null));
                 }
 
                 if (currentUser.Roles.Contains("Sales"))
                 {
                     Func<Request, bool> salesFilter = x => x.CreatedById == currentUser.Id;
 
-                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesFilter(x) && monthFilter(x) && breachedFilter(x), search, page: null, itemsPerPage: null));
+                    requestSet.UnionWith(
+                        _requestService.GetRequests(
+                            out totalItems,
+                            x => salesFilter(x)
+                                 && monthFilter(x)
+                                 && yearFilter(x)
+                                 && breachedFilter(x),
+                            search, page: null, itemsPerPage: null));
                 }
             }
 
@@ -186,9 +227,6 @@ namespace Epson.Controllers.API
 
             await PopulateRequestWorksheet(package.Workbook.Worksheets.Add("Request"), uniqueRequests);
             await PopulateRequestProductWorksheet(package.Workbook.Worksheets.Add("Request Products"), uniqueRequests);
-            //PopulateCompetitorInformationWorksheet(package.Workbook.Worksheets.Add("Competitor Informations"), request.CompetitorInformations);
-            //PopulateRequestSubmissionDetailWorksheet(package.Workbook.Worksheets.Add("Request Submission Detail"), request.RequestSubmissionDetail);
-            //PopulateProjectInformationWorksheet(package.Workbook.Worksheets.Add("Project Information"), request.ProjectInformation);
 
             var stream = new MemoryStream();
             await package.SaveAsAsync(stream);

@@ -41,7 +41,7 @@
                 <input v-model="editedItem.totalPrice" class="border-input" label="Price" disabled></input>
               </div>
               <div class="form-group">
-                <label>Total Budget</label>
+                <label>Customers Budget</label>
                 <input v-model="editedItem.totalBudget" class="border-input" label="Budget" disabled></input>
               </div>
             </v-card-text>
@@ -281,7 +281,7 @@
             sortable: false
           },
           {
-            text: 'Total Budget',
+            text: 'Customers Budget',
             align: 'start',
             value: 'totalBudget',
             sortable: false

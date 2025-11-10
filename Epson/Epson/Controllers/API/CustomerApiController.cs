@@ -283,46 +283,62 @@ namespace Epson.Controllers.API
         [AllowAnonymous]
         public async Task<IActionResult> ValidateTwoFactor([FromBody] BaseQueryModel<ValidateTwoFactorModel> queryModel)
         {
-            var model = queryModel.Data;
-            var user = await _userManager.FindByEmailAsync(model.email);
-
-            if (user == null)
+            try
             {
-                return Unauthorized(new { error = "Invalid username or password" });
-            }
+                var model = queryModel.Data;
+                var user = await _userManager.FindByEmailAsync(model.email);
 
-            if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.Now)
-            {
-                if (DateTime.Now >= user.LockoutEnd.Value.AddDays(1))
+                if (user == null)
                 {
-                    user.LockoutEnd = null;
-                    user.AccessFailedCount = 0;
-                    await _userManager.UpdateAsync(user);
+                    return Unauthorized(new { error = "Invalid username or password" });
                 }
-                else
+
+                if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.Now)
                 {
-                    return Unauthorized(new { error = "Account locked. Please try again later." });
-
-                }
-            }
-
-            string issuer = "Epson-UMS";
-            string accountName = user.Email;
-            string secretKey = user.secretKey;
-
-            TOTPManager manager = new TOTPManager(issuer, accountName, secretKey);
-
-            if (model.OTP != null)
-            {
-                bool result = manager.Validate(model.OTP);
-
-                if (result)
-                {
-                    var generatedToken = await _jwtService.GenerateToken(user);
-                    return Ok(new
+                    if (DateTime.Now >= user.LockoutEnd.Value.AddDays(1))
                     {
-                        token = generatedToken
-                    });
+                        user.LockoutEnd = null;
+                        user.AccessFailedCount = 0;
+                        await _userManager.UpdateAsync(user);
+                    }
+                    else
+                    {
+                        return Unauthorized(new { error = "Account locked. Please try again later." });
+
+                    }
+                }
+
+                string issuer = "Epson-UMS";
+                string accountName = user.Email;
+                string secretKey = user.secretKey;
+
+                TOTPManager manager = new TOTPManager(issuer, accountName, secretKey);
+
+                if (model.OTP != null)
+                {
+                    bool result = manager.Validate(model.OTP);
+
+                    if (result)
+                    {
+                        var generatedToken = await _jwtService.GenerateToken(user);
+                        return Ok(new
+                        {
+                            token = generatedToken
+                        });
+                    }
+                    else
+                    {
+                        user.AccessFailedCount++;
+
+                        if (user.AccessFailedCount >= 12)
+                        {
+                            user.LockoutEnd = DateTime.Now.AddHours(24);
+                        }
+
+                        await _userManager.UpdateAsync(user);
+
+                        return Unauthorized(new { error = "Invalid username or password" });
+                    }
                 }
                 else
                 {
@@ -337,18 +353,9 @@ namespace Epson.Controllers.API
 
                     return Unauthorized(new { error = "Invalid username or password" });
                 }
-            }
-            else
+            }catch(Exception ex)
             {
-                user.AccessFailedCount++;
-
-                if (user.AccessFailedCount >= 12)
-                {
-                    user.LockoutEnd = DateTime.Now.AddHours(24);
-                }
-
-                await _userManager.UpdateAsync(user);
-
+                _logger.Error(ex.Message, ex);
                 return Unauthorized(new { error = "Invalid username or password" });
             }
         }

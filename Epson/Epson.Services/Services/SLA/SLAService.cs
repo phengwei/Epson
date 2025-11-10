@@ -222,6 +222,7 @@ namespace Epson.Services.Services.SLA
             return averageTimeToResolution;
         }
 
+
         public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year)
         {
             List<int> breachedRequests = new List<int>();
@@ -283,68 +284,182 @@ namespace Epson.Services.Services.SLA
             return totalTickets.Count;
         }
 
-
-
-        private int GetApprovedTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month)
+        public int GetTotalOpenTicketCount(
+            ApplicationUser user,
+            bool isSalesHeadUser,
+            List<string> users,
+            List<RequestDTO> requests,
+            bool isAdminUser,
+            int month,
+            int year)
         {
-            List<RequestProduct> approvedTickets = new List<RequestProduct>();
+            List<Request> totalTickets = new List<Request>();
+
+            var closedStates = new[]
+                    {
+                (int)ApprovalStateEnum.Approved,
+                (int)ApprovalStateEnum.RejectedByFulfiller,
+                (int)ApprovalStateEnum.RejectedByRequester,
+                (int)ApprovalStateEnum.RejectedBySalesSectionHead,
+                (int)ApprovalStateEnum.Cancelled,
+                (int)ApprovalStateEnum.DealExited
+            };
 
             if (isAdminUser)
             {
-                approvedTickets = _requestProductRepository.Table
-                    .Where(x => x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
-                    .ToList();
-            }
-            else if (isSalesHeadUser)
-            {
-                approvedTickets = _requestProductRepository.Table
-                    .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                totalTickets = _requestRepository.Table
+                    .Where(x => !closedStates.Contains(x.ApprovalState) &&
+                                (month == 0 || x.CreatedOnUTC.Month == month) &&
+                                (year == 0 || x.CreatedOnUTC.Year == year))
                     .ToList();
             }
             else
             {
-                approvedTickets = _requestProductRepository.Table
-                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true && (month == 0 || x.CreatedOnUTC.Month == month))
+                var relevantRequestIds = _requestProductRepository.Table
+                    .Where(rp => (isSalesHeadUser && users.Contains(rp.FulfillerId)) ||
+                                 (!isSalesHeadUser && rp.FulfillerId == user.Id))
+                    .Select(rp => rp.RequestId)
+                    .Distinct()
+                    .ToList();
+
+                totalTickets = _requestRepository.Table
+                    .Where(x => relevantRequestIds.Contains(x.Id) &&
+                                !closedStates.Contains(x.ApprovalState) &&
+                                (month == 0 || x.CreatedOnUTC.Month == month) &&
+                                (year == 0 || x.CreatedOnUTC.Year == year))
                     .ToList();
             }
 
-            return approvedTickets.Count;
+            return totalTickets.Count;
         }
 
-        public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year)
+
+
+        public int GetTotalClosedTicketCount(
+            ApplicationUser user,
+            bool isSalesHeadUser,
+            List<string> users,
+            List<RequestDTO> requests,
+            bool isAdminUser,
+            int month,
+            int year)
         {
-            List<RequestProduct> successTickets = new List<RequestProduct>();
+            List<Request> totalTickets = new List<Request>();
+
+            var closedStates = new[]
+                    {
+                (int)ApprovalStateEnum.Approved,
+                (int)ApprovalStateEnum.RejectedByFulfiller,
+                (int)ApprovalStateEnum.RejectedByRequester,
+                (int)ApprovalStateEnum.RejectedBySalesSectionHead,
+                (int)ApprovalStateEnum.Cancelled,
+                (int)ApprovalStateEnum.DealExited
+            };
 
             if (isAdminUser)
             {
-                successTickets = _requestProductRepository.Table
-                    .Where(x => x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month) && (year == 0 || x.CreatedOnUTC.Year == year))
-                    .ToList();
-            }
-            else if (isSalesHeadUser)
-            {
-                successTickets = _requestProductRepository.Table
-                    .Where(x => users.Contains(x.FulfillerId) && x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month) && (year == 0 || x.CreatedOnUTC.Year == year))
+                totalTickets = _requestRepository.Table
+                    .Where(x => closedStates.Contains(x.ApprovalState) &&
+                                (month == 0 || x.CreatedOnUTC.Month == month) &&
+                                (year == 0 || x.CreatedOnUTC.Year == year))
                     .ToList();
             }
             else
             {
-                successTickets = _requestProductRepository.Table
-                    .Where(x => x.FulfillerId == user.Id && x.HasFulfilled == true && !x.Breached && (month == 0 || x.CreatedOnUTC.Month == month) && (year == 0 || x.CreatedOnUTC.Year == year))
+                var relevantRequestIds = _requestProductRepository.Table
+                    .Where(rp => (isSalesHeadUser && users.Contains(rp.FulfillerId)) ||
+                                 (!isSalesHeadUser && rp.FulfillerId == user.Id))
+                    .Select(rp => rp.RequestId)
+                    .Distinct()
+                    .ToList();
+
+                totalTickets = _requestRepository.Table
+                    .Where(x => relevantRequestIds.Contains(x.Id) &&
+                                closedStates.Contains(x.ApprovalState) &&
+                                (month == 0 || x.CreatedOnUTC.Month == month) &&
+                                (year == 0 || x.CreatedOnUTC.Year == year))
                     .ToList();
             }
 
-            var totalTickets = GetApprovedTickets(user, isSalesHeadUser, users, requests, isAdminUser, month);
+            return totalTickets.Count;
+        }
 
-            decimal successRate = 0;
-            if (totalTickets > 0)
+
+
+        private int GetApprovedTickets(
+            ApplicationUser user, bool isSalesHeadUser, List<string> users,
+            List<RequestDTO> requests, bool isAdminUser, int month)
+        {
+            IQueryable<RequestProduct> q = _requestProductRepository.Table;
+
+            if (isAdminUser)
             {
-                successRate = (decimal)successTickets.Count / totalTickets;
-                successRate = Math.Round(successRate * 100, 2);
+                // no role restriction
+            }
+            else if (isSalesHeadUser)
+            {
+                q = q.Where(x => users.Contains(x.FulfillerId));
+            }
+            else
+            {
+                q = q.Where(x => x.FulfillerId == user.Id);
             }
 
-            return successRate;
+            if (month != 0)
+                q = q.Where(x => x.CreatedOnUTC.Month == month);
+
+            return q.Where(x => x.HasFulfilled == true)
+                    .Select(x => x.RequestId)
+                    .Distinct()
+                    .Count();
         }
+
+        public decimal GetSuccessRateOfTickets(
+            ApplicationUser user, bool isSalesHeadUser, List<string> users,
+            List<RequestDTO> requests, bool isAdminUser, int month, int year)
+        {
+            IQueryable<RequestProduct> q = _requestProductRepository.Table;
+
+            if (isAdminUser)
+            {
+                // no role restriction
+            }
+            else if (isSalesHeadUser)
+            {
+                q = q.Where(x => users.Contains(x.FulfillerId));
+            }
+            else
+            {
+                q = q.Where(x => x.FulfillerId == user.Id);
+            }
+
+            if (month != 0) q = q.Where(x => x.CreatedOnUTC.Month == month);
+            if (year != 0) q = q.Where(x => x.CreatedOnUTC.Year == year);
+
+            // Denominator at request level: requests with at least one approved product
+            var approvedRequestIds = q.Where(x => x.HasFulfilled == true)
+                                      .Select(x => x.RequestId)
+                                      .Distinct()
+                                      .ToList();
+
+            var totalRequestsApproved = approvedRequestIds.Count;
+            if (totalRequestsApproved == 0) return 0m;
+
+            // A request fails if ANY in-scope product in that request is breached
+            var breachedApprovedRequestCount = _requestProductRepository.Table
+                .Where(x => approvedRequestIds.Contains(x.RequestId)
+                            && x.Breached == true
+                            && (month == 0 || x.CreatedOnUTC.Month == month)
+                            && (year == 0 || x.CreatedOnUTC.Year == year))
+                .Select(x => x.RequestId)
+                .Distinct()
+                .Count();
+
+            var successfulRequests = totalRequestsApproved - breachedApprovedRequestCount;
+            var rate = (decimal)successfulRequests / totalRequestsApproved * 100m;
+            return Math.Round(rate, 2);
+        }
+
 
     }
 }

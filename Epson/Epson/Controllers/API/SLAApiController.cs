@@ -269,6 +269,8 @@ namespace Epson.Controllers.API
 
             response.Data.AverageTimeToResolutionInHours = _slaService.GetAverageTimeToResolutionInHours(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month, year);
             response.Data.TotalTickets = _slaService.GetTotalTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month, year);
+            response.Data.TotalOpenTickets = _slaService.GetTotalOpenTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month, year);
+            response.Data.TotalCloseTickets = _slaService.GetTotalClosedTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month, year);
             response.Data.BreachedTickets = _slaService.GetBreachedTicketCount(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month, year);
             response.Data.SuccessRate = _slaService.GetSuccessRateOfTickets(currentUser, isSalesSectionHeadUser, usersInRelevantTeams, requests, isAdminUser, month, year);
 

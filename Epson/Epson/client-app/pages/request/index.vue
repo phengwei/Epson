@@ -101,7 +101,7 @@
           { text: 'End User', value: 'endUserName', align: 'center', sortable: false },
           { text: 'Approval State', value: 'approvalStateStr', align: 'center', sortable: false },
           { text: 'Categories', value: 'categories', align: 'center', sortable: false },
-          { text: 'Total Budget (RM)', value: 'totalEndUserBudget', align: 'center', sortable: false },
+          { text: 'Customers Budget (RM)', value: 'totalEndUserBudget', align: 'center', sortable: false },
           { text: 'Created On', value: 'createdOnUTC', align: 'center', sortable: false },
           { text: 'Created By', value: 'createdByStr', align: 'center', sortable: false },
           { text: 'Approved Time', value: 'approvedTime', align: 'center', sortable: false },

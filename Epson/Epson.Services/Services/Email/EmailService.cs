@@ -186,7 +186,7 @@ namespace Epson.Services.Services.Email
                                 <td>{requester.Result.UserName}</td>
                             </tr>
                             <tr>
-                                <th>Total Budget</th>
+                                <th>Customers Budget</th>
                                 <td>RM {request.TotalBudget}</td>
                             </tr>
                             <tr>
@@ -298,7 +298,7 @@ namespace Epson.Services.Services.Email
                                     <td>{requester.Result.UserName}</td>
                                 </tr>
                                 <tr>
-                                    <th>Total Budget</th>
+                                    <th>Customers Budget</th>
                                     <td>RM {request.TotalBudget}</td>
                                 </tr>
                                 <tr>
@@ -433,7 +433,7 @@ namespace Epson.Services.Services.Email
                                         <td>{requester.UserName}</td>
                                     </tr>
                                     <tr>
-                                        <th>Total Budget</th>
+                                        <th>Customers Budget</th>
                                         <td>RM {request.TotalBudget}</td>
                                     </tr>
                                     <tr>
@@ -592,7 +592,7 @@ namespace Epson.Services.Services.Email
                                     <td>{requester.Result.UserName}</td>
                                 </tr>
                                 <tr>
-                                    <th>Total Budget</th>
+                                    <th>Customers Budget</th>
                                     <td>RM {request.TotalBudget}</td>
                                 </tr>
                                 <tr>
@@ -759,7 +759,7 @@ namespace Epson.Services.Services.Email
                                 <td>{requester.Result.UserName}</td>
                             </tr>
                             <tr>
-                                <th>Total Budget</th>
+                                <th>Customers Budget</th>
                                 <td>RM {request.TotalBudget.ToString("N2")}</td>
                             </tr>
                             <tr>
@@ -900,7 +900,7 @@ namespace Epson.Services.Services.Email
                                     <td>{requester.Result.UserName}</td>
                                 </tr>
                                 <tr>
-                                    <th>Total Budget</th>
+                                    <th>Customers Budget</th>
                                     <td>RM {request.TotalBudget}</td>
                                 </tr>
                                 <tr>
@@ -1042,7 +1042,7 @@ namespace Epson.Services.Services.Email
                                     <td>{requester.Result.UserName}</td>
                                 </tr>
                                 <tr>
-                                    <th>Total Budget</th>
+                                    <th>Customers Budget</th>
                                     <td>RM {request.TotalBudget}</td>
                                 </tr>
                                 <tr>
@@ -1199,7 +1199,6 @@ namespace Epson.Services.Services.Email
                 }
 
                 // Static CCs
-                uniqueEmails.Add("hanson.ong@emsb.epson.com.my");
                 uniqueEmails.Add("michelle.yau@emsb.epson.com.my");
 
                 // Only now safe to reference fulfiller.Email

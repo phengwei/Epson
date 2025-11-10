@@ -126,7 +126,7 @@
             sortable: false
           },
           {
-            text: 'Total Budget',
+            text: 'Customers Budget',
             align: 'start',
             value: 'totalBudget',
             sortable: false

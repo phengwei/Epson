@@ -27,6 +27,8 @@ namespace Epson.Services.Interface.SLA
         public decimal GetAverageTimeToResolutionInHours(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year);
         public int GetBreachedTicketCount(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year);
         public int GetTotalTicketCount(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year);
+        public int GetTotalClosedTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year);
+        public int GetTotalOpenTicketCount(ApplicationUser user, bool isSalesHeadUser, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year);
         public decimal GetSuccessRateOfTickets(ApplicationUser user, bool isSalesHead, List<string> users, List<RequestDTO> requests, bool isAdminUser, int month, int year);
     }
 }

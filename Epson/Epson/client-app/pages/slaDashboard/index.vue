@@ -29,23 +29,29 @@
                       dense
                       class="year-select" />
           </div>
+
           <div class="container">
-            <div class="card average-time-card">
+            <!-- Total Open Tickets -->
+            <div class="card total-open-card">
               <div class="card-content">
-                <v-icon class="top-center-icon">mdi-clock-outline</v-icon>
-                <h2 class="number">{{ AverageTimeToResolutionInHours }}</h2>
-                <p class="bottom-center-text">Hours Average Time To Resolution</p>
+                <v-icon class="top-center-icon">mdi-ticket-confirmation-outline</v-icon>
+                <h2 class="number">{{ TotalOpenTickets }}</h2>
+                <p class="bottom-center-text">Total Open Tickets</p>
                 <div class="bottom-reserved-space"></div>
               </div>
             </div>
-            <div class="card total-tickets-card">
+
+            <!-- Total Closed Tickets -->
+            <div class="card total-closed-card">
               <div class="card-content">
                 <v-icon class="top-center-icon">mdi-ticket-outline</v-icon>
-                <h2 class="number">{{ TotalTickets }}</h2>
-                <p class="bottom-center-text">Total Tickets</p>
+                <h2 class="number">{{ TotalClosedTickets }}</h2>
+                <p class="bottom-center-text">Total Closed Tickets</p>
                 <div class="bottom-reserved-space"></div>
               </div>
             </div>
+
+            <!-- Breached Tickets -->
             <div class="card breached-card">
               <div class="card-content">
                 <v-icon class="top-center-icon">mdi-alert-circle-outline</v-icon>
@@ -59,6 +65,8 @@
                 </div>
               </div>
             </div>
+
+            <!-- Success Rate -->
             <div class="card success-rate-card">
               <div class="card-content">
                 <v-icon class="top-center-icon">mdi-trophy-outline</v-icon>
@@ -95,12 +103,13 @@
         years.push({ value: y, text: String(y) });
       }
       return {
-        AverageTimeToResolutionInHours: 0,
+        // removed AverageTimeToResolutionInHours
         BreachedTickets: 0,
-        TotalTickets: 0,
+        TotalOpenTickets: 0,
+        TotalClosedTickets: 0,
         SuccessRate: 0,
         selectedMonth: new Date().getMonth() + 1,
-        selectedYear: thisYear, 
+        selectedYear: thisYear,
         months: [
           { value: 0, text: 'All' },
           { value: 1, text: 'January' },
@@ -147,11 +156,13 @@
             params: { month, year },
           });
 
-          if (result.data.data) {
-            this.AverageTimeToResolutionInHours = result.data.data.averageTimeToResolutionInHours || 0;
-            this.BreachedTickets = result.data.data.breachedTickets || 0;
-            this.TotalTickets = result.data.data.totalTickets || 0;
-            this.SuccessRate = result.data.data.successRate || 0;
+          if (result.data && result.data.data) {
+            const d = result.data.data;
+            console.log("dd", d);
+            this.TotalOpenTickets = d.totalOpenTickets ?? 0;
+            this.TotalClosedTickets = d.totalCloseTickets ?? 0;
+            this.BreachedTickets = d.breachedTickets ?? d.BreachedTickets ?? 0;
+            this.SuccessRate = d.successRate ?? d.SuccessRate ?? 0;
           } else {
             this.resetMetrics();
           }
@@ -161,20 +172,25 @@
         }
       },
       resetMetrics() {
-        this.AverageTimeToResolutionInHours = 0;
         this.BreachedTickets = 0;
-        this.TotalTickets = 0;
+        this.TotalOpenTickets = 0;
+        this.TotalClosedTickets = 0;
         this.SuccessRate = 0;
         console.log('Metrics reset.');
       },
       goToBreachedTickets() {
-        this.$router.push({ path: '/request', query: { breached: true, month: this.selectedMonth, year: this.selectedYear } });
+        this.$router.push({
+          path: '/request',
+          query: { breached: true, month: this.selectedMonth, year: this.selectedYear },
+        });
       },
     },
   };
 </script>
+
 <style scoped>
   @import '~@/../wwwroot/css/general-table.css';
+
   .v-application {
     font-family: TCCC-UnityText-Regular, TCCC-UnityText !important;
   }
@@ -188,6 +204,7 @@
     background-color: #f5f5f5 !important;
     color: black !important;
   }
+
   .big-bold {
     font-size: 1.5rem;
   }
@@ -199,6 +216,7 @@
     justify-content: center;
     padding: 1rem;
   }
+
   .filter-bar {
     margin: auto;
     margin-bottom: 1rem;
@@ -274,7 +292,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 3rem; /* Adjust height as needed */
+    height: 3rem;
   }
 
   .navigate-button {
@@ -291,13 +309,15 @@
       margin-left: 8px;
     }
 
-  .average-time-card,
-  .total-tickets-card,
+  /* Blue theme cards */
+  .total-open-card,
+  .total-closed-card,
   .success-rate-card {
     background-color: #003399;
     color: white;
   }
 
+  /* Grey theme card */
   .breached-card {
     background-color: #6d6d6d;
     color: white;
