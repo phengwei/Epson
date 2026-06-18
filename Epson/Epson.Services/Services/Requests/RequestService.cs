@@ -515,8 +515,6 @@ namespace Epson.Services.Services.Requests
                     requestProduct.Status = (int)RequestProductStatusEnum.Pending;
 
                     var requestProductToInsert = _mapper.Map<RequestProduct>(requestProduct);
-                    // Ensure SLA is preserved from DTO
-                    requestProductToInsert.SLA = requestProduct.sla;
                     InsertRequestProduct(requestProductToInsert);
                 }
 
@@ -635,8 +633,6 @@ namespace Epson.Services.Services.Requests
                         }
 
                         var requestProductToInsert = _mapper.Map<RequestProduct>(requestProduct);
-                        // Ensure SLA is preserved from DTO
-                        requestProductToInsert.SLA = requestProduct.sla;
                         DeleteRequestProduct(existingRequestProduct.Id);
                         InsertRequestProduct(requestProductToInsert);
                     }
