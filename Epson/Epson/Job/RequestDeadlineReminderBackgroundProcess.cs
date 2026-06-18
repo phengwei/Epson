@@ -72,12 +72,16 @@ namespace Epson.Job
                     List<RequestProduct> productsToNotify = new List<RequestProduct>();
                     foreach (var rp in requestProductGroup)
                     {
-                        if (rp.SLA == "Local")
+                        var sla = string.IsNullOrWhiteSpace(rp.SLA) ? "Local" : rp.SLA;
+
+                        if (sla == "Local")
                             workingDays = 3;
-                        else if (rp.SLA == "Regional")
+                        else if (sla == "Regional")
                             workingDays = 5;
-                        else if (rp.SLA == "SEC")
+                        else if (sla == "SEC")
                             workingDays = 10;
+                        else
+                            workingDays = 3; // default to Local if SLA is invalid or missing
 
                         if (referenceTime != DateTime.MinValue && referenceTime.AddWorkingDays(workingDays) <= DateTime.UtcNow)
                         {
