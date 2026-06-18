@@ -469,6 +469,26 @@ namespace Epson.Controllers.API
 
             var model = queryModel.Data;
 
+            // Validate that RequestProducts exist and have SLA
+            if (model.RequestProducts == null || model.RequestProducts.Count == 0)
+            {
+                return BadRequest("At least one product is required.");
+            }
+
+            foreach (var product in model.RequestProducts)
+            {
+                if (string.IsNullOrWhiteSpace(product.sla))
+                {
+                    return BadRequest("SLA is mandatory for all products. Valid values are: Local, Regional, or SEC.");
+                }
+
+                var validSLA = new[] { "Local", "Regional", "SEC" };
+                if (!validSLA.Contains(product.sla))
+                {
+                    return BadRequest($"Invalid SLA value '{product.sla}'. Valid values are: Local, Regional, or SEC.");
+                }
+            }
+
             var user = _workContext.CurrentUser;
             var dbUser = await _userManager.FindByIdAsync(user.Id);
 
@@ -512,6 +532,24 @@ namespace Epson.Controllers.API
 
             if (request.ApprovalState != (int)ApprovalStateEnum.AmendQuotation)
                 return BadRequest("Request is not in the state of approval!");
+
+            // Validate that RequestProducts have SLA
+            if (model.RequestProducts != null && model.RequestProducts.Count > 0)
+            {
+                foreach (var product in model.RequestProducts)
+                {
+                    if (string.IsNullOrWhiteSpace(product.sla))
+                    {
+                        return BadRequest("SLA is mandatory for all products. Valid values are: Local, Regional, or SEC.");
+                    }
+
+                    var validSLA = new[] { "Local", "Regional", "SEC" };
+                    if (!validSLA.Contains(product.sla))
+                    {
+                        return BadRequest($"Invalid SLA value '{product.sla}'. Valid values are: Local, Regional, or SEC.");
+                    }
+                }
+            }
 
             var updatedRequest = new RequestDTO
             {
