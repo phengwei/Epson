@@ -81,8 +81,7 @@
     [ApprovalStateEnum.RejectedByRequester]: 'Rejected By Requester',
     [ApprovalStateEnum.RejectedBySalesSectionHead]: 'Rejected By Sales Section Head',
     [ApprovalStateEnum.Cancelled]: 'Cancelled',
-    [ApprovalStateEnum.DealExited]: 'Deal Exited',
-    [ApprovalStateEnum.PendingDemoRequisitionApproval]: 'Pending Demo Unit Price Approval'
+    [ApprovalStateEnum.DealExited]: 'Deal Exited'
   };
 
   export default {
@@ -297,9 +296,6 @@
         } else if (this.loggedInUser && this.loggedInUser.id === request.createdById
           && request.approvalState === this.RequestProductStatusEnum.Rejected) {
           queryParameters = { ...queryParameters, amendable: true, view: true };
-        } else if (this.loggedInUser && this.loggedInUser.roles.includes('Director')
-          && request.approvalState === this.ApprovalStateEnum.PendingDemoRequisitionApproval) {
-          queryParameters = { ...queryParameters, isFinalApprove: true, view: true }
         } else {
           queryParameters = { ...queryParameters, view: true };
         }

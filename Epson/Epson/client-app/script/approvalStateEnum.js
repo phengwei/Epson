@@ -8,5 +8,4 @@ export const ApprovalStateEnum = {
   RejectedByFulfiller: 70,
   RejectedBySalesSectionHead: 90,
   Cancelled: 100,
-  PendingDemoRequisitionApproval: 120,
 };

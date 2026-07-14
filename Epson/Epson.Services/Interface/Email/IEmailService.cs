@@ -16,7 +16,6 @@ namespace Epson.Services.Interface.Email
         public EmailAccountDTO GetEmailAccountByUserName(string username);
         public List<EmailQueue> NotifySalesSectionHeadUsers(RequestDTO request, List<RequestProductDTO> requestProducts);
         Task<List<EmailQueue>> CreateReminderEmailQueue(List<RequestProduct> requestProducts);
-        List<EmailQueue> NotifyDemoRequisitionFulfiller(Request request, List<RequestProduct> requestProducts);
         public Task<List<EmailQueue>> NotifyFulfillers(Request request);
         public List<EmailQueueDTO> GetUnsentEmailQueues();
         public bool InsertEmailQueue(EmailQueue emailQueue);

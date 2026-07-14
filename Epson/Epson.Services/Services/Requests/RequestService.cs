@@ -1340,40 +1340,12 @@ namespace Epson.Services.Services.Requests
 
                     if (allProductsFulfilled)
                     {
-                        if (anyProductNotApproved)
-                        {
-                            request.ApprovalState = (int)ApprovalStateEnum.RejectedByFulfiller;
-                            _RequestRepository.Update(request);
-                        }
-                        else
-                        {
-                            //check if is demo requisition request
-                            if (request.ProjectInformation.ProjectInformationReasons.Any(x => x.SelectedReason == "Demo Unit Price Requisition"))
-                            {
-                                request.ApprovalState = (int)ApprovalStateEnum.PendingDemoRequisitionApproval;
-                                _RequestRepository.Update(request);
-
-                                List<EmailQueue> emailQueues = _emailService.NotifyDemoRequisitionFulfiller(request, requestProducts);
-
-                                foreach (var emailQueue in emailQueues)
-                                {
-                                    _emailService.InsertEmailQueue(emailQueue);
-                                }
-                            }
-                            else
-                            {
-                                request.ApprovalState = (int)ApprovalStateEnum.Approved;
-                                _RequestRepository.Update(request);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        _RequestRepository.Update(request);
+                        request.ApprovalState = anyProductNotApproved
+                            ? (int)ApprovalStateEnum.RejectedByFulfiller
+                            : (int)ApprovalStateEnum.Approved;
                     }
 
-
-
+                    _RequestRepository.Update(request);
 
                     string actionDetails = $"{user.UserName} fulfilled request {request.Id} of product {existingProduct.ProductName} ";
                     _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, user.Id, actionDetails, "Fulfill");
@@ -1473,38 +1445,12 @@ namespace Epson.Services.Services.Requests
                 var request = _mapper.Map<Request>(existingRequest);
                 if (allProductsFulfilled)
                 {
-                    if (anyProductNotApproved)
-                    {
-                        request.ApprovalState = (int)ApprovalStateEnum.RejectedByFulfiller;
-                        _RequestRepository.Update(request);
-                    }
-                    else
-                    {
-                        //check if is demo requisition request
-                        if (request.ProjectInformation.ProjectInformationReasons.Any(x => x.SelectedReason == "Demo Unit Price Requisition"))
-                        {
-                            request.ApprovalState = (int)ApprovalStateEnum.PendingDemoRequisitionApproval;
-                            _RequestRepository.Update(request);
-
-
-                            List<EmailQueue> emailQueues = _emailService.NotifyDemoRequisitionFulfiller(request, requestProducts);
-
-                            foreach (var emailQueue in emailQueues)
-                            {
-                                _emailService.InsertEmailQueue(emailQueue);
-                            }
-                        }
-                        else
-                        {
-                            request.ApprovalState = (int)ApprovalStateEnum.Approved;
-                            _RequestRepository.Update(request);
-                        }
-                    }
+                    request.ApprovalState = anyProductNotApproved
+                        ? (int)ApprovalStateEnum.RejectedByFulfiller
+                        : (int)ApprovalStateEnum.Approved;
                 }
-                else
-                {
-                    _RequestRepository.Update(request);
-                }
+
+                _RequestRepository.Update(request);
 
                 // Run email notification in the background
                 Task.Run(() => _scopedTaskRunner.RunInScope(provider =>
@@ -1647,36 +1593,6 @@ namespace Epson.Services.Services.Requests
                 string actionDetails = $"{userName} rejected request {request.Id}";
                 _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, userID, actionDetails, "Sales Section Head Approval");
 
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Error completing first level approval for request {id}", request.Id);
-                return false;
-            }
-        }
-
-        public bool ApproveFinalLevelRequest(Request request, ApplicationUser user, bool isApprove)
-        {
-            var req = GetRequestById(request.Id);
-
-            if (req == null)
-                throw new Exception("Invalid request.");
-
-            if (isApprove)
-                request.ApprovalState = (int)ApprovalStateEnum.Approved;
-            else
-                request.ApprovalState = (int)ApprovalStateEnum.RejectedBySalesSectionHead;
-
-            try
-            {
-                _RequestRepository.Update(request);
-                _logger.Information("Completing final level approval for request {id}", request.Id);
-
-
-                string actionDetails = $"{user.UserName} appoved demo request of ID {request.Id}";
-                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, user.Id, actionDetails, "Fulfill");
-
-                return true;
             }
             catch (Exception ex)
             {

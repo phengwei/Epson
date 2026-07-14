@@ -501,35 +501,6 @@ export default {
         }
       });
     },
-    approveRequest() {
-      Swal.fire({
-        title: 'Confirmation',
-        text: 'Do you want to approve the demo request?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Approve',
-        cancelButtonText: 'Cancel',
-        allowOutsideClick: true
-      }).then((result) => {
-        if (result.isConfirmed) {
-          const requestUrl = `${this.$config.restUrl}/api/request/approvefinalrequest?requestId=${this.currentRequest.id}&isAccept=true`;
-
-          this.$axios.post(requestUrl)
-            .then(response => {
-              Swal.fire('Done!', 'Request is successfully approved.', 'success')
-                .then(() => {
-          location.reload();
-                });
-            }).catch(error => {
-              console.log('error', error);
-              Swal.fire('Error', 'Failed to process the request', 'error');
-            });
-        } 
-      });
-    },
-
     closeDialogProductFulfillment() {
       this.closeDialogProductFulfillment = false;
     },

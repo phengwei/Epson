@@ -37,8 +37,5 @@ namespace Epson.Core.Domain.Enum
 
         [Description("Deal Exited")]
         DealExited = 110,
-
-        [Description("Pending Demo Requisition Approval")]
-        PendingDemoRequisitionApproval = 120,
     }
 }

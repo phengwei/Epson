@@ -1,20 +1,6 @@
 <template>
   <main class="dashboard-header" v-if="loggedInUser.roles.includes('Product') || loggedInUser.roles.includes('Coverplus') || loggedInUser.roles.includes('Admin') || loggedInUser.roles.includes('Director')">
     <div class="grid-container">
-      <div class="row">
-        <div class="grid-item full-width request-table">
-          <v-app>
-            <DemoRequestPendingFulfilment />
-          </v-app>
-        </div>
-      </div>
-      <div class="row">
-        <div class="grid-item full-width request-table">
-          <v-app>
-            <FulfilledDemoRequests />
-          </v-app>
-        </div>
-      </div>
       <!--<div class="row">
         <div class="grid-item full-width request-table">
           <v-app>
@@ -28,8 +14,6 @@
 
 <script>
   import { mapGetters } from 'vuex';
-  import DemoRequestPendingFulfilment from '~/components/DemoRequestPendingFulfilment.vue';
-  import FulfilledDemoRequests from '~/components/FulfilledDemoRequests.vue';
 
   export default {
     name: 'DirectorDashboard',
@@ -39,10 +23,6 @@
     },
     data() {
       return {};
-    },
-    components: {
-      DemoRequestPendingFulfilment,
-      FulfilledDemoRequests
     }
   };
 </script>
