@@ -31,6 +31,7 @@ namespace Epson.Services.Services.Requests
     {
         private readonly IMapper _mapper;
         private readonly EpsonDbContext _context;
+        private readonly EpsonSQLConnectionFactory _connectionFactory;
         private readonly IRepository<Request> _RequestRepository;
         private readonly IRepository<RequestProduct> _RequestProductRepository;
         private readonly IRepository<CompetitorInformation> _CompetitorInformationRepository;
@@ -50,6 +51,7 @@ namespace Epson.Services.Services.Requests
         public RequestService
             (IMapper mapper,
             EpsonDbContext dbContext,
+            EpsonSQLConnectionFactory connectionFactory,
             IRepository<Request> requestRepository,
             IRepository<RequestProduct> requestProductRepository,
             IRepository<CompetitorInformation> competitorInformationRepository,
@@ -68,6 +70,7 @@ namespace Epson.Services.Services.Requests
         {
             _mapper = mapper;
             _context = dbContext;
+            _connectionFactory = connectionFactory;
             _RequestRepository = requestRepository;
             _RequestProductRepository = requestProductRepository;
             _CompetitorInformationRepository = competitorInformationRepository;
@@ -578,121 +581,228 @@ namespace Epson.Services.Services.Requests
             var existingRequest = _RequestRepository.GetById(request.Id);
             var projectInformation = _mapper.Map<ProjectInformation>(projectInformationDTO);
 
-            using (var transaction = _context.Database.BeginTransaction())
+            // Capture the "before" state up front, before any fields are mutated below,
+            // so the audit trail can record exactly what changed during this update.
+            var oldComments = existingRequest.Comments;
+            var oldSegment = existingRequest.Segment;
+            var oldTotalBudget = existingRequest.TotalBudget;
+            var oldApprovalState = existingRequest.ApprovalState;
+
+            // All writes below run on a single MySQL connection wrapped in one real transaction,
+            // so the request update, its product/competitor/project rows and the audit entry either
+            // all commit together or all roll back together. (The previous _context transaction only
+            // governed EF Core, while every repository write went through Dapper on its own
+            // auto-committing connection - meaning a mid-method failure could leave a half-applied
+            // update with no audit trail.)
+            using var connection = _connectionFactory.CreateDataConnection();
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+
+            try
             {
-                try
+                existingRequest.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => (decimal)rp.EndUserPrice);
+                existingRequest.UpdatedOnUTC = DateTime.UtcNow;
+                existingRequest.Comments = request.Comments;
+                existingRequest.Segment = request.Segment;
+                existingRequest.UpdatedById = request.UpdatedById;
+                if (existingRequest.ApprovedBy == null)
                 {
-                    existingRequest.TotalBudget = GetTotalPriceOfRequestProducts(requestProducts, rp => (decimal)rp.EndUserPrice);
-                    existingRequest.UpdatedOnUTC = DateTime.UtcNow;
-                    existingRequest.Comments = request.Comments;
-                    existingRequest.Segment = request.Segment;
-                    existingRequest.UpdatedById = request.UpdatedById;
-                    if (existingRequest.ApprovedBy == null)
+                    existingRequest.ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction;
+                }
+                else
+                {
+                    existingRequest.ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction;
+                }
+                _RequestRepository.Update(existingRequest, connection, transaction);
+                _logger.Information("Updating request {id}", request.Id);
+
+                var existingRequestProducts = _RequestProductRepository.GetAll().Where(x => x.RequestId == existingRequest.Id).ToList();
+
+                // Replace the whole product set: remove every current row, then insert the
+                // submitted list. This handles added, removed and changed products (a changed
+                // product has a new ProductId with no matching existing row) without leaving
+                // orphaned rows behind. Fulfilment data is inherited from the in-memory snapshot
+                // captured above, so unchanged approved products keep their fulfilment history.
+                foreach (var existingRequestProduct in existingRequestProducts)
+                    _RequestProductRepository.Delete(existingRequestProduct.Id, connection, transaction);
+
+                foreach (var requestProduct in requestProducts)
+                {
+                    var existingRequestProduct = existingRequestProducts.FirstOrDefault(rp => rp.ProductId == requestProduct.ProductId);
+
+                    var product = _productService.GetProductById(requestProduct.ProductId);
+
+                    requestProduct.ProductName = product.SKU + product.Name;
+                    requestProduct.ProductId = product.Id;
+                    requestProduct.FulfillerId = product.CreatedById;
+                    requestProduct.RequestId = request.Id;
+                    requestProduct.CreatedOnUTC = request.CreatedOnUTC;
+                    requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
+
+                    // Only inherit fulfilment data when this product already existed on the request.
+                    // A newly added or changed product has no prior row, so it starts as Pending.
+                    if (requestProduct.Status == (int)RequestProductStatusEnum.Approved && existingRequestProduct != null)
                     {
-                        existingRequest.ApprovalState = (int)ApprovalStateEnum.PendingSalesSectionHeadAction;
+                        requestProduct.Status = (int)RequestProductStatusEnum.Approved;
+                        requestProduct.HasFulfilled = true;
+
+                        requestProduct.FulfilledDate = existingRequestProduct.FulfilledDate;
+                        requestProduct.FulfillerId = existingRequestProduct.FulfillerId;
+                        requestProduct.FulfilledPrice = existingRequestProduct.FulfilledPrice;
+                        requestProduct.TimeToResolution = existingRequestProduct.TimeToResolution;
+                        requestProduct.sla = existingRequestProduct.SLA;
+                        requestProduct.Breached = existingRequestProduct.Breached;
+                        requestProduct.HasReminded = existingRequestProduct.HasReminded;
                     }
                     else
                     {
-                        existingRequest.ApprovalState = (int)ApprovalStateEnum.PendingFulfillerAction;
-                    }
-                    _RequestRepository.Update(existingRequest);
-                    _logger.Information("Updating request {id}", request.Id);
-
-                    var existingRequestProducts = _RequestProductRepository.GetAll().Where(x => x.RequestId == existingRequest.Id).ToList();
-
-                    foreach (var requestProduct in requestProducts)
-                    {
-                        var existingRequestProduct = existingRequestProducts.FirstOrDefault(rp => rp.ProductId == requestProduct.ProductId);
-
-                        var product = _productService.GetProductById(requestProduct.ProductId);
-
-                        requestProduct.ProductName = product.SKU + product.Name;
-                        requestProduct.ProductId = product.Id;
-                        requestProduct.FulfillerId = product.CreatedById;
-                        requestProduct.RequestId = request.Id;
-                        requestProduct.CreatedOnUTC = request.CreatedOnUTC;
-                        requestProduct.UpdatedOnUTC = request.UpdatedOnUTC;
-
-                        if (requestProduct.Status == (int)RequestProductStatusEnum.Approved)
-                        {
-                            requestProduct.Status = (int)RequestProductStatusEnum.Approved;
-                            requestProduct.HasFulfilled = true;
-
-                            requestProduct.FulfilledDate = existingRequestProduct.FulfilledDate;
-                            requestProduct.FulfillerId = existingRequestProduct.FulfillerId;
-                            requestProduct.FulfilledPrice = existingRequestProduct.FulfilledPrice;
-                            requestProduct.TimeToResolution = existingRequestProduct.TimeToResolution;
-                            requestProduct.sla = existingRequestProduct.SLA;
-                            requestProduct.Breached = existingRequestProduct.Breached;
-                            requestProduct.HasReminded = existingRequestProduct.HasReminded;
-                        }
-                        else
-                        {
-                            requestProduct.Status = (int)RequestProductStatusEnum.Pending;
-                            requestProduct.HasFulfilled = false;
-                        }
-
-                        var requestProductToInsert = _mapper.Map<RequestProduct>(requestProduct);
-                        DeleteRequestProduct(existingRequestProduct.Id);
-                        InsertRequestProduct(requestProductToInsert);
+                        requestProduct.Status = (int)RequestProductStatusEnum.Pending;
+                        requestProduct.HasFulfilled = false;
                     }
 
-                    DeleteCompetitorInformationOfRequest(request.Id);
-
-                    foreach (var competitorInformation in competitorInformations)
-                    {
-                        competitorInformation.RequestId = request.Id;
-
-                        var competitorInformationToInsert = _mapper.Map<CompetitorInformation>(competitorInformation);
-                        InsertCompetitorInformation(competitorInformationToInsert);
-                    }
-
-                    var projectInfo = _ProjectInformationRepository.Table.FirstOrDefault(x => x.RequestId == request.Id);
-                    if (projectInfo != null)
-                        projectInformation.Id = projectInfo.Id;
-
-                    projectInformation.RequestId = request.Id;
-                    _ProjectInformationRepository.Update(projectInformation);
-
-                    DeleteProjectInformationReasons(projectInformation.Id);
-
-                    foreach (var projectInformationReason in projectInformationDTO.ProjectInformationReasons)
-                    {
-                        projectInformationReason.ProjectInformationId = projectInformation.Id;
-
-                        var projectInformationReasonToInsert = _mapper.Map<ProjectInformationReason>(projectInformationReason);
-                        _ProjectInformationReasonRepository.Add(projectInformationReasonToInsert);
-                    }
-
-                    requestSubmissionDetail.RequestId = request.Id;
-                    var capturedRequestSubmissionDetail = _RequestSubmissionDetailRepository.Table.Where(x => x.RequestId == request.Id).FirstOrDefault();
-                    if (capturedRequestSubmissionDetail != null)
-                    {
-                        requestSubmissionDetail.Id = capturedRequestSubmissionDetail.Id;
-                        requestSubmissionDetail.CreatedBy = capturedRequestSubmissionDetail.CreatedBy;
-                    }
-
-                    var requestSubmissionDetailToInsert = _mapper.Map<RequestSubmissionDetail>(requestSubmissionDetail);
-                    requestSubmissionDetailToInsert.CreatedByStr = request.CreatedByStr;
-                    _RequestSubmissionDetailRepository.Update(requestSubmissionDetailToInsert);
-
-                    _logger.Information("Successfully updated request {id}", request.Id);
-
-                    string actionDetails = $"{request.CreatedByStr} updated request {request.Id} ";
-                    _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, request.UpdatedById, actionDetails, "Update");
-
-                    _context.SaveChanges();
-                    transaction.Commit();
-
-                    return true;
+                    var requestProductToInsert = _mapper.Map<RequestProduct>(requestProduct);
+                    _RequestProductRepository.Add(requestProductToInsert, connection, transaction);
                 }
-                catch (Exception ex)
+
+                var existingCompetitorInformations = _CompetitorInformationRepository.GetAll().Where(x => x.RequestId == request.Id).ToList();
+                foreach (var competitorInformation in existingCompetitorInformations)
+                    _CompetitorInformationRepository.Delete(competitorInformation.Id, connection, transaction);
+
+                foreach (var competitorInformation in competitorInformations)
                 {
-                    transaction.Rollback();
-                    _logger.Error(ex, "Error updating request {id}", request.Id);
-                    return false;
+                    competitorInformation.RequestId = request.Id;
+
+                    var competitorInformationToInsert = _mapper.Map<CompetitorInformation>(competitorInformation);
+                    _CompetitorInformationRepository.Add(competitorInformationToInsert, connection, transaction);
                 }
+
+                var projectInfo = _ProjectInformationRepository.Table.FirstOrDefault(x => x.RequestId == request.Id);
+                if (projectInfo != null)
+                    projectInformation.Id = projectInfo.Id;
+
+                projectInformation.RequestId = request.Id;
+                _ProjectInformationRepository.Update(projectInformation, connection, transaction);
+
+                var existingProjectInformationReasons = _ProjectInformationReasonRepository.Table.Where(x => x.ProjectInformationId == projectInformation.Id).ToList();
+                foreach (var projectInformationReason in existingProjectInformationReasons)
+                    _ProjectInformationReasonRepository.Delete(projectInformationReason.Id, connection, transaction);
+
+                foreach (var projectInformationReason in projectInformationDTO.ProjectInformationReasons)
+                {
+                    projectInformationReason.ProjectInformationId = projectInformation.Id;
+
+                    var projectInformationReasonToInsert = _mapper.Map<ProjectInformationReason>(projectInformationReason);
+                    _ProjectInformationReasonRepository.Add(projectInformationReasonToInsert, connection, transaction);
+                }
+
+                requestSubmissionDetail.RequestId = request.Id;
+                var capturedRequestSubmissionDetail = _RequestSubmissionDetailRepository.Table.Where(x => x.RequestId == request.Id).FirstOrDefault();
+                if (capturedRequestSubmissionDetail != null)
+                {
+                    requestSubmissionDetail.Id = capturedRequestSubmissionDetail.Id;
+                    requestSubmissionDetail.CreatedBy = capturedRequestSubmissionDetail.CreatedBy;
+                }
+
+                var requestSubmissionDetailToInsert = _mapper.Map<RequestSubmissionDetail>(requestSubmissionDetail);
+                requestSubmissionDetailToInsert.CreatedByStr = request.CreatedByStr;
+                _RequestSubmissionDetailRepository.Update(requestSubmissionDetailToInsert, connection, transaction);
+
+                _logger.Information("Successfully updated request {id}", request.Id);
+
+                // existingRequestProducts holds the products as they were before this update
+                // (it is captured above and never mutated in memory), while requestProducts now
+                // carries the incoming values, so comparing the two yields the change list.
+                var changeDetails = BuildRequestUpdateAuditDetails(
+                    oldComments, existingRequest.Comments,
+                    oldSegment, existingRequest.Segment,
+                    oldTotalBudget, existingRequest.TotalBudget,
+                    oldApprovalState, existingRequest.ApprovalState,
+                    existingRequestProducts, requestProducts);
+
+                string actionDetails = $"{request.CreatedByStr} updated request {request.Id}"
+                    + (string.IsNullOrEmpty(changeDetails) ? "" : $" | Changes: {changeDetails}");
+                _auditTrailService.CreateAuditTrail(request.Id, Entity, DateTime.UtcNow, request.UpdatedById, actionDetails, "Update", connection, transaction);
+
+                transaction.Commit();
+
+                return true;
             }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                _logger.Error(ex, "Error updating request {id}", request.Id);
+                return false;
+            }
+        }
+
+        // Builds a human-readable summary of what changed during an update, comparing the
+        // request-level fields and the product list before/after. Returns an empty string when
+        // no tracked field changed.
+        private string BuildRequestUpdateAuditDetails(
+            string oldComments, string newComments,
+            string oldSegment, string newSegment,
+            decimal oldTotalBudget, decimal newTotalBudget,
+            int oldApprovalState, int newApprovalState,
+            List<RequestProduct> oldProducts,
+            List<RequestProductDTO> newProducts)
+        {
+            var changes = new List<string>();
+
+            if ((oldComments ?? string.Empty) != (newComments ?? string.Empty))
+                changes.Add($"Comments: '{oldComments}' -> '{newComments}'");
+
+            if ((oldSegment ?? string.Empty) != (newSegment ?? string.Empty))
+                changes.Add($"Segment: '{oldSegment}' -> '{newSegment}'");
+
+            if (oldTotalBudget != newTotalBudget)
+                changes.Add($"Total Budget: {oldTotalBudget} -> {newTotalBudget}");
+
+            if (oldApprovalState != newApprovalState)
+                changes.Add($"Approval State: {DescribeApprovalState(oldApprovalState)} -> {DescribeApprovalState(newApprovalState)}");
+
+            oldProducts ??= new List<RequestProduct>();
+            newProducts ??= new List<RequestProductDTO>();
+
+            foreach (var newProduct in newProducts)
+            {
+                var oldProduct = oldProducts.FirstOrDefault(x => x.ProductId == newProduct.ProductId);
+                if (oldProduct == null)
+                {
+                    changes.Add($"Added product '{newProduct.ProductName}' (qty {newProduct.Quantity}, end-user price {newProduct.EndUserPrice})");
+                    continue;
+                }
+
+                var productChanges = new List<string>();
+
+                if (oldProduct.Quantity != newProduct.Quantity)
+                    productChanges.Add($"qty {oldProduct.Quantity} -> {newProduct.Quantity}");
+                if (oldProduct.EndUserPrice != newProduct.EndUserPrice)
+                    productChanges.Add($"end-user price {oldProduct.EndUserPrice} -> {newProduct.EndUserPrice}");
+                if (oldProduct.DealerPrice != newProduct.DealerPrice)
+                    productChanges.Add($"dealer price {oldProduct.DealerPrice} -> {newProduct.DealerPrice}");
+                if (oldProduct.DistyPrice != newProduct.DistyPrice)
+                    productChanges.Add($"disty price {oldProduct.DistyPrice} -> {newProduct.DistyPrice}");
+                if ((oldProduct.Remarks ?? string.Empty) != (newProduct.Remarks ?? string.Empty))
+                    productChanges.Add($"remarks '{oldProduct.Remarks}' -> '{newProduct.Remarks}'");
+
+                if (productChanges.Count > 0)
+                    changes.Add($"Product '{newProduct.ProductName}': {string.Join(", ", productChanges)}");
+            }
+
+            foreach (var oldProduct in oldProducts)
+            {
+                if (!newProducts.Any(x => x.ProductId == oldProduct.ProductId))
+                    changes.Add($"Removed product '{oldProduct.ProductName}' (qty {oldProduct.Quantity})");
+            }
+
+            return string.Join("; ", changes);
+        }
+
+        private static string DescribeApprovalState(int approvalState)
+        {
+            return Enum.IsDefined(typeof(ApprovalStateEnum), approvalState)
+                ? ((ApprovalStateEnum)approvalState).ToString()
+                : approvalState.ToString();
         }
 
         private decimal GetTotalPriceOfRequestProducts(List<RequestProductDTO> requestProducts, Func<RequestProductDTO, decimal> selector)

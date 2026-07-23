@@ -46,14 +46,12 @@ namespace Epson.Data
             return db.QueryFirstOrDefault<T>($"SELECT * FROM {typeof(T).Name} WHERE Id = @Id", new { Id = id });
         }
 
-        public int Add(T entity)
+        public int Add(T entity, IDbConnection connection = null, IDbTransaction transaction = null)
         {
-            using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
-
             var props = typeof(T).GetProperties()
                 .Where(p =>
-                    !typeof(IEnumerable<object>).IsAssignableFrom(p.PropertyType) && 
-                    (!p.PropertyType.IsClass || p.PropertyType == typeof(string)))  
+                    !typeof(IEnumerable<object>).IsAssignableFrom(p.PropertyType) &&
+                    (!p.PropertyType.IsClass || p.PropertyType == typeof(string)))
                 .ToArray();
 
             var query = $"INSERT INTO {typeof(T).Name} ({string.Join(",", props.Select(p => p.Name))}) VALUES ({string.Join(",", props.Select(p => "@" + p.Name))}); SELECT LAST_INSERT_ID();";
@@ -64,17 +62,22 @@ namespace Epson.Data
                 parameters.Add("@" + prop.Name, prop.GetValue(entity));
             }
 
+            // When a caller supplies a connection/transaction, enlist in it (and do NOT dispose
+            // the connection here — the caller owns its lifetime). Otherwise fall back to a
+            // self-contained connection that auto-commits, preserving existing behaviour.
+            if (connection != null)
+                return connection.ExecuteScalar<int>(query, parameters, transaction);
+
+            using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
             return db.ExecuteScalar<int>(query, parameters);
         }
 
 
-        public int Update(T entity)
+        public int Update(T entity, IDbConnection connection = null, IDbTransaction transaction = null)
         {
-            using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
-
             var properties = entity.GetType().GetProperties()
                                     .Where(p => p.PropertyType.IsValueType || p.PropertyType == typeof(string))
-                                    .Where(p => !p.Name.Equals("id", StringComparison.OrdinalIgnoreCase)) 
+                                    .Where(p => !p.Name.Equals("id", StringComparison.OrdinalIgnoreCase))
                                     .ToArray();
 
             var query = new StringBuilder($"UPDATE {typeof(T).Name} SET ");
@@ -91,14 +94,24 @@ namespace Epson.Data
             query.Append(" WHERE id = @id");
 
             _logger.Information("Executing query {querystring}", query.ToString());
+
+            if (connection != null)
+                return connection.Execute(query.ToString(), entity, transaction);
+
+            using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
             return db.Execute(query.ToString(), entity);
         }
 
 
-        public int Delete(int id)
+        public int Delete(int id, IDbConnection connection = null, IDbTransaction transaction = null)
         {
+            var query = $"DELETE FROM {typeof(T).Name} WHERE Id = @Id";
+
+            if (connection != null)
+                return connection.Execute(query, new { Id = id }, transaction);
+
             using IDbConnection db = _dataConnectionProvider.CreateDataConnection();
-            return db.Execute($"DELETE FROM {typeof(T).Name} WHERE Id = @Id", new { Id = id });
+            return db.Execute(query, new { Id = id });
         }
 
         public int BulkInsert(IEnumerable<T> entities)

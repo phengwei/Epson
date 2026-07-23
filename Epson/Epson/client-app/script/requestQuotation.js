@@ -54,6 +54,7 @@ export default {
       competitor: { model: null, brand: null, distyPrice: null, dealerPrice: null, endUserPrice: null },
       competitors: [],
       productsToShow: [],
+      editingProductIndex: null,
       competitorsToShow: [],
       coverplusesToShow: [],
       submissionDetail: { createdByStr: null, createdOnUTC: null, distributorName: null, resellerName: null, contactPersonName: null, telephoneNo: null, faxNo: null, email: null },
@@ -387,6 +388,9 @@ export default {
       this.dialogProduct = true;
     },
     openEditProductDialog(product) {
+      // Remember which row is being edited by its position, so we can update the correct
+      // row even if the product (and therefore productId) is changed inside the dialog.
+      this.editingProductIndex = this.productsToShow.indexOf(product);
       this.selectedProduct = { ...product };
       this.$nextTick(() => {
         this.dialogProduct = true;
@@ -394,9 +398,15 @@ export default {
       });
     },
     editProductRow(editedProduct) {
-      const index = this.productsToShow.findIndex(product => product.productId === editedProduct.productId);
-      if (index !== -1) {
+      // Use the row position captured when the dialog was opened rather than searching by
+      // productId. The edit dialog allows changing the selected product, which changes
+      // productId and would make a productId-based lookup fail ("Product not found for editing").
+      const index = this.editingProductIndex;
+      if (index !== null && index >= 0 && this.productsToShow[index]) {
+        const originalProduct = this.productsToShow[index];
         const updatedProduct = { ...editedProduct };
+        // Preserve the original request-product identity so the row stays stable across edits.
+        updatedProduct.id = originalProduct.id;
         updatedProduct.distyPrice = updatedProduct.distyPrice || 0;
         updatedProduct.dealerPrice = updatedProduct.dealerPrice || 0;
         updatedProduct.endUserPrice = updatedProduct.endUserPrice || 0;
@@ -406,6 +416,7 @@ export default {
         console.error("Product not found for editing.");
       }
 
+      this.editingProductIndex = null;
       this.dialogProduct = false;
     },
     addProductRow(product) {

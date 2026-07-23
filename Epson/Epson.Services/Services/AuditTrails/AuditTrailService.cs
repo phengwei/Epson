@@ -3,6 +3,7 @@ using Epson.Data;
 using Epson.Data.Context;
 using Epson.Services.DTO.Products;
 using Epson.Services.Interface.AuditTrails;
+using System.Data;
 using System.Web.Mvc;
 
 namespace Epson.Services.Services.AuditTrails
@@ -19,7 +20,7 @@ namespace Epson.Services.Services.AuditTrails
             _auditTrailRepository = auditTrailRepository;
         }
 
-        public void CreateAuditTrail(int entityId, string entity, DateTime actionTime, string actor, string actionDetails, string action)
+        public void CreateAuditTrail(int entityId, string entity, DateTime actionTime, string actor, string actionDetails, string action, IDbConnection connection = null, IDbTransaction transaction = null)
         {
             var auditEntry = new AuditTrail
             {
@@ -32,7 +33,7 @@ namespace Epson.Services.Services.AuditTrails
                 CreatedOnUTC = DateTime.UtcNow
             };
 
-            _auditTrailRepository.Add(auditEntry);
+            _auditTrailRepository.Add(auditEntry, connection, transaction);
         }
 
         public List<AuditTrail> GetProductAuditTrails()
