@@ -31,10 +31,17 @@ namespace Epson.Job
 
         private void DoWork(object state)
         {
-            using (var scope = _serviceScopeFactory.CreateScope())
+            try
             {
-                var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
-                emailService.SendEmailBatch();
+                using (var scope = _serviceScopeFactory.CreateScope())
+                {
+                    var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+                    emailService.SendEmailBatch();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "[{0}] Failed to send email batch.", "SendEmailBackgroundProcess");
             }
         }
 

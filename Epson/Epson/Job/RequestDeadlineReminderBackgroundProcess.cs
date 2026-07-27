@@ -40,6 +40,18 @@ namespace Epson.Job
 
         private async void DoWork(object state)
         {
+            try
+            {
+                await DoWorkAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "[{0}] Failed to process deadline reminders.", "RequestDeadlineReminderBackgroundProcess");
+            }
+        }
+
+        private async Task DoWorkAsync()
+        {
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<EpsonDbContext>();
             var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
