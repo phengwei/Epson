@@ -121,9 +121,8 @@
       },
       async getAllStaffs() {
         try {
-          const response = await fetch('/api/customer/getallstaff');
-          const data = await response.json();
-          this.staffMembers = data.data || [];
+          const response = await this.$axios.get(`${this.$config.restUrl}/api/customer/getallstaff`);
+          this.staffMembers = response.data.data || [];
 
         } catch (error) {
           console.error('There was a problem fetching the staff:', error);

@@ -7,11 +7,13 @@ using Epson.Model.Request;
 using Epson.Services.DTO.Report;
 using Epson.Services.Interface.Report;
 using Epson.Services.Interface.Requests;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Epson.Controllers.API
 {
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [Route("api/report")]
     public class ReportApiController : BaseApiController
     {

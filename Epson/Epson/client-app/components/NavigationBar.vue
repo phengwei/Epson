@@ -63,7 +63,6 @@
     methods: {
       toggleDropdown() {
         this.showDropdown = !this.showDropdown;
-        console.log('Dropdown toggled:', this.showDropdown);
       },
       closeDropdown(event) {
         if (!this.$refs.dropdown.contains(event.target)) {

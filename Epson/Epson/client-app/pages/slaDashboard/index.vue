@@ -158,7 +158,6 @@
 
           if (result.data && result.data.data) {
             const d = result.data.data;
-            console.log("dd", d);
             this.TotalOpenTickets = d.totalOpenTickets ?? 0;
             this.TotalClosedTickets = d.totalCloseTickets ?? 0;
             this.BreachedTickets = d.breachedTickets ?? d.BreachedTickets ?? 0;
@@ -176,7 +175,6 @@
         this.TotalOpenTickets = 0;
         this.TotalClosedTickets = 0;
         this.SuccessRate = 0;
-        console.log('Metrics reset.');
       },
       goToBreachedTickets() {
         this.$router.push({

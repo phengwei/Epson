@@ -241,6 +241,10 @@ namespace Epson.Controllers.API
             if (draft == null)
                 return NotFound("Draft not found!");
 
+            var user = _workContext.CurrentUser;
+            if (draft.UserId != user.Id)
+                return Forbid();
+
             return Ok(draft);
         }
 
@@ -263,6 +267,9 @@ namespace Epson.Controllers.API
                 return NotFound("Draft not found!");
 
             var user = _workContext.CurrentUser;
+            if (draft.UserId != user.Id)
+                return Forbid();
+
             draft.UpdatedOnUTC = DateTime.UtcNow;
             draft.SelectedCategories = model.SelectedCategories;
             draft.ProductsToShow = model.ProductsToShow;
@@ -391,6 +398,12 @@ namespace Epson.Controllers.API
 
             var user = _workContext.CurrentUser;
 
+            DraftDTO existingDraft = _draftService.GetDraftById(id);
+            if (existingDraft == null)
+                return NotFound("Draft not found!");
+            if (existingDraft.UserId != user.Id)
+                return Forbid();
+
             var existingDrafts = _draftService.GetDraftsByUserId(user.Id)
                                               .Where(d => d.isDefault)
                                               .ToList();
@@ -402,7 +415,6 @@ namespace Epson.Controllers.API
                 _draftService.UpdateDraft(draft);
             }
 
-            DraftDTO existingDraft = _draftService.GetDraftById(id);
             existingDraft.isDefault = true;
 
             if (_draftService.UpdateDraft(existingDraft))
@@ -427,6 +439,10 @@ namespace Epson.Controllers.API
             var user = _workContext.CurrentUser;
 
             DraftDTO existingDraft = _draftService.GetDraftById(id);
+            if (existingDraft == null)
+                return NotFound("Draft not found!");
+            if (existingDraft.UserId != user.Id)
+                return Forbid();
 
             if (_draftService.DeleteDraft(existingDraft))
             {
@@ -548,6 +564,9 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
+            if (request.CreatedById != user.Id)
+                return Forbid();
+
             bool isSuccess = false;
 
             if (isAccept)
@@ -572,6 +591,9 @@ namespace Epson.Controllers.API
 
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
+
+            if (request.CreatedById != user.Id)
+                return Forbid();
 
             bool isSuccess = false;
 
@@ -721,10 +743,33 @@ namespace Epson.Controllers.API
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
 
+            if (!await IsRequestWithinSalesSectionHeadScopeAsync(user, request))
+                return Forbid();
+
             if (await _requestService.ApproveFirstLevelRequest(_workContext.CurrentUser?.Id, _workContext.CurrentUser?.Name, _mapper.Map<Request>(request)))
                 return Ok("Request has been approved to proceed");
             else
                 return BadRequest("Failed to set complete first level approval for request");
+        }
+
+        private async Task<bool> IsRequestWithinSalesSectionHeadScopeAsync(ApplicationUser user, RequestDTO request)
+        {
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            if (userRoles.Contains("Admin") || userRoles.Contains("Director"))
+                return true;
+
+            bool multiRoles = userRoles.Count > 1;
+            var teamHierarchy = _userService.InitializeTeamHierarchyPairs(true, multiRoles);
+            var relevantTeamIds = _userService.GetChildTeamIdsV2(teamHierarchy, user.TeamId, _teamRepository);
+            relevantTeamIds.Add(user.TeamId);
+
+            var usersInRelevantTeams = _userManager.Users
+                                                   .Where(u => relevantTeamIds.Contains(u.TeamId))
+                                                   .Select(u => u.Id)
+                                                   .ToList();
+
+            return usersInRelevantTeams.Contains(request.CreatedById) && request.CreatedById != user.Id;
         }
 
         [HttpPost("rejectfirstlevelrequest")]
@@ -743,6 +788,9 @@ namespace Epson.Controllers.API
 
             if (user == null)
                 return Unauthorized("User not authorized to perform this operation");
+
+            if (!await IsRequestWithinSalesSectionHeadScopeAsync(user, request))
+                return Forbid();
 
             if (_requestService.RejectFirstLevelRequest(_workContext.CurrentUser?.Id, _workContext.CurrentUser?.Name, _mapper.Map<Request>(request)))
                 return Ok("Request has been rejected");

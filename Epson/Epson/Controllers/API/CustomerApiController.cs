@@ -89,12 +89,19 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("GetSalesHeadByTeam")]
-        [AllowAnonymous]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> GetSalesHeadByTeam(int teamID)
         {
             var result = _userService.GetAllSalesHeadUsersByTeam(teamID);
 
-            return Ok(result);
+            var userModels = result.Select(user => new UserModel
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Email = user.Email
+            }).ToList();
+
+            return Ok(userModels);
         }
 
         [HttpPost("AddHierarchy")]
@@ -362,7 +369,7 @@ namespace Epson.Controllers.API
 
 
         [HttpPost("addnewuser")]
-        [AllowAnonymous]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> Register([FromBody] BaseQueryModel<RegisterModel> queryModel)
         {
             if (!ModelState.IsValid)
@@ -420,7 +427,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("edituser")]
-        [AllowAnonymous]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> EditUser([FromBody] BaseQueryModel<RegisterModel> queryModel)
         {
             if (!ModelState.IsValid)
@@ -464,7 +471,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpDelete("deleteuser")]
-        [AllowAnonymous]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -484,7 +491,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("deactivateuser")]
-        [AllowAnonymous]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> DeactivateUser(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -498,7 +505,7 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("reactivateuser")]
-        [AllowAnonymous]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> ReactivateUser(string userId)
         {
             var user = await ((UserManagerExtension)_userManager).FindByIdIncludingInactiveAsync(userId);
@@ -564,7 +571,6 @@ namespace Epson.Controllers.API
         }
 
         [HttpPost("changepassword")]
-        [AllowAnonymous]
         public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword)
         {
             var currentUser = _workContext.CurrentUser;
@@ -613,7 +619,7 @@ namespace Epson.Controllers.API
 
 
         [HttpPost("addroletouser")]
-        [AllowAnonymous]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> AddRoleToUser(string userId, string roleName)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -632,7 +638,6 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getallstaff")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAllStaff()
         {
             var response = new GenericResponseModel<List<UserModel>>();
@@ -653,7 +658,6 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getallrequesters")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAllRequester()
         {
             var response = new GenericResponseModel<List<UserModel>>();
@@ -671,7 +675,6 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getallfulfillers")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAllFulfiller()
         {
             var response = new GenericResponseModel<List<UserModel>>();
@@ -689,7 +692,6 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getallsalessectionheadusers")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAllSalesSectionHeadUsers()
         {
             var response = new GenericResponseModel<List<UserModel>>();
@@ -706,7 +708,7 @@ namespace Epson.Controllers.API
             return Ok(response);
         }
         [HttpGet("getallusers")]
-        [AllowAnonymous]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<IActionResult> GetAllUsers()
         {
             var response = new GenericResponseModel<List<UserModel>>();
@@ -770,7 +772,6 @@ namespace Epson.Controllers.API
         }
 
         [HttpGet("getallroles")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAllRoles()
         {
             var response = new GenericResponseModel<List<Role>>();
