@@ -121,6 +121,12 @@ namespace Epson.Controllers.API
                     return StatusCode(500, "Internal server error: Missing required claims.");
                 }
 
+                if (!email.EndsWith("@emsb.epson.com.my", StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.Error($"SSO login rejected: email {email} is not in the allowed domain (emsb.epson.com.my).");
+                    return StatusCode(403, "Access denied: only emsb.epson.com.my accounts are permitted to sign in.");
+                }
+
                 var user = await _userManager.FindByEmailAsync(email);
                 if (user != null)
                 {

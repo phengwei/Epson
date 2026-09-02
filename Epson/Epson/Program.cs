@@ -217,11 +217,14 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+if (!app.Environment.IsProduction())
 {
-    c.SwaggerEndpoint("/swagger/v2/swagger.json", "My API v2");
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v2/swagger.json", "My API v2");
+    });
+}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

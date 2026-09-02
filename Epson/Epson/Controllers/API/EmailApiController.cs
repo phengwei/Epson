@@ -9,10 +9,12 @@ using Epson.Model.Products;
 using Epson.Services.Interface.Email;
 using Epson.Services.Interface.Products;
 using Epson.Services.Services.Products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Epson.Controllers.API
 {
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
     [Route("api/email")]
     public class EmailApiController : BaseApiController
     {
