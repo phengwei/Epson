@@ -16,6 +16,7 @@ namespace Epson.Services.Interface.Requests
         Task<List<RequestDTO>> GetRequestsByIdsAsync(List<int> requestIds);
         RequestDTO GetUnfulfilledRequestProducts(RequestDTO request, ApplicationUser user, bool isDivisionHeadUser, bool isCoverplusUser, bool isProductUser, bool isAdminUser);
         PagedResult<RequestDTO> GetUnfulfilledRequests(ApplicationUser user, bool isDivisionHeadUser, bool isCoverplusUser, bool isProductUser, bool isAdminUser, string search = null, int? page = null, int? itemsPerPage = null);
+        HashSet<int> GetBackupFulfillerProductIds(string userId);
         public List<RequestProductDTO> GetRequestProducts(Func<RequestProduct, bool> filter = null, int? page = null, int? itemsPerPage = null);
         bool FulfillDivisionCoverplusRequest(ApplicationUser user, RequestProduct requestProduct, Product product, string remarks);
         public List<RequestProductDTO> GetRequestProducts(out int totalCount, Func<RequestProduct, bool> filter = null, int? page = null, int? itemsPerPage = null);

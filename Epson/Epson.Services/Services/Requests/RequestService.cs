@@ -416,6 +416,11 @@ namespace Epson.Services.Services.Requests
                    (backupFulfillers.Contains(rp.ProductId) && (!rp.IsCoverplus || !isCoverplusUser));
         }
 
+        public HashSet<int> GetBackupFulfillerProductIds(string userId)
+        {
+            return GetBackupFulfillers(userId);
+        }
+
         private HashSet<int> GetBackupFulfillers(string userId)
         {
             return _CategoryRepository.Table

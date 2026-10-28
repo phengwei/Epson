@@ -124,113 +124,79 @@ namespace Epson.Controllers.API
                     ? await _userManager.GetRolesAsync(currentUserDetail)
                     : new List<string>();
 
-                Func<Request, bool> monthFilter = x => month == 0 || (x.CreatedOnUTC.Month == month);
-                Func<Request, bool> breachedFilter = x => !breached || x.RequestProducts.Any(rp => rp.Breached);
-                Func<Request, bool> yearFilter = x => year == 0 || x.CreatedOnUTC.Year == year;
-                Func<Request, bool> approvalStateFilter = x => approvalState == 0 || x.ApprovalState == approvalState;
+                string me = currentUserDetail?.Id;
+                bool isAdmin = roles.Contains("Admin") || roles.Contains("Director");
+                bool isSalesOperation = roles.Contains("Sales Operation");
+                bool isSalesSectionHead = roles.Contains("Sales Section Head");
+                bool isFulfiller = roles.Contains("Product") || roles.Contains("Coverplus");
+                bool isSales = roles.Contains("Sales");
 
-                HashSet<RequestDTO> requestSet = new HashSet<RequestDTO>(new RequestDTOComparer());
-                int totalItems;
-
-                if (roles.Contains("Admin") || roles.Contains("Director"))
+                // Sales Section Head team scopes, computed once: Action uses the IsSalesHead=true
+                // hierarchy, Department uses the IsSalesHead=false hierarchy.
+                var approverTeamUsers = new HashSet<string>();
+                var departmentTeamUsers = new HashSet<string>();
+                if (!isAdmin && isSalesSectionHead && currentUserDetail != null)
                 {
-                    Func<Request, bool> adminFilter = x => true;
-                    requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => adminFilter(x) && monthFilter(x) && breachedFilter(x) && yearFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
+                    bool multiRoles = roles.Count > 1;
+
+                    var approverTeamIds = _userService.GetChildTeamIdsV2(_userService.InitializeTeamHierarchyPairs(true, multiRoles), currentUserDetail.TeamId, _teamRepository);
+                    approverTeamIds.Add(currentUserDetail.TeamId);
+                    approverTeamUsers = _userManager.Users.Where(u => approverTeamIds.Contains(u.TeamId)).Select(u => u.Id).ToHashSet();
+
+                    var departmentTeamIds = _userService.GetChildTeamIdsV2(_userService.InitializeTeamHierarchyPairs(), currentUserDetail.TeamId, _teamRepository);
+                    departmentTeamIds.Add(currentUserDetail.TeamId);
+                    departmentTeamUsers = _userManager.Users.Where(u => departmentTeamIds.Contains(u.TeamId)).Select(u => u.Id).ToHashSet();
                 }
-                else
-                {
-                    // Each branch below mirrors the request set the matching dashboard shows, so any
-                    // request a user can see in a dashboard is also visible in this listing.
 
+                // Fulfiller authorisation inputs (same ones the fulfiller queue uses), computed once.
+                var backupFulfillerProductIds = new HashSet<int>();
+                var fulfilledRequestIds = new HashSet<int>();
+                bool isCoverplusUser = false, isProductUser = false, isDivisionHeadUser = false;
+                if (!isAdmin && isFulfiller && currentUserDetail != null)
+                {
+                    isCoverplusUser = roles.Contains(RoleEnum.Coverplus.ToString());
+                    isProductUser = roles.Contains(RoleEnum.Product.ToString());
+                    isDivisionHeadUser = currentUserDetail.Email == _userService.GetCoverplusTeamHierarchyEmail();
+                    backupFulfillerProductIds = _requestService.GetBackupFulfillerProductIds(currentUserDetail.Id);
+                    fulfilledRequestIds = _auditService.GetFulfilledRequestsByUser(currentUserDetail.Id, new[] { "Fulfill", "Reject" }).ToHashSet();
+                }
+
+                // All role branches are combined into one predicate and the request table is loaded
+                // a single time (instead of once per role). Each clause mirrors the request set the
+                // matching dashboard shows, so the listing is the union of the user's dashboards.
+                Func<Request, bool> visible = x =>
+                    isAdmin
                     // Sales Operation dashboard: every approved request.
-                    if (roles.Contains("Sales Operation"))
-                    {
-                        Func<Request, bool> salesOperationFilter = x => x.ApprovalState == (int)ApprovalStateEnum.Approved;
-                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesOperationFilter(x) && monthFilter(x) && breachedFilter(x) && yearFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
-                    }
-
-                    // Sales Section Head dashboards (Action + Department + Completed):
-                    //   - Action: requests raised by someone in the head's team scope (any state),
-                    //     using the IsSalesHead = true hierarchy.
-                    //   - Department: pending-fulfilment requests whose product fulfiller is in the
-                    //     team scope, using the IsSalesHead = false hierarchy.
-                    //   - Completed: every approved request.
-                    if (roles.Contains("Sales Section Head"))
-                    {
-                        bool multiRoles = roles.Count > 1;
-
-                        var approverHierarchy = _userService.InitializeTeamHierarchyPairs(true, multiRoles);
-                        var approverTeamIds = _userService.GetChildTeamIdsV2(approverHierarchy, currentUserDetail.TeamId, _teamRepository);
-                        approverTeamIds.Add(currentUserDetail.TeamId);
-                        var usersInApproverTeams = _userManager.Users
-                                                                .Where(u => approverTeamIds.Contains(u.TeamId))
-                                                                .Select(u => u.Id)
-                                                                .ToList();
-
-                        var departmentHierarchy = _userService.InitializeTeamHierarchyPairs();
-                        var departmentTeamIds = _userService.GetChildTeamIdsV2(departmentHierarchy, currentUserDetail.TeamId, _teamRepository);
-                        departmentTeamIds.Add(currentUserDetail.TeamId);
-                        var usersInDepartmentTeams = _userManager.Users
-                                                                .Where(u => departmentTeamIds.Contains(u.TeamId))
-                                                                .Select(u => u.Id)
-                                                                .ToList();
-
-                        Func<Request, bool> salesSectionHeadFilter = x =>
-                            (usersInApproverTeams.Contains(x.CreatedById) && x.CreatedById != currentUserDetail.Id)
+                    || (isSalesOperation && x.ApprovalState == (int)ApprovalStateEnum.Approved)
+                    // Sales Section Head dashboards: Action + Department + Completed.
+                    || (isSalesSectionHead && (
+                            (approverTeamUsers.Contains(x.CreatedById) && x.CreatedById != me)
                             || (x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction
-                                && (x.RequestProducts.Any(rp => usersInDepartmentTeams.Contains(rp.FulfillerId))
-                                    || usersInDepartmentTeams.Contains(x.CreatedById)))
-                            || x.ApprovalState == (int)ApprovalStateEnum.Approved;
+                                && (x.RequestProducts.Any(rp => departmentTeamUsers.Contains(rp.FulfillerId))
+                                    || departmentTeamUsers.Contains(x.CreatedById)))
+                            || x.ApprovalState == (int)ApprovalStateEnum.Approved))
+                    // Fulfiller dashboards: authorised pending items + already fulfilled/rejected + own.
+                    || (isFulfiller && (
+                            fulfilledRequestIds.Contains(x.Id)
+                            || x.RequestProducts.Any(rp => rp.FulfillerId == me)
+                            || (x.ApprovalState == (int)ApprovalStateEnum.PendingFulfillerAction
+                                && x.RequestProducts.Any(rp => !rp.HasFulfilled
+                                    && IsAuthorizedToFulfill(rp, isDivisionHeadUser, isCoverplusUser, isProductUser, me, backupFulfillerProductIds)))))
+                    // Requester dashboards: every request this user created.
+                    || (isSales && x.CreatedById == me);
 
-                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesSectionHeadFilter(x) && monthFilter(x) && breachedFilter(x) && yearFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
-                    }
+                Func<Request, bool> filter = x =>
+                    visible(x)
+                    && (month == 0 || x.CreatedOnUTC.Month == month)
+                    && (year == 0 || x.CreatedOnUTC.Year == year)
+                    && (!breached || x.RequestProducts.Any(rp => rp.Breached))
+                    && (approvalState == 0 || x.ApprovalState == approvalState);
 
-                    // Fulfiller dashboards (Product / Coverplus):
-                    //   - Pending: every request with a product this user is authorised to fulfil,
-                    //     reusing the same authorisation the fulfiller queue uses (covers coverplus,
-                    //     backup-fulfiller and division-head cases, not just FulfillerId == me).
-                    //   - Fulfilled: requests this user has already fulfilled or rejected.
-                    if (roles.Contains("Product") || roles.Contains("Coverplus"))
-                    {
-                        string divisionHeadUserEmail = _userService.GetCoverplusTeamHierarchyEmail();
-                        bool isDivisionHeadUser = currentUserDetail.Email == divisionHeadUserEmail;
-                        bool isCoverplusUser = roles.Contains(RoleEnum.Coverplus.ToString());
-                        bool isProductUser = roles.Contains(RoleEnum.Product.ToString());
+                int totalItems;
+                var requests = _requestService.GetRequests(out totalItems, filter, search, page, itemsPerPage);
 
-                        var authorizedPending = _requestService.GetUnfulfilledRequests(currentUserDetail, isDivisionHeadUser, isCoverplusUser, isProductUser, false, search, page: null, itemsPerPage: null);
-                        var authorizedPendingIds = authorizedPending.Items.Select(r => r.Id).ToHashSet();
-                        var fulfilledIds = _auditService.GetFulfilledRequestsByUser(currentUserDetail.Id, new[] { "Fulfill", "Reject" }).ToHashSet();
-
-                        Func<Request, bool> fulfillerFilter = x =>
-                            authorizedPendingIds.Contains(x.Id)
-                            || fulfilledIds.Contains(x.Id)
-                            || x.RequestProducts.Any(rp => rp.FulfillerId == currentUserDetail.Id);
-
-                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => fulfillerFilter(x) && monthFilter(x) && breachedFilter(x) && yearFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
-                    }
-
-                    // Requester dashboards (Sales): every request this user created.
-                    if (roles.Contains("Sales"))
-                    {
-                        Func<Request, bool> salesFilter = x => x.CreatedById == currentUserDetail.Id;
-
-                        requestSet.UnionWith(_requestService.GetRequests(out totalItems, x => salesFilter(x) && monthFilter(x) && breachedFilter(x) && yearFilter(x) && approvalStateFilter(x), search, page: null, itemsPerPage: null));
-                    }
-                }
-
-                var uniqueRequests = requestSet.ToList().Distinct(new RequestDTOComparer()).ToList();
-                int actualTotalItems = uniqueRequests.Count;
-
-                if (page.HasValue && itemsPerPage.HasValue && itemsPerPage.Value != -1)
-                {
-                    uniqueRequests = uniqueRequests
-                                     .Skip((page.Value - 1) * itemsPerPage.Value)
-                                     .Take(itemsPerPage.Value)
-                                     .ToList();
-                }
-
-                response.Data = uniqueRequests;
-                response.Count = actualTotalItems;
+                response.Data = requests;
+                response.Count = totalItems;
 
                 return Ok(response);
             }
@@ -241,6 +207,20 @@ namespace Epson.Controllers.API
             }
         }
 
+        // Mirrors RequestService.DetermineAuthorization: whether this user may fulfil the given
+        // product line, covering division-head, coverplus and backup-fulfiller cases.
+        private static bool IsAuthorizedToFulfill(RequestProduct rp, bool isDivisionHeadUser, bool isCoverplusUser, bool isProductUser, string userId, HashSet<int> backupFulfillerProductIds)
+        {
+            if (rp.Status == (int)RequestProductStatusEnum.PendingDivisionHeadApproval)
+                return isDivisionHeadUser;
+
+            if (rp.IsCoverplus && !isCoverplusUser)
+                return false;
+
+            return (isCoverplusUser && rp.IsCoverplus)
+                || (isProductUser && rp.FulfillerId == userId && !rp.IsCoverplus)
+                || (backupFulfillerProductIds.Contains(rp.ProductId) && (!rp.IsCoverplus || !isCoverplusUser));
+        }
 
         public class RequestDTOComparer : IEqualityComparer<RequestDTO>
         {
